@@ -1,0 +1,74 @@
+version: 0.1.0
+roles:
+  owner:
+    decision: allow
+    command: allow
+    execution: deny
+    review: allow
+    advisory: allow
+    oversight: allow
+    workforce: allow
+  administrator:
+    decision: deny
+    command: deny
+    execution: deny
+    review: deny
+    advisory: deny
+    oversight: allow
+    workforce: deny
+  auditor:
+    decision: deny
+    command: deny
+    execution: deny
+    review: deny
+    advisory: deny
+    oversight: allow
+    workforce: deny
+  ceo:
+    decision: allow
+    command: allow
+    execution: deny
+    review: deny
+    advisory: deny
+    oversight: deny
+    workforce: deny
+  cwo:
+    decision: deny
+    command: allow
+    execution: deny
+    review: deny
+    advisory: deny
+    oversight: deny
+    workforce: allow
+  cso:
+    decision: allow
+    command: deny
+    execution: deny
+    review: deny
+    advisory: allow
+    oversight: deny
+    workforce: deny
+  project_manager:
+    decision: allow
+    command: allow
+    execution: deny
+    review: deny
+    advisory: deny
+    oversight: deny
+    workforce: allow
+  domain_lead:
+    decision: deny
+    command: deny
+    execution: deny
+    review: allow
+    advisory: allow
+    oversight: deny
+    workforce: deny
+  specialist:
+    decision: deny
+    command: deny
+    execution: allow
+    review: deny
+    advisory: deny
+    oversight: deny
+    workforce: deny
