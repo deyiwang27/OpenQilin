@@ -1,0 +1,46 @@
+version: 0.1.0
+obligations:
+  emit_audit_event:
+    description: Emit immutable decision event.
+    required_when:
+      decisions:
+        - allow
+        - deny
+        - allow_with_obligations
+
+  reserve_budget:
+    description: Reserve budget before dispatch for costed actions.
+    required_when:
+      context_flags:
+        - costed_action
+
+  enforce_sandbox_profile:
+    description: Enforce sandbox profile for tool or code execution.
+    required_when:
+      action_categories:
+        - tool_execution
+        - code_execution
+
+  require_owner_approval:
+    description: Require explicit owner approval before execution.
+    required_when:
+      action_categories:
+        - policy_change
+        - governance_override
+      role_transitions:
+        - concierge_passive_to_bootstrap
+
+decision_requirements:
+  allow:
+    mandatory_obligations:
+      - emit_audit_event
+  deny:
+    mandatory_obligations:
+      - emit_audit_event
+  allow_with_obligations:
+    mandatory_obligations:
+      - emit_audit_event
+    additional_obligations_allowed:
+      - reserve_budget
+      - enforce_sandbox_profile
+      - require_owner_approval

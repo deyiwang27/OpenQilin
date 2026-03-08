@@ -1,0 +1,54 @@
+manifest_version: 1
+policy_bundle:
+  policy_version: 0.1.0
+  status: active
+  active_from: "2026-03-08T00:00:00Z"
+  approval:
+    approved_by_role: owner
+    approved_at: "2026-03-08T00:00:00Z"
+  enforcement:
+    source_format: yaml_only
+    active_version_model: single_global_active
+    evaluation_mode: fail_closed
+    unknown_role_behavior: deny
+  audit_profile:
+    decision_event_required: true
+    required_fields:
+      - policy_version
+      - policy_hash
+      - rule_ids
+      - trace_id
+    detail_level:
+      allow: compact
+      deny: full
+      allow_with_obligations: full
+      governance_or_emergency: full
+  supported_decisions:
+    - allow
+    - deny
+    - allow_with_obligations
+  supported_obligations:
+    - emit_audit_event
+    - reserve_budget
+    - enforce_sandbox_profile
+    - require_owner_approval
+  canonical_roles:
+    - owner
+    - concierge_bootstrap
+    - concierge_passive
+    - administrator
+    - auditor
+    - ceo
+    - cwo
+    - cso
+    - project_manager
+    - domain_lead
+    - specialist
+  required_files:
+    - AuthorityMatrix.yaml
+    - PolicyRules.yaml
+    - ObligationPolicy.yaml
+    - EscalationPolicy.yaml
+    - BudgetPolicy.yaml
+    - SafetyPolicy.yaml
+  bundle_hash: "UNSET_REGENERATE_ON_PUBLISH"

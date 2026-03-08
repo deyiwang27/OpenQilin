@@ -3,17 +3,28 @@ thresholds:
   soft_percent: 85
   hard_percent: 100
   daily_guardrail_percent: 15
+
+checks:
+  pre_dispatch_reservation_required: true
+  in_flight_metering_required: true
+  post_completion_reconciliation_required: true
+
 enforcement:
   on_soft:
+    action: notify
     notify:
       - cwo
       - ceo
   on_hard:
-    action: pause_project
+    actions:
+      - block_new_execution
+      - pause_project
     enforce_by: auditor
-    notify:
+    escalate_to:
       - owner
+    notify:
       - ceo
+
 concurrency:
   reservation_required: true
   reservation_mode: atomic

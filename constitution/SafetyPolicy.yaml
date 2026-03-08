@@ -2,6 +2,13 @@ version: 0.1.0
 incident_levels:
   - warning
   - critical
+
+risk_categories:
+  - behavioral
+  - execution
+  - resource
+  - infrastructure
+
 containment:
   warning:
     allowed_actions:
@@ -12,6 +19,14 @@ containment:
       - pause_project
       - isolate_component
       - activate_safety_mode
+
+monitoring_owners:
+  behavioral: auditor
+  execution: auditor
+  resource: auditor
+  infrastructure: administrator
+
 owner_override:
   enabled: true
+  audit_required: true
   note: Owner may override governance decisions with auditable justification.

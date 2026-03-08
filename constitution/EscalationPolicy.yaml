@@ -1,25 +1,66 @@
 version: 0.1.0
 escalation:
-  operational:
+  operational_general:
+    path:
+      - specialist
+      - project_manager
+      - cwo
+      - ceo
+      - owner
+
+  operational_coordination_failures:
     path:
       - specialist
       - domain_lead
       - project_manager
       - cwo
       - ceo
+
   strategic:
     path:
       - cso
       - ceo
       - owner
+
   governance:
     path:
       - auditor
       - owner
     notify:
       - ceo
+
+  budget_violations:
+    risk_monitoring_path:
+      - project_manager
+      - cwo
+    enforcement_path:
+      - auditor
+      - owner
+    notify:
+      - ceo
+
+  behavioral_violations:
+    path:
+      - specialist
+      - project_manager
+      - auditor
+      - owner
+    notify:
+      - ceo
+
   infrastructure:
     path:
       - system_component
       - administrator
       - owner
+
+global_requirements:
+  escalation_event_required: true
+  required_event_fields:
+    - event_id
+    - trace_id
+    - incident_type
+    - severity
+    - current_owner_role
+    - next_owner_role
+    - rule_ids

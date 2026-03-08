@@ -8,6 +8,22 @@ roles:
     advisory: allow
     oversight: allow
     workforce: allow
+  concierge_bootstrap:
+    decision: deny
+    command: deny
+    execution: deny
+    review: deny
+    advisory: allow
+    oversight: deny
+    workforce: allow
+  concierge_passive:
+    decision: deny
+    command: deny
+    execution: deny
+    review: deny
+    advisory: allow
+    oversight: deny
+    workforce: deny
   administrator:
     decision: deny
     command: deny
@@ -72,3 +88,27 @@ roles:
     advisory: deny
     oversight: deny
     workforce: deny
+default_behavior:
+  unknown_role: deny
+  unknown_authority: deny
+phase_constraints:
+  concierge_bootstrap:
+    allowed_when:
+      system_initialized: false
+      ceo_handoff_complete: false
+    forbidden_actions:
+      - governance_override
+      - project_execution
+      - safety_policy_override
+  concierge_passive:
+    allowed_when:
+      ceo_handoff_complete: true
+transitions:
+  - from: concierge_bootstrap
+    to: concierge_passive
+    trigger: CEO_HANDOFF_COMPLETE
+    auto: true
+  - from: concierge_passive
+    to: concierge_bootstrap
+    trigger: OWNER_APPROVED_REACTIVATION
+    auto: false

@@ -4,7 +4,7 @@ Version: 0.1.0
 Status: Draft
 
 ## Purpose
-Define foundational institutional principles for OpenQilin.
+Define foundational constitutional governance principles for OpenQilin.
 
 ## Principles
 1. Governance constraints are mandatory.
