@@ -1,6 +1,6 @@
 # Constitution Layer
 
-Purpose: runtime institutional source of truth that agents read and follow.
+Purpose: runtime constitutional source of truth that agents read and follow.
 
 ## Canonical Rule Files
 - `Charter.md`

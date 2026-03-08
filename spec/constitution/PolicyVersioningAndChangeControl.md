@@ -2,7 +2,7 @@
 
 ## 1. Scope
 - Defines policy lifecycle, approval, rollout, and rollback controls.
-- Source alignment: institutional assets under `constitution/`.
+- Source alignment: constitutional assets under `constitution/`.
 
 ## 2. Versioning Rules
 - Policy bundle versioning uses semantic versioning: `MAJOR.MINOR.PATCH`.

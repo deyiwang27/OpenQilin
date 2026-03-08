@@ -13,7 +13,7 @@ This repository is currently **documentation-first**.
 
 ## Core Idea
 
-OpenQilin models AI operation as an institutional system:
+OpenQilin models AI operation as a constitutional governance system:
 
 - Strategic and operational roles are separated.
 - Governance is independent from execution.
@@ -24,11 +24,11 @@ OpenQilin models AI operation as an institutional system:
 
 - `spec/`: implementation-level specifications for AI engineering agents
 - `docs/`: concise human-facing documentation for GitHub users
-- `constitution/`: institutional runtime rules that agents must follow
+- `constitution/`: constitutional runtime rules that agents must follow
 
 Precedence:
 
-1. `constitution/` (runtime institutional source of truth)
+1. `constitution/` (runtime constitutional source of truth)
 2. `spec/` (implementation contract)
 3. `docs/` (human-readable guidance)
 
@@ -46,14 +46,14 @@ If you are new to the project:
 
 - Governance architecture: [`spec/governance/GovernanceArchitecture.md`](spec/governance/GovernanceArchitecture.md)
 - Runtime architecture: [`spec/infrastructure/RuntimeArchitecture.md`](spec/infrastructure/RuntimeArchitecture.md)
-- Policy engine: [`spec/institution/PolicyEngineContract.md`](spec/institution/PolicyEngineContract.md)
+- Policy engine: [`spec/constitution/PolicyEngineContract.md`](spec/constitution/PolicyEngineContract.md)
 - Task orchestration: [`spec/orchestration/TaskOrchestrator.md`](spec/orchestration/TaskOrchestrator.md)
 - Execution sandbox: [`spec/infrastructure/ExecutionSandbox.md`](spec/infrastructure/ExecutionSandbox.md)
 - Observability: [`spec/observability/ObservabilityArchitecture.md`](spec/observability/ObservabilityArchitecture.md)
 
 ## Constitution Layer
 
-The `constitution/` folder defines enforceable institutional policy artifacts, including:
+The `constitution/` folder defines enforceable constitutional policy artifacts, including:
 
 - authority matrix
 - policy rules

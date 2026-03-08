@@ -1,10 +1,10 @@
-# OpenQilin - Institution Management Specification
+# OpenQilin - Constitution Management Specification
 
 ## 1. Scope
-- Defines institutional governance assets, ownership, and operating model.
-- Defines who can propose, approve, publish, and audit institutional policy at early stage.
+- Defines constitutional governance assets, ownership, and operating model.
+- Defines who can propose, approve, publish, and audit constitutional policy at early stage.
 
-## 2. Institutional Assets
+## 2. Constitutional Assets
 - Charter: `constitution/Charter.md`
 - Authority matrix: `constitution/AuthorityMatrix.yaml`
 - Policy rule catalog: `constitution/PolicyRules.yaml`
@@ -16,7 +16,7 @@
 ## 3. Ownership and Approval Model (v1)
 - Owner:
   - sole approval authority for policy changes
-  - final authority for emergency institutional decisions
+  - final authority for emergency constitutional decisions
 - CEO:
   - may propose policy changes to Owner
   - cannot approve or publish policy changes
@@ -60,11 +60,11 @@ Unknown roles MUST be treated as unauthorized.
 ## 7. Rule Set
 | Rule ID | Statement | Severity | Enforced By |
 | --- | --- | --- | --- |
-| INST-001 | Institutional assets MUST be versioned and auditable. | critical | Observability |
-| INST-002 | Owner MUST be the sole approver for policy changes in v1. | critical | Change Control |
-| INST-003 | Runtime policy source MUST be YAML-only in v1. | high | Constitution Binding |
-| INST-004 | Runtime policy mode MUST use a single globally active policy version. | high | Constitution Binding |
-| INST-005 | Unknown runtime roles MUST be denied by default. | critical | Policy Engine |
+| CONS-001 | Constitutional assets MUST be versioned and auditable. | critical | Observability |
+| CONS-002 | Owner MUST be the sole approver for policy changes in v1. | critical | Change Control |
+| CONS-003 | Runtime policy source MUST be YAML-only in v1. | high | Constitution Binding |
+| CONS-004 | Runtime policy mode MUST use a single globally active policy version. | high | Constitution Binding |
+| CONS-005 | Unknown runtime roles MUST be denied by default. | critical | Policy Engine |
 
 ## 8. Conformance Tests
 - Policy loads include version and hash metadata.

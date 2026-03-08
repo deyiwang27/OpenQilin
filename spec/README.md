@@ -17,12 +17,12 @@ Purpose: implementation-level specifications for AI engineering agents.
 - `governance/SafetyDoctrine.md`
 - `governance/DecisionReviewGates.md`
 
-### 3. Institution
-- `institution/InstitutionManagement.md`
-- `institution/PolicyVersioningAndChangeControl.md`
-- `institution/ConstitutionBindingModel.md`
-- `institution/PolicyEngineContract.md`
-- `institution/BudgetEngineContract.md`
+### 3. Constitution
+- `constitution/ConstitutionManagement.md`
+- `constitution/PolicyVersioningAndChangeControl.md`
+- `constitution/ConstitutionBindingModel.md`
+- `constitution/PolicyEngineContract.md`
+- `constitution/BudgetEngineContract.md`
 
 ### 4. Orchestration
 - `orchestration/AgentRegistry.md`
