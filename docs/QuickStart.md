@@ -9,9 +9,9 @@
 - Governance: `spec/governance/GovernanceArchitecture.md`
 
 ## 3. Load Constitutional Policies
-- Charter: `constitution/Charter.md`
-- Rule catalog: `constitution/PolicyRules.yaml`
-- Authority matrix: `constitution/AuthorityMatrix.yaml`
+- Charter: `constitution/governance/Charter.md`
+- Rule catalog: `constitution/core/PolicyRules.yaml`
+- Authority matrix: `constitution/core/AuthorityMatrix.yaml`
 
 ## 4. Build Against Contracts
 - Use rule IDs and policy versions in runtime events.

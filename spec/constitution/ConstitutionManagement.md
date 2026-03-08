@@ -5,13 +5,15 @@
 - Defines who can propose, approve, publish, and audit constitutional policy at early stage.
 
 ## 2. Constitutional Assets
-- Charter: `constitution/Charter.md`
-- Authority matrix: `constitution/AuthorityMatrix.yaml`
-- Policy rule catalog: `constitution/PolicyRules.yaml`
-- Escalation policy: `constitution/EscalationPolicy.yaml`
-- Budget policy: `constitution/BudgetPolicy.yaml`
-- Safety policy: `constitution/SafetyPolicy.yaml`
-- Change control policy: `constitution/ChangeControl.md`
+- Charter: `constitution/governance/Charter.md`
+- Authority matrix: `constitution/core/AuthorityMatrix.yaml`
+- Policy rule catalog: `constitution/core/PolicyRules.yaml`
+- Obligation policy: `constitution/core/ObligationPolicy.yaml`
+- Policy manifest: `constitution/core/PolicyManifest.yaml`
+- Escalation policy: `constitution/domain/EscalationPolicy.yaml`
+- Budget policy: `constitution/domain/BudgetPolicy.yaml`
+- Safety policy: `constitution/domain/SafetyPolicy.yaml`
+- Change control policy: `constitution/governance/ChangeControl.md`
 
 ## 3. Ownership and Approval Model (v1)
 - Owner:

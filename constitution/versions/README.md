@@ -7,6 +7,6 @@ Suggested layout:
 - `v0.2.0/`
 
 Each snapshot should include:
-- `PolicyManifest.yaml`
+- `core/PolicyManifest.yaml`
 - all required YAML policy artifacts
 - manifest-level bundle hash

@@ -45,10 +45,10 @@ policy_bundle:
     - domain_lead
     - specialist
   required_files:
-    - AuthorityMatrix.yaml
-    - PolicyRules.yaml
-    - ObligationPolicy.yaml
-    - EscalationPolicy.yaml
-    - BudgetPolicy.yaml
-    - SafetyPolicy.yaml
+    - core/AuthorityMatrix.yaml
+    - core/PolicyRules.yaml
+    - core/ObligationPolicy.yaml
+    - domain/EscalationPolicy.yaml
+    - domain/BudgetPolicy.yaml
+    - domain/SafetyPolicy.yaml
   bundle_hash: "UNSET_REGENERATE_ON_PUBLISH"

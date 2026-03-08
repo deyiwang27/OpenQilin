@@ -8,7 +8,7 @@
 - soft_threshold_percent
 - hard_threshold_percent
 - daily_guardrail_percent
-- Source of parameter values: `constitution/BudgetPolicy.yaml`.
+- Source of parameter values: `constitution/domain/BudgetPolicy.yaml`.
 
 ## 3. Budget Control Model (v1)
 - Threshold values are read from YAML policy artifacts only.
