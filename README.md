@@ -38,18 +38,18 @@ If you are new to the project:
 
 1. Read [`docs/SystemOverview.md`](docs/SystemOverview.md)
 2. Read [`docs/QuickStart.md`](docs/QuickStart.md)
-3. Read [`spec/Governance.md`](spec/Governance.md)
-4. Read [`spec/RuntimeInfrastructure.md`](spec/RuntimeInfrastructure.md)
+3. Read [`spec/governance/GovernanceArchitecture.md`](spec/governance/GovernanceArchitecture.md)
+4. Read [`spec/infrastructure/RuntimeArchitecture.md`](spec/infrastructure/RuntimeArchitecture.md)
 5. Read constitutional files in `constitution/`
 
 ## Key Specifications
 
-- Governance architecture: [`spec/Governance.md`](spec/Governance.md)
-- Runtime architecture: [`spec/RuntimeInfrastructure.md`](spec/RuntimeInfrastructure.md)
-- Policy engine: [`spec/PolicyEngine.md`](spec/PolicyEngine.md)
-- Task orchestration: [`spec/TaskOrchestrator.md`](spec/TaskOrchestrator.md)
-- Execution sandbox: [`spec/ExecutionSandbox.md`](spec/ExecutionSandbox.md)
-- Observability: [`spec/Observability.md`](spec/Observability.md)
+- Governance architecture: [`spec/governance/GovernanceArchitecture.md`](spec/governance/GovernanceArchitecture.md)
+- Runtime architecture: [`spec/infrastructure/RuntimeArchitecture.md`](spec/infrastructure/RuntimeArchitecture.md)
+- Policy engine: [`spec/institution/PolicyEngineContract.md`](spec/institution/PolicyEngineContract.md)
+- Task orchestration: [`spec/orchestration/TaskOrchestrator.md`](spec/orchestration/TaskOrchestrator.md)
+- Execution sandbox: [`spec/infrastructure/ExecutionSandbox.md`](spec/infrastructure/ExecutionSandbox.md)
+- Observability: [`spec/observability/ObservabilityArchitecture.md`](spec/observability/ObservabilityArchitecture.md)
 
 ## Constitution Layer
 

@@ -1,8 +1,8 @@
-# Observability Specification
+# OpenQilin - Observability Architecture Specification
 
 ## 1. Scope
 - Defines required telemetry for governance, runtime, and auditability.
-- This document is a component-spec under `spec/RuntimeInfrastructure.md`.
+- This document is a component-spec under `spec/infrastructure/RuntimeArchitecture.md`.
 - It MUST inherit global runtime contracts `RT-001..RT-003`.
 
 ## 2. Event Schema (Required Fields)
