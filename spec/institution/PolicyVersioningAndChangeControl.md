@@ -2,18 +2,58 @@
 
 ## 1. Scope
 - Defines policy lifecycle, approval, rollout, and rollback controls.
+- Source alignment: institutional assets under `constitution/`.
 
 ## 2. Versioning Rules
-- Semantic versioning for policy bundles
-- Backward-incompatible policy change requires major bump
+- Policy bundle versioning uses semantic versioning: `MAJOR.MINOR.PATCH`.
+- Backward-incompatible policy behavior changes require `MAJOR` bump.
+- New rules or non-breaking defaults require `MINOR` bump.
+- Metadata-only fixes require `PATCH` bump.
 
-## 3. Change Control Workflow
-- Propose -> impact review -> approval -> publish -> snapshot
+## 3. Active Version Model (v1)
+- Exactly one global policy version is active at any time.
+- All runtime policy decisions resolve against this active version.
+- No per-task/per-project policy pinning in v1.
 
-## 4. Rule Set
+## 4. Change Authority (v1)
+- CEO may propose policy updates.
+- Owner is sole policy approver.
+- Administrator publishes approved policy bundle.
+- Auditor verifies post-publish enforcement and audit integrity.
+
+## 5. Change Control Workflow
+1. Propose change (CEO or Owner).
+2. Run impact review (scope, affected rule IDs, enforcement impact).
+3. Owner approval decision.
+4. Publish approved bundle.
+5. Atomically switch global active version.
+6. Snapshot bundle to `constitution/versions/`.
+7. Emit change audit event and release note.
+
+## 6. Bundle Manifest Contract
+Minimum manifest fields:
+- `policy_version`
+- `published_at`
+- `approved_by`
+- `bundle_hash`
+- `artifact_hashes` (per YAML artifact)
+- `change_summary`
+
+## 7. Rollback Rules
+- Rollback target must be a previously published immutable snapshot.
+- Rollback requires Owner approval.
+- Rollback action must emit auditable change event with rationale.
+
+## 8. Rule Set
 | Rule ID | Statement | Severity | Enforced By |
 | --- | --- | --- | --- |
 | PVC-001 | Runtime decisions MUST include policy version and hash. | critical | Policy Engine |
+| PVC-002 | Policy activation MUST be atomic to prevent mixed-version decisions. | critical | Constitution Binding |
+| PVC-003 | Policy publication without Owner approval MUST be rejected. | critical | Change Control |
+| PVC-004 | Rollback operations MUST target immutable snapshots only. | high | Change Control |
 
-## 5. Conformance Tests
+## 9. Conformance Tests
 - Rollback to prior policy version preserves decision reproducibility.
+- Concurrent decision requests never observe mixed policy versions during switch.
+- Publish attempt without Owner approval fails.
+- Manifest hash mismatch causes publish rejection.
