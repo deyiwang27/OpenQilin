@@ -5,14 +5,22 @@
 - Source of truth alignment: `spec/governance/GovernanceArchitecture.md` sections 4.5 and 8.6.
 
 ## 2. Canonical Paths
+Escalation chains:
 - Operational (general): specialist -> project_manager -> cwo -> ceo -> owner
 - Operational coordination failures: specialist -> domain_lead -> project_manager -> cwo -> ceo
 - Strategic: cso -> ceo -> owner
 - Governance (authority escalation): auditor -> owner (direct)
-- Budget violations (risk + enforcement): project_manager -> cwo (risk monitoring), auditor -> owner -> ceo (informed by auditor)
-- Behavioral violations: specialist -> project_manager -> auditor -> owner -> ceo (informed by auditor)
-- Infrastructure: System Component -> administrator -> owner
-- Agent pause reporting: any pause event -> ceo notification; critical impact -> owner immediate alert
+- Budget violations:
+  - risk monitoring chain: project_manager -> cwo
+  - enforcement chain: auditor -> owner
+- Behavioral violations:
+  - escalation chain: specialist -> project_manager -> auditor -> owner
+- Infrastructure: system_component -> administrator -> owner
+
+Notification-only routes (not escalation chain ownership transfer):
+- Budget violations: notify `ceo`.
+- Behavioral violations: notify `ceo`.
+- Agent pause reporting: any pause event -> notify `ceo`; critical impact -> immediate alert to `owner`.
 
 ## 3. Escalation Principles
 - Operational agents cannot override governance enforcement.
@@ -30,7 +38,7 @@ Canonical triggers:
 3. Governance violation -> constitutional rule breach -> owner -> direct governance escalation
 4. Operational deadlock -> retries exhausted and progress blocked -> highest authority in scope -> forced resolution
 5. Legal risk detected -> severity in `high|critical` -> owner -> immediate compliance escalation
-6. Agent paused -> any pause event -> ceo -> notification
+6. Agent paused -> any pause event -> notify ceo
 7. Agent paused (critical impact) -> critical impact true -> owner -> immediate alert
 
 ## 5. Rule Set

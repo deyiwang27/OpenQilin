@@ -6,8 +6,8 @@
 ## 2. Canonical Artifacts
 - Registry artifact: `spec/cross-cutting/RuleRegistry.json`
 - Coverage artifact: `spec/cross-cutting/ConformanceCoverage.json`
-- Generator: `scripts/generate_rule_registry.py`
-- Integrity validator: `scripts/spec_integrity_check.py`
+- Maintenance requirement: registry and coverage artifacts must be updated together.
+- Validation requirement: path references and rule ID references must be checked before merge.
 
 ## 3. Namespace Pattern
 - `AUTH-*` authority and role constraints

@@ -2,57 +2,27 @@ OpenQilin Spec TODO Backlog
 Date: 2026-03-09
 
 Execution model:
+- Focus: documentation and investigation only (no implementation code changes).
 - Phase strategy: governance-core first.
 - Investigation method: timeboxed RFC spikes (1-2 weeks each).
-- Backlog style: single prioritized list with exit criteria.
 
-P0
-1) Fix `spec/README.md` path integrity
-- Status: completed
-- Exit criteria: all index paths resolve under repo root.
-
-2) Add ACP spec and align with A2A
-- Status: completed
-- Exit criteria: ACP contract exists and A2A references ACP interoperability semantics.
-
-3) Complete state machines (agent/project/memory/communication/event)
-- Status: completed
-- Exit criteria: each file includes states, transitions (event+guard+action), illegal transitions, and conformance tests.
-
-4) Expand A2A with authority metadata and auditor read-only semantics
-- Status: completed
-- Exit criteria: message envelope includes authority/policy/trust metadata; read-only observer behavior is explicit.
-
-5) Formalize memory CDC pipeline
-- Status: completed
-- Exit criteria: ordering, replay, idempotency, and failure recovery behavior are specified.
-
-6) Define zero-context restart protocol
-- Status: completed
-- Exit criteria: mandatory restart artifacts and resume validation workflow are specified.
-
-7) Complete alert ownership matrix
-- Status: completed
-- Exit criteria: alert source owner mapping and fallback escalation owner are defined.
-
-P1
-8) Expand runtime/sandbox/failure specs to implementation-grade contracts
-- Status: completed
-- Exit criteria: governance gate order, component boundaries, failure classes, deterministic recovery, and containment rules are explicit.
-
-9) Build machine-readable rule registry and validation checks
-- Status: completed
-- Exit criteria: `RuleRegistry.json` + `ConformanceCoverage.json` generated; integrity check verifies uniqueness/references.
-
-10) RFC spike: orchestration/governance/control plane
+1) Complete RFC spike: orchestration/governance/control plane
 - Status: pending
-- Exit criteria: adopt/defer decisions recorded with architecture, risk, cost, and conformance impact.
+- Exit criteria: adopt/defer decisions captured for LangGraph, AgentSwarm, A2A+ACP interoperability, OPA, FastAPI, FastMCP.
 
-11) RFC spike: memory/intelligence/observability
+2) Complete RFC spike: memory/intelligence/observability
 - Status: pending
-- Exit criteria: adopt/defer decisions recorded with architecture, risk, cost, and conformance impact.
+- Exit criteria: adopt/defer decisions captured for LiteLLM, RAG, Skills, Mem0, pgvector, OpenSearch, OpenTelemetry, LangSmith, AgentOps, Grafana.
 
-P2
-12) Create v1 architecture baseline mapping selected tools to components/interfaces
+3) Complete RFC spike: language/runtime/persistence/deployment
+- Status: pending
+- Exit criteria: adopt/defer decisions captured for Python, TypeScript, React, PostgreSQL, Redis, Docker.
+
+4) Create v1 architecture baseline mapping selected tools to components/interfaces
 - Status: pending
 - Exit criteria: locked v1 interface map for Policy API, Task API, A2A/ACP, memory APIs, and audit schema.
+
+Current validation snapshot (docs consistency)
+- Conformance mapping gap fixed: `GOV-001` is now mapped.
+- Observability inheritance statement aligned to runtime contracts `RT-001..RT-006`.
+- Escalation model now distinguishes escalation chains vs notification-only routes, aligned with constitution policy semantics.

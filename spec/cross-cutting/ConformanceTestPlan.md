@@ -15,7 +15,7 @@
 ## 3. Conformance Artifacts
 - Rule registry: `spec/cross-cutting/RuleRegistry.json`
 - Coverage mapping: `spec/cross-cutting/ConformanceCoverage.json`
-- Integrity validator: `scripts/spec_integrity_check.py`
+- Integrity checklist: path references resolve and all referenced rule IDs are present in rule registry.
 
 ## 4. Rule Set
 | Rule ID | Statement | Severity | Enforced By |

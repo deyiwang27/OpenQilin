@@ -70,5 +70,5 @@ Purpose: implementation-level specifications for AI engineering agents.
 3. `docs/`
 
 ## Quality Gates
-- Run `python3 scripts/spec_integrity_check.py` before merge.
-- Regenerate rule registry artifacts with `python3 scripts/generate_rule_registry.py` after rule updates.
+- Validate internal spec/constitution path references before merge.
+- Ensure `spec/cross-cutting/RuleRegistry.json` and `spec/cross-cutting/ConformanceCoverage.json` are updated whenever rule IDs or rule tables change.

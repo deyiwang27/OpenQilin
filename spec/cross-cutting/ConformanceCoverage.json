@@ -355,8 +355,10 @@
     },
     {
       "id": "GOV-001",
-      "test_references": [],
-      "status": "needs_test_mapping"
+      "test_references": [
+        "spec/governance/AgentAuthorityGraph.md#conformance-tests"
+      ],
+      "status": "mapped"
     },
     {
       "id": "IAM-001",
