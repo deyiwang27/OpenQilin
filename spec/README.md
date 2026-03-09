@@ -27,6 +27,7 @@ Purpose: implementation-level specifications for AI engineering agents.
 ### 4. Orchestration
 - `spec/orchestration/OwnerInteractionModel.md`
 - `spec/orchestration/AgentRegistry.md`
+- `spec/orchestration/SkillCatalogAndBindings.md`
 - `spec/orchestration/AgentCommunicationA2A.md`
 - `spec/orchestration/AgentCommunicationACP.md`
 - `spec/orchestration/AgentMemoryModel.md`
@@ -47,7 +48,9 @@ Purpose: implementation-level specifications for AI engineering agents.
 ### 6. Infrastructure
 - `spec/infrastructure/RuntimeArchitecture.md`
 - `spec/infrastructure/DataModelAndSchemas.md`
+- `spec/infrastructure/LlmGatewayContract.md`
 - `spec/infrastructure/ArtifactIngestionAndExtraction.md`
+- `spec/infrastructure/DeploymentTopologyAndOps.md`
 - `spec/infrastructure/ExecutionSandbox.md`
 - `spec/infrastructure/StorageAndRetention.md`
 - `spec/infrastructure/FailureAndRecoveryModel.md`

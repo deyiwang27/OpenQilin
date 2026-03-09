@@ -53,6 +53,7 @@
 - Input policy source: YAML artifacts loaded via Constitution Binding Model.
 - Active policy selection: single global active version.
 - Decision mode: fail-closed (errors default to `deny`).
+- Communication posture: runtime supports `a2a` payload with `acp` transport context.
 - Deterministic evaluation order:
   1. actor/role validation
   2. authority and governance constraints

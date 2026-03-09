@@ -10,6 +10,11 @@
 - Executive Chat (owner + ceo/cwo/cso)
 - Governance Chat (owner + auditor/administrator)
 
+Platform posture (v1):
+- Primary external channel: Discord.
+- Optional channel: WhatsApp Cloud API (feature-flagged and policy-gated).
+- Communication protocol posture remains `A2A + ACP`.
+
 Allowed direct access (v1):
 - owner may direct-message: administrator, auditor, ceo, cwo, cso, `concierge_bootstrap`, `concierge_passive`.
 - owner may join project and executive channels as observer/commander according to policy.
@@ -33,7 +38,20 @@ Every owner interaction message should include:
 - `content`
 - optional `project_id`
 
-## 4. Alerts and Notification Model
+Connector-required metadata:
+- `channel` (`discord|whatsapp|internal`)
+- `external_message_id`
+- `actor_external_id`
+- `idempotency_key`
+- `raw_payload_hash`
+
+## 4. Connector Security and Reliability
+- Incoming connector payloads must pass platform signature/token validation.
+- External identity must be mapped to internal principal/role before policy checks.
+- Replay window and idempotency controls are required for redelivery-safe processing.
+- High-impact command handling must produce immutable accept/deny audit records.
+
+## 5. Alerts and Notification Model
 Alert classes:
 - `critical`: immediate owner attention required.
 - `warning`: high-priority risk signal, may trigger automated correction.
@@ -44,19 +62,19 @@ Canonical examples:
 - warning: repeated execution failures, nearing budget limit
 - informational: milestones, periodic health summaries
 
-## 5. Dashboard Views (v1)
+## 6. Dashboard Views (v1)
 - Agent status
 - Project progress
 - Budget usage
 - Governance and safety events
 - Periodic reports (daily/weekly/monthly/quarterly/yearly)
 
-## 6. Governance and Safety Constraints
+## 7. Governance and Safety Constraints
 - owner interaction must not bypass policy authorization for execution actions.
 - High-impact actions triggered by owner messages must still pass policy and budget gates.
 - All critical owner interactions must produce immutable audit events.
 
-## 7. Rule Set
+## 8. Rule Set
 | Rule ID | Statement | Severity | Enforced By |
 | --- | --- | --- | --- |
 | OIM-001 | owner-issued commands MUST pass policy authorization before execution. | critical | Policy Engine |
@@ -64,8 +82,9 @@ Canonical examples:
 | OIM-003 | owner channel access MUST respect role and project scope constraints. | high | Task Orchestrator |
 | OIM-004 | Alert severity mapping MUST follow constitutional safety/escalation policies. | high | Observability |
 
-## 8. Conformance Tests
+## 9. Conformance Tests
 - Unauthorized owner-issued execution requests are denied by policy engine.
 - Critical owner interactions produce immutable audit events with trace metadata.
 - owner cannot access out-of-scope restricted project channels without authorization.
 - Alert classification and routing match constitutional policy definitions.
+- Unsigned or replayed connector payloads are rejected before orchestration.

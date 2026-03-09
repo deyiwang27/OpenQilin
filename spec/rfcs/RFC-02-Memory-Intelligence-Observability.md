@@ -35,8 +35,8 @@ Timebox:
 | vector index | pgvector | adopt (v1 default) | high | positive | Co-locate vectors with Postgres source data for simpler operations and consistency. |
 | search/index | OpenSearch | adopt_later (derived index, selective use) | medium | neutral-positive | Best for large-scale lexical/hybrid search and observability exploration; avoid dual-writes as source-of-record. |
 | telemetry baseline | OpenTelemetry | adopt (mandatory baseline) | high | strong positive | Vendor-neutral telemetry + Collector pipeline must be default. |
-| tracing overlay | LangSmith | adopt as optional overlay (dev/qa + evaluation) | medium-high | positive | Strong LLM trace visibility and evaluation workflow support. |
-| ops/cost overlay | AgentOps | defer as core dependency; evaluate as optional overlay | medium | neutral | Good integrations and OTel alignment, but overlaps with OTel + LangSmith/Grafana stack. |
+| tracing overlay | LangSmith | adopt (system tracing and evaluation overlay) | medium-high | positive | User decision: keep in active system stack. |
+| ops/cost overlay | AgentOps | adopt (system cost and operations overlay) | medium | positive | User decision: keep in active system stack. |
 | dashboarding | Grafana | adopt (standard dashboards + alerts) | high | positive | Natural fit for OTel data and operational alerting. |
 
 ## 4. Spike Findings and Decisions
@@ -112,17 +112,17 @@ Data model rule:
 - Single source-of-record; indexes are rebuildable derivatives.
 - No business-critical dual-write without replay and reconciliation guarantees.
 
-### 4.6 Observability Stack: OTel Baseline + Optional Overlays
+### 4.6 Observability Stack: OTel Baseline + System Overlays
 Decision:
 - OpenTelemetry is mandatory baseline.
 - Grafana is mandatory operational dashboard/alert layer.
-- LangSmith is optional but recommended for LLM trace/eval workflows.
-- AgentOps is optional and deferred as core dependency until overlap/benefit is validated against existing stack.
+- LangSmith is retained in system for LLM trace/eval workflows.
+- AgentOps is retained in system for cost/ops analytics.
 
 Why:
 - OTel provides vendor-neutral instrumentation and Collector-based processing pipelines.
 - Grafana integrates well for traces/metrics/logs and alert workflows.
-- LangSmith and AgentOps both provide GenAI-focused visibility; adopt incrementally to avoid duplicated telemetry and cost.
+- LangSmith and AgentOps provide complementary LLM trace + cost/ops overlays when scoped by clear responsibility boundaries.
 
 ## 5. Reference Architecture (v1)
 
@@ -147,9 +147,9 @@ Why:
 - Mandatory:
   - OTel instrumentation + Collector
   - Grafana dashboards + alerts
-- Optional overlays:
+- System overlays:
   - LangSmith (trace debugging/evaluation)
-  - AgentOps (framework-specific analytics)
+  - AgentOps (cost and operational analytics)
 
 ## 6. Cost and Safety Profile
 - LiteLLM: improves provider routing/fallback and budget controls; adds gateway operational cost.
@@ -180,14 +180,12 @@ Adopt now:
 - pgvector
 - OpenTelemetry
 - Grafana
+- LangSmith
+- AgentOps
 
 Adopt later / optional:
 - Mem0 (assistive memory layer)
 - OpenSearch (derived search/observability index where justified)
-- LangSmith (recommended optional)
-
-Defer core dependency:
-- AgentOps (optional overlay after overlap/cost validation)
 
 ## 9. Migration / Rollback Notes
 - If LiteLLM gateway introduces instability, keep provider adapters behind one internal interface so gateway can be swapped without orchestrator contract changes.
@@ -230,5 +228,9 @@ Defer core dependency:
 
 ## 11. Evidence Strength Notes
 - High confidence: LiteLLM gateway capabilities, OTel baseline role, pgvector fit for Postgres-first architecture.
-- Medium confidence: OpenSearch timing for early-stage adoption, LangSmith vs AgentOps overlap decisions.
+- Medium confidence: OpenSearch timing for early-stage adoption and exact LangSmith/AgentOps boundary tuning under real workloads.
 - Medium-low confidence: exact cost-performance crossover point for introducing OpenSearch and multiple observability overlays; requires workload-specific benchmark in later implementation baseline.
+
+## 12. User Comment Overrides (2026-03-09)
+- Owner decision: keep both `LangSmith` and `AgentOps` in the active system stack.
+- This override supersedes the earlier spike recommendation that deferred AgentOps and treated LangSmith as optional.

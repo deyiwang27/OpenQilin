@@ -4,37 +4,36 @@ Date: 2026-03-09
 Execution model:
 - Focus: documentation and investigation only (no implementation code changes).
 - Phase strategy: governance-core first.
-- Investigation method: timeboxed RFC spikes (1-2 weeks each).
+- RFC spikes: completed.
 
-1) Complete RFC spike: orchestration/governance/control plane
-- Status: completed
-- Exit criteria: adopt/defer decisions captured for LangGraph, AgentSwarm, A2A+ACP interoperability, OPA, FastAPI, FastMCP.
-
-2) Complete RFC spike: memory/intelligence/observability
-- Status: completed
-- Exit criteria: adopt/defer decisions captured for LiteLLM, RAG, Skills, Mem0, pgvector, OpenSearch, OpenTelemetry, LangSmith, AgentOps, Grafana.
-
-3) Complete RFC spike: runtime interfaces and operator experience
-- Status: completed
-- Exit criteria: adopt/defer decisions captured for Python runtime boundary, channel integrations (WhatsApp/Discord), Grafana-first operations UX, and React/TypeScript necessity for custom UI.
-
-4) Complete RFC spike: data and memory architecture
-- Status: completed
-- Exit criteria: adopt/defer decisions captured for PostgreSQL, Redis, pgvector, Mem0, and CDC/replay + retention model.
-
-5) Complete RFC spike: deployment and cost strategy
-- Status: completed
-- Exit criteria: adopt/defer decisions captured for Docker local baseline, cloud deployment pattern, managed vs self-hosted data services, and cost scaling triggers.
-
-6) Complete RFC spike: project/task status and work artifact management
-- Status: completed
-- Exit criteria: data ownership, artifact model, and state/artifact sync approach documented with adopt/defer decisions.
-
-7) Create v1 architecture baseline mapping selected tools to components/interfaces
+1) P0 - Publish v1 Architecture Baseline
 - Status: pending
-- Exit criteria: locked v1 interface map for Policy API, Task API, A2A/ACP, memory APIs, and audit schema.
+- Exit criteria: one baseline document mapping selected stack to runtime components and authoritative interfaces (`policy`, `task`, `a2a+acp`, `llm gateway`, `memory`, `audit`).
 
-Current validation snapshot (docs consistency)
-- Conformance mapping gap fixed: `GOV-001` is now mapped.
-- Observability inheritance statement aligned to runtime contracts `RT-001..RT-006`.
-- Escalation model now distinguishes escalation chains vs notification-only routes, aligned with constitution policy semantics.
+2) P0 - Lock A2A + ACP Reliability Profile
+- Status: pending
+- Exit criteria: unified reliability contract across `AgentCommunicationA2A.md`, `AgentCommunicationACP.md`, and `TaskOrchestrator.md` for ack/retry/dead-letter/idempotency semantics.
+
+3) P0 - Conformance Mapping for New Specs
+- Status: pending
+- Exit criteria: each new integration spec below has either (a) explicit rule IDs mapped in `RuleRegistry.json` and `ConformanceCoverage.json`, or (b) documented rationale for having no rule table.
+  - `spec/infrastructure/DeploymentTopologyAndOps.md`
+  - `spec/infrastructure/LlmGatewayContract.md`
+  - `spec/orchestration/SkillCatalogAndBindings.md`
+  - `constitution/domain/OperationsPolicy.yaml`
+
+4) P1 - Deployment Runbook Completion (Local First -> Cloud)
+- Status: pending
+- Exit criteria: documentation-grade runbooks for local phase gates, cloud promotion checklist, rollback path, and evidence artifacts required by operations policy.
+
+5) P1 - Owner Channel and Identity Hardening Spec
+- Status: pending
+- Exit criteria: complete connector trust model for Discord/WhatsApp integration, identity binding lifecycle, signature/replay controls, and alert ownership defaults.
+
+6) P1 - Data and Memory Operations Playbooks
+- Status: pending
+- Exit criteria: operational playbooks for CDC replay, backfill, artifact extraction failure handling, and PostgreSQL/Redis recovery drills.
+
+7) P2 - Deferred Capability Activation Criteria
+- Status: pending
+- Exit criteria: explicit adoption gates for deferred items (Mem0/OpenSearch/managed Redis/full managed cloud topology) with measurable trigger thresholds.

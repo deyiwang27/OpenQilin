@@ -28,7 +28,7 @@ Timebox:
 | orchestration alt | CrewAI | defer (adapter only) | medium | neutral | Good crew/flow abstraction; same early-stage complexity concern. |
 | external parallel runtime | Kimi K2.5 AgentSwarm | adopt as optional burst executor, not core dependency | medium-low | neutral | Potential cost upside, but published enterprise-grade operational details are limited. |
 | agent communication | A2A | adopt as baseline inter-agent protocol | medium-high | positive | Open interoperability direction; complements MCP. |
-| agent communication | ACP | defer as independent protocol; keep as internal reliability profile on top of A2A if needed | medium | positive | “ACP” naming is ambiguous in ecosystem; avoid protocol confusion in v1. |
+| agent communication | ACP | adopt (required runtime transport with A2A payload) | medium | positive | User decision: retain A2A+ACP in v1 with explicit transport guarantees. |
 | policy runtime | OPA | adopt as authoritative policy decision point (fail-closed) | high | strong positive | Mature policy engine with decoupled policy/data model and bundle distribution model. |
 | control plane API | FastAPI | adopt | high | positive | Pragmatic Python control-plane fit. |
 | MCP bridge | FastMCP | adopt as tool-exposure boundary (non-authoritative for policy) | medium-high | positive | Keep governance checks in orchestrator + OPA path. |
@@ -78,8 +78,8 @@ Definitions:
 
 Decision:
 - Adopt A2A as baseline protocol direction for inter-agent communication.
-- Defer ACP as a standalone protocol commitment in v1.
-- If reliability extensions are required, define an OpenQilin communication profile layered on A2A (acks/retry/dead-letter/idempotency), without claiming external ACP compatibility unless explicitly validated.
+- Retain ACP as required runtime transport contract in v1.
+- Keep OpenQilin reliability profile explicitly mapped to A2A envelope + ACP transport semantics (acks/retry/dead-letter/idempotency).
 
 Pros of A2A baseline:
 - Open interoperability momentum.
@@ -135,7 +135,8 @@ Tool plane:
 
 Communication plane:
 - A2A envelope baseline.
-- OpenQilin reliability profile on top of A2A for ack/retry/idempotency/dead-letter.
+- ACP wire transport for delivery/runtime semantics.
+- OpenQilin reliability profile on A2A+ACP for ack/retry/idempotency/dead-letter.
 
 External execution:
 - Optional AgentSwarm provider via adapter interface only.
@@ -166,14 +167,17 @@ Adopt now:
 - OPA (authoritative policy runtime)
 - FastAPI (control plane API)
 - MCP/FastMCP + Skills hybrid (tool management)
-- A2A (baseline inter-agent protocol)
+- A2A + ACP (inter-agent payload + transport baseline)
 
 Defer or scope-limit:
 - AutoGen and CrewAI as core runtime components
-- ACP as independent committed protocol in v1
 - AgentSwarm as mandatory dependency
 
-## 9. Sources (Primary)
+## 9. User Comment Overrides (2026-03-09)
+- Owner decision: retain `A2A+ACP` correctness in v1 and keep ACP as active protocol contract.
+- This override supersedes the earlier spike recommendation that deferred ACP as an independent commitment.
+
+## 10. Sources (Primary)
 - LangGraph Overview: https://docs.langchain.com/oss/python/langgraph/overview
 - Microsoft AutoGen repository: https://github.com/microsoft/autogen
 - CrewAI docs: https://docs.crewai.com/
@@ -191,7 +195,7 @@ Defer or scope-limit:
 - Kimi context caching post: https://platform.moonshot.ai/blog/introducing-context-caching
 - K2 API pricing post: https://platform.moonshot.ai/blog/kimi-k2-api-pricing
 
-## 10. Notes on Evidence Strength
+## 11. Notes on Evidence Strength
 - High confidence areas: LangGraph capabilities, OPA role, MCP architecture, A2A positioning.
 - Medium confidence areas: comparative adoption timing for AutoGen/CrewAI in this project context.
 - Lower confidence area: precise Kimi K2.5 AgentSwarm cost/SLA efficiency for OpenQilin-specific workloads; requires controlled internal benchmark before hard commitment.

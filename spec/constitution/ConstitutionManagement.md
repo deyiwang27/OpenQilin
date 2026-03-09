@@ -13,6 +13,7 @@
 - Escalation policy: `constitution/domain/EscalationPolicy.yaml`
 - Budget policy: `constitution/domain/BudgetPolicy.yaml`
 - Safety policy: `constitution/domain/SafetyPolicy.yaml`
+- Operations policy: `constitution/domain/OperationsPolicy.yaml`
 - Change control policy: `constitution/governance/ChangeControl.md`
 
 ## 3. Ownership and Approval Model (v1)

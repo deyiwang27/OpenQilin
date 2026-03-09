@@ -9,8 +9,10 @@
 - safety containment
 - budget enforcement
 - observability completeness
+- observability stack alignment (OpenTelemetry baseline + LangSmith/AgentOps overlays)
 - state-machine transition integrity
 - communication protocol correctness (A2A + ACP)
+- deployment promotion integrity (local-first gates before cloud phase)
 
 ## 3. Conformance Artifacts
 - Rule registry: `spec/cross-cutting/RuleRegistry.json`
@@ -30,3 +32,4 @@
 - No release if any critical conformance checks fail.
 - No release if rule registry and coverage artifacts are outdated.
 - No release if unresolved P0 TODO items remain.
+- No cloud promotion if phase_0 local readiness gates are incomplete.

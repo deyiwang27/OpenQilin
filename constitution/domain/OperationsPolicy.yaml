@@ -1,0 +1,56 @@
+version: 0.1.0
+
+deployment_strategy:
+  mode: local_first_then_cloud
+  phases:
+    - phase_0_local_first
+    - phase_1_cloud_hybrid
+
+promotion_gates:
+  from_phase_0_to_phase_1:
+    required_checks:
+      - governance_core_conformance_passed
+      - backup_restore_drill_passed
+      - observability_alert_routes_validated
+      - security_secrets_audit_passed
+
+secrets:
+  plaintext_in_repo_forbidden: true
+  external_secret_store_required_in_cloud: true
+  rotation_required: true
+  minimum_rotation_days: 90
+
+backup_and_recovery:
+  postgresql:
+    backup_required: true
+    pitr_required_in_cloud: true
+    restore_drill_interval_days: 90
+  redis:
+    persistence_config_required: true
+    snapshot_policy_required: true
+  restore_evidence_required: true
+
+observability:
+  baseline_stack:
+    - opentelemetry
+    - grafana
+    - langsmith
+    - agentops
+  required_alert_destinations:
+    - ceo
+    - administrator
+  audit_trace_link_required: true
+
+scaling_triggers:
+  - id: OPS-T001
+    signal: sustained_runtime_resource_pressure
+    condition: cpu_or_memory_over_70_percent_for_review_window
+    action: evaluate_multi_node_runtime_split
+  - id: OPS-T002
+    signal: queue_or_latency_slo_breach
+    condition: repeated_breach_across_review_windows
+    action: evaluate_ha_upgrade_plan
+  - id: OPS-T003
+    signal: resilience_target_gap
+    condition: required_rto_rpo_below_single_host_capability
+    action: trigger_cloud_topology_upgrade

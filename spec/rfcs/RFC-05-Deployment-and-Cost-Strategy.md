@@ -41,6 +41,10 @@ Timebox:
 - Governance-critical AI runtime where policy/audit cannot be sacrificed for minimal cost.
 - Clear upgrade path from low-cost deployment to resilient multi-node architecture.
 
+Deployment order decision:
+- phase_0: local-first development and validation baseline.
+- phase_1: cloud rollout using approved topology after local readiness gates pass.
+
 ## 5. Spike Findings and Decisions
 
 ### 5.1 Local and CI Baseline: Docker Compose
@@ -76,6 +80,11 @@ Recommended topology (v1):
 Why this balance:
 - Cheaper and simpler than full multi-node managed stack.
 - Safer than self-hosting every critical component, because PostgreSQL durability/recovery is highest-risk domain.
+
+Local-first gating before cloud rollout:
+- all governance-core conformance tests pass locally.
+- backup/restore drill succeeds in non-production environment.
+- observability and alert routes validated in local staging profile.
 
 ### 5.3 Managed vs Self-Hosted Boundaries
 Database:
@@ -177,7 +186,8 @@ Upgrade sequence:
 ## 9. Recommendation Summary
 Adopt now:
 - Docker Compose as local/dev/CI baseline.
-- Hybrid cloud baseline (single runtime host + managed PostgreSQL).
+- Local-first deployment phase as mandatory first production gate.
+- Hybrid cloud baseline (single runtime host + managed PostgreSQL) as next phase.
 - Self-hosted Redis (bounded role) for v1.
 - Self-hosted OTel Collector + Grafana OSS baseline.
 - External secret management and credential rotation.
@@ -231,3 +241,7 @@ Defer:
 - High confidence: Docker-based local baseline, PostgreSQL backup/recovery requirements, Redis persistence tradeoffs, OTel/Grafana deployment patterns.
 - Medium confidence: exact cloud provider cost crossover between hybrid and full-managed options (provider/region specific and changes over time).
 - Inference note: the recommended hybrid topology is an architectural synthesis from reliability and cost-optimization guidance, aligned with current OpenQilin governance-first constraints.
+
+## 12. User Comment Overrides (2026-03-09)
+- Owner decision: deployment strategy is `local-first` before cloud adoption.
+- Approved cloud target remains the hybrid single-region architecture defined in this RFC.

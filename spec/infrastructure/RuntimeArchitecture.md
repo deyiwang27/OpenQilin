@@ -7,6 +7,7 @@
 - `policy_engine`: authorization and obligation assignment
 - `task_orchestrator`: task lifecycle + dispatch pipeline
 - `budget_engine`: budget reservation and threshold enforcement
+- `llm_gateway`: model routing/fallback/budget attribution boundary
 - `execution_sandbox`: isolated tool/code execution runtime
 - `observability`: logs, traces, metrics, and immutable audit events
 
@@ -30,9 +31,14 @@
 - Policy API: input/output per `spec/constitution/PolicyEngineContract.md`.
 - Task API: lifecycle and envelope per `spec/orchestration/TaskOrchestrator.md`.
 - Communication API: A2A payload + ACP transport contracts.
+- LLM Gateway API: request/response and routing constraints per `spec/infrastructure/LlmGatewayContract.md`.
 - Audit Event API: event schema per `spec/observability/AuditEvents.md`.
 
-## 6. Rule Set
+## 6. Deployment and Operations Alignment
+- Deployment topology and promotion gates are defined in `spec/infrastructure/DeploymentTopologyAndOps.md`.
+- Runtime implementation order follows local-first then cloud promotion policy.
+
+## 7. Rule Set
 | Rule ID | Statement | Severity | Enforced By |
 | --- | --- | --- | --- |
 | RT-001 | No action executes without `policy_engine` decision. | critical | task_orchestrator |
@@ -42,7 +48,7 @@
 | RT-005 | Obligations from `allow_with_obligations` decisions MUST be executed before dispatch. | high | task_orchestrator |
 | RT-006 | Runtime event emission MUST be append-only and immutable for governance-critical actions. | critical | observability |
 
-## 7. Conformance Tests
+## 8. Conformance Tests
 - Policy denial prevents execution and emits immutable deny audit event.
 - Missing `trace_id` or policy metadata fails runtime validation.
 - Costed task dispatch without reservation is blocked.

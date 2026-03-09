@@ -19,6 +19,7 @@ Purpose: runtime constitutional source of truth for policy enforcement.
 - `domain/EscalationPolicy.yaml`
 - `domain/BudgetPolicy.yaml`
 - `domain/SafetyPolicy.yaml`
+- `domain/OperationsPolicy.yaml`
 
 ## Supporting Governance Docs (Human-readable)
 - `governance/Charter.md`

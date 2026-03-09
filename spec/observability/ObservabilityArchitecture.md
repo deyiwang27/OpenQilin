@@ -5,6 +5,10 @@
 - This document is a component-spec under `spec/infrastructure/RuntimeArchitecture.md`.
 - It MUST inherit global runtime contracts `RT-001..RT-006`.
 
+Observability stack posture (v1):
+- baseline: OpenTelemetry + Grafana.
+- system overlays: LangSmith + AgentOps.
+
 ## 2. Event Schema (Required Fields)
 ```json
 {
@@ -34,8 +38,15 @@
 - Task failure rate by role
 - Mean time to containment
 
-## 5. Conformance Tests
+## 5. Tooling Layers
+- OpenTelemetry: canonical telemetry substrate.
+- Grafana: dashboards, alert routing, and operations views.
+- LangSmith: LLM trace and evaluation workflows.
+- AgentOps: cost and operational analytics overlays.
+
+## 6. Conformance Tests
 - Missing `trace_id` events are rejected.
 - Critical incident always generates alert.
 - Policy decision, task dispatch, and sandbox execution events share the same `trace_id`.
 - Budget hard-threshold events include telemetry payload with policy metadata.
+- Overlay telemetry from LangSmith/AgentOps remains trace-correlated to baseline telemetry.
