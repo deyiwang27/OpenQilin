@@ -25,6 +25,11 @@
 - `execution_logs`
 - `metrics_store`
 - `messages`
+- `knowledge_document`
+- `knowledge_chunk`
+- `knowledge_embedding`
+- `outbox_events`
+- `sync_checkpoint`
 - `dimension_project_state`
 - `dimension_agent_state`
 - `dimension_tools`
@@ -110,6 +115,7 @@
 - Authoritative state lives in relational store.
 - Derived memory/vector layers must remain consistent with source records via change propagation.
 - Every mutable entity update must include `updated_at` and actor provenance.
+- File/document ingestion and relational CDC are distinct pipelines; only relational changes are treated as CDC streams.
 
 ## 7. Rule Set
 | Rule ID | Statement | Severity | Enforced By |

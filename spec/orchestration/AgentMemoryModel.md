@@ -11,6 +11,7 @@
 - Source of record is structured persistence (`postgresql`), not vector index.
 - Vector index is a derived retrieval layer and must be reproducible from source of record.
 - Memory operations must preserve policy, scope, and audit constraints.
+- Markdown/constitution documents are governed source corpus inputs; they are ingested into structured memory layers and are not the runtime hot-memory store.
 
 ## 3. Tiers
 - `hot`
@@ -31,7 +32,9 @@
 - Destructive deletion override requires explicit `owner` approval.
 
 ## 6. Memory CDC Pipeline (v1)
-- CDC source: append-only relational event/store.
+- Pipeline split:
+  - `document_ingest`: file/git document changes -> normalized relational document tables.
+  - `relational_cdc`: append-only relational event/store -> derived indexes/caches.
 - Ordering: apply changes by monotonic source sequence.
 - Replay: consumers must support restartable replay from committed checkpoint.
 - Idempotency: repeated CDC events with same source event id must not duplicate memory writes.
