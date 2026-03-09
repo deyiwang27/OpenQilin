@@ -15,7 +15,7 @@ Execution model:
 - Exit criteria: adopt/defer decisions captured for LiteLLM, RAG, Skills, Mem0, pgvector, OpenSearch, OpenTelemetry, LangSmith, AgentOps, Grafana.
 
 3) Complete RFC spike: runtime interfaces and operator experience
-- Status: pending
+- Status: completed
 - Exit criteria: adopt/defer decisions captured for Python runtime boundary, channel integrations (WhatsApp/Discord), Grafana-first operations UX, and React/TypeScript necessity for custom UI.
 
 4) Complete RFC spike: data and memory architecture
