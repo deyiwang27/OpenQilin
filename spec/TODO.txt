@@ -23,7 +23,7 @@ Execution model:
 - Exit criteria: adopt/defer decisions captured for PostgreSQL, Redis, pgvector, Mem0, and CDC/replay + retention model.
 
 5) Complete RFC spike: deployment and cost strategy
-- Status: pending
+- Status: completed
 - Exit criteria: adopt/defer decisions captured for Docker local baseline, cloud deployment pattern, managed vs self-hosted data services, and cost scaling triggers.
 
 6) Complete RFC spike: project/task status and work artifact management
