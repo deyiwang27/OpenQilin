@@ -19,7 +19,7 @@
 
 ## 3. Non-Responsibilities
 - Does not override Policy Engine decisions.
-- Does not override governance enforcement actions (Auditor/Administrator).
+- Does not override governance enforcement actions (auditor/administrator).
 - Does not mutate constitutional policy artifacts.
 
 ## 4. Task Lifecycle
@@ -76,7 +76,7 @@ If any required obligation cannot be satisfied, transition to `blocked` (fail-cl
 - Concurrent dispatches must honor atomic reservation semantics.
 - Hard threshold behavior:
   - block new execution
-  - emit governance enforcement metadata for Auditor path
+  - emit governance enforcement metadata for auditor path
   - preserve auditable trace context
 
 ## 9. Failure and Retry Behavior
@@ -91,7 +91,7 @@ If any required obligation cannot be satisfied, transition to `blocked` (fail-cl
 ## 10. Escalation Integration
 - Escalation paths follow `constitution/domain/EscalationPolicy.yaml`.
 - Operational failures use operational path.
-- Budget hard breaches include Auditor enforcement path and Owner escalation with CEO notification.
+- Budget hard breaches include auditor enforcement path and owner escalation with ceo notification.
 - Behavioral/infrastructure incidents emit escalation events with required fields:
   - `event_id`, `trace_id`, `incident_type`, `severity`, `current_owner_role`, `next_owner_role`, `rule_ids`
 
@@ -141,5 +141,5 @@ Minimum task status output:
 - Policy Engine unavailability transitions task to `blocked` (fail-closed).
 - Budget reservation failure prevents dispatch.
 - `allow_with_obligations` path enforces required obligations in deterministic order.
-- Hard budget breach emits enforcement metadata for Auditor/Owner/CEO escalation flow.
+- Hard budget breach emits enforcement metadata for auditor/owner/ceo escalation flow.
 - Duplicate task requests do not duplicate side effects.

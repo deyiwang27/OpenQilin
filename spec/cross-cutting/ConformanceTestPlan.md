@@ -9,11 +9,24 @@
 - safety containment
 - budget enforcement
 - observability completeness
+- state-machine transition integrity
+- communication protocol correctness (A2A + ACP)
 
-## 3. Rule Set
+## 3. Conformance Artifacts
+- Rule registry: `spec/cross-cutting/RuleRegistry.json`
+- Coverage mapping: `spec/cross-cutting/ConformanceCoverage.json`
+- Integrity validator: `scripts/spec_integrity_check.py`
+
+## 4. Rule Set
 | Rule ID | Statement | Severity | Enforced By |
 | --- | --- | --- | --- |
-| TEST-001 | Critical rules MUST have at least one automated conformance test. | critical | CI Pipeline |
+| TEST-001 | Critical rules MUST have at least one conformance mapping in coverage artifacts. | critical | ci_pipeline |
+| TEST-002 | Spec integrity checks MUST pass before merge/release. | critical | ci_pipeline |
+| TEST-003 | State machine specs MUST be consistent with orchestration/runtime contracts. | high | spec_review |
+| TEST-004 | Constitution/spec role and authority mappings MUST remain consistent. | high | spec_review |
+| TEST-005 | Tool investigation RFCs MUST record adopt/defer decisions before architecture baseline lock. | high | governance_review |
 
-## 4. Release Gate
-- No release if critical conformance tests fail.
+## 5. Release Gate
+- No release if any critical conformance checks fail.
+- No release if rule registry and coverage artifacts are outdated.
+- No release if unresolved P0 TODO items remain.

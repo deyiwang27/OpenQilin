@@ -11,22 +11,22 @@
 - Separation of safety authority (governance enforces, operations execute)
 
 ## 3. Risk Categories
-- Behavioral risks (Auditor monitored)
+- Behavioral risks (auditor monitored)
 - Execution risks (trace-analysis detected)
 - Resource risks (budget governance monitored)
-- Infrastructure risks (Administrator monitored)
+- Infrastructure risks (administrator monitored)
 
 ## 4. Monitoring Responsibilities
-- Auditor:
+- auditor:
   - monitors behavioral and operational risks
   - enforces budget limits
   - may pause or restrict affected agents/projects
-- Administrator:
+- administrator:
   - monitors infrastructure integrity and availability
   - may suspend components or isolate failures
-- CEO:
+- ceo:
   - evaluates major safety incidents
-  - may pause projects, adjust strategy, escalate to Owner
+  - may pause projects, adjust strategy, escalate to owner
 
 ## 5. Containment and Emergency Actions
 - Containment:
@@ -35,13 +35,13 @@
   - resource lockdown
   - infrastructure isolation
 - Emergency:
-  - emergency project shutdown (CEO)
-  - system safety mode (Administrator)
-  - Owner override (ultimate authority)
+  - emergency project shutdown (ceo)
+  - system safety mode (administrator)
+  - owner override (ultimate authority)
 
 Pause reporting requirements:
-- Any agent pause action must notify CEO.
-- If pause impact is critical to project continuity or governance integrity, Owner must be alerted immediately.
+- Any agent pause action must notify ceo.
+- If pause impact is critical to project continuity or governance integrity, owner must be alerted immediately.
 
 ## 6. Rule Set
 | Rule ID | Statement | Severity | Enforced By |
@@ -49,8 +49,8 @@ Pause reporting requirements:
 | SAF-001 | Safety containment MUST take priority over task completion. | critical | Task Orchestrator |
 | SAF-002 | Safety enforcement MUST remain independent from operational execution. | critical | Policy Engine |
 | SAF-003 | Safety incidents MUST be recorded in immutable execution logs. | critical | Observability |
-| SAF-004 | Owner override capability MUST remain available and auditable. | high | Runtime |
-| SAF-005 | Agent pause events MUST notify CEO and escalate to Owner when critical impact is detected. | high | Task Orchestrator |
+| SAF-004 | owner override capability MUST remain available and auditable. | high | Runtime |
+| SAF-005 | Agent pause events MUST notify ceo and escalate to owner when critical impact is detected. | high | Task Orchestrator |
 
 ## 7. Incident Record Contract
 Required fields:
@@ -63,6 +63,6 @@ Required fields:
 ## 8. Conformance Tests
 - Unsafe task path triggers containment action.
 - Safety incidents produce complete immutable incident records.
-- Owner override action is accepted when authorized and fully audited.
-- Agent pause actions always produce CEO notification records.
-- Critical-impact pause actions produce Owner alert records.
+- owner override action is accepted when authorized and fully audited.
+- Agent pause actions always produce ceo notification records.
+- Critical-impact pause actions produce owner alert records.

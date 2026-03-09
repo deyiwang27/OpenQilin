@@ -81,12 +81,24 @@
 
 ### 4.5 `messages`
 - `message_id` (PK)
+- `trace_id`
 - `sender_id`
 - `recipient_ids`
 - `project_id` (nullable)
 - `message_type`
 - `priority`
 - `content`
+- `idempotency_key`
+- `protocol` (`a2a|acp`)
+- `channel_id`
+- `channel_type`
+- `trust_level`
+- `policy_version`
+- `policy_hash`
+- `rule_ids`
+- `attempt`
+- `max_attempts`
+- `dead_lettered` (boolean)
 - `timestamp`
 - `delivery_status`
 

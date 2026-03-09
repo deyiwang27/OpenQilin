@@ -1,18 +1,58 @@
-OpenQilin Spec TODO (Deferred by decision)
+OpenQilin Spec TODO Backlog
 Date: 2026-03-09
 
-1) A2A channel and authority metadata completion
-- Define channel-level trust/authority metadata model for A2A messages.
-- Define explicit read-only behavior and access scope for auditor interactions in A2A flows.
+Execution model:
+- Phase strategy: governance-core first.
+- Investigation method: timeboxed RFC spikes (1-2 weeks each).
+- Backlog style: single prioritized list with exit criteria.
 
-2) Memory CDC pipeline formalization
-- Define the canonical CDC flow from relational source-of-record to memory index.
-- Specify ordering, replay, idempotency, and failure recovery guarantees.
+P0
+1) Fix `spec/README.md` path integrity
+- Status: completed
+- Exit criteria: all index paths resolve under repo root.
 
-3) Zero-context restart protocol
-- Define mandatory restart artifact set and reconstruction sequence.
-- Define validation rules before resuming autonomous execution after restart.
+2) Add ACP spec and align with A2A
+- Status: completed
+- Exit criteria: ACP contract exists and A2A references ACP interoperability semantics.
 
-4) Alert ownership matrix completion
-- Define source ownership for each alert type (budget, safety, infrastructure, orchestration).
-- Define default escalation owner when alert source is ambiguous.
+3) Complete state machines (agent/project/memory/communication/event)
+- Status: completed
+- Exit criteria: each file includes states, transitions (event+guard+action), illegal transitions, and conformance tests.
+
+4) Expand A2A with authority metadata and auditor read-only semantics
+- Status: completed
+- Exit criteria: message envelope includes authority/policy/trust metadata; read-only observer behavior is explicit.
+
+5) Formalize memory CDC pipeline
+- Status: completed
+- Exit criteria: ordering, replay, idempotency, and failure recovery behavior are specified.
+
+6) Define zero-context restart protocol
+- Status: completed
+- Exit criteria: mandatory restart artifacts and resume validation workflow are specified.
+
+7) Complete alert ownership matrix
+- Status: completed
+- Exit criteria: alert source owner mapping and fallback escalation owner are defined.
+
+P1
+8) Expand runtime/sandbox/failure specs to implementation-grade contracts
+- Status: completed
+- Exit criteria: governance gate order, component boundaries, failure classes, deterministic recovery, and containment rules are explicit.
+
+9) Build machine-readable rule registry and validation checks
+- Status: completed
+- Exit criteria: `RuleRegistry.json` + `ConformanceCoverage.json` generated; integrity check verifies uniqueness/references.
+
+10) RFC spike: orchestration/governance/control plane
+- Status: pending
+- Exit criteria: adopt/defer decisions recorded with architecture, risk, cost, and conformance impact.
+
+11) RFC spike: memory/intelligence/observability
+- Status: pending
+- Exit criteria: adopt/defer decisions recorded with architecture, risk, cost, and conformance impact.
+
+P2
+12) Create v1 architecture baseline mapping selected tools to components/interfaces
+- Status: pending
+- Exit criteria: locked v1 interface map for Policy API, Task API, A2A/ACP, memory APIs, and audit schema.

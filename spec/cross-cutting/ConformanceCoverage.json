@@ -1,0 +1,915 @@
+{
+  "generated_at": "2026-03-09T07:31:21+00:00",
+  "coverage_count": 130,
+  "coverage": [
+    {
+      "id": "A2A-001",
+      "test_references": [
+        "spec/orchestration/AgentCommunicationA2A.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "A2A-002",
+      "test_references": [
+        "spec/orchestration/AgentCommunicationA2A.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "A2A-003",
+      "test_references": [
+        "spec/orchestration/AgentCommunicationA2A.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "A2A-004",
+      "test_references": [
+        "spec/orchestration/AgentCommunicationA2A.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "A2A-005",
+      "test_references": [
+        "spec/orchestration/AgentCommunicationA2A.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "ACP-001",
+      "test_references": [
+        "spec/orchestration/AgentCommunicationACP.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "ACP-002",
+      "test_references": [
+        "spec/orchestration/AgentCommunicationACP.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "ACP-003",
+      "test_references": [
+        "spec/orchestration/AgentCommunicationACP.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "ACP-004",
+      "test_references": [
+        "spec/orchestration/AgentCommunicationACP.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "ACP-005",
+      "test_references": [
+        "spec/orchestration/AgentCommunicationACP.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "AUD-001",
+      "test_references": [
+        "spec/governance/AgentAuthorityGraph.md#conformance-tests",
+        "spec/observability/AuditEvents.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "AUD-002",
+      "test_references": [
+        "spec/observability/AuditEvents.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "AUD-003",
+      "test_references": [
+        "spec/observability/AuditEvents.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "AUTH-001",
+      "test_references": [
+        "spec/governance/AgentAuthorityGraph.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "AUTH-002",
+      "test_references": [
+        "spec/governance/AgentAuthorityGraph.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "AUTH-003",
+      "test_references": [
+        "spec/governance/AgentAuthorityGraph.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "AUTH-004",
+      "test_references": [
+        "spec/governance/AgentAuthorityGraph.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "AUTH-005",
+      "test_references": [
+        "spec/governance/AgentAuthorityGraph.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "BUD-001",
+      "test_references": [
+        "spec/constitution/BudgetEngineContract.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "BUD-002",
+      "test_references": [
+        "spec/constitution/BudgetEngineContract.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "BUD-003",
+      "test_references": [
+        "spec/constitution/BudgetEngineContract.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "BUD-004",
+      "test_references": [
+        "spec/constitution/BudgetEngineContract.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "BUD-005",
+      "test_references": [
+        "spec/constitution/BudgetEngineContract.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "CBM-001",
+      "test_references": [
+        "spec/constitution/ConstitutionBindingModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "CBM-002",
+      "test_references": [
+        "spec/constitution/ConstitutionBindingModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "CBM-003",
+      "test_references": [
+        "spec/constitution/ConstitutionBindingModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "CBM-004",
+      "test_references": [
+        "spec/constitution/ConstitutionBindingModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "CONS-001",
+      "test_references": [
+        "spec/constitution/ConstitutionManagement.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "CONS-002",
+      "test_references": [
+        "spec/constitution/ConstitutionManagement.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "CONS-003",
+      "test_references": [
+        "spec/constitution/ConstitutionManagement.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "CONS-004",
+      "test_references": [
+        "spec/constitution/ConstitutionManagement.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "CONS-005",
+      "test_references": [
+        "spec/constitution/ConstitutionManagement.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "DOC-001",
+      "test_references": [
+        "spec/templates/ImplementationContractTemplate.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "ERR-001",
+      "test_references": [
+        "spec/cross-cutting/ErrorCodesAndHandling.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "ESC-001",
+      "test_references": [
+        "spec/governance/EscalationModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "ESC-002",
+      "test_references": [
+        "spec/governance/EscalationModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "ESC-003",
+      "test_references": [
+        "spec/governance/EscalationModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "ESC-004",
+      "test_references": [
+        "spec/governance/EscalationModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "ESC-005",
+      "test_references": [
+        "spec/governance/EscalationModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "ESC-006",
+      "test_references": [
+        "spec/governance/EscalationModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "FRM-001",
+      "test_references": [
+        "spec/infrastructure/FailureAndRecoveryModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "FRM-002",
+      "test_references": [
+        "spec/infrastructure/FailureAndRecoveryModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "FRM-003",
+      "test_references": [
+        "spec/infrastructure/FailureAndRecoveryModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "FRM-004",
+      "test_references": [
+        "spec/infrastructure/FailureAndRecoveryModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "FRM-005",
+      "test_references": [
+        "spec/infrastructure/FailureAndRecoveryModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "GATE-001",
+      "test_references": [
+        "spec/governance/DecisionReviewGates.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "GATE-002",
+      "test_references": [
+        "spec/governance/DecisionReviewGates.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "GATE-003",
+      "test_references": [
+        "spec/governance/DecisionReviewGates.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "GATE-004",
+      "test_references": [
+        "spec/governance/DecisionReviewGates.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "GLO-001",
+      "test_references": [
+        "spec/cross-cutting/Glossary.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "GOV-001",
+      "test_references": [],
+      "status": "needs_test_mapping"
+    },
+    {
+      "id": "IAM-001",
+      "test_references": [
+        "spec/cross-cutting/IdentityAndAccessModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "LOG-001",
+      "test_references": [
+        "spec/observability/SystemLogs.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "LOG-002",
+      "test_references": [
+        "spec/observability/SystemLogs.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "LOG-003",
+      "test_references": [
+        "spec/observability/SystemLogs.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "MEM-001",
+      "test_references": [
+        "spec/orchestration/AgentMemoryModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "MEM-002",
+      "test_references": [
+        "spec/orchestration/AgentMemoryModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "MEM-003",
+      "test_references": [
+        "spec/orchestration/AgentMemoryModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "MEM-004",
+      "test_references": [
+        "spec/orchestration/AgentMemoryModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "MEM-005",
+      "test_references": [
+        "spec/orchestration/AgentMemoryModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "MEM-006",
+      "test_references": [
+        "spec/orchestration/AgentMemoryModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "MEM-007",
+      "test_references": [
+        "spec/orchestration/AgentMemoryModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "MET-001",
+      "test_references": [
+        "spec/observability/MetricsAndAlerts.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "MET-002",
+      "test_references": [
+        "spec/observability/MetricsAndAlerts.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "MET-003",
+      "test_references": [
+        "spec/observability/MetricsAndAlerts.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "MET-004",
+      "test_references": [
+        "spec/observability/MetricsAndAlerts.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "OBS-001",
+      "test_references": [
+        "spec/observability/ObservabilityArchitecture.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "OBS-002",
+      "test_references": [
+        "spec/observability/ObservabilityArchitecture.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "OBS-003",
+      "test_references": [
+        "spec/observability/ObservabilityArchitecture.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "OBS-004",
+      "test_references": [
+        "spec/observability/ObservabilityArchitecture.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "OIM-001",
+      "test_references": [
+        "spec/orchestration/OwnerInteractionModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "OIM-002",
+      "test_references": [
+        "spec/orchestration/OwnerInteractionModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "OIM-003",
+      "test_references": [
+        "spec/orchestration/OwnerInteractionModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "OIM-004",
+      "test_references": [
+        "spec/orchestration/OwnerInteractionModel.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "ORCH-001",
+      "test_references": [
+        "spec/orchestration/TaskOrchestrator.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "ORCH-002",
+      "test_references": [
+        "spec/orchestration/TaskOrchestrator.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "ORCH-003",
+      "test_references": [
+        "spec/orchestration/TaskOrchestrator.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "ORCH-004",
+      "test_references": [
+        "spec/orchestration/TaskOrchestrator.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "ORCH-005",
+      "test_references": [
+        "spec/orchestration/TaskOrchestrator.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "ORCH-006",
+      "test_references": [
+        "spec/orchestration/TaskOrchestrator.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "ORCH-007",
+      "test_references": [
+        "spec/orchestration/TaskOrchestrator.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "POL-001",
+      "test_references": [
+        "spec/constitution/PolicyEngineContract.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "POL-002",
+      "test_references": [
+        "spec/constitution/PolicyEngineContract.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "POL-003",
+      "test_references": [
+        "spec/constitution/PolicyEngineContract.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "POL-004",
+      "test_references": [
+        "spec/constitution/PolicyEngineContract.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "POL-005",
+      "test_references": [
+        "spec/constitution/PolicyEngineContract.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "POL-006",
+      "test_references": [
+        "spec/constitution/PolicyEngineContract.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "POL-007",
+      "test_references": [
+        "spec/constitution/PolicyEngineContract.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "PVC-001",
+      "test_references": [
+        "spec/constitution/PolicyVersioningAndChangeControl.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "PVC-002",
+      "test_references": [
+        "spec/constitution/PolicyVersioningAndChangeControl.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "PVC-003",
+      "test_references": [
+        "spec/constitution/PolicyVersioningAndChangeControl.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "PVC-004",
+      "test_references": [
+        "spec/constitution/PolicyVersioningAndChangeControl.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "REG-001",
+      "test_references": [
+        "spec/orchestration/AgentRegistry.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "RID-001",
+      "test_references": [
+        "spec/cross-cutting/RuleIdCatalog.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "RID-002",
+      "test_references": [
+        "spec/cross-cutting/RuleIdCatalog.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "RID-003",
+      "test_references": [
+        "spec/cross-cutting/RuleIdCatalog.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "RID-004",
+      "test_references": [
+        "spec/cross-cutting/RuleIdCatalog.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "RT-001",
+      "test_references": [
+        "spec/infrastructure/RuntimeArchitecture.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "RT-002",
+      "test_references": [
+        "spec/infrastructure/RuntimeArchitecture.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "RT-003",
+      "test_references": [
+        "spec/infrastructure/RuntimeArchitecture.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "RT-004",
+      "test_references": [
+        "spec/infrastructure/RuntimeArchitecture.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "RT-005",
+      "test_references": [
+        "spec/infrastructure/RuntimeArchitecture.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "RT-006",
+      "test_references": [
+        "spec/infrastructure/RuntimeArchitecture.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "SAF-001",
+      "test_references": [
+        "spec/governance/SafetyDoctrine.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "SAF-002",
+      "test_references": [
+        "spec/governance/SafetyDoctrine.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "SAF-003",
+      "test_references": [
+        "spec/governance/SafetyDoctrine.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "SAF-004",
+      "test_references": [
+        "spec/governance/SafetyDoctrine.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "SAF-005",
+      "test_references": [
+        "spec/governance/SafetyDoctrine.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "SAN-001",
+      "test_references": [
+        "spec/infrastructure/ExecutionSandbox.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "SAN-002",
+      "test_references": [
+        "spec/infrastructure/ExecutionSandbox.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "SAN-003",
+      "test_references": [
+        "spec/infrastructure/ExecutionSandbox.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "SAN-004",
+      "test_references": [
+        "spec/infrastructure/ExecutionSandbox.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "SAN-005",
+      "test_references": [
+        "spec/infrastructure/ExecutionSandbox.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "SCHEMA-001",
+      "test_references": [
+        "spec/infrastructure/DataModelAndSchemas.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "SCHEMA-002",
+      "test_references": [
+        "spec/infrastructure/DataModelAndSchemas.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "SCHEMA-003",
+      "test_references": [
+        "spec/infrastructure/DataModelAndSchemas.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "SCHEMA-004",
+      "test_references": [
+        "spec/infrastructure/DataModelAndSchemas.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "SCHEMA-005",
+      "test_references": [
+        "spec/infrastructure/DataModelAndSchemas.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "STR-001",
+      "test_references": [
+        "spec/infrastructure/StorageAndRetention.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "STR-002",
+      "test_references": [
+        "spec/infrastructure/StorageAndRetention.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "STR-003",
+      "test_references": [
+        "spec/infrastructure/StorageAndRetention.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "STR-004",
+      "test_references": [
+        "spec/infrastructure/StorageAndRetention.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "STR-005",
+      "test_references": [
+        "spec/infrastructure/StorageAndRetention.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "TEST-001",
+      "test_references": [
+        "spec/cross-cutting/ConformanceTestPlan.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "TEST-002",
+      "test_references": [
+        "spec/cross-cutting/ConformanceTestPlan.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "TEST-003",
+      "test_references": [
+        "spec/cross-cutting/ConformanceTestPlan.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "TEST-004",
+      "test_references": [
+        "spec/cross-cutting/ConformanceTestPlan.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "TEST-005",
+      "test_references": [
+        "spec/cross-cutting/ConformanceTestPlan.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "TOOL-001",
+      "test_references": [
+        "spec/orchestration/ToolRegistry.md#conformance-tests"
+      ],
+      "status": "mapped"
+    },
+    {
+      "id": "TRC-001",
+      "test_references": [
+        "spec/observability/AgentTracing.md#conformance-tests"
+      ],
+      "status": "mapped"
+    }
+  ]
+}

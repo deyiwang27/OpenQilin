@@ -43,7 +43,7 @@ For `agent_pause_report`, payload must include:
 | --- | --- | --- | --- |
 | AUD-001 | Governance-critical actions MUST emit immutable audit events. | critical | Observability |
 | AUD-002 | Audit events MUST include policy metadata (`policy_version`, `policy_hash`, `rule_ids`) for governed actions. | critical | Observability |
-| AUD-003 | Agent pause events MUST generate audit records including CEO notification and Owner alert status when critical impact is true. | high | Observability |
+| AUD-003 | Agent pause events MUST generate audit records including ceo notification and owner alert status when critical impact is true. | high | Observability |
 
 ## 5. Conformance Tests
 - Audit events include policy_version, policy_hash, and rule_ids.

@@ -16,7 +16,18 @@
     "project_id": "string",
     "budget_state": "ok|soft|hard",
     "incident_level": "none|warning|critical",
-    "requested_capabilities": ["string"]
+    "requested_capabilities": ["string"],
+    "execution_target": {
+      "target_type": "internal_sandbox|external_bridge|service_call",
+      "sandbox_profile": "read_only|tool_exec_restricted|code_exec_restricted|external_bridge",
+      "network_zone": "internal|restricted_egress|external"
+    },
+    "communication_context": {
+      "protocol": "a2a|acp",
+      "channel_id": "string",
+      "channel_type": "direct|group|project|executive|governance",
+      "trust_level": "internal|external_verified|external_untrusted"
+    }
   }
 }
 ```
@@ -75,6 +86,7 @@
 | POL-004 | Unknown actor roles MUST be denied. | critical | Policy Engine |
 | POL-005 | `allow_with_obligations` decisions MUST include explicit obligation values. | high | Policy Engine |
 | POL-006 | Every decision MUST return policy version and hash metadata. | critical | Policy Engine |
+| POL-007 | Policy evaluation MUST include execution-target and communication-context constraints when provided. | high | Policy Engine |
 
 ## 8. Conformance Tests
 - Replay with same input and policy version returns same output.
@@ -82,3 +94,4 @@
 - Simulated policy load failure returns `deny` (fail-closed).
 - `allow_with_obligations` responses include valid obligation set.
 - Decision audit events include `policy_version`, `policy_hash`, and `rule_ids`.
+- Untrusted communication context with privileged action is denied.

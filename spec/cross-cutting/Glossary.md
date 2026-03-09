@@ -4,11 +4,11 @@
 - Defines canonical terminology used across all specs.
 
 ## 2. Terms (Initial)
-- Owner
+- owner
 - Governance agent
 - Executive agent
 - Operational agent
-- Specialist agent
+- specialist agent
 - Constitution
 - Policy Engine
 - Trace ID

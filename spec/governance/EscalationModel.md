@@ -5,19 +5,19 @@
 - Source of truth alignment: `spec/governance/GovernanceArchitecture.md` sections 4.5 and 8.6.
 
 ## 2. Canonical Paths
-- Operational (general): Specialist -> PM -> CWO -> CEO -> Owner
-- Operational coordination failures: Specialist -> Domain Lead -> PM -> CWO -> CEO
-- Strategic: CSO -> CEO -> Owner
-- Governance (authority escalation): Auditor -> Owner (direct)
-- Budget violations (risk + enforcement): PM -> CWO (risk monitoring), Auditor -> Owner -> CEO (informed by Auditor)
-- Behavioral violations: Specialist -> PM -> Auditor -> Owner -> CEO (informed by Auditor)
-- Infrastructure: System Component -> Administrator -> Owner
-- Agent pause reporting: any pause event -> CEO notification; critical impact -> Owner immediate alert
+- Operational (general): specialist -> project_manager -> cwo -> ceo -> owner
+- Operational coordination failures: specialist -> domain_lead -> project_manager -> cwo -> ceo
+- Strategic: cso -> ceo -> owner
+- Governance (authority escalation): auditor -> owner (direct)
+- Budget violations (risk + enforcement): project_manager -> cwo (risk monitoring), auditor -> owner -> ceo (informed by auditor)
+- Behavioral violations: specialist -> project_manager -> auditor -> owner -> ceo (informed by auditor)
+- Infrastructure: System Component -> administrator -> owner
+- Agent pause reporting: any pause event -> ceo notification; critical impact -> owner immediate alert
 
 ## 3. Escalation Principles
 - Operational agents cannot override governance enforcement.
 - Independent oversight agents can intervene directly when required.
-- Strategic decisions remain under executive or Owner authority.
+- Strategic decisions remain under executive or owner authority.
 - Escalation events must be traceable and auditable.
 
 ## 4. Trigger Catalog (Deterministic)
@@ -25,23 +25,23 @@ Escalation trigger model:
 - `Event -> Condition -> Target Authority -> Action`
 
 Canonical triggers:
-1. Budget hard breach -> threshold_state=`hard` -> Auditor -> enforce stop, escalate Owner, notify CEO
-2. Domain disagreement -> unresolved after PM review -> CEO -> strategic arbitration
-3. Governance violation -> constitutional rule breach -> Owner -> direct governance escalation
+1. Budget hard breach -> threshold_state=`hard` -> auditor -> enforce stop, escalate owner, notify ceo
+2. Domain disagreement -> unresolved after project_manager review -> ceo -> strategic arbitration
+3. Governance violation -> constitutional rule breach -> owner -> direct governance escalation
 4. Operational deadlock -> retries exhausted and progress blocked -> highest authority in scope -> forced resolution
-5. Legal risk detected -> severity in `high|critical` -> Owner -> immediate compliance escalation
-6. Agent paused -> any pause event -> CEO -> notification
-7. Agent paused (critical impact) -> critical impact true -> Owner -> immediate alert
+5. Legal risk detected -> severity in `high|critical` -> owner -> immediate compliance escalation
+6. Agent paused -> any pause event -> ceo -> notification
+7. Agent paused (critical impact) -> critical impact true -> owner -> immediate alert
 
 ## 5. Rule Set
 | Rule ID | Statement | Severity | Enforced By |
 | --- | --- | --- | --- |
 | ESC-001 | Critical incidents MUST follow defined escalation path. | high | Task Orchestrator |
-| ESC-002 | Governance and infrastructure escalations MUST permit direct Owner escalation. | critical | Task Orchestrator |
-| ESC-003 | Budget hard-threshold enforcement MUST be initiated by Auditor independent of operational chain. | critical | Budget Engine |
+| ESC-002 | Governance and infrastructure escalations MUST permit direct owner escalation. | critical | Task Orchestrator |
+| ESC-003 | Budget hard-threshold enforcement MUST be initiated by auditor independent of operational chain. | critical | Budget Engine |
 | ESC-004 | Escalation records MUST include incident class, current stage, and next authority target. | high | Observability |
-| ESC-005 | Any agent pause action MUST be reported to CEO. | high | Task Orchestrator |
-| ESC-006 | Agent pause actions with critical impact MUST alert Owner immediately. | critical | Task Orchestrator |
+| ESC-005 | Any agent pause action MUST be reported to ceo. | high | Task Orchestrator |
+| ESC-006 | Agent pause actions with critical impact MUST alert owner immediately. | critical | Task Orchestrator |
 
 ## 6. Event Contract
 Minimum escalation event fields:
@@ -56,8 +56,8 @@ Minimum escalation event fields:
 
 ## 7. Conformance Tests
 - Critical incident emits escalation event with trace and path metadata.
-- Governance escalation can route Auditor directly to Owner.
-- Budget hard-threshold breach includes Auditor enforcement event before executive remediation.
+- Governance escalation can route auditor directly to owner.
+- Budget hard-threshold breach includes auditor enforcement event before executive remediation.
 - Behavioral incidents follow the defined governance-involved path.
-- Agent pause events always notify CEO.
-- Agent pause events marked critical impact alert Owner.
+- Agent pause events always notify ceo.
+- Agent pause events marked critical impact alert owner.

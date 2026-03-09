@@ -20,11 +20,13 @@
 }
 ```
 
-## 3. Telemetry Rules
-- OBS-001: All policy decisions MUST emit events.
-- OBS-002: All lifecycle transitions MUST emit events.
-- OBS-003: All budget threshold crossings MUST emit events.
-- OBS-004: Critical incidents MUST page governance channels.
+## 3. Telemetry Rule Set
+| Rule ID | Statement | Severity | Enforced By |
+| --- | --- | --- | --- |
+| OBS-001 | All policy decisions MUST emit telemetry events. | critical | observability |
+| OBS-002 | All lifecycle transitions MUST emit telemetry events. | high | runtime |
+| OBS-003 | All budget threshold crossings MUST emit telemetry events. | critical | budget_engine |
+| OBS-004 | Critical incidents MUST page governance channels. | critical | observability |
 
 ## 4. Metrics Baseline
 - Authorization deny rate
@@ -36,3 +38,4 @@
 - Missing `trace_id` events are rejected.
 - Critical incident always generates alert.
 - Policy decision, task dispatch, and sandbox execution events share the same `trace_id`.
+- Budget hard-threshold events include telemetry payload with policy metadata.
