@@ -22,7 +22,8 @@ Minimum fields:
 - Every active agent must have explicit role and scope metadata.
 - `tool_bindings` and `skill_bindings` must reference active registry/catalog entries.
 - Agent status changes must be traceable and auditable.
-- Role-phase agents (`concierge_bootstrap`, `concierge_passive`) must honor phase constraints.
+- `secretary` role is advisory-only and must not be registered with command/execution/workforce capabilities.
+- `secretary` may be bound to read-only dashboard/alert/chat data views for onboarding and status support.
 
 ## 4. Rule Set
 | Rule ID | Statement | Severity | Enforced By |
@@ -32,4 +33,4 @@ Minimum fields:
 ## 5. Conformance Tests
 - Duplicate registration fails deterministically.
 - Agent activation fails when required skill/tool bindings are missing.
-- Phase-constrained concierge registration transitions follow authority policy.
+- `secretary` registration fails if non-advisory authority or mutating data capabilities are requested.

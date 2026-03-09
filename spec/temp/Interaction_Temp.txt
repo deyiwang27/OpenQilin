@@ -2,7 +2,7 @@ Interaction Layer
 	Provide a WhatsApp-like interface for Owner → agent interaction, supporting DMs, group chats, and real-time command delivery (Ideally leverage WhatsApp, Discord, etc.).
 	Owner UI
 	• Chat interface:
-		• DM with any single agent (Governance, Executive, Operation, and Concierge).
+		• DM with any single agent (Governance, Executive, Operation, and Secretary).
 		• Group chat with multiple agents (Governance, Executive, and Project group).
 		• Include message context, e.g., task/project reference, timestamp, read status.
 	• Message types:

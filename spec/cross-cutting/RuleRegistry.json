@@ -333,7 +333,7 @@
     },
     {
       "id": "AUTH-003",
-      "statement": "concierge_bootstrap role MUST only be active before system initialization and ceo handoff completion.",
+      "statement": "System-level workforce lifecycle actions MUST be restricted to cwo authority.",
       "severity": "critical",
       "enforced_by": "policy_engine",
       "primary_source": "constitution/core/PolicyRules.yaml",
@@ -362,7 +362,7 @@
     },
     {
       "id": "AUTH-004",
-      "statement": "concierge_passive role MUST be used after ceo handoff completion for non-operational advisory behavior.",
+      "statement": "secretary role MUST remain advisory-only and MAY access relevant dashboard, alert, and owner chat data in read-only mode for onboarding and status interpretation.",
       "severity": "high",
       "enforced_by": "policy_engine",
       "primary_source": "constitution/core/PolicyRules.yaml",
@@ -391,8 +391,8 @@
     },
     {
       "id": "AUTH-005",
-      "statement": "Reactivating concierge_bootstrap from concierge_passive MUST require explicit owner approval.",
-      "severity": "critical",
+      "statement": "secretary role MAY request executive or specialist participation for out-of-scope questions but MUST NOT delegate as command authority.",
+      "severity": "high",
       "enforced_by": "policy_engine",
       "primary_source": "constitution/core/PolicyRules.yaml",
       "occurrences": [

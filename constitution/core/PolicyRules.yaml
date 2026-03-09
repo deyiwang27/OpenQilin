@@ -13,21 +13,21 @@ rules:
     enforced_by: policy_engine
 
   - id: AUTH-003
-    title: Concierge bootstrap phase guard
+    title: Workforce authority guard
     severity: critical
-    statement: concierge_bootstrap role MUST only be active before system initialization and ceo handoff completion.
+    statement: System-level workforce lifecycle actions MUST be restricted to cwo authority.
     enforced_by: policy_engine
 
   - id: AUTH-004
-    title: Concierge passive role guard
+    title: Secretary advisory and read-only scope
     severity: high
-    statement: concierge_passive role MUST be used after ceo handoff completion for non-operational advisory behavior.
+    statement: secretary role MUST remain advisory-only and MAY access relevant dashboard, alert, and owner chat data in read-only mode for onboarding and status interpretation.
     enforced_by: policy_engine
 
   - id: AUTH-005
-    title: Concierge reactivation approval
-    severity: critical
-    statement: Reactivating concierge_bootstrap from concierge_passive MUST require explicit owner approval.
+    title: Secretary triage routing guard
+    severity: high
+    statement: secretary role MAY request executive or specialist participation for out-of-scope questions but MUST NOT delegate as command authority.
     enforced_by: policy_engine
 
   - id: GOV-001

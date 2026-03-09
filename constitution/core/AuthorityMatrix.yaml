@@ -8,15 +8,7 @@ roles:
     advisory: allow
     oversight: allow
     workforce: allow
-  concierge_bootstrap:
-    decision: deny
-    command: deny
-    execution: deny
-    review: deny
-    advisory: allow
-    oversight: deny
-    workforce: allow
-  concierge_passive:
+  secretary:
     decision: deny
     command: deny
     execution: deny
@@ -91,24 +83,18 @@ roles:
 default_behavior:
   unknown_role: deny
   unknown_authority: deny
-phase_constraints:
-  concierge_bootstrap:
-    allowed_when:
-      system_initialized: false
-      ceo_handoff_complete: false
-    forbidden_actions:
-      - governance_override
-      - project_execution
-      - safety_policy_override
-  concierge_passive:
-    allowed_when:
-      ceo_handoff_complete: true
-transitions:
-  - from: concierge_bootstrap
-    to: concierge_passive
-    trigger: CEO_HANDOFF_COMPLETE
-    auto: true
-  - from: concierge_passive
-    to: concierge_bootstrap
-    trigger: OWNER_APPROVED_REACTIVATION
-    auto: false
+role_notes:
+  secretary:
+    display_name: Secretary
+    operating_contract:
+      - advisory_only
+      - read_only_onboarding_and_status_support
+      - triage_router_to_executive_or_specialist_roles
+    read_access_scope:
+      - dashboard_metrics
+      - alert_streams
+      - owner_interaction_chats
+    prohibited_actions:
+      - policy_approval_or_override
+      - workforce_lifecycle_actions
+      - command_or_execution_actions

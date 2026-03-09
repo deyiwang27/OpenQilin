@@ -32,8 +32,7 @@
 
 ## 4. Canonical Runtime Roles (v1)
 - owner
-- concierge_bootstrap
-- concierge_passive
+- secretary
 - administrator
 - auditor
 - ceo
@@ -45,10 +44,11 @@
 
 Unknown roles MUST be treated as unauthorized.
 
-Concierge phase model:
-- `concierge_bootstrap`: initialization-only role with limited advisory/workforce capability.
-- `concierge_passive`: post-handoff advisory-only role.
-- Transition from passive back to bootstrap requires explicit `owner` approval.
+Secretary role model:
+- `secretary` display role: Secretary.
+- Formal contract: read-only advisory + triage router.
+- `secretary` may read relevant dashboard, alert, and owner chat data for onboarding and status interpretation.
+- `secretary` cannot command, execute, or perform workforce actions.
 
 ## 5. Runtime Policy Posture
 - Policy format: YAML only.

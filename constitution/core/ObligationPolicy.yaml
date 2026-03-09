@@ -27,8 +27,6 @@ obligations:
       action_categories:
         - policy_change
         - governance_override
-      role_transitions:
-        - concierge_passive_to_bootstrap
 
 decision_requirements:
   allow:

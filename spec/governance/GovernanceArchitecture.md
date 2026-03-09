@@ -134,45 +134,29 @@ The **Support Layer** exists to simplify interaction between the Owner and the O
 
 This layer does not participate in operational decision-making and does not possess authority over governance, executive, or project-level agents.
 
-Instead, the Support Layer functions as a system concierge and knowledge guide.
+Instead, the Support Layer functions as a system secretary and knowledge guide.
 
-The **Concierge** Agent serves as the primary interface between the Owner and the system during the early stages of deployment and learning.
+The **Secretary** Agent serves as the primary support interface between the Owner and the system.
 
 This layer is responsible for:
 
-- Guide the Owner through system initialization
+- Guide the Owner through system onboarding and operating model
 - Explain the OpenQilin architecture and governance principles
-- Assist in the initial creation of core agents (CEO, CWO, CSO, Auditor, Administrator)
 - Provide documentation and architectural explanations
-- Answer questions about system behavior and governance rules
-- Translate Owner intent into structured proposals for executive agents
+- Answer questions about system behavior, governance rules, and current system status
+- Provide basic read-only analysis from dashboards, alerts, and owner interaction chat context
+- Route out-of-scope or professional questions to executive/specialist agents
 
-The Concierge operates in two phases:
+The Secretary is always passive in authority posture:
 
-**Initialization Phase**
+- advisory-only authority
+- no decision authority
+- no command authority
+- no execution authority
+- no workforce authority
+- no policy override capability
 
-During system setup, the Concierge actively assists the Owner in:
-
-- Configuring system parameters
-- Spawning the initial executive and governance agents
-- Establishing the initial project structure
-
-**Passive Handbook Phase**
-
-After the system is initialized:
-
-- The Concierge becomes a passive reference agent
-- It provides explanations and documentation when requested
-- It does not interfere with operational workflows
-
-The Concierge has strictly limited authority:
-
-- Cannot spawn operational agents after initialization
-- Cannot override governance rules
-- Cannot modify project budgets
-- Cannot access project execution logs beyond documentation references
-
-This limitation ensures the Concierge remains a neutral support entity rather than an operational participant.
+This limitation ensures the Secretary remains a neutral support and triage entity rather than an operational participant.
 
 2.3 Governance Layer
 
@@ -315,13 +299,13 @@ The goal of the role architecture is to establish a clear organizational hierarc
 
 Support agents provide the interface layer between the Owner and the internal AI workforce. They do not participate directly in governance or project execution but instead facilitate interaction, coordination, and information routing between the human Owner and the AI organization.
 
-Support agents serve as interaction and communication infrastructure, ensuring that the Owner can efficiently observe, guide, and communicate with the AI system without directly intervening in internal operational workflows. The primary support role in OpenQilin is the Concierge Agent.
+Support agents serve as interaction and communication infrastructure, ensuring that the Owner can efficiently observe, guide, and communicate with the AI system without directly intervening in internal operational workflows. The primary support role in OpenQilin is the Secretary Agent.
 
-**Concierge Agent**
+**Secretary Agent**
 
-Domain: Owner Interaction & System Interface
+Domain: Owner Interaction, Status Interpretation, and Triage Routing
 
-Authority Type: Communication Facilitation
+Authority Type: Advisory-only Communication Facilitation
 
 Reports To: Owner
 
@@ -329,42 +313,27 @@ Informs: CEO
 
 **Responsibilities**
 
-Phase 1: Initialization & Scaffolding (Active)
+- System Onboarding: Explain architecture layers, governance model, and agent responsibilities.
+- Knowledge Retrieval: Answer handbook and system-operation questions.
+- Status Interpretation: Provide basic analysis from dashboard metrics, alerts, and trends.
+- Interaction Support: Summarize owner chat context and clarify intent.
+- Triage Routing: Invite relevant executive/specialist agents when questions are out of scope.
 
-During this phase, the Concierge is the primary interface.
+**Authority & Permissions**
 
-- System Education: Explaining the 7-layer architecture, the role of the Constitution, and the purpose of core agents.
-- Core Workforce Creation: Assisting the user in the initial configuration and "spawning" of the five mandatory core agents: Admin, Auditor, CEO, CWO, and CSO.
-- Executive Hand-off: Formally introducing the CEO agent to the Owner and transitioning "Active Lead" status to the CEO once the core workforce is functional.
-
-Phase 2: Handbook & Reference (Hidden/Passive)
-
-Once the CEO takes over duties, the Concierge enters "Passive Mode".
-
-- Knowledge Retrieval: Remains available to answer questions regarding system rules, the Constitution, or "how-to" queries about the platform.
-- Accessibility: Triggered only by specific keywords (e.g., "Help", "Handbook", "Concierge") to minimize token noise in the main project chat.
-
-**Revised Authority & Permissions**
-
-To maintain system integrity, the Concierge's permissions change based on its lifecycle state:
-
-Provisioning Authority (Phase 1):
-
-- Can write to agent registry to bind base models and roles for the initial core team (one-time bootstrap).
-- Can set initial budget thresholds in the Budget Enforcement Engine based on user input (one-time bootstrap).
-
-Advisory Limitation (Phase 2):
-
-- Cannot spawn, terminate, or modify specialists (this authority belongs to the CWO/CEO).
-- Cannot override Auditor security pauses or Administrator data isolation rules.
-- Read-only access to the System Handbook and Constitution; no access to active project execution logs to ensure data privacy.
+- Advisory-only role.
+- No decision, command, execution, review, oversight, or workforce authority.
+- No policy override or budget modification capability.
+- No agent creation/termination capability.
+- Read-only access to relevant dashboard, alert, and owner interaction chat data.
 
 **Memory**
 
-The Concierge utilizes a specialized memory scope to ensure it remains a "neutral" educator:
+The Secretary utilizes a limited memory scope to remain a neutral support role:
 
-- Global Knowledge Base (Cold): A read-only snapshot of the OpenQilin documentation and technical handbook.
-- Owner Preference Memory (Warm): Stores the user's preferred communication style and broad business constraints to inform future scaffolding recommendations.
+- Global Knowledge Base (Cold): A read-only snapshot of OpenQilin documentation and technical handbook.
+- Owner Interaction Context (Warm): Recent owner-facing interaction summaries for better intent interpretation.
+- Operational status context is read-only and derived from monitored data sources.
 
 3.2 Governance Agents
 
@@ -900,7 +869,7 @@ The Owner does not participate in routine system operations.
 
 Support agents facilitate communication between the Owner and the AI workforce.
 
-Concierge agents hold no command authority and cannot influence internal governance or project execution.
+Secretary agent holds advisory-only authority and cannot influence governance or project execution through command paths.
 
 **Governance Layer Authority**
 
@@ -1231,7 +1200,7 @@ Interactions with external resources are logged for transparency and auditing pu
 
 Support agents provide interaction interfaces between the Owner and the system.
 
-The primary support agent is the Concierge Agent, which facilitates communication between the Owner and the internal agent hierarchy.
+The primary support agent is the Secretary Agent, which facilitates communication between the Owner and the internal agent hierarchy.
 
 Support agents are ephemeral. They are instantiated when interaction is required and terminated after the interaction session concludes.
 

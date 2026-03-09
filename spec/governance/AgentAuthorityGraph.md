@@ -13,8 +13,7 @@
 | Role | Decision | Command | Execution | Review | Advisory | Oversight | Workforce |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | owner | Y | Y | - | Y | Y | Y | Y |
-| concierge_bootstrap | - | - | - | - | Y | - | Y |
-| concierge_passive | - | - | - | - | Y | - | - |
+| secretary | - | - | - | - | Y | - | - |
 | administrator | - | - | - | - | - | Y | - |
 | auditor | - | - | - | - | - | Y | - |
 | ceo | Y | Y | - | - | - | - | - |
@@ -25,9 +24,9 @@
 | specialist | - | - | Y | - | - | - | - |
 
 Notes:
-- `concierge_bootstrap` is initialization-only and can be active only before system initialization and `ceo` handoff completion.
-- `concierge_passive` is post-handoff advisory-only and cannot perform workforce actions.
-- Reactivation from `concierge_passive` to `concierge_bootstrap` requires explicit `owner` approval.
+- `secretary` is advisory-only and acts as onboarding guide + status interpreter + triage router.
+- `secretary` has read-only access to relevant dashboard, alert, and owner chat data for basic analysis.
+- `secretary` can invite executive/specialist participation for out-of-scope questions, but cannot command them.
 
 ## 4. Hard Constraints
 - Governance agents cannot participate in project execution.
@@ -42,8 +41,8 @@ Notes:
 | AUTH-001 | Actions outside authority matrix MUST be denied. | critical | Policy Engine |
 | AUTH-002 | Governance enforcement actions MUST NOT be overridden by executive or operational roles. | critical | Policy Engine |
 | AUTH-003 | System-level workforce lifecycle actions MUST be restricted to `cwo` authority. | critical | Policy Engine |
-| AUTH-004 | `concierge_bootstrap` role MUST only be active pre-initialization and before `ceo` handoff completion. | critical | Policy Engine |
-| AUTH-005 | Reactivating `concierge_bootstrap` from `concierge_passive` MUST require explicit `owner` approval. | critical | Policy Engine |
+| AUTH-004 | `secretary` role MUST remain advisory-only and MAY access relevant dashboard, alert, and owner chat data in read-only mode for onboarding and status interpretation. | high | Policy Engine |
+| AUTH-005 | `secretary` role MAY request executive or specialist participation for out-of-scope questions but MUST NOT delegate as command authority. | high | Policy Engine |
 | AUD-001 | Emergency actions MUST emit immutable audit records with trace context. | high | Observability |
 
 ## 6. Data Contract
@@ -58,6 +57,6 @@ Notes:
 - Invalid role-action-target triplets are denied.
 - Executive override attempts against governance actions are denied.
 - Non-`cwo` system-level agent creation/termination attempts are denied.
-- `concierge_bootstrap` is denied when used after handoff-complete state.
-- `concierge_passive` workforce actions are denied.
+- `secretary` command/execution/workforce actions are denied.
+- `secretary` status-analysis requests over allowed read scopes are denied.
 - Emergency actions without audit metadata fail validation.

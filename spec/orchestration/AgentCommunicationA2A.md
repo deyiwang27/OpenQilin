@@ -19,8 +19,7 @@
   "payload": {},
   "authority_context": {
     "required_authority": "decision|command|execution|review|advisory|oversight|workforce",
-    "project_scope": "string",
-    "role_phase": "bootstrap|passive|default"
+    "project_scope": "string"
   },
   "policy_context": {
     "policy_version": "string",
@@ -57,7 +56,7 @@
 - `auditor` may observe all channels in `read_only` mode.
 - Observer roles MUST NOT emit command/event payloads into observed channels.
 - `external_untrusted` channels cannot carry privileged command payloads.
-- Role-phase constraints (for `concierge_bootstrap`/`concierge_passive`) MUST be enforced before dispatch.
+- `secretary` role may process onboarding/status/triage queries only and cannot dispatch command or execution payloads.
 
 ## 5. ACP Interoperability
 - A2A envelope is payload contract.

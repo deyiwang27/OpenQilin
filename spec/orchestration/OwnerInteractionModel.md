@@ -16,7 +16,7 @@ Platform posture (v1):
 - Communication protocol posture remains `A2A + ACP`.
 
 Allowed direct access (v1):
-- owner may direct-message: administrator, auditor, ceo, cwo, cso, `concierge_bootstrap`, `concierge_passive`.
+- owner may direct-message: administrator, auditor, ceo, cwo, cso, `secretary`.
 - owner may join project and executive channels as observer/commander according to policy.
 
 ## 3. Message Types

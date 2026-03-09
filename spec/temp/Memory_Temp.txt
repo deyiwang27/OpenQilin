@@ -1,7 +1,7 @@
 1. The Three-Tier Memory Architecture
 To prevent "context rot" and manage long-running agent stability, the system employs a tiered storage approach:
 	• Cold Memory (Archival): Managed via RAG (Retrieval-Augmented Generation). This stores static knowledge such as the System Handbook, the Constitution, and historical project documentation.
-	• Warm Memory (Fact-Centric): Powered by Mem0. It extracts discrete facts, user preferences, and project state from conversations as "data points". This ensures the CEO and Concierge maintain a consistent "source of truth" regarding Owner instructions and project parameters.
+	• Warm Memory (Fact-Centric): Powered by Mem0. It extracts discrete facts, user preferences, and project state from conversations as "data points". This ensures the CEO and Secretary maintain a consistent "source of truth" regarding Owner instructions and project parameters.
 	• Hot Memory (Working): The immediate LLM context window, strictly limited to the current task and the most recent interaction turns to minimize token waste and hallucination risk.
 2. Operational Protocols
 	A. The "Zero-Context" Restart (Checkpointing & Artifacts)

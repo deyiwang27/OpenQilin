@@ -34,8 +34,7 @@ policy_bundle:
     - require_owner_approval
   canonical_roles:
     - owner
-    - concierge_bootstrap
-    - concierge_passive
+    - secretary
     - administrator
     - auditor
     - ceo
