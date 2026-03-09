@@ -20,13 +20,13 @@
 
 ## 4. Decision and Enforcement Outputs
 - `ok`: execution may proceed.
-- `soft_breach`: execution may proceed with alerts (`CWO`, `CEO`).
+- `soft_breach`: execution may proceed with alerts (`cwo`, `ceo`).
 - `hard_breach`: execution blocked; emit enforcement event for governance action.
 
 Hard breach governance behavior (aligned to governance specs):
-- Auditor performs independent enforcement.
+- `auditor` performs independent enforcement.
 - Project may be paused.
-- Owner is escalated; CEO is informed for remediation planning.
+- `owner` is escalated; `ceo` is informed for remediation planning.
 
 ## 5. Budget Event Contract
 Required fields:
@@ -46,7 +46,7 @@ Required fields:
 | BUD-001 | Hard-threshold breaches MUST block or pause execution. | critical | Budget Engine |
 | BUD-002 | Concurrent spend MUST use atomic reservation. | high | Budget Engine |
 | BUD-003 | Threshold values MUST be sourced from active YAML budget policy. | high | Budget Engine |
-| BUD-004 | Hard-breach events MUST trigger governance escalation metadata for Auditor/Owner/CEO flow. | critical | Budget Engine |
+| BUD-004 | Hard-breach events MUST trigger governance escalation metadata for `auditor`/`owner`/`ceo` flow. | critical | Budget Engine |
 | BUD-005 | Budget decisions MUST include policy version/hash context. | high | Budget Engine |
 
 ## 7. Conformance Tests

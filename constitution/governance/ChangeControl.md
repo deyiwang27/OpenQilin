@@ -4,15 +4,15 @@
 Defines how constitutional policy artifacts are modified.
 
 ## Approval Policy (v1)
-- CEO may propose policy changes.
-- Only the Owner can approve policy changes.
-- Administrator publishes approved policy bundles.
-- Auditor verifies policy-change audit integrity.
+- `ceo` may propose policy changes.
+- Only the `owner` can approve policy changes.
+- `administrator` publishes approved policy bundles.
+- `auditor` verifies policy-change audit integrity.
 
 ## Change Workflow
-1. Proposal created (CEO or Owner).
+1. Proposal created (`ceo` or `owner`).
 2. Impact assessment prepared (affected rules, runtime effect, rollback plan).
-3. Owner approval decision recorded.
+3. `owner` approval decision recorded.
 4. Policy bundle version incremented and published.
 5. Global active version switched atomically.
 6. Snapshot stored in `constitution/versions/`.
@@ -20,7 +20,7 @@ Defines how constitutional policy artifacts are modified.
 
 ## Rollback Policy
 - Rollback target must be a previously published immutable snapshot.
-- Rollback requires Owner approval.
+- Rollback requires `owner` approval.
 - Rollback must emit audit event with rationale.
 
 ## Audit Requirement

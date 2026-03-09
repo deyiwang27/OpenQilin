@@ -9,7 +9,7 @@
 {
   "request_id": "uuid",
   "trace_id": "uuid",
-  "actor": {"id": "string", "role": "Owner|concierge_bootstrap|concierge_passive|Administrator|Auditor|CEO|CWO|CSO|ProjectManager|DomainLead|Specialist"},
+  "actor": {"id": "string", "role": "owner|concierge_bootstrap|concierge_passive|administrator|auditor|ceo|cwo|cso|project_manager|domain_lead|specialist"},
   "action": "string",
   "target": "string",
   "context": {

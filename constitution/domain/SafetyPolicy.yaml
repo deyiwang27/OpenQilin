@@ -41,4 +41,4 @@ pause_reporting:
 owner_override:
   enabled: true
   audit_required: true
-  note: Owner may override governance decisions with auditable justification.
+  note: owner may override governance decisions with auditable justification.

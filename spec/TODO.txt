@@ -1,0 +1,18 @@
+OpenQilin Spec TODO (Deferred by decision)
+Date: 2026-03-09
+
+1) A2A channel and authority metadata completion
+- Define channel-level trust/authority metadata model for A2A messages.
+- Define explicit read-only behavior and access scope for auditor interactions in A2A flows.
+
+2) Memory CDC pipeline formalization
+- Define the canonical CDC flow from relational source-of-record to memory index.
+- Specify ordering, replay, idempotency, and failure recovery guarantees.
+
+3) Zero-context restart protocol
+- Define mandatory restart artifact set and reconstruction sequence.
+- Define validation rules before resuming autonomous execution after restart.
+
+4) Alert ownership matrix completion
+- Define source ownership for each alert type (budget, safety, infrastructure, orchestration).
+- Define default escalation owner when alert source is ambiguous.
