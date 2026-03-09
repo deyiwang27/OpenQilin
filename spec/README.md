@@ -30,6 +30,7 @@ Purpose: implementation-level specifications for AI engineering agents.
 - `spec/orchestration/AgentCommunicationA2A.md`
 - `spec/orchestration/AgentCommunicationACP.md`
 - `spec/orchestration/AgentMemoryModel.md`
+- `spec/orchestration/ProjectArtifactModel.md`
 - `spec/orchestration/AgentLifecycleManagement.md`
 - `spec/orchestration/ToolRegistry.md`
 - `spec/orchestration/TaskOrchestrator.md`
@@ -37,6 +38,7 @@ Purpose: implementation-level specifications for AI engineering agents.
 ### 5. State Machines
 - `spec/state-machines/AgentStateMachine.md`
 - `spec/state-machines/ProjectStateMachine.md`
+- `spec/state-machines/MilestoneStateMachine.md`
 - `spec/state-machines/TaskStateMachine.md`
 - `spec/state-machines/MemoryStateMachine.md`
 - `spec/state-machines/CommunicationStateMachine.md`
@@ -45,6 +47,7 @@ Purpose: implementation-level specifications for AI engineering agents.
 ### 6. Infrastructure
 - `spec/infrastructure/RuntimeArchitecture.md`
 - `spec/infrastructure/DataModelAndSchemas.md`
+- `spec/infrastructure/ArtifactIngestionAndExtraction.md`
 - `spec/infrastructure/ExecutionSandbox.md`
 - `spec/infrastructure/StorageAndRetention.md`
 - `spec/infrastructure/FailureAndRecoveryModel.md`
@@ -56,6 +59,7 @@ Purpose: implementation-level specifications for AI engineering agents.
 - `spec/cross-cutting/RuleIdCatalog.md`
 - `spec/cross-cutting/RuleRegistry.json`
 - `spec/cross-cutting/ConformanceCoverage.json`
+- `spec/cross-cutting/ProjectTaskQueryContracts.md`
 - `spec/cross-cutting/Glossary.md`
 
 ### 8. RFC Spikes
@@ -63,6 +67,9 @@ Purpose: implementation-level specifications for AI engineering agents.
 - `spec/rfcs/RFC-01-Orchestration-Governance-ControlPlane.md`
 - `spec/rfcs/RFC-02-Memory-Intelligence-Observability.md`
 - `spec/rfcs/RFC-03-Language-Runtime-Persistence-Deployment.md`
+- `spec/rfcs/RFC-04-Data-Memory-Architecture.md`
+- `spec/rfcs/RFC-05-Deployment-and-Cost-Strategy.md`
+- `spec/rfcs/RFC-06-Project-Task-Status-And-Work-Artifact-Management.md`
 
 ## Precedence
 1. `constitution/`

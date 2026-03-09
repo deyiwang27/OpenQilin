@@ -1,7 +1,7 @@
-# OpenQilin - Project/Task Status and Work Artifact Management Investigation Report
+# OpenQilin - RFC 06: Project/Task Status and Work Artifact Management
 
-## 1. Purpose
-This report investigates how to manage detailed project and task status when canonical state is in PostgreSQL, while preserving rich planning/execution context (objectives, pathways, risks, metrics, notes, requirements, TODOs, and role-authored docs).
+## 1. Scope
+This RFC investigates how to manage detailed project and task status when canonical state is in PostgreSQL, while preserving rich planning/execution context (objectives, pathways, risks, metrics, notes, requirements, TODOs, and role-authored docs).
 
 Primary scenario:
 - Owner discusses with `ceo`, `cwo`, `cso` to initiate a project.
@@ -9,7 +9,7 @@ Primary scenario:
 - `project_manager` decomposes milestones/tasks and maintains planning notes.
 - Specialist agents execute tasks with task-level requirements and updates.
 
-## 2. Investigation Questions (Reorganized Around Your Proposal)
+## 2. Investigation Questions
 - What should be strictly structured in PostgreSQL vs captured as narrative documents?
 - Should project/task docs live in database, markdown files, or both?
 - How do we keep narrative docs and structured status synchronized without ambiguity?
@@ -74,7 +74,7 @@ This best matches OpenQilin governance requirements and your workflow.
 
 ### 5.1 Data Domains
 1. State domain (authoritative, structured)
-- `project`
+- `project_container` (project root record)
 - `milestone`
 - `task`
 - `task_assignment`
@@ -84,8 +84,8 @@ This best matches OpenQilin governance requirements and your workflow.
 - `project_objective`
 
 2. Artifact domain (versioned narrative)
-- `artifact`
-- `artifact_version`
+- `project_artifact`
+- `project_artifact_version`
 - `artifact_link` (project/milestone/task relation)
 
 3. Event domain (append-only timeline)
@@ -115,7 +115,7 @@ Each artifact version should include:
 
 ### 5.3 Lifecycle Flow
 1. Project initiation (Owner + `ceo` + `cwo` + `cso`)
-- Create `project` row in `proposed`.
+- Create `project_container` row in `proposed`.
 - Generate `project_charter` artifact with objectives, pathways, risks, metrics.
 - Parse and persist structured extracts into `project_objective`, `project_risk`, `project_metric`.
 - Approval gate transitions project to `approved` / `active`.
@@ -170,13 +170,13 @@ Enforcement:
 ## 6. Suggested Schema Blueprint (Minimal)
 
 ### 6.1 Status Tables
-- `project(project_id, state, planning_status, risk_status, metric_status, owner_agent_id, updated_at)`
+- `project_container(project_id, state, planning_status, risk_status, metric_status, owner_agent_id, updated_at)`
 - `milestone(milestone_id, project_id, state, due_at, sequence_no, updated_at)`
 - `task(task_id, milestone_id, state, priority, assignee_agent_id, requirement_level, acceptance_criteria_json, updated_at)`
 
 ### 6.2 Artifact Tables
-- `artifact(artifact_id, artifact_type, project_id, milestone_id, task_id, current_version, status, created_at)`
-- `artifact_version(artifact_id, version_no, content_md, summary_structured_json, author_role, author_agent_id, change_reason, trace_id, created_at)`
+- `project_artifact(artifact_id, artifact_type, project_id, milestone_id, task_id, current_version, status, created_at)`
+- `project_artifact_version(artifact_id, version_no, content_md, summary_structured_json, author_role, author_agent_id, change_reason, trace_id, created_at)`
 
 ### 6.3 Event Tables
 - `status_event(event_id, aggregate_type, aggregate_id, from_state, to_state, reason_code, trace_id, actor_role, actor_id, created_at)`
@@ -198,13 +198,14 @@ Enforcement:
 - Risk: agent writes bypass governance.
 - Mitigation: write APIs enforce policy checks and state-machine guards; DB permissions deny direct unsafe writes.
 
-## 9. Recommended Next Spec Additions
+## 9. Spec Outputs
+- The following specs were added/updated from this RFC recommendation:
 - `spec/orchestration/ProjectArtifactModel.md` (artifact taxonomy + lifecycle)
 - `spec/infrastructure/ArtifactIngestionAndExtraction.md` (markdown->structured sync contract)
 - `spec/state-machines/MilestoneStateMachine.md` (currently implied by project/task only)
 - `spec/cross-cutting/ProjectTaskQueryContracts.md` (agent-safe SQL contracts)
 
-## 10. Decision
+## 10. Recommendation Summary
 For OpenQilin, use:
 - PostgreSQL as authoritative status/state and structured planning store.
 - Markdown artifacts for collaborative narrative context, with DB-ingested version tracking.

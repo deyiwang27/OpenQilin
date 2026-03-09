@@ -26,7 +26,11 @@ Execution model:
 - Status: pending
 - Exit criteria: adopt/defer decisions captured for Docker local baseline, cloud deployment pattern, managed vs self-hosted data services, and cost scaling triggers.
 
-6) Create v1 architecture baseline mapping selected tools to components/interfaces
+6) Complete RFC spike: project/task status and work artifact management
+- Status: completed
+- Exit criteria: data ownership, artifact model, and state/artifact sync approach documented with adopt/defer decisions.
+
+7) Create v1 architecture baseline mapping selected tools to components/interfaces
 - Status: pending
 - Exit criteria: locked v1 interface map for Policy API, Task API, A2A/ACP, memory APIs, and audit schema.
 

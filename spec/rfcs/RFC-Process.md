@@ -22,6 +22,7 @@
 - `spec/rfcs/RFC-03-Language-Runtime-Persistence-Deployment.md`
 - `spec/rfcs/RFC-04-Data-Memory-Architecture.md`
 - `spec/rfcs/RFC-05-Deployment-and-Cost-Strategy.md`
+- `spec/rfcs/RFC-06-Project-Task-Status-And-Work-Artifact-Management.md`
 
 ## 5. Completion Gate
 - Every required domain has one recorded recommendation.

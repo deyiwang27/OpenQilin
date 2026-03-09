@@ -21,7 +21,7 @@
 | approved | start | budget reservation + policy authorization succeed | emit project-start event | active |
 | active | pause | budget hard breach or safety containment triggered | emit pause + escalation event | paused |
 | paused | resume | remediation complete and authorization=`allow` | emit resume event | active |
-| active | complete | all required tasks terminal-success | emit completion event | completed |
+| active | complete | all required milestones=`completed` and required tasks terminal-success | emit completion event | completed |
 | active | terminate | owner/governance termination decision | emit termination event | terminated |
 | paused | terminate | owner/governance termination decision | emit termination event | terminated |
 | completed | archive | retention elapsed | persist completion snapshot | archived |
@@ -37,4 +37,5 @@
 - Hard budget breach transitions project to `paused` with enforcement metadata.
 - Resuming a paused project without remediation evidence is denied.
 - Project start requires both policy approval and budget reservation.
+- Project completion is denied when any required milestone is not `completed`.
 - Archived projects reject further mutation events.

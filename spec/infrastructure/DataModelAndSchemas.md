@@ -21,16 +21,24 @@
 
 ## 3. Canonical Relational Entities (Minimum v1)
 - `project_container`
+- `milestone`
+- `task`
+- `task_assignment`
+- `task_requirement`
 - `agent_registry`
 - `execution_logs`
 - `metrics_store`
 - `messages`
+- `project_artifact`
+- `project_artifact_version`
 - `knowledge_document`
 - `knowledge_chunk`
 - `knowledge_embedding`
 - `outbox_events`
 - `sync_checkpoint`
 - `dimension_project_state`
+- `dimension_milestone_state`
+- `dimension_task_state`
 - `dimension_agent_state`
 - `dimension_tools`
 - `lookup_roles`
@@ -45,7 +53,16 @@
 - `created_at`
 - `updated_at`
 
-### 4.2 `agent_registry`
+### 4.2 `milestone`
+- `milestone_id` (PK)
+- `project_id` (FK)
+- `state`
+- `sequence_no`
+- `due_at` (nullable)
+- `created_at`
+- `updated_at`
+
+### 4.3 `agent_registry`
 - `agent_id` (PK)
 - `project_id` (FK, nullable for global roles)
 - `role_type`
@@ -57,7 +74,36 @@
 - `budget_limit`
 - `created_at`
 
-### 4.3 `execution_logs` (append-only)
+### 4.4 `task`
+- `task_id` (PK)
+- `project_id` (FK)
+- `milestone_id` (FK, nullable)
+- `state`
+- `priority`
+- `requested_by`
+- `assigned_agent_id` (nullable)
+- `idempotency_key`
+- `created_at`
+- `updated_at`
+
+### 4.5 `task_assignment`
+- `assignment_id` (PK)
+- `task_id` (FK)
+- `agent_id` (FK)
+- `assigned_by`
+- `assigned_at`
+- `status`
+
+### 4.6 `task_requirement`
+- `requirement_id` (PK)
+- `task_id` (FK)
+- `requirement_type`
+- `requirement_value`
+- `is_mandatory`
+- `created_at`
+- `updated_at`
+
+### 4.7 `execution_logs` (append-only)
 - `log_id` (PK)
 - `project_id` (FK)
 - `agent_id` (FK)
@@ -74,7 +120,7 @@
 - `timestamp`
 - `checksum`
 
-### 4.4 `metrics_store`
+### 4.8 `metrics_store`
 - `metric_id` (PK)
 - `project_id` (FK)
 - `agent_id` (FK)
@@ -84,7 +130,7 @@
 - `review_loops`
 - `timestamp`
 
-### 4.5 `messages`
+### 4.9 `messages`
 - `message_id` (PK)
 - `trace_id`
 - `sender_id`
@@ -107,8 +153,31 @@
 - `timestamp`
 - `delivery_status`
 
+### 4.10 `project_artifact`
+- `artifact_id` (PK)
+- `artifact_type`
+- `scope_type` (`project|milestone|task`)
+- `scope_id`
+- `current_version`
+- `status`
+- `created_at`
+- `updated_at`
+
+### 4.11 `project_artifact_version`
+- `artifact_id` (FK)
+- `version_no`
+- `content_md`
+- `summary_structured`
+- `author_role`
+- `author_agent_id`
+- `change_reason`
+- `trace_id`
+- `created_at`
+
 ## 5. State Dimensions
 - `dimension_project_state`: proposed, approved, active, paused, completed, terminated, archived
+- `dimension_milestone_state`: planned, active, paused, blocked, completed, cancelled, archived
+- `dimension_task_state`: created, queued, authorized, dispatched, running, completed, failed, cancelled, blocked
 - `dimension_agent_state`: created, active, paused, retired, archived
 
 ## 6. Schema and Consistency Requirements
@@ -116,6 +185,7 @@
 - Derived memory/vector layers must remain consistent with source records via change propagation.
 - Every mutable entity update must include `updated_at` and actor provenance.
 - File/document ingestion and relational CDC are distinct pipelines; only relational changes are treated as CDC streams.
+- Milestone and task states should use canonical values from their state-machine specs.
 
 ## 7. Rule Set
 | Rule ID | Statement | Severity | Enforced By |
