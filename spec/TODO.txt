@@ -7,18 +7,26 @@ Execution model:
 - Investigation method: timeboxed RFC spikes (1-2 weeks each).
 
 1) Complete RFC spike: orchestration/governance/control plane
-- Status: pending
+- Status: completed
 - Exit criteria: adopt/defer decisions captured for LangGraph, AgentSwarm, A2A+ACP interoperability, OPA, FastAPI, FastMCP.
 
 2) Complete RFC spike: memory/intelligence/observability
-- Status: pending
+- Status: completed
 - Exit criteria: adopt/defer decisions captured for LiteLLM, RAG, Skills, Mem0, pgvector, OpenSearch, OpenTelemetry, LangSmith, AgentOps, Grafana.
 
-3) Complete RFC spike: language/runtime/persistence/deployment
+3) Complete RFC spike: runtime interfaces and operator experience
 - Status: pending
-- Exit criteria: adopt/defer decisions captured for Python, TypeScript, React, PostgreSQL, Redis, Docker.
+- Exit criteria: adopt/defer decisions captured for Python runtime boundary, channel integrations (WhatsApp/Discord), Grafana-first operations UX, and React/TypeScript necessity for custom UI.
 
-4) Create v1 architecture baseline mapping selected tools to components/interfaces
+4) Complete RFC spike: data and memory architecture
+- Status: pending
+- Exit criteria: adopt/defer decisions captured for PostgreSQL, Redis, pgvector, Mem0, and CDC/replay + retention model.
+
+5) Complete RFC spike: deployment and cost strategy
+- Status: pending
+- Exit criteria: adopt/defer decisions captured for Docker local baseline, cloud deployment pattern, managed vs self-hosted data services, and cost scaling triggers.
+
+6) Create v1 architecture baseline mapping selected tools to components/interfaces
 - Status: pending
 - Exit criteria: locked v1 interface map for Policy API, Task API, A2A/ACP, memory APIs, and audit schema.
 

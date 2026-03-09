@@ -20,6 +20,8 @@
 - `spec/rfcs/RFC-01-Orchestration-Governance-ControlPlane.md`
 - `spec/rfcs/RFC-02-Memory-Intelligence-Observability.md`
 - `spec/rfcs/RFC-03-Language-Runtime-Persistence-Deployment.md`
+- `spec/rfcs/RFC-04-Data-Memory-Architecture.md`
+- `spec/rfcs/RFC-05-Deployment-and-Cost-Strategy.md`
 
 ## 5. Completion Gate
 - Every required domain has one recorded recommendation.
