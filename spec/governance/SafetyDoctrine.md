@@ -39,6 +39,10 @@
   - system safety mode (Administrator)
   - Owner override (ultimate authority)
 
+Pause reporting requirements:
+- Any agent pause action must notify CEO.
+- If pause impact is critical to project continuity or governance integrity, Owner must be alerted immediately.
+
 ## 6. Rule Set
 | Rule ID | Statement | Severity | Enforced By |
 | --- | --- | --- | --- |
@@ -46,6 +50,7 @@
 | SAF-002 | Safety enforcement MUST remain independent from operational execution. | critical | Policy Engine |
 | SAF-003 | Safety incidents MUST be recorded in immutable execution logs. | critical | Observability |
 | SAF-004 | Owner override capability MUST remain available and auditable. | high | Runtime |
+| SAF-005 | Agent pause events MUST notify CEO and escalate to Owner when critical impact is detected. | high | Task Orchestrator |
 
 ## 7. Incident Record Contract
 Required fields:
@@ -59,3 +64,5 @@ Required fields:
 - Unsafe task path triggers containment action.
 - Safety incidents produce complete immutable incident records.
 - Owner override action is accepted when authorized and fully audited.
+- Agent pause actions always produce CEO notification records.
+- Critical-impact pause actions produce Owner alert records.

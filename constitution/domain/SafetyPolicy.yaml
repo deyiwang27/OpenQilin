@@ -26,6 +26,18 @@ monitoring_owners:
   resource: auditor
   infrastructure: administrator
 
+pause_reporting:
+  notify_ceo_on_any_agent_pause: true
+  alert_owner_on_critical_impact: true
+  required_fields:
+    - event_id
+    - trace_id
+    - paused_agent_id
+    - initiated_by
+    - reason
+    - critical_impact
+    - timestamp
+
 owner_override:
   enabled: true
   audit_required: true

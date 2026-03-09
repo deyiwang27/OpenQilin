@@ -1,0 +1,48 @@
+Inter-Agent Communication Layer
+	Communication Channels
+		Direct Chat / Direct Message: One-to-one communication between agents. Used for:
+			• Task requests (PM → Specialist)
+			• Clarification (Specialist → PM/Domain Lead)
+			• Escalation (any agent → higher authority)
+		Group Chat / Project Chat: Scoped to a project, accessible to all project-level agents.
+			• Coordination among multiple specialists.
+			• Broadcast updates from PM or Domain Lead.
+		Executive Chat: Only CEO, CWO, CSO.
+			• High-level strategic or performance discussions.
+		Audit/Read-Only Channels: Auditor can read all communications but cannot participate.
+Owner can Direct Chat with Admin, Auditor, CEO, CWO, CSO
+		Owner can join Group Chat, Project Chat, and Executive Chat
+	Message Structure
+		Every message should include:
+		1. Sender ID – agent_id
+		2. Recipient(s) ID(s) – agent_id or project/team namespace
+		3. Message Type – e.g., decision, command, advoice, alert, discussion, etc.
+		4. Authority Level – sender’s role authority (used to enforce permissions)
+		5. Payload – structured content, e.g., task description, data snippet, recommendation
+		6. Priority / Urgency – Normal / High / Critical
+		7. Timestamp
+	Alert Types
+		• Critical (Immediate)
+			• Requires Owner attention and/or intervention.
+			• Examples: budget overshoot, legal risk detected, deadlock between agents, project suspension.
+		• Warning (High-priority)
+			• Signals potential future issues; may trigger automatic corrective actions by agents.
+			• Examples: repeated execution failures, token consumption nearing limit, low agent efficiency.
+		• Informational (Low-priority)
+			• Periodic summaries or notifications for Owner awareness.
+			• Examples: project milestone reached, regular weekly agent performance digest.
+	Authority Enforcement
+		• Agents cannot override messages beyond their authority.
+			• Example: Developer cannot assign tasks to another specialist.
+		• Escalation messages must follow Constitution Layer rules:
+			• Event → Condition → Target Authority → Action
+		• Temporary suspension or approval requests (e.g., CWO suspends a malfunctioning agent) require higher-level acknowledgment before taking effect.
+	Triggers for inter-agent conversations:
+		1. Task assignment: PM assigns new task → start DM thread with responsible Specialist(s).
+		2. Progress update / milestone reached: Specialist reports completion → PM receives notification.
+		3. Escalation / Exception: Any failure, repeated errors, or risk → trigger conversation to next authority.
+		4. Periodic check-ins: Low-frequency review of active tasks (e.g., daily or weekly summaries).
+	Recommendation:
+		• Primary log: PostgreSQL execution_logs table. Treat it as authoritative, append-only.
+		• Vector embeddings: Only store messages that are relevant for reasoning, like task context, important updates, or ongoing discussion.
+		• Auditor reads: Pulls from PostgreSQL for audit (all messages) and optionally from vector DB for reasoning/analysis — this avoids overloading token usage for every read.

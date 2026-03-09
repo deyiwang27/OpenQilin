@@ -25,6 +25,7 @@ Purpose: implementation-level specifications for AI engineering agents.
 - `constitution/BudgetEngineContract.md`
 
 ### 4. Orchestration
+- `orchestration/OwnerInteractionModel.md`
 - `orchestration/AgentRegistry.md`
 - `orchestration/AgentCommunicationA2A.md`
 - `orchestration/AgentMemoryModel.md`

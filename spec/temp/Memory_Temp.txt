@@ -1,0 +1,22 @@
+1. The Three-Tier Memory Architecture
+To prevent "context rot" and manage long-running agent stability, the system employs a tiered storage approach:
+	• Cold Memory (Archival): Managed via RAG (Retrieval-Augmented Generation). This stores static knowledge such as the System Handbook, the Constitution, and historical project documentation.
+	• Warm Memory (Fact-Centric): Powered by Mem0. It extracts discrete facts, user preferences, and project state from conversations as "data points". This ensures the CEO and Concierge maintain a consistent "source of truth" regarding Owner instructions and project parameters.
+	• Hot Memory (Working): The immediate LLM context window, strictly limited to the current task and the most recent interaction turns to minimize token waste and hallucination risk.
+2. Operational Protocols
+	A. The "Zero-Context" Restart (Checkpointing & Artifacts)
+		To maintain high reasoning quality over months of operation, OpenQilin moves away from long "chat history" dependencies:
+			§ Artifact Generation: At the conclusion of every session, the active agent (e.g., CWO) is forced to generate a progress.txt or status.json file.
+			§ State Loading: The next session begins by reading these specific artifacts rather than the raw chat logs. This ensures a clean, "Zero-Context" start that focuses only on the current state and the next objective.
+	B. The "Memory Scrubbing" Protocol (Administrator Role)
+		The Administrator Agent is responsible for infrastructure hygiene and token efficiency:
+			§ 24-Hour Compression: Every 24 hours, the Administrator reviews the previous day's raw execution logs.
+			§ Insight Extraction: Using a temporal tool (like Zep’s core engine), the Administrator compresses these logs into high-level "Strategic Insights."
+			§ Promotion: These insights are promoted to the CSO’s strategic memory or the Auditor’s log, while the voluminous raw data is archived to Cold Memory.
+3. Governance IntegrationAuditor Oversight: 
+	• The Auditor Agent monitors the "Warm Memory" for inconsistencies. If a stored fact contradicts a new Owner directive, it flags a "Strategic Drift" alert.
+	• Budget Discipline: By offloading long-term memory to Mem0 (Warm) and RAG (Cold), the system avoids the "Token Bankruptcy" associated with feeding massive chat histories back into the LLM.
+	• Data Privacy: The Administrator ensures that sensitive data detected during "Memory Scrubbing" is redacted before it is stored in long-term archival memory.
+4. Implementation Stack (Target: Month 3 MVP)
+	• Primary Tool: Mem0 (Self-Hosted/OSS). Chosen for its Apache 2.0 license, aligning with OpenQilin’s open-source foundation.
+	• Secondary Tool: LiteLLM + AgentOps. Used by the Administrator to track the cost of memory operations against the defined 10%/20% budget thresholds.

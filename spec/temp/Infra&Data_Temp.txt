@@ -1,0 +1,160 @@
+Infra & Data Layer
+	Deterministic State + Storage Substrate
+	PostgreSQL:
+	Schema	Purpose
+	project_container	Main project info, budget, state, agent roster
+	agent_registry	Agents, roles, model binding, memory scope, autonomy, budget, lifecycle
+	execution_logs	Append-only, structured logs with agent decisions, tool calls, result
+	metrics_store	Token usage, API calls, execution time, review loops
+	dimension_project_state	Reference for project state machine
+	dimension_agent_state	Reference for agent lifecycle
+	dimension_tools	Catalog of available tools
+	lookup_roles	Normalized agent roles
+	lookup_memory_levels	Hot/Warm/Cold
+
+	1. Project Container
+	• project_id (PK)
+	• state (from Constitution)
+	• budget allocation
+	• agent roster (FK to Agent Registry)
+	• creation / update timestamps
+	• constitution version reference
+
+	2. Agent Registry:
+	• agent_id (PK)
+	• state (from Constitution)
+	• role_type
+	• base_model
+	• tool_bindings
+	• memory_scope
+	• autonomy_level
+	• budget limit
+	• creation timestamp
+
+	3. Immutable Execution Log Store
+	• log_id (PK)
+	• project_id (FK)
+	• agent_id (FK)
+	• timestamp
+	• intent
+	• decision_reasoning
+	• authority_source
+	• tool_call
+	• result
+	• outcome_evaluation
+	• budget_impact
+	• previous_state / next_state
+	• hash / checksum (to guarantee immutability)
+
+	4. Metrics Store
+	• metric_id (PK)
+	• project_id (FK)
+	• agent_id (FK)
+	• token_usage
+	• api_calls
+	• execution_duration
+	• review_loops
+	• timestamp
+
+	5. Project State Dimension Table
+	• state_id - PK
+	• name - Proposed, Active, Paused, Completed, Archived, Terminated
+	• allowed_transitions - JSON list of allowed next states
+	• description - Optional human-readable description
+
+	6. Agent State Dimension Table
+	• state_id - PK
+	• name - Proposed, Active, Paused, Terminated, Archived
+	• allowed_transitions - JSON list
+	• description - Notes on governance rules
+
+	7. Tool Catalog
+	tool_id - PK
+	name - e.g., Perplexity, Notion AI, NotebookLM
+	type - e.g., Search, Knowledge Management, Spreadsheet
+	access_level - Which agents/projects can use
+	version - Tool version
+	description - Purpose, notes
+
+	8. Agent Roles
+	role_id - PK
+	role_name
+	role_type
+	description
+	
+	role_id	role_name	role_type	description
+	1	CEO Agent	Executive	Primary interface to Owner; makes final decisions
+	2	CSO Agent	Executive	Strategic guidance across projects
+	3	CWO Agent	Executive	Workforce & agent factory; spins up/down agents
+	4	Auditor Agent	Infrastructure	Oversight, cost/legal review, governance check
+	5	Administrator Agent	Infrastructure	Memory, storage, logs, compliance management
+	6	Project Manager	Project-Level Lead	Task breakdown, coordination, milestone reporting
+	7	Domain Lead	Project-Level Lead	Technical/domain expert
+	8	Developer Agent	Specialist	Code implementation
+	9	Analyst Agent	Specialist	Data/trend/market analysis
+	10	Creator Agent	Specialist	Creative/content generation
+	11	QA Agent	Specialist	Review & critique output
+
+	9. Memory Levels
+	memory_id - PK
+	memory_name
+	description
+	ttl_days
+	compression
+	read_only
+	
+	10. Messages
+	Field	Description
+	message_id	PK
+	sender	Owner / agent_id
+	recipients	single or list of agent_ids
+	project_id	optional project association
+	message_type	communication / alert / system_event
+	content	raw text
+	timestamp	creation time
+	status	pending / delivered / read
+	
+	memory_id	memory_name	description	ttl_days	compression	read_only
+	1	Hot Memory	Active project context, frequently updated	1	FALSE	FALSE
+	2	Warm Memory	Summarized history, mid-term storage	30	TRUE	FALSE
+	3	Cold Archive	Snapshot storage, long-term, read-only	365	TRUE	TRUE
+	
+	Qdrant: open-source, Python SDK, supports namespaces per project, TTL for hot/warm memory, easy to integrate with CDC.
+	Memory	Purpose
+	Hot Memory	Project active context, agent scratchpads
+	Warm Memory	Summarized project history
+	Cold Archive	Snapshots, compressed, read-only
+	
+	1. Memory Stores
+	Memory = Scope × Lifecycle
+	Storage lifecycle
+		• Working Memory Store(hot)
+		• Project Memory Store(warm)
+		• Archive Memory Store (cold)
+	Scope dimension:
+		• Agent
+		• Project
+		• Global
+	Structured Index Filters:
+		• project_id
+		• agent_id
+		• memory_scope (hot/warm)
+		• memory_type (decision, summary, alert, discussion)
+		• timestamp
+		• status
+		• version
+
+	Change Data Capture (CDC): Relational DB → Vector DB
+	Ensure Memory Stores (vector DB) are always consistent with authoritative project/agent state.
+	Any insert/update in relevant tables (Project Container, Logs, Agent Registry) triggers CDC events.
+	Direct ETL scripts: Python listener on PostgreSQL triggers → push updates to vector DB.
+		• Hot memory updated in near real-time.
+		• Warm memory updated periodically, e.g., nightly summarization.
+		• Cold archive updated weekly/monthly.
+	
+	Memory Mapping
+	DB Table / Event	Vector DB Memory Level	Notes
+	Project updates / logs	Hot Memory	Latest context for active reasoning
+	Execution logs aggregation	Warm Memory	Summarized history, compressed
+	Snapshots / old logs	Cold Archive	Periodic snapshot, read-only
+	

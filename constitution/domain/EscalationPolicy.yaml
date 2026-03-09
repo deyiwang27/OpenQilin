@@ -64,3 +64,46 @@ global_requirements:
     - current_owner_role
     - next_owner_role
     - rule_ids
+
+triggers:
+  - id: ESC-T001
+    event: budget_hard_breach
+    condition: threshold_state == hard
+    target_authority: auditor
+    action: enforce_budget_stop_and_escalate_owner_notify_ceo
+
+  - id: ESC-T002
+    event: domain_disagreement
+    condition: unresolved_after_project_manager_review == true
+    target_authority: ceo
+    action: strategic_arbitration
+
+  - id: ESC-T003
+    event: governance_violation
+    condition: constitutional_rule_breach == true
+    target_authority: owner
+    action: direct_governance_escalation
+
+  - id: ESC-T004
+    event: operational_deadlock
+    condition: progress_blocked_and_retries_exhausted == true
+    target_authority: highest_authority_in_scope
+    action: forced_resolution_or_reassignment
+
+  - id: ESC-T005
+    event: legal_risk_detected
+    condition: risk_severity in [high, critical]
+    target_authority: owner
+    action: immediate_compliance_escalation
+
+  - id: ESC-T006
+    event: agent_paused
+    condition: pause_initiated == true
+    target_authority: ceo
+    action: notify_ceo
+
+  - id: ESC-T007
+    event: agent_paused
+    condition: critical_impact == true
+    target_authority: owner
+    action: immediate_owner_alert

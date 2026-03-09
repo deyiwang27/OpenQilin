@@ -1,0 +1,85 @@
+Constitution Layer
+	A policy engine + authority graph + state machine + enforcement contract.
+	1. Authority Graph Engine
+	Command + Override + Escalate + Pause + Data Access
+	Defines:
+		• Who can command whom
+		• Who can escalate to whom
+		• Who can override whom
+		• Who can pause whom
+		• Who can what data
+
+	2. Escalation Engine
+	It is trigger-based. No debate logic inside Constitution.
+	Each escalation trigger must be:
+	Event → Condition → Target Authority → Action
+	Define explicit triggers:
+		1. Budget exceeded → Auditor → Owner
+		2. Domain disagreement → PM → CEO (→ Owner optional)
+		3. Governance violation → Auditor → Owner
+		4. Deadlock between agents → Escalate to Highest Authority in Scope
+		5. Legal risk detected → Auditor → Owner
+
+	3. Budget Enforcement Engine
+	Token and API cost budget
+		Soft limit (warning) 90%
+		Hard limit (alert owner) 100%
+
+	Above three stored in Git-style file structure and database storage
+
+	4. Project State Machine
+	Must be deterministic. Allowed transitions only.
+	Project states:
+		• Proposed
+		• Active
+		• Paused
+		• Completed
+		• Terminated
+		• Archived
+
+	5. Agent Lifecycle Control
+	Agent states:
+		• Proposed
+		• Active
+		• Paused
+		• Terminated
+		• Archived
+
+	6. Memory lifecycle Policy
+		• Snapshot before compression
+		• Owner override required for deletion
+		• Cross-project isolation guarantee
+	Memory states:
+		Hot Memory
+		Active project context.
+		Short TTL 24 hr.
+
+		Warm Memory
+		Summarized history.
+		Compressed.
+		Mid TTL 30 days.
+
+		Cold Archive
+		Snapshot storage.
+		Read-only.
+		Long TTL 365 days.
+	
+	7. Logging Enforcement Contract
+	Every execution step must produce:
+		• Intent
+		• Decision Reasoning
+		• Authority Source
+		• Tool Call
+		• Result
+		• Outcome Evaluation
+		• Budget Impact
+		• Timestamp
+		• Agent ID
+	
+	8. Constitution Version Control
+		• Constitution changes require:
+			• Owner approval
+			• Automatic compatibility validation against active projects
+			• Version diff logged immutably
+			• Migration rules defined (backward compatibility or forced transition)
+	

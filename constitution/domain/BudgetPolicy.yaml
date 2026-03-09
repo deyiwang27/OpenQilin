@@ -1,6 +1,6 @@
 version: 0.1.0
 thresholds:
-  soft_percent: 85
+  soft_percent: 90
   hard_percent: 100
   daily_guardrail_percent: 15
 
