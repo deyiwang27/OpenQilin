@@ -707,7 +707,7 @@ Key authority constraints include:
 
 Additionally:
 
-- Only the CWO may create or terminate agents at the system level.
+- CWO manages system-level agent creation or termination in normal operations; Owner may authorize exceptions through constitutional override workflow.
 - Project Managers may create specialist agents only within project scope and budget constraints.
 - The Auditor may pause agents or projects when severe violations occur.
 - The Administrator may intervene when infrastructure or security risks are detected.
@@ -976,7 +976,7 @@ To maintain system stability, several hard constraints are enforced across the a
 
 **Workforce Control Limits**
 
-- Only the CWO may manage system-level agent creation or termination.
+- CWO manages system-level agent creation or termination in normal operations; Owner may authorize exceptions through constitutional override workflow.
 
 **Project Containment**
 

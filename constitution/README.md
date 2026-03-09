@@ -25,6 +25,9 @@ Purpose: runtime constitutional source of truth for policy enforcement.
 - `governance/Charter.md`
 - `governance/ChangeControl.md`
 
+## Templates
+- `templates/DomainPolicyTemplate.yaml`
+
 ## Runtime Decision Metadata (Required)
 Every governance-critical decision should include:
 - `policy_version`

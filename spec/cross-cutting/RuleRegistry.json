@@ -333,7 +333,7 @@
     },
     {
       "id": "AUTH-003",
-      "statement": "System-level workforce lifecycle actions MUST be restricted to cwo authority.",
+      "statement": "System-level workforce lifecycle actions MUST be executed by cwo in normal operations; owner may authorize exceptions through constitutional override workflow.",
       "severity": "critical",
       "enforced_by": "policy_engine",
       "primary_source": "constitution/core/PolicyRules.yaml",

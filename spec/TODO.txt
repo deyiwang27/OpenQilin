@@ -6,34 +6,56 @@ Execution model:
 - Phase strategy: governance-core first.
 - RFC spikes: completed.
 
-1) P0 - Publish v1 Architecture Baseline
+P0 (must complete before implementation kickoff)
+
+1) Publish v1 Architecture Baseline
 - Status: pending
 - Exit criteria: one baseline document mapping selected stack to runtime components and authoritative interfaces (`policy`, `task`, `a2a+acp`, `llm gateway`, `memory`, `audit`).
 
-2) P0 - Lock A2A + ACP Reliability Profile
+2) Lock A2A + ACP Reliability Profile
 - Status: pending
 - Exit criteria: unified reliability contract across `AgentCommunicationA2A.md`, `AgentCommunicationACP.md`, and `TaskOrchestrator.md` for ack/retry/dead-letter/idempotency semantics.
 
-3) P0 - Conformance Mapping for New Specs
+3) Refresh Rule Registry and Conformance Coverage
 - Status: pending
-- Exit criteria: each new integration spec below has either (a) explicit rule IDs mapped in `RuleRegistry.json` and `ConformanceCoverage.json`, or (b) documented rationale for having no rule table.
+- Exit criteria: all changed specs/policies are reflected in `RuleRegistry.json` and `ConformanceCoverage.json`, including the Secretary role migration and new templates; unresolved mappings are explicitly documented.
   - `spec/infrastructure/DeploymentTopologyAndOps.md`
   - `spec/infrastructure/LlmGatewayContract.md`
   - `spec/orchestration/SkillCatalogAndBindings.md`
   - `constitution/domain/OperationsPolicy.yaml`
+  - `spec/governance/AgentAuthorityGraph.md`
+  - `constitution/core/PolicyRules.yaml`
 
-4) P1 - Deployment Runbook Completion (Local First -> Cloud)
+P1 (next documentation hardening wave)
+
+4) Add Dedicated Secretary Role Contract Spec
+- Status: pending
+- Exit criteria: one normative role-contract spec (using `spec/templates/RoleContractTemplate.md`) that centralizes duties, boundaries, read-only data scope, and triage routing rules.
+
+5) Deployment Runbook Completion (Local First -> Cloud)
 - Status: pending
 - Exit criteria: documentation-grade runbooks for local phase gates, cloud promotion checklist, rollback path, and evidence artifacts required by operations policy.
 
-5) P1 - Owner Channel and Identity Hardening Spec
+6) Owner Channel and Identity Hardening Spec
 - Status: pending
 - Exit criteria: complete connector trust model for Discord/WhatsApp integration, identity binding lifecycle, signature/replay controls, and alert ownership defaults.
 
-6) P1 - Data and Memory Operations Playbooks
+7) Data and Memory Operations Playbooks
 - Status: pending
 - Exit criteria: operational playbooks for CDC replay, backfill, artifact extraction failure handling, and PostgreSQL/Redis recovery drills.
 
-7) P2 - Deferred Capability Activation Criteria
+8) Add Spec/Constitution Release Checklist
+- Status: pending
+- Exit criteria: one checklist document defining pre-merge/pre-release documentation gates (index integrity, role consistency, policy-manifest sync, rule registry freshness).
+
+P2 (planning and evolution)
+
+9) Deferred Capability Activation Criteria
 - Status: pending
 - Exit criteria: explicit adoption gates for deferred items (Mem0/OpenSearch/managed Redis/full managed cloud topology) with measurable trigger thresholds.
+
+10) Template Adoption for New Docs
+- Status: pending
+- Exit criteria: all newly drafted role specs and domain policies start from:
+  - `spec/templates/RoleContractTemplate.md`
+  - `constitution/templates/DomainPolicyTemplate.yaml`

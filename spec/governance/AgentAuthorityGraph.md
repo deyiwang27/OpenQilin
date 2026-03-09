@@ -31,7 +31,7 @@ Notes:
 ## 4. Hard Constraints
 - Governance agents cannot participate in project execution.
 - Executive agents cannot override `auditor` or `administrator` actions.
-- Only the `cwo` may manage system-level agent creation or termination.
+- `cwo` manages system-level agent creation or termination in normal operations; `owner` exceptions require explicit constitutional override approval.
 - `project_manager` may create `specialist` agents only within project scope and budget.
 - All emergency actions must be recorded in immutable execution logs.
 
@@ -40,7 +40,7 @@ Notes:
 | --- | --- | --- | --- |
 | AUTH-001 | Actions outside authority matrix MUST be denied. | critical | Policy Engine |
 | AUTH-002 | Governance enforcement actions MUST NOT be overridden by executive or operational roles. | critical | Policy Engine |
-| AUTH-003 | System-level workforce lifecycle actions MUST be restricted to `cwo` authority. | critical | Policy Engine |
+| AUTH-003 | System-level workforce lifecycle actions MUST be executed by `cwo` in normal operations; `owner` may authorize exceptions through constitutional override workflow. | critical | Policy Engine |
 | AUTH-004 | `secretary` role MUST remain advisory-only and MAY access relevant dashboard, alert, and owner chat data in read-only mode for onboarding and status interpretation. | high | Policy Engine |
 | AUTH-005 | `secretary` role MAY request executive or specialist participation for out-of-scope questions but MUST NOT delegate as command authority. | high | Policy Engine |
 | AUD-001 | Emergency actions MUST emit immutable audit records with trace context. | high | Observability |
@@ -56,7 +56,7 @@ Notes:
 ## 7. Conformance Tests
 - Invalid role-action-target triplets are denied.
 - Executive override attempts against governance actions are denied.
-- Non-`cwo` system-level agent creation/termination attempts are denied.
+- Non-`cwo` system-level agent creation/termination attempts are denied unless an explicit `owner` override approval is present.
 - `secretary` command/execution/workforce actions are denied.
 - `secretary` status-analysis requests over allowed read scopes are denied.
 - Emergency actions without audit metadata fail validation.

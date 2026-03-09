@@ -15,7 +15,7 @@ rules:
   - id: AUTH-003
     title: Workforce authority guard
     severity: critical
-    statement: System-level workforce lifecycle actions MUST be restricted to cwo authority.
+    statement: System-level workforce lifecycle actions MUST be executed by cwo in normal operations; owner may authorize exceptions through constitutional override workflow.
     enforced_by: policy_engine
 
   - id: AUTH-004

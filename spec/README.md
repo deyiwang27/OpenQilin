@@ -74,6 +74,10 @@ Purpose: implementation-level specifications for AI engineering agents.
 - `spec/rfcs/RFC-05-Deployment-and-Cost-Strategy.md`
 - `spec/rfcs/RFC-06-Project-Task-Status-And-Work-Artifact-Management.md`
 
+### 9. Templates
+- `spec/templates/ImplementationContractTemplate.md`
+- `spec/templates/RoleContractTemplate.md`
+
 ## Precedence
 1. `constitution/`
 2. `spec/`
