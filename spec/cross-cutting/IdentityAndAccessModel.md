@@ -3,6 +3,8 @@
 ## 1. Scope
 - Defines agent identity, role binding, and access control boundaries.
 - Defines mapping between external channel identities and internal governed principals.
+- Defines v1 external channel hardening posture for Discord integration.
+- Channel-specific controls are detailed in `spec/cross-cutting/DiscordOwnerChannelIdentityHardening.md`.
 
 ## 2. Identity Model
 Canonical identity fields:
@@ -27,6 +29,7 @@ External mapping fields:
 - Cross-project access requires explicit project scope authorization.
 - External identities are denied by default until mapped and verified.
 - Connector-authenticated requests still require policy authorization.
+- v1 channel hardening profile is Discord-only; additional channels are deferred.
 
 ## 4. Rule Set
 | Rule ID | Statement | Severity | Enforced By |

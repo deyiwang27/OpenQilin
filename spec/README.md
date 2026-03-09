@@ -13,6 +13,15 @@ Purpose: implementation-level specifications for AI engineering agents.
 ### 2. Governance
 - `spec/governance/GovernanceArchitecture.md`
 - `spec/governance/AgentAuthorityGraph.md`
+- `spec/governance/SecretaryRoleContract.md`
+- `spec/governance/AdministratorRoleContract.md`
+- `spec/governance/AuditorRoleContract.md`
+- `spec/governance/CeoRoleContract.md`
+- `spec/governance/CwoRoleContract.md`
+- `spec/governance/CsoRoleContract.md`
+- `spec/governance/ProjectManagerRoleContract.md`
+- `spec/governance/DomainLeadRoleContract.md`
+- `spec/governance/SpecialistRoleContract.md`
 - `spec/governance/EscalationModel.md`
 - `spec/governance/SafetyDoctrine.md`
 - `spec/governance/DecisionReviewGates.md`
@@ -50,6 +59,7 @@ Purpose: implementation-level specifications for AI engineering agents.
 - `spec/infrastructure/DataModelAndSchemas.md`
 - `spec/infrastructure/LlmGatewayContract.md`
 - `spec/infrastructure/ArtifactIngestionAndExtraction.md`
+- `spec/infrastructure/DataMemoryOperationsPlaybooks.md`
 - `spec/infrastructure/DeploymentTopologyAndOps.md`
 - `spec/infrastructure/ExecutionSandbox.md`
 - `spec/infrastructure/StorageAndRetention.md`
@@ -58,11 +68,15 @@ Purpose: implementation-level specifications for AI engineering agents.
 ### 7. Cross-Cutting
 - `spec/cross-cutting/ErrorCodesAndHandling.md`
 - `spec/cross-cutting/IdentityAndAccessModel.md`
+- `spec/cross-cutting/DiscordOwnerChannelIdentityHardening.md`
 - `spec/cross-cutting/ConformanceTestPlan.md`
 - `spec/cross-cutting/RuleIdCatalog.md`
 - `spec/cross-cutting/RuleRegistry.json`
 - `spec/cross-cutting/ConformanceCoverage.json`
 - `spec/cross-cutting/ProjectTaskQueryContracts.md`
+- `spec/cross-cutting/SpecConstitutionReleaseChecklist.md`
+- `spec/cross-cutting/DeferredCapabilityActivationCriteria.md`
+- `spec/cross-cutting/DocumentationTemplateAdoption.md`
 - `spec/cross-cutting/Glossary.md`
 
 ### 8. RFC Spikes

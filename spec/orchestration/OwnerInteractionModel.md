@@ -3,6 +3,7 @@
 ## 1. Scope
 - Defines owner-to-agent interaction patterns, channels, message types, alerts, and monitoring views.
 - Covers human-facing interaction semantics only; policy enforcement remains in constitution/runtime components.
+- Discord security profile is defined in `spec/cross-cutting/DiscordOwnerChannelIdentityHardening.md`.
 
 ## 2. Interaction Channels
 - Direct Message (owner <-> single agent)
@@ -12,7 +13,7 @@
 
 Platform posture (v1):
 - Primary external channel: Discord.
-- Optional channel: WhatsApp Cloud API (feature-flagged and policy-gated).
+- Additional external channels are deferred until Discord baseline is hardened.
 - Communication protocol posture remains `A2A + ACP`.
 
 Allowed direct access (v1):
@@ -39,7 +40,7 @@ Every owner interaction message should include:
 - optional `project_id`
 
 Connector-required metadata:
-- `channel` (`discord|whatsapp|internal`)
+- `channel` (`discord|internal`)
 - `external_message_id`
 - `actor_external_id`
 - `idempotency_key`

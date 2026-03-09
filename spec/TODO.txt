@@ -18,44 +18,20 @@ P0 (must complete before implementation kickoff)
 
 3) Refresh Rule Registry and Conformance Coverage
 - Status: pending
-- Exit criteria: all changed specs/policies are reflected in `RuleRegistry.json` and `ConformanceCoverage.json`, including the Secretary role migration and new templates; unresolved mappings are explicitly documented.
+- Exit criteria: all changed specs/policies are reflected in `RuleRegistry.json` and `ConformanceCoverage.json`, including Secretary and newly added P1/P2 specs; unresolved mappings are explicitly documented.
   - `spec/infrastructure/DeploymentTopologyAndOps.md`
   - `spec/infrastructure/LlmGatewayContract.md`
+  - `spec/infrastructure/DataMemoryOperationsPlaybooks.md`
   - `spec/orchestration/SkillCatalogAndBindings.md`
   - `constitution/domain/OperationsPolicy.yaml`
   - `spec/governance/AgentAuthorityGraph.md`
+  - `spec/governance/SecretaryRoleContract.md`
+  - `spec/governance/AdministratorRoleContract.md`
+  - `spec/governance/AuditorRoleContract.md`
+  - `spec/governance/CeoRoleContract.md`
+  - `spec/governance/CwoRoleContract.md`
+  - `spec/governance/CsoRoleContract.md`
+  - `spec/governance/ProjectManagerRoleContract.md`
+  - `spec/governance/DomainLeadRoleContract.md`
+  - `spec/governance/SpecialistRoleContract.md`
   - `constitution/core/PolicyRules.yaml`
-
-P1 (next documentation hardening wave)
-
-4) Add Dedicated Secretary Role Contract Spec
-- Status: pending
-- Exit criteria: one normative role-contract spec (using `spec/templates/RoleContractTemplate.md`) that centralizes duties, boundaries, read-only data scope, and triage routing rules.
-
-5) Deployment Runbook Completion (Local First -> Cloud)
-- Status: pending
-- Exit criteria: documentation-grade runbooks for local phase gates, cloud promotion checklist, rollback path, and evidence artifacts required by operations policy.
-
-6) Owner Channel and Identity Hardening Spec
-- Status: pending
-- Exit criteria: complete connector trust model for Discord/WhatsApp integration, identity binding lifecycle, signature/replay controls, and alert ownership defaults.
-
-7) Data and Memory Operations Playbooks
-- Status: pending
-- Exit criteria: operational playbooks for CDC replay, backfill, artifact extraction failure handling, and PostgreSQL/Redis recovery drills.
-
-8) Add Spec/Constitution Release Checklist
-- Status: pending
-- Exit criteria: one checklist document defining pre-merge/pre-release documentation gates (index integrity, role consistency, policy-manifest sync, rule registry freshness).
-
-P2 (planning and evolution)
-
-9) Deferred Capability Activation Criteria
-- Status: pending
-- Exit criteria: explicit adoption gates for deferred items (Mem0/OpenSearch/managed Redis/full managed cloud topology) with measurable trigger thresholds.
-
-10) Template Adoption for New Docs
-- Status: pending
-- Exit criteria: all newly drafted role specs and domain policies start from:
-  - `spec/templates/RoleContractTemplate.md`
-  - `constitution/templates/DomainPolicyTemplate.yaml`
