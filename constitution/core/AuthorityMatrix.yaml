@@ -1,0 +1,100 @@
+version: 0.1.0
+roles:
+  owner:
+    decision: allow
+    command: allow
+    execution: deny
+    review: allow
+    advisory: allow
+    oversight: allow
+    workforce: allow
+  secretary:
+    decision: deny
+    command: deny
+    execution: deny
+    review: deny
+    advisory: allow
+    oversight: deny
+    workforce: deny
+  administrator:
+    decision: deny
+    command: deny
+    execution: deny
+    review: deny
+    advisory: deny
+    oversight: allow
+    workforce: deny
+  auditor:
+    decision: deny
+    command: deny
+    execution: deny
+    review: deny
+    advisory: deny
+    oversight: allow
+    workforce: deny
+  ceo:
+    decision: allow
+    command: allow
+    execution: deny
+    review: deny
+    advisory: deny
+    oversight: deny
+    workforce: deny
+  cwo:
+    decision: deny
+    command: allow
+    execution: deny
+    review: deny
+    advisory: deny
+    oversight: deny
+    workforce: allow
+  cso:
+    decision: allow
+    command: deny
+    execution: deny
+    review: deny
+    advisory: allow
+    oversight: deny
+    workforce: deny
+  project_manager:
+    decision: allow
+    command: allow
+    execution: deny
+    review: deny
+    advisory: deny
+    oversight: deny
+    workforce: allow
+  domain_lead:
+    decision: deny
+    command: deny
+    execution: deny
+    review: allow
+    advisory: allow
+    oversight: deny
+    workforce: deny
+  specialist:
+    decision: deny
+    command: deny
+    execution: allow
+    review: deny
+    advisory: deny
+    oversight: deny
+    workforce: deny
+default_behavior:
+  unknown_role: deny
+  unknown_authority: deny
+role_notes:
+  secretary:
+    display_name: Secretary
+    operating_contract:
+      - advisory_only
+      - read_only_onboarding_and_status_support
+      - triage_router_to_executive_or_specialist_roles
+    read_access_scope:
+      - dashboard_metrics
+      - alert_streams
+      - owner_interaction_chats
+    prohibited_actions:
+      - policy_approval_or_override
+      - workforce_lifecycle_actions
+      - command_or_execution_actions

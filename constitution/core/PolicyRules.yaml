@@ -1,0 +1,85 @@
+version: 0.1.0
+rules:
+  - id: AUTH-001
+    title: Actor identity required
+    severity: critical
+    statement: Every action request MUST include actor id and role.
+    enforced_by: policy_engine
+
+  - id: AUTH-002
+    title: Authority matrix enforcement
+    severity: critical
+    statement: Actions outside authority matrix MUST be denied.
+    enforced_by: policy_engine
+
+  - id: AUTH-003
+    title: Workforce authority guard
+    severity: critical
+    statement: System-level workforce lifecycle actions MUST be executed by cwo in normal operations; owner may authorize exceptions through constitutional override workflow.
+    enforced_by: policy_engine
+
+  - id: AUTH-004
+    title: Secretary advisory and read-only scope
+    severity: high
+    statement: secretary role MUST remain advisory-only and MAY access relevant dashboard, alert, and owner chat data in read-only mode for onboarding and status interpretation.
+    enforced_by: policy_engine
+
+  - id: AUTH-005
+    title: Secretary triage routing guard
+    severity: high
+    statement: secretary role MAY request executive or specialist participation for out-of-scope questions but MUST NOT delegate as command authority.
+    enforced_by: policy_engine
+
+  - id: GOV-001
+    title: Governance non-bypass
+    severity: critical
+    statement: Executive and operational agents MUST NOT override governance enforcement actions.
+    enforced_by: policy_engine
+
+  - id: POL-003
+    title: Fail-closed policy evaluation
+    severity: critical
+    statement: Policy evaluation errors MUST result in deny decisions.
+    enforced_by: policy_engine
+
+  - id: POL-004
+    title: Unknown role denied
+    severity: critical
+    statement: Unknown actor roles MUST be denied.
+    enforced_by: policy_engine
+
+  - id: POL-005
+    title: Obligations required
+    severity: high
+    statement: allow_with_obligations decisions MUST include explicit obligations.
+    enforced_by: policy_engine
+
+  - id: BUD-001
+    title: Hard budget stop
+    severity: critical
+    statement: Execution at or above hard threshold MUST be blocked or paused.
+    enforced_by: budget_engine
+
+  - id: BUD-002
+    title: Atomic budget reservation
+    severity: high
+    statement: Concurrent spending MUST use atomic reservation.
+    enforced_by: budget_engine
+
+  - id: SAF-001
+    title: Safety containment priority
+    severity: critical
+    statement: Safety containment actions take priority over normal execution.
+    enforced_by: task_orchestrator
+
+  - id: AUD-001
+    title: Immutable audit trail
+    severity: critical
+    statement: Governance-critical actions MUST emit immutable audit events.
+    enforced_by: observability
+
+  - id: CONS-002
+    title: owner-only policy approval
+    severity: critical
+    statement: Only the owner can approve policy changes in v1.
+    enforced_by: change_control

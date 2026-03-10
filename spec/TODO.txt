@@ -1,0 +1,40 @@
+OpenQilin Spec TODO Backlog
+Date: 2026-03-10
+
+Execution model:
+- Focus: documentation and investigation only (no implementation code changes).
+- Phase strategy: governance-core first.
+- RFC spikes: completed.
+
+P0 (must complete before implementation kickoff)
+
+1) Publish v1 Architecture Baseline
+- Status: completed
+- Output:
+  - `spec/architecture/ArchitectureBaseline-v1.md`
+- Exit criteria result:
+  - Selected stack mapped to runtime components and authoritative interfaces (`policy`, `task`, `a2a+acp`, `llm_gateway`, `memory`, `audit`).
+
+Review Notes (2026-03-10)
+- Completed in this pass:
+  - Conformance artifacts refreshed:
+    - `spec/cross-cutting/conformance/RuleRegistry.json`
+    - `spec/cross-cutting/conformance/ConformanceCoverage.json`
+  - Initial versioned constitution snapshot created:
+    - `constitution/versions/v0.1.0/` with required core/domain policy files
+    - `constitution/versions/v0.1.0/ReleaseRecord.yaml`
+  - Constitution release integrity finalized:
+    - runtime and snapshot `PolicyManifest.yaml` now use concrete `bundle_hash`
+    - `ReleaseRecord.yaml` now includes matching `bundle_hash` and concrete `source_commit`
+  - Constitution/docs clarity updates:
+    - documented deterministic bundle-hash generation in constitution/spec change-control docs
+    - updated `docs/QuickStart.md` to include manifest-first load and release verification
+    - added conformance artifact refresh procedure in `spec/cross-cutting/conformance/RuleIdCatalog.md`
+  - v1 architecture baseline published:
+    - `spec/architecture/ArchitectureBaseline-v1.md`
+- No major spec/constitution conflicts found in current documentation set.
+- No redundant files require immediate deletion.
+
+Current status:
+- No open TODO items remain in `spec/` backlog for the Define phase.
+- Next phase starts in `design/` with technical design artifacts.

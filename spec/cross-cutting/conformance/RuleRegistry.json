@@ -1,0 +1,3195 @@
+{
+  "generated_at": "2026-03-10T06:00:40.736Z",
+  "source_roots": [
+    "spec/",
+    "constitution/"
+  ],
+  "rule_count": 130,
+  "rules": [
+    {
+      "id": "A2A-001",
+      "statement": "Delivery MUST be at-least-once with idempotent handling.",
+      "severity": "high",
+      "enforced_by": "Task Orchestrator",
+      "primary_source": "spec/orchestration/communication/AgentCommunicationA2A.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/communication/AgentCommunicationA2A.md",
+          "line": 80,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/communication/AgentCommunicationA2A.md",
+          "line": 80,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "A2A-002",
+      "statement": "Every command/event message MUST include authority and policy context metadata.",
+      "severity": "critical",
+      "enforced_by": "Task Orchestrator",
+      "primary_source": "spec/orchestration/communication/AgentCommunicationA2A.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/roles/ProjectManagerRoleContract.md",
+          "line": 53,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/SpecialistRoleContract.md",
+          "line": 52,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/orchestration/communication/AgentCommunicationA2A.md",
+          "line": 81,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/communication/AgentCommunicationA2A.md",
+          "line": 81,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "A2A-003",
+      "statement": "`auditor` observer mode MUST be read-only across all channels.",
+      "severity": "critical",
+      "enforced_by": "Policy Engine",
+      "primary_source": "spec/orchestration/communication/AgentCommunicationA2A.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/communication/AgentCommunicationA2A.md",
+          "line": 82,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/communication/AgentCommunicationA2A.md",
+          "line": 82,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "A2A-004",
+      "statement": "Messages in untrusted channels MUST fail closed for privileged actions.",
+      "severity": "critical",
+      "enforced_by": "Policy Engine",
+      "primary_source": "spec/orchestration/communication/AgentCommunicationA2A.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/communication/AgentCommunicationA2A.md",
+          "line": 83,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/communication/AgentCommunicationA2A.md",
+          "line": 83,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "A2A-005",
+      "statement": "Messages exceeding retry limits MUST be dead-lettered with immutable audit metadata.",
+      "severity": "high",
+      "enforced_by": "Observability",
+      "primary_source": "spec/orchestration/communication/AgentCommunicationA2A.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/communication/AgentCommunicationA2A.md",
+          "line": 84,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/communication/AgentCommunicationA2A.md",
+          "line": 84,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "ACP-001",
+      "statement": "Every ACP frame MUST include route and auth context before dispatch.",
+      "severity": "critical",
+      "enforced_by": "ACP Runtime",
+      "primary_source": "spec/orchestration/communication/AgentCommunicationACP.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/communication/AgentCommunicationACP.md",
+          "line": 89,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/communication/AgentCommunicationACP.md",
+          "line": 89,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "ACP-002",
+      "statement": "Ack timeout or retryable nack MUST trigger bounded retry policy.",
+      "severity": "high",
+      "enforced_by": "ACP Runtime",
+      "primary_source": "spec/orchestration/communication/AgentCommunicationACP.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/communication/AgentCommunicationACP.md",
+          "line": 90,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/communication/AgentCommunicationACP.md",
+          "line": 90,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "ACP-003",
+      "statement": "Retry exhaustion MUST transition frame to dead-letter state with immutable diagnostics.",
+      "severity": "high",
+      "enforced_by": "ACP Runtime",
+      "primary_source": "spec/orchestration/communication/AgentCommunicationACP.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/communication/AgentCommunicationACP.md",
+          "line": 91,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/communication/AgentCommunicationACP.md",
+          "line": 91,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "ACP-004",
+      "statement": "Non-retryable nack MUST fail fast and produce audit event.",
+      "severity": "high",
+      "enforced_by": "ACP Runtime",
+      "primary_source": "spec/orchestration/communication/AgentCommunicationACP.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/communication/AgentCommunicationACP.md",
+          "line": 92,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/communication/AgentCommunicationACP.md",
+          "line": 92,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "ACP-005",
+      "statement": "ACP payload MUST encapsulate valid A2A envelope schema.",
+      "severity": "critical",
+      "enforced_by": "ACP Runtime",
+      "primary_source": "spec/orchestration/communication/AgentCommunicationACP.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/communication/AgentCommunicationACP.md",
+          "line": 93,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/communication/AgentCommunicationACP.md",
+          "line": 93,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "AUD-001",
+      "statement": "Governance-critical actions MUST emit immutable audit events.",
+      "severity": "critical",
+      "enforced_by": "observability",
+      "primary_source": "constitution/core/PolicyRules.yaml",
+      "occurrences": [
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 75,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 75,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 75,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 75,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "spec/governance/architecture/AgentAuthorityGraph.md",
+          "line": 46,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/AgentAuthorityGraph.md",
+          "line": 46,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/AdministratorRoleContract.md",
+          "line": 56,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/AuditorRoleContract.md",
+          "line": 55,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/CeoRoleContract.md",
+          "line": 55,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/CsoRoleContract.md",
+          "line": 54,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/CwoRoleContract.md",
+          "line": 55,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/DomainLeadRoleContract.md",
+          "line": 54,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/ProjectManagerRoleContract.md",
+          "line": 54,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/SpecialistRoleContract.md",
+          "line": 53,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/observability/AuditEvents.md",
+          "line": 44,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/observability/AuditEvents.md",
+          "line": 44,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "AUD-002",
+      "statement": "Audit events MUST include policy metadata (`policy_version`, `policy_hash`, `rule_ids`) for governed actions.",
+      "severity": "critical",
+      "enforced_by": "Observability",
+      "primary_source": "spec/observability/AuditEvents.md",
+      "occurrences": [
+        {
+          "source": "spec/observability/AuditEvents.md",
+          "line": 45,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/observability/AuditEvents.md",
+          "line": 45,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "AUD-003",
+      "statement": "Agent pause events MUST generate audit records including ceo notification and owner alert status when critical impact is true.",
+      "severity": "high",
+      "enforced_by": "Observability",
+      "primary_source": "spec/observability/AuditEvents.md",
+      "occurrences": [
+        {
+          "source": "spec/observability/AuditEvents.md",
+          "line": 46,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/observability/AuditEvents.md",
+          "line": 46,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "AUTH-001",
+      "statement": "Every action request MUST include actor id and role.",
+      "severity": "critical",
+      "enforced_by": "policy_engine",
+      "primary_source": "constitution/core/PolicyRules.yaml",
+      "occurrences": [
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 3,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 3,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 3,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 3,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "spec/governance/architecture/AgentAuthorityGraph.md",
+          "line": 41,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/AgentAuthorityGraph.md",
+          "line": 41,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/AdministratorRoleContract.md",
+          "line": 52,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/AuditorRoleContract.md",
+          "line": 52,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/CeoRoleContract.md",
+          "line": 51,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/CsoRoleContract.md",
+          "line": 51,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/CwoRoleContract.md",
+          "line": 51,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/DomainLeadRoleContract.md",
+          "line": 51,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/ProjectManagerRoleContract.md",
+          "line": 51,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/SpecialistRoleContract.md",
+          "line": 50,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "AUTH-002",
+      "statement": "Actions outside authority matrix MUST be denied.",
+      "severity": "critical",
+      "enforced_by": "policy_engine",
+      "primary_source": "constitution/core/PolicyRules.yaml",
+      "occurrences": [
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 9,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 9,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 9,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 9,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "spec/governance/architecture/AgentAuthorityGraph.md",
+          "line": 42,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/AgentAuthorityGraph.md",
+          "line": 42,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/AdministratorRoleContract.md",
+          "line": 52,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/AuditorRoleContract.md",
+          "line": 52,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/CeoRoleContract.md",
+          "line": 51,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/CsoRoleContract.md",
+          "line": 51,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/CwoRoleContract.md",
+          "line": 51,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/DomainLeadRoleContract.md",
+          "line": 52,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/ProjectManagerRoleContract.md",
+          "line": 51,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "AUTH-003",
+      "statement": "System-level workforce lifecycle actions MUST be executed by cwo in normal operations; owner may authorize exceptions through constitutional override workflow.",
+      "severity": "critical",
+      "enforced_by": "policy_engine",
+      "primary_source": "constitution/core/PolicyRules.yaml",
+      "occurrences": [
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 15,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 15,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 15,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 15,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "spec/governance/architecture/AgentAuthorityGraph.md",
+          "line": 43,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/AgentAuthorityGraph.md",
+          "line": 43,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/CwoRoleContract.md",
+          "line": 52,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "AUTH-004",
+      "statement": "secretary role MUST remain advisory-only and MAY access relevant dashboard, alert, and owner chat data in read-only mode for onboarding and status interpretation.",
+      "severity": "high",
+      "enforced_by": "policy_engine",
+      "primary_source": "constitution/core/PolicyRules.yaml",
+      "occurrences": [
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 21,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 21,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 21,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 21,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "spec/governance/architecture/AgentAuthorityGraph.md",
+          "line": 44,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/AgentAuthorityGraph.md",
+          "line": 44,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/SecretaryRoleContract.md",
+          "line": 63,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "AUTH-005",
+      "statement": "secretary role MAY request executive or specialist participation for out-of-scope questions but MUST NOT delegate as command authority.",
+      "severity": "high",
+      "enforced_by": "policy_engine",
+      "primary_source": "constitution/core/PolicyRules.yaml",
+      "occurrences": [
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 27,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 27,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 27,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 27,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "spec/governance/architecture/AgentAuthorityGraph.md",
+          "line": 45,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/AgentAuthorityGraph.md",
+          "line": 45,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/SecretaryRoleContract.md",
+          "line": 64,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "BUD-001",
+      "statement": "Execution at or above hard threshold MUST be blocked or paused.",
+      "severity": "critical",
+      "enforced_by": "budget_engine",
+      "primary_source": "constitution/core/PolicyRules.yaml",
+      "occurrences": [
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 57,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 57,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 57,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 57,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "spec/constitution/BudgetEngineContract.md",
+          "line": 46,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/BudgetEngineContract.md",
+          "line": 46,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/cross-cutting/planning/DeferredCapabilityActivationCriteria.md",
+          "line": 77,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/AuditorRoleContract.md",
+          "line": 54,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/CwoRoleContract.md",
+          "line": 54,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "BUD-002",
+      "statement": "Concurrent spending MUST use atomic reservation.",
+      "severity": "high",
+      "enforced_by": "budget_engine",
+      "primary_source": "constitution/core/PolicyRules.yaml",
+      "occurrences": [
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 63,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 63,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 63,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 63,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "spec/constitution/BudgetEngineContract.md",
+          "line": 47,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/BudgetEngineContract.md",
+          "line": 47,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/AuditorRoleContract.md",
+          "line": 54,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "BUD-003",
+      "statement": "Threshold values MUST be sourced from active YAML budget policy.",
+      "severity": "high",
+      "enforced_by": "Budget Engine",
+      "primary_source": "spec/constitution/BudgetEngineContract.md",
+      "occurrences": [
+        {
+          "source": "spec/constitution/BudgetEngineContract.md",
+          "line": 48,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/BudgetEngineContract.md",
+          "line": 48,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "BUD-004",
+      "statement": "Hard-breach events MUST trigger governance escalation metadata for `auditor`/`owner`/`ceo` flow.",
+      "severity": "critical",
+      "enforced_by": "Budget Engine",
+      "primary_source": "spec/constitution/BudgetEngineContract.md",
+      "occurrences": [
+        {
+          "source": "spec/constitution/BudgetEngineContract.md",
+          "line": 49,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/BudgetEngineContract.md",
+          "line": 49,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "BUD-005",
+      "statement": "Budget decisions MUST include policy version/hash context.",
+      "severity": "high",
+      "enforced_by": "Budget Engine",
+      "primary_source": "spec/constitution/BudgetEngineContract.md",
+      "occurrences": [
+        {
+          "source": "spec/constitution/BudgetEngineContract.md",
+          "line": 50,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/BudgetEngineContract.md",
+          "line": 50,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "CBM-001",
+      "statement": "Policy evaluation MUST use an explicit constitution version.",
+      "severity": "critical",
+      "enforced_by": "Policy Engine",
+      "primary_source": "spec/constitution/ConstitutionBindingModel.md",
+      "occurrences": [
+        {
+          "source": "spec/constitution/ConstitutionBindingModel.md",
+          "line": 49,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/ConstitutionBindingModel.md",
+          "line": 49,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "CBM-002",
+      "statement": "Only YAML policy artifacts are accepted in v1.",
+      "severity": "high",
+      "enforced_by": "Constitution Binding",
+      "primary_source": "spec/constitution/ConstitutionBindingModel.md",
+      "occurrences": [
+        {
+          "source": "spec/constitution/ConstitutionBindingModel.md",
+          "line": 50,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/ConstitutionBindingModel.md",
+          "line": 50,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "CBM-003",
+      "statement": "Global active policy version MUST be singular and atomically switchable.",
+      "severity": "critical",
+      "enforced_by": "Constitution Binding",
+      "primary_source": "spec/constitution/ConstitutionBindingModel.md",
+      "occurrences": [
+        {
+          "source": "spec/constitution/ConstitutionBindingModel.md",
+          "line": 51,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/ConstitutionBindingModel.md",
+          "line": 51,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "CBM-004",
+      "statement": "Invalid policy bundle activation MUST fail-closed.",
+      "severity": "critical",
+      "enforced_by": "Constitution Binding",
+      "primary_source": "spec/constitution/ConstitutionBindingModel.md",
+      "occurrences": [
+        {
+          "source": "spec/constitution/ConstitutionBindingModel.md",
+          "line": 52,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/ConstitutionBindingModel.md",
+          "line": 52,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "CONS-001",
+      "statement": "Constitutional assets MUST be versioned and auditable.",
+      "severity": "critical",
+      "enforced_by": "Observability",
+      "primary_source": "spec/constitution/ConstitutionManagement.md",
+      "occurrences": [
+        {
+          "source": "spec/constitution/ConstitutionManagement.md",
+          "line": 79,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/ConstitutionManagement.md",
+          "line": 79,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "CONS-002",
+      "statement": "Only the owner can approve policy changes in v1.",
+      "severity": "critical",
+      "enforced_by": "change_control",
+      "primary_source": "constitution/core/PolicyRules.yaml",
+      "occurrences": [
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 81,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 81,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 81,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 81,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "spec/constitution/ConstitutionManagement.md",
+          "line": 80,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/ConstitutionManagement.md",
+          "line": 80,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "CONS-003",
+      "statement": "Runtime policy source MUST be YAML-only in v1.",
+      "severity": "high",
+      "enforced_by": "Constitution Binding",
+      "primary_source": "spec/constitution/ConstitutionManagement.md",
+      "occurrences": [
+        {
+          "source": "spec/constitution/ConstitutionManagement.md",
+          "line": 81,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/ConstitutionManagement.md",
+          "line": 81,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "CONS-004",
+      "statement": "Runtime policy mode MUST use a single globally active policy version.",
+      "severity": "high",
+      "enforced_by": "Constitution Binding",
+      "primary_source": "spec/constitution/ConstitutionManagement.md",
+      "occurrences": [
+        {
+          "source": "spec/constitution/ConstitutionManagement.md",
+          "line": 82,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/ConstitutionManagement.md",
+          "line": 82,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "CONS-005",
+      "statement": "Unknown runtime roles MUST be denied by default.",
+      "severity": "critical",
+      "enforced_by": "Policy Engine",
+      "primary_source": "spec/constitution/ConstitutionManagement.md",
+      "occurrences": [
+        {
+          "source": "spec/constitution/ConstitutionManagement.md",
+          "line": 83,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/ConstitutionManagement.md",
+          "line": 83,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "DOC-001",
+      "statement": "UNSPECIFIED_RULE_STATEMENT",
+      "severity": "unknown",
+      "enforced_by": "unknown",
+      "primary_source": "spec/cross-cutting/conformance/DocumentationTemplateAdoption.md",
+      "occurrences": [
+        {
+          "source": "spec/cross-cutting/conformance/DocumentationTemplateAdoption.md",
+          "line": 44,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/templates/ImplementationContractTemplate.md",
+          "line": 26,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/templates/ImplementationContractTemplate.md",
+          "line": 96,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "ERR-001",
+      "statement": "Error responses MUST include canonical code, actionable reason, and deterministic handling metadata.",
+      "severity": "high",
+      "enforced_by": "Runtime",
+      "primary_source": "spec/cross-cutting/runtime/ErrorCodesAndHandling.md",
+      "occurrences": [
+        {
+          "source": "spec/cross-cutting/runtime/ErrorCodesAndHandling.md",
+          "line": 48,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/cross-cutting/runtime/ErrorCodesAndHandling.md",
+          "line": 48,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "ESC-001",
+      "statement": "Critical incidents MUST follow defined escalation path.",
+      "severity": "high",
+      "enforced_by": "Task Orchestrator",
+      "primary_source": "spec/governance/architecture/EscalationModel.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/architecture/EscalationModel.md",
+          "line": 47,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/EscalationModel.md",
+          "line": 47,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/AuditorRoleContract.md",
+          "line": 56,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "ESC-002",
+      "statement": "Governance and infrastructure escalations MUST permit direct owner escalation.",
+      "severity": "critical",
+      "enforced_by": "Task Orchestrator",
+      "primary_source": "spec/governance/architecture/EscalationModel.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/architecture/EscalationModel.md",
+          "line": 48,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/EscalationModel.md",
+          "line": 48,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/AuditorRoleContract.md",
+          "line": 56,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "ESC-003",
+      "statement": "Budget hard-threshold enforcement MUST be initiated by auditor independent of operational chain.",
+      "severity": "critical",
+      "enforced_by": "Budget Engine",
+      "primary_source": "spec/governance/architecture/EscalationModel.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/architecture/EscalationModel.md",
+          "line": 49,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/EscalationModel.md",
+          "line": 49,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "ESC-004",
+      "statement": "Escalation records MUST include incident class, current stage, and next authority target.",
+      "severity": "high",
+      "enforced_by": "Observability",
+      "primary_source": "spec/governance/architecture/EscalationModel.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/architecture/EscalationModel.md",
+          "line": 50,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/EscalationModel.md",
+          "line": 50,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "ESC-005",
+      "statement": "Any agent pause action MUST be reported to ceo.",
+      "severity": "high",
+      "enforced_by": "Task Orchestrator",
+      "primary_source": "spec/governance/architecture/EscalationModel.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/architecture/EscalationModel.md",
+          "line": 51,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/EscalationModel.md",
+          "line": 51,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "ESC-006",
+      "statement": "Agent pause actions with critical impact MUST alert owner immediately.",
+      "severity": "critical",
+      "enforced_by": "Task Orchestrator",
+      "primary_source": "spec/governance/architecture/EscalationModel.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/architecture/EscalationModel.md",
+          "line": 52,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/EscalationModel.md",
+          "line": 52,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "FRM-001",
+      "statement": "Safety-critical failures MUST trigger containment before retry.",
+      "severity": "critical",
+      "enforced_by": "task_orchestrator",
+      "primary_source": "spec/infrastructure/operations/FailureAndRecoveryModel.md",
+      "occurrences": [
+        {
+          "source": "spec/infrastructure/operations/FailureAndRecoveryModel.md",
+          "line": 44,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/operations/FailureAndRecoveryModel.md",
+          "line": 44,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "FRM-002",
+      "statement": "Recovery behavior MUST be deterministic for same failure class + policy version.",
+      "severity": "high",
+      "enforced_by": "runtime",
+      "primary_source": "spec/infrastructure/operations/FailureAndRecoveryModel.md",
+      "occurrences": [
+        {
+          "source": "spec/cross-cutting/planning/DeferredCapabilityActivationCriteria.md",
+          "line": 79,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/infrastructure/operations/FailureAndRecoveryModel.md",
+          "line": 45,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/operations/FailureAndRecoveryModel.md",
+          "line": 45,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "FRM-003",
+      "statement": "Zero-context restart MUST require validated restart artifact set.",
+      "severity": "critical",
+      "enforced_by": "runtime",
+      "primary_source": "spec/infrastructure/operations/FailureAndRecoveryModel.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/roles/AdministratorRoleContract.md",
+          "line": 55,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/infrastructure/operations/DataMemoryOperationsPlaybooks.md",
+          "line": 106,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/infrastructure/operations/FailureAndRecoveryModel.md",
+          "line": 46,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/operations/FailureAndRecoveryModel.md",
+          "line": 46,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "FRM-004",
+      "statement": "Safety-critical recovery resume MUST require explicit clearance evidence.",
+      "severity": "critical",
+      "enforced_by": "governance",
+      "primary_source": "spec/infrastructure/operations/FailureAndRecoveryModel.md",
+      "occurrences": [
+        {
+          "source": "spec/infrastructure/operations/FailureAndRecoveryModel.md",
+          "line": 47,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/operations/FailureAndRecoveryModel.md",
+          "line": 47,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "FRM-005",
+      "statement": "Recovery and restart actions MUST emit immutable audit events.",
+      "severity": "high",
+      "enforced_by": "observability",
+      "primary_source": "spec/infrastructure/operations/FailureAndRecoveryModel.md",
+      "occurrences": [
+        {
+          "source": "spec/cross-cutting/planning/DeferredCapabilityActivationCriteria.md",
+          "line": 80,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/AdministratorRoleContract.md",
+          "line": 55,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/infrastructure/operations/DataMemoryOperationsPlaybooks.md",
+          "line": 107,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/infrastructure/operations/FailureAndRecoveryModel.md",
+          "line": 48,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/operations/FailureAndRecoveryModel.md",
+          "line": 48,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "GATE-001",
+      "statement": "New projects MUST pass cso strategic review before ceo approval.",
+      "severity": "high",
+      "enforced_by": "Task Orchestrator",
+      "primary_source": "spec/governance/architecture/DecisionReviewGates.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/architecture/DecisionReviewGates.md",
+          "line": 23,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/DecisionReviewGates.md",
+          "line": 23,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/CsoRoleContract.md",
+          "line": 52,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "GATE-002",
+      "statement": "Proposals marked `Needs Revision` MUST NOT proceed without resubmission.",
+      "severity": "high",
+      "enforced_by": "Task Orchestrator",
+      "primary_source": "spec/governance/architecture/DecisionReviewGates.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/architecture/DecisionReviewGates.md",
+          "line": 24,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/DecisionReviewGates.md",
+          "line": 24,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/CsoRoleContract.md",
+          "line": 52,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "GATE-003",
+      "statement": "`Strategic Conflict` proposals rejected three times MUST require explicit ceo override to proceed.",
+      "severity": "high",
+      "enforced_by": "Task Orchestrator",
+      "primary_source": "spec/governance/architecture/DecisionReviewGates.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/architecture/DecisionReviewGates.md",
+          "line": 25,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/DecisionReviewGates.md",
+          "line": 25,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "GATE-004",
+      "statement": "ceo final decision outcomes MUST be audit logged with rationale.",
+      "severity": "medium",
+      "enforced_by": "Observability",
+      "primary_source": "spec/governance/architecture/DecisionReviewGates.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/architecture/DecisionReviewGates.md",
+          "line": 26,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/DecisionReviewGates.md",
+          "line": 26,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "GLO-001",
+      "statement": "Normative terms MUST map to one canonical definition.",
+      "severity": "medium",
+      "enforced_by": "Spec Review",
+      "primary_source": "spec/cross-cutting/reference/Glossary.md",
+      "occurrences": [
+        {
+          "source": "spec/cross-cutting/reference/Glossary.md",
+          "line": 19,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/cross-cutting/reference/Glossary.md",
+          "line": 19,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "GOV-001",
+      "statement": "Executive and operational agents MUST NOT override governance enforcement actions.",
+      "severity": "critical",
+      "enforced_by": "policy_engine",
+      "primary_source": "constitution/core/PolicyRules.yaml",
+      "occurrences": [
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 33,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 33,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 33,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 33,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "spec/governance/roles/AdministratorRoleContract.md",
+          "line": 53,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/AuditorRoleContract.md",
+          "line": 53,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/CeoRoleContract.md",
+          "line": 52,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "IAM-001",
+      "statement": "Every runtime action MUST be attributable to an authenticated principal.",
+      "severity": "critical",
+      "enforced_by": "Policy Engine",
+      "primary_source": "spec/cross-cutting/security/IdentityAndAccessModel.md",
+      "occurrences": [
+        {
+          "source": "spec/cross-cutting/security/DiscordOwnerChannelIdentityHardening.md",
+          "line": 56,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/cross-cutting/security/IdentityAndAccessModel.md",
+          "line": 37,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/cross-cutting/security/IdentityAndAccessModel.md",
+          "line": 37,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/SecretaryRoleContract.md",
+          "line": 66,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "LOG-001",
+      "statement": "Critical actions MUST emit structured logs with trace_id.",
+      "severity": "high",
+      "enforced_by": "Observability",
+      "primary_source": "spec/observability/SystemLogs.md",
+      "occurrences": [
+        {
+          "source": "spec/observability/SystemLogs.md",
+          "line": 36,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/observability/SystemLogs.md",
+          "line": 36,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "LOG-002",
+      "statement": "Full profile logging MUST be used for deny, allow_with_obligations, and governance/emergency actions.",
+      "severity": "high",
+      "enforced_by": "Observability",
+      "primary_source": "spec/observability/SystemLogs.md",
+      "occurrences": [
+        {
+          "source": "spec/observability/SystemLogs.md",
+          "line": 37,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/observability/SystemLogs.md",
+          "line": 37,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "LOG-003",
+      "statement": "Structured log records MUST preserve policy metadata (`policy_version`, `policy_hash`, `rule_ids`) for governed actions.",
+      "severity": "high",
+      "enforced_by": "Observability",
+      "primary_source": "spec/observability/SystemLogs.md",
+      "occurrences": [
+        {
+          "source": "spec/observability/SystemLogs.md",
+          "line": 38,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/observability/SystemLogs.md",
+          "line": 38,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "MEM-001",
+      "statement": "Immutable execution logs MUST be append-only.",
+      "severity": "critical",
+      "enforced_by": "observability",
+      "primary_source": "spec/orchestration/memory/AgentMemoryModel.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/memory/AgentMemoryModel.md",
+          "line": 49,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/memory/AgentMemoryModel.md",
+          "line": 49,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "MEM-002",
+      "statement": "Memory tier transitions MUST follow configured TTL and lifecycle policies.",
+      "severity": "high",
+      "enforced_by": "administrator",
+      "primary_source": "spec/orchestration/memory/AgentMemoryModel.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/memory/AgentMemoryModel.md",
+          "line": 50,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/memory/AgentMemoryModel.md",
+          "line": 50,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "MEM-003",
+      "statement": "Cross-project memory isolation MUST be enforced for all reads and writes.",
+      "severity": "critical",
+      "enforced_by": "policy_engine",
+      "primary_source": "spec/orchestration/memory/AgentMemoryModel.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/memory/AgentMemoryModel.md",
+          "line": 51,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/memory/AgentMemoryModel.md",
+          "line": 51,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "MEM-004",
+      "statement": "Deletion overrides outside normal retention flow MUST require `owner` approval.",
+      "severity": "critical",
+      "enforced_by": "change_control",
+      "primary_source": "spec/orchestration/memory/AgentMemoryModel.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/memory/AgentMemoryModel.md",
+          "line": 52,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/memory/AgentMemoryModel.md",
+          "line": 52,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "MEM-005",
+      "statement": "Snapshot artifacts MUST be created before compression or archival compaction.",
+      "severity": "high",
+      "enforced_by": "administrator",
+      "primary_source": "spec/orchestration/memory/AgentMemoryModel.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/memory/AgentMemoryModel.md",
+          "line": 53,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/memory/AgentMemoryModel.md",
+          "line": 53,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "MEM-006",
+      "statement": "CDC application MUST be idempotent and ordered by source sequence.",
+      "severity": "critical",
+      "enforced_by": "memory_sync_runtime",
+      "primary_source": "spec/orchestration/memory/AgentMemoryModel.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/memory/AgentMemoryModel.md",
+          "line": 54,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/memory/AgentMemoryModel.md",
+          "line": 54,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "MEM-007",
+      "statement": "CDC checkpoint recovery MUST be deterministic and auditable.",
+      "severity": "high",
+      "enforced_by": "memory_sync_runtime",
+      "primary_source": "spec/orchestration/memory/AgentMemoryModel.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/memory/AgentMemoryModel.md",
+          "line": 55,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/memory/AgentMemoryModel.md",
+          "line": 55,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "MET-001",
+      "statement": "Critical incidents MUST trigger alerts to governance channels.",
+      "severity": "critical",
+      "enforced_by": "observability",
+      "primary_source": "spec/observability/MetricsAndAlerts.md",
+      "occurrences": [
+        {
+          "source": "spec/observability/MetricsAndAlerts.md",
+          "line": 34,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/observability/MetricsAndAlerts.md",
+          "line": 34,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "MET-002",
+      "statement": "Every alert MUST resolve a source owner role before escalation.",
+      "severity": "high",
+      "enforced_by": "observability",
+      "primary_source": "spec/observability/MetricsAndAlerts.md",
+      "occurrences": [
+        {
+          "source": "spec/observability/MetricsAndAlerts.md",
+          "line": 35,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/observability/MetricsAndAlerts.md",
+          "line": 35,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "MET-003",
+      "statement": "Ambiguous-owner alerts MUST default-route to `ceo` with audit metadata.",
+      "severity": "high",
+      "enforced_by": "observability",
+      "primary_source": "spec/observability/MetricsAndAlerts.md",
+      "occurrences": [
+        {
+          "source": "spec/observability/MetricsAndAlerts.md",
+          "line": 36,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/observability/MetricsAndAlerts.md",
+          "line": 36,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "MET-004",
+      "statement": "Alert events MUST include required escalation metadata fields.",
+      "severity": "high",
+      "enforced_by": "observability",
+      "primary_source": "spec/observability/MetricsAndAlerts.md",
+      "occurrences": [
+        {
+          "source": "spec/observability/MetricsAndAlerts.md",
+          "line": 37,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/observability/MetricsAndAlerts.md",
+          "line": 37,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "OBS-001",
+      "statement": "All policy decisions MUST emit telemetry events.",
+      "severity": "critical",
+      "enforced_by": "observability",
+      "primary_source": "spec/observability/ObservabilityArchitecture.md",
+      "occurrences": [
+        {
+          "source": "spec/observability/ObservabilityArchitecture.md",
+          "line": 30,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/observability/ObservabilityArchitecture.md",
+          "line": 30,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "OBS-002",
+      "statement": "All lifecycle transitions MUST emit telemetry events.",
+      "severity": "high",
+      "enforced_by": "runtime",
+      "primary_source": "spec/observability/ObservabilityArchitecture.md",
+      "occurrences": [
+        {
+          "source": "spec/observability/ObservabilityArchitecture.md",
+          "line": 31,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/observability/ObservabilityArchitecture.md",
+          "line": 31,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "OBS-003",
+      "statement": "All budget threshold crossings MUST emit telemetry events.",
+      "severity": "critical",
+      "enforced_by": "budget_engine",
+      "primary_source": "spec/observability/ObservabilityArchitecture.md",
+      "occurrences": [
+        {
+          "source": "spec/observability/ObservabilityArchitecture.md",
+          "line": 32,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/observability/ObservabilityArchitecture.md",
+          "line": 32,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "OBS-004",
+      "statement": "Critical incidents MUST page governance channels.",
+      "severity": "critical",
+      "enforced_by": "observability",
+      "primary_source": "spec/observability/ObservabilityArchitecture.md",
+      "occurrences": [
+        {
+          "source": "spec/observability/ObservabilityArchitecture.md",
+          "line": 33,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/observability/ObservabilityArchitecture.md",
+          "line": 33,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "OIM-001",
+      "statement": "owner-issued commands MUST pass policy authorization before execution.",
+      "severity": "critical",
+      "enforced_by": "Policy Engine",
+      "primary_source": "spec/orchestration/communication/OwnerInteractionModel.md",
+      "occurrences": [
+        {
+          "source": "spec/cross-cutting/security/DiscordOwnerChannelIdentityHardening.md",
+          "line": 57,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/CeoRoleContract.md",
+          "line": 54,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/orchestration/communication/OwnerInteractionModel.md",
+          "line": 81,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/communication/OwnerInteractionModel.md",
+          "line": 81,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "OIM-002",
+      "statement": "Critical owner interaction events MUST generate immutable audit records.",
+      "severity": "high",
+      "enforced_by": "Observability",
+      "primary_source": "spec/orchestration/communication/OwnerInteractionModel.md",
+      "occurrences": [
+        {
+          "source": "spec/cross-cutting/security/DiscordOwnerChannelIdentityHardening.md",
+          "line": 58,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/orchestration/communication/OwnerInteractionModel.md",
+          "line": 82,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/communication/OwnerInteractionModel.md",
+          "line": 82,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "OIM-003",
+      "statement": "owner channel access MUST respect role and project scope constraints.",
+      "severity": "high",
+      "enforced_by": "Task Orchestrator",
+      "primary_source": "spec/orchestration/communication/OwnerInteractionModel.md",
+      "occurrences": [
+        {
+          "source": "spec/cross-cutting/security/DiscordOwnerChannelIdentityHardening.md",
+          "line": 59,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/CsoRoleContract.md",
+          "line": 53,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/DomainLeadRoleContract.md",
+          "line": 53,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/SecretaryRoleContract.md",
+          "line": 65,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/orchestration/communication/OwnerInteractionModel.md",
+          "line": 83,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/communication/OwnerInteractionModel.md",
+          "line": 83,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "OIM-004",
+      "statement": "Alert severity mapping MUST follow constitutional safety/escalation policies.",
+      "severity": "high",
+      "enforced_by": "Observability",
+      "primary_source": "spec/orchestration/communication/OwnerInteractionModel.md",
+      "occurrences": [
+        {
+          "source": "spec/cross-cutting/security/DiscordOwnerChannelIdentityHardening.md",
+          "line": 60,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/orchestration/communication/OwnerInteractionModel.md",
+          "line": 84,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/communication/OwnerInteractionModel.md",
+          "line": 84,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "ORCH-001",
+      "statement": "Task MUST pass Policy Engine before dispatch.",
+      "severity": "critical",
+      "enforced_by": "Task Orchestrator",
+      "primary_source": "spec/orchestration/control/TaskOrchestrator.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/roles/CeoRoleContract.md",
+          "line": 53,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/CwoRoleContract.md",
+          "line": 53,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/ProjectManagerRoleContract.md",
+          "line": 52,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/SpecialistRoleContract.md",
+          "line": 51,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/orchestration/control/TaskOrchestrator.md",
+          "line": 139,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/control/TaskOrchestrator.md",
+          "line": 139,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "ORCH-002",
+      "statement": "Task MUST reserve budget before dispatch.",
+      "severity": "critical",
+      "enforced_by": "Task Orchestrator",
+      "primary_source": "spec/orchestration/control/TaskOrchestrator.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/roles/CwoRoleContract.md",
+          "line": 53,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/ProjectManagerRoleContract.md",
+          "line": 52,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/SpecialistRoleContract.md",
+          "line": 51,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/orchestration/control/TaskOrchestrator.md",
+          "line": 140,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/control/TaskOrchestrator.md",
+          "line": 140,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "ORCH-003",
+      "statement": "Policy or budget evaluation errors MUST fail closed and block dispatch.",
+      "severity": "critical",
+      "enforced_by": "Task Orchestrator",
+      "primary_source": "spec/orchestration/control/TaskOrchestrator.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/control/TaskOrchestrator.md",
+          "line": 141,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/control/TaskOrchestrator.md",
+          "line": 141,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "ORCH-004",
+      "statement": "Orchestrator MUST execute required obligations for `allow_with_obligations` decisions before dispatch.",
+      "severity": "high",
+      "enforced_by": "Task Orchestrator",
+      "primary_source": "spec/orchestration/control/TaskOrchestrator.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/control/TaskOrchestrator.md",
+          "line": 142,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/control/TaskOrchestrator.md",
+          "line": 142,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "ORCH-005",
+      "statement": "Governance enforcement actions MUST NOT be overridden by orchestrator logic.",
+      "severity": "critical",
+      "enforced_by": "Task Orchestrator",
+      "primary_source": "spec/orchestration/control/TaskOrchestrator.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/roles/CeoRoleContract.md",
+          "line": 53,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/orchestration/control/TaskOrchestrator.md",
+          "line": 143,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/control/TaskOrchestrator.md",
+          "line": 143,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "ORCH-006",
+      "statement": "Task state transitions MUST emit traceable events with immutable audit references.",
+      "severity": "high",
+      "enforced_by": "Task Orchestrator",
+      "primary_source": "spec/orchestration/control/TaskOrchestrator.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/roles/ProjectManagerRoleContract.md",
+          "line": 52,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/governance/roles/SpecialistRoleContract.md",
+          "line": 51,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/orchestration/control/TaskOrchestrator.md",
+          "line": 144,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/control/TaskOrchestrator.md",
+          "line": 144,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "ORCH-007",
+      "statement": "Duplicate requests with same idempotency key MUST be side-effect safe.",
+      "severity": "high",
+      "enforced_by": "Task Orchestrator",
+      "primary_source": "spec/orchestration/control/TaskOrchestrator.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/control/TaskOrchestrator.md",
+          "line": 145,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/control/TaskOrchestrator.md",
+          "line": 145,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "POL-001",
+      "statement": "Decisions MUST be deterministic for same normalized input and policy version.",
+      "severity": "critical",
+      "enforced_by": "Policy Engine",
+      "primary_source": "spec/constitution/PolicyEngineContract.md",
+      "occurrences": [
+        {
+          "source": "spec/constitution/PolicyEngineContract.md",
+          "line": 84,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/PolicyEngineContract.md",
+          "line": 84,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "POL-002",
+      "statement": "Deny response MUST include at least one rule ID.",
+      "severity": "high",
+      "enforced_by": "Policy Engine",
+      "primary_source": "spec/constitution/PolicyEngineContract.md",
+      "occurrences": [
+        {
+          "source": "spec/constitution/PolicyEngineContract.md",
+          "line": 85,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/PolicyEngineContract.md",
+          "line": 85,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "POL-003",
+      "statement": "Policy evaluation errors MUST result in deny decisions.",
+      "severity": "critical",
+      "enforced_by": "policy_engine",
+      "primary_source": "constitution/core/PolicyRules.yaml",
+      "occurrences": [
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 39,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 39,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 39,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 39,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "spec/constitution/PolicyEngineContract.md",
+          "line": 86,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/PolicyEngineContract.md",
+          "line": 86,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/cross-cutting/planning/DeferredCapabilityActivationCriteria.md",
+          "line": 78,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "POL-004",
+      "statement": "Unknown actor roles MUST be denied.",
+      "severity": "critical",
+      "enforced_by": "policy_engine",
+      "primary_source": "constitution/core/PolicyRules.yaml",
+      "occurrences": [
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 45,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 45,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 45,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 45,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "spec/constitution/PolicyEngineContract.md",
+          "line": 87,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/PolicyEngineContract.md",
+          "line": 87,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "POL-005",
+      "statement": "allow_with_obligations decisions MUST include explicit obligations.",
+      "severity": "high",
+      "enforced_by": "policy_engine",
+      "primary_source": "constitution/core/PolicyRules.yaml",
+      "occurrences": [
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 51,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 51,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 51,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 51,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "spec/constitution/PolicyEngineContract.md",
+          "line": 88,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/PolicyEngineContract.md",
+          "line": 88,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "POL-006",
+      "statement": "Every decision MUST return policy version and hash metadata.",
+      "severity": "critical",
+      "enforced_by": "Policy Engine",
+      "primary_source": "spec/constitution/PolicyEngineContract.md",
+      "occurrences": [
+        {
+          "source": "spec/constitution/PolicyEngineContract.md",
+          "line": 89,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/PolicyEngineContract.md",
+          "line": 89,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "POL-007",
+      "statement": "Policy evaluation MUST include execution-target and communication-context constraints when provided.",
+      "severity": "high",
+      "enforced_by": "Policy Engine",
+      "primary_source": "spec/constitution/PolicyEngineContract.md",
+      "occurrences": [
+        {
+          "source": "spec/constitution/PolicyEngineContract.md",
+          "line": 90,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/PolicyEngineContract.md",
+          "line": 90,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "PVC-001",
+      "statement": "Runtime decisions MUST include policy version and hash.",
+      "severity": "critical",
+      "enforced_by": "Policy Engine",
+      "primary_source": "spec/constitution/PolicyVersioningAndChangeControl.md",
+      "occurrences": [
+        {
+          "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
+          "line": 71,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
+          "line": 71,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "PVC-002",
+      "statement": "Policy activation MUST be atomic to prevent mixed-version decisions.",
+      "severity": "critical",
+      "enforced_by": "Constitution Binding",
+      "primary_source": "spec/constitution/PolicyVersioningAndChangeControl.md",
+      "occurrences": [
+        {
+          "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
+          "line": 72,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
+          "line": 72,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "PVC-003",
+      "statement": "Policy publication without `owner` approval MUST be rejected.",
+      "severity": "critical",
+      "enforced_by": "Change Control",
+      "primary_source": "spec/constitution/PolicyVersioningAndChangeControl.md",
+      "occurrences": [
+        {
+          "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
+          "line": 73,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
+          "line": 73,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "PVC-004",
+      "statement": "Rollback operations MUST target immutable snapshots only.",
+      "severity": "high",
+      "enforced_by": "Change Control",
+      "primary_source": "spec/constitution/PolicyVersioningAndChangeControl.md",
+      "occurrences": [
+        {
+          "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
+          "line": 74,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
+          "line": 74,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "REG-001",
+      "statement": "Every active agent MUST have a unique immutable agent_id.",
+      "severity": "critical",
+      "enforced_by": "Task Orchestrator",
+      "primary_source": "spec/orchestration/registry/AgentRegistry.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/registry/AgentRegistry.md",
+          "line": 31,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/registry/AgentRegistry.md",
+          "line": 31,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "RID-001",
+      "statement": "Rule IDs MUST be unique within the machine-readable registry.",
+      "severity": "critical",
+      "enforced_by": "change_control",
+      "primary_source": "spec/cross-cutting/conformance/RuleIdCatalog.md",
+      "occurrences": [
+        {
+          "source": "spec/cross-cutting/conformance/RuleIdCatalog.md",
+          "line": 67,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/RuleIdCatalog.md",
+          "line": 67,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "RID-002",
+      "statement": "Any rule ID reference in governed artifacts MUST resolve in the registry.",
+      "severity": "critical",
+      "enforced_by": "ci_pipeline",
+      "primary_source": "spec/cross-cutting/conformance/RuleIdCatalog.md",
+      "occurrences": [
+        {
+          "source": "spec/cross-cutting/conformance/RuleIdCatalog.md",
+          "line": 68,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/RuleIdCatalog.md",
+          "line": 68,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/SpecConstitutionReleaseChecklist.md",
+          "line": 49,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "RID-003",
+      "statement": "Registry and coverage artifacts MUST be regenerated on rule updates.",
+      "severity": "high",
+      "enforced_by": "ci_pipeline",
+      "primary_source": "spec/cross-cutting/conformance/RuleIdCatalog.md",
+      "occurrences": [
+        {
+          "source": "spec/cross-cutting/conformance/RuleIdCatalog.md",
+          "line": 69,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/RuleIdCatalog.md",
+          "line": 69,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "RID-004",
+      "statement": "Integrity validation MUST fail on broken path references or unresolved rule IDs.",
+      "severity": "high",
+      "enforced_by": "ci_pipeline",
+      "primary_source": "spec/cross-cutting/conformance/RuleIdCatalog.md",
+      "occurrences": [
+        {
+          "source": "spec/cross-cutting/conformance/DocumentationTemplateAdoption.md",
+          "line": 46,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/RuleIdCatalog.md",
+          "line": 70,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/RuleIdCatalog.md",
+          "line": 70,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/SpecConstitutionReleaseChecklist.md",
+          "line": 50,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "RT-001",
+      "statement": "No action executes without `policy_engine` decision.",
+      "severity": "critical",
+      "enforced_by": "task_orchestrator",
+      "primary_source": "spec/infrastructure/architecture/RuntimeArchitecture.md",
+      "occurrences": [
+        {
+          "source": "spec/infrastructure/architecture/RuntimeArchitecture.md",
+          "line": 44,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/architecture/RuntimeArchitecture.md",
+          "line": 44,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/observability/ObservabilityArchitecture.md",
+          "line": 6,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "RT-002",
+      "statement": "Every execution unit MUST carry `trace_id` and policy metadata.",
+      "severity": "high",
+      "enforced_by": "runtime",
+      "primary_source": "spec/infrastructure/architecture/RuntimeArchitecture.md",
+      "occurrences": [
+        {
+          "source": "spec/infrastructure/architecture/RuntimeArchitecture.md",
+          "line": 45,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/architecture/RuntimeArchitecture.md",
+          "line": 45,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "RT-003",
+      "statement": "Budget reservation MUST complete before dispatch for costed actions.",
+      "severity": "critical",
+      "enforced_by": "task_orchestrator",
+      "primary_source": "spec/infrastructure/architecture/RuntimeArchitecture.md",
+      "occurrences": [
+        {
+          "source": "spec/infrastructure/architecture/RuntimeArchitecture.md",
+          "line": 46,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/architecture/RuntimeArchitecture.md",
+          "line": 46,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "RT-004",
+      "statement": "Governance enforcement actions MUST NOT be bypassed by runtime components.",
+      "severity": "critical",
+      "enforced_by": "runtime",
+      "primary_source": "spec/infrastructure/architecture/RuntimeArchitecture.md",
+      "occurrences": [
+        {
+          "source": "spec/infrastructure/architecture/RuntimeArchitecture.md",
+          "line": 47,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/architecture/RuntimeArchitecture.md",
+          "line": 47,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "RT-005",
+      "statement": "Obligations from `allow_with_obligations` decisions MUST be executed before dispatch.",
+      "severity": "high",
+      "enforced_by": "task_orchestrator",
+      "primary_source": "spec/infrastructure/architecture/RuntimeArchitecture.md",
+      "occurrences": [
+        {
+          "source": "spec/infrastructure/architecture/RuntimeArchitecture.md",
+          "line": 48,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/architecture/RuntimeArchitecture.md",
+          "line": 48,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "RT-006",
+      "statement": "Runtime event emission MUST be append-only and immutable for governance-critical actions.",
+      "severity": "critical",
+      "enforced_by": "observability",
+      "primary_source": "spec/infrastructure/architecture/RuntimeArchitecture.md",
+      "occurrences": [
+        {
+          "source": "spec/infrastructure/architecture/RuntimeArchitecture.md",
+          "line": 49,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/architecture/RuntimeArchitecture.md",
+          "line": 49,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/observability/ObservabilityArchitecture.md",
+          "line": 6,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "SAF-001",
+      "statement": "Safety containment actions take priority over normal execution.",
+      "severity": "critical",
+      "enforced_by": "task_orchestrator",
+      "primary_source": "constitution/core/PolicyRules.yaml",
+      "occurrences": [
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 69,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/core/PolicyRules.yaml",
+          "line": 69,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 69,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 69,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "spec/governance/architecture/SafetyDoctrine.md",
+          "line": 49,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/SafetyDoctrine.md",
+          "line": 49,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "SAF-002",
+      "statement": "Safety enforcement MUST remain independent from operational execution.",
+      "severity": "critical",
+      "enforced_by": "Policy Engine",
+      "primary_source": "spec/governance/architecture/SafetyDoctrine.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/architecture/SafetyDoctrine.md",
+          "line": 50,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/SafetyDoctrine.md",
+          "line": 50,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "SAF-003",
+      "statement": "Safety incidents MUST be recorded in immutable execution logs.",
+      "severity": "critical",
+      "enforced_by": "Observability",
+      "primary_source": "spec/governance/architecture/SafetyDoctrine.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/architecture/SafetyDoctrine.md",
+          "line": 51,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/SafetyDoctrine.md",
+          "line": 51,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "SAF-004",
+      "statement": "owner override capability MUST remain available and auditable.",
+      "severity": "high",
+      "enforced_by": "Runtime",
+      "primary_source": "spec/governance/architecture/SafetyDoctrine.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/architecture/SafetyDoctrine.md",
+          "line": 52,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/SafetyDoctrine.md",
+          "line": 52,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "SAF-005",
+      "statement": "Agent pause events MUST notify ceo and escalate to owner when critical impact is detected.",
+      "severity": "high",
+      "enforced_by": "Task Orchestrator",
+      "primary_source": "spec/governance/architecture/SafetyDoctrine.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/architecture/SafetyDoctrine.md",
+          "line": 53,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/governance/architecture/SafetyDoctrine.md",
+          "line": 53,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "SAN-001",
+      "statement": "Sandbox MUST enforce per-task resource quotas.",
+      "severity": "critical",
+      "enforced_by": "execution_sandbox",
+      "primary_source": "spec/infrastructure/security/ExecutionSandbox.md",
+      "occurrences": [
+        {
+          "source": "spec/infrastructure/security/ExecutionSandbox.md",
+          "line": 33,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/security/ExecutionSandbox.md",
+          "line": 33,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "SAN-002",
+      "statement": "Forbidden capabilities MUST fail closed.",
+      "severity": "critical",
+      "enforced_by": "execution_sandbox",
+      "primary_source": "spec/infrastructure/security/ExecutionSandbox.md",
+      "occurrences": [
+        {
+          "source": "spec/infrastructure/security/ExecutionSandbox.md",
+          "line": 34,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/security/ExecutionSandbox.md",
+          "line": 34,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "SAN-003",
+      "statement": "Profile selection MUST be authorized by policy obligations before execution.",
+      "severity": "critical",
+      "enforced_by": "task_orchestrator",
+      "primary_source": "spec/infrastructure/security/ExecutionSandbox.md",
+      "occurrences": [
+        {
+          "source": "spec/infrastructure/security/ExecutionSandbox.md",
+          "line": 35,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/security/ExecutionSandbox.md",
+          "line": 35,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "SAN-004",
+      "statement": "Sandbox failures MUST produce immutable containment telemetry.",
+      "severity": "high",
+      "enforced_by": "observability",
+      "primary_source": "spec/infrastructure/security/ExecutionSandbox.md",
+      "occurrences": [
+        {
+          "source": "spec/infrastructure/security/ExecutionSandbox.md",
+          "line": 36,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/security/ExecutionSandbox.md",
+          "line": 36,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "SAN-005",
+      "statement": "Secrets MUST NOT be persisted in logs or task outputs by default.",
+      "severity": "critical",
+      "enforced_by": "execution_sandbox",
+      "primary_source": "spec/infrastructure/security/ExecutionSandbox.md",
+      "occurrences": [
+        {
+          "source": "spec/infrastructure/security/ExecutionSandbox.md",
+          "line": 37,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/security/ExecutionSandbox.md",
+          "line": 37,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "SCHEMA-001",
+      "statement": "Every schema MUST carry explicit schema_version.",
+      "severity": "critical",
+      "enforced_by": "Runtime",
+      "primary_source": "spec/infrastructure/architecture/DataModelAndSchemas.md",
+      "occurrences": [
+        {
+          "source": "spec/infrastructure/architecture/DataModelAndSchemas.md",
+          "line": 193,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/architecture/DataModelAndSchemas.md",
+          "line": 193,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "SCHEMA-002",
+      "statement": "Execution logs MUST be append-only and checksum-verifiable.",
+      "severity": "critical",
+      "enforced_by": "Observability",
+      "primary_source": "spec/infrastructure/architecture/DataModelAndSchemas.md",
+      "occurrences": [
+        {
+          "source": "spec/infrastructure/architecture/DataModelAndSchemas.md",
+          "line": 194,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/architecture/DataModelAndSchemas.md",
+          "line": 194,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "SCHEMA-003",
+      "statement": "Project and agent states MUST map to canonical state dimensions.",
+      "severity": "high",
+      "enforced_by": "Runtime",
+      "primary_source": "spec/infrastructure/architecture/DataModelAndSchemas.md",
+      "occurrences": [
+        {
+          "source": "spec/infrastructure/architecture/DataModelAndSchemas.md",
+          "line": 195,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/architecture/DataModelAndSchemas.md",
+          "line": 195,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "SCHEMA-004",
+      "statement": "Runtime events and persistent records MUST be correlated via trace_id.",
+      "severity": "high",
+      "enforced_by": "Runtime",
+      "primary_source": "spec/infrastructure/architecture/DataModelAndSchemas.md",
+      "occurrences": [
+        {
+          "source": "spec/infrastructure/architecture/DataModelAndSchemas.md",
+          "line": 196,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/architecture/DataModelAndSchemas.md",
+          "line": 196,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "SCHEMA-005",
+      "statement": "Source-of-truth relational data and derived memory indexes MUST maintain consistency guarantees.",
+      "severity": "high",
+      "enforced_by": "Infrastructure",
+      "primary_source": "spec/infrastructure/architecture/DataModelAndSchemas.md",
+      "occurrences": [
+        {
+          "source": "spec/infrastructure/architecture/DataModelAndSchemas.md",
+          "line": 197,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/architecture/DataModelAndSchemas.md",
+          "line": 197,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "STR-001",
+      "statement": "Audit data MUST be immutable and retained per policy.",
+      "severity": "critical",
+      "enforced_by": "administrator",
+      "primary_source": "spec/infrastructure/data/StorageAndRetention.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/roles/AdministratorRoleContract.md",
+          "line": 54,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/infrastructure/data/StorageAndRetention.md",
+          "line": 36,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/data/StorageAndRetention.md",
+          "line": 36,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "STR-002",
+      "statement": "Snapshot artifacts MUST exist before compression or archival compaction.",
+      "severity": "high",
+      "enforced_by": "administrator",
+      "primary_source": "spec/infrastructure/data/StorageAndRetention.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/roles/AdministratorRoleContract.md",
+          "line": 54,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/infrastructure/data/StorageAndRetention.md",
+          "line": 37,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/data/StorageAndRetention.md",
+          "line": 37,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/infrastructure/operations/DataMemoryOperationsPlaybooks.md",
+          "line": 103,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "STR-003",
+      "statement": "Retention transitions MUST preserve traceability metadata.",
+      "severity": "high",
+      "enforced_by": "Observability",
+      "primary_source": "spec/infrastructure/data/StorageAndRetention.md",
+      "occurrences": [
+        {
+          "source": "spec/infrastructure/data/StorageAndRetention.md",
+          "line": 38,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/data/StorageAndRetention.md",
+          "line": 38,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/infrastructure/operations/DataMemoryOperationsPlaybooks.md",
+          "line": 104,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "STR-004",
+      "statement": "Destructive deletion overrides MUST require owner approval.",
+      "severity": "critical",
+      "enforced_by": "Change Control",
+      "primary_source": "spec/infrastructure/data/StorageAndRetention.md",
+      "occurrences": [
+        {
+          "source": "spec/infrastructure/data/StorageAndRetention.md",
+          "line": 39,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/data/StorageAndRetention.md",
+          "line": 39,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "STR-005",
+      "statement": "Storage access MUST enforce project isolation boundaries.",
+      "severity": "critical",
+      "enforced_by": "Policy Engine",
+      "primary_source": "spec/infrastructure/data/StorageAndRetention.md",
+      "occurrences": [
+        {
+          "source": "spec/governance/roles/AdministratorRoleContract.md",
+          "line": 54,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/infrastructure/data/StorageAndRetention.md",
+          "line": 40,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/infrastructure/data/StorageAndRetention.md",
+          "line": 40,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/infrastructure/operations/DataMemoryOperationsPlaybooks.md",
+          "line": 105,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "TEST-001",
+      "statement": "Critical rules MUST have at least one conformance mapping in coverage artifacts.",
+      "severity": "critical",
+      "enforced_by": "ci_pipeline",
+      "primary_source": "spec/cross-cutting/conformance/ConformanceTestPlan.md",
+      "occurrences": [
+        {
+          "source": "spec/cross-cutting/conformance/ConformanceTestPlan.md",
+          "line": 25,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/ConformanceTestPlan.md",
+          "line": 25,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/ConformanceTestPlan.md",
+          "line": 38,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/SpecConstitutionReleaseChecklist.md",
+          "line": 46,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "TEST-002",
+      "statement": "Spec integrity checks MUST pass before merge/release.",
+      "severity": "critical",
+      "enforced_by": "ci_pipeline",
+      "primary_source": "spec/cross-cutting/conformance/ConformanceTestPlan.md",
+      "occurrences": [
+        {
+          "source": "spec/cross-cutting/conformance/ConformanceTestPlan.md",
+          "line": 26,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/ConformanceTestPlan.md",
+          "line": 26,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/ConformanceTestPlan.md",
+          "line": 39,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/DocumentationTemplateAdoption.md",
+          "line": 45,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/SpecConstitutionReleaseChecklist.md",
+          "line": 47,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "TEST-003",
+      "statement": "State machine specs MUST be consistent with orchestration/runtime contracts.",
+      "severity": "high",
+      "enforced_by": "spec_review",
+      "primary_source": "spec/cross-cutting/conformance/ConformanceTestPlan.md",
+      "occurrences": [
+        {
+          "source": "spec/cross-cutting/conformance/ConformanceTestPlan.md",
+          "line": 27,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/ConformanceTestPlan.md",
+          "line": 27,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/ConformanceTestPlan.md",
+          "line": 40,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "TEST-004",
+      "statement": "Constitution/spec role and authority mappings MUST remain consistent.",
+      "severity": "high",
+      "enforced_by": "spec_review",
+      "primary_source": "spec/cross-cutting/conformance/ConformanceTestPlan.md",
+      "occurrences": [
+        {
+          "source": "spec/cross-cutting/conformance/ConformanceTestPlan.md",
+          "line": 28,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/ConformanceTestPlan.md",
+          "line": 28,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/ConformanceTestPlan.md",
+          "line": 41,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/SpecConstitutionReleaseChecklist.md",
+          "line": 48,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "TEST-005",
+      "statement": "Tool investigation RFCs MUST record adopt/defer decisions before architecture baseline lock.",
+      "severity": "high",
+      "enforced_by": "governance_review",
+      "primary_source": "spec/cross-cutting/conformance/ConformanceTestPlan.md",
+      "occurrences": [
+        {
+          "source": "spec/cross-cutting/conformance/ConformanceTestPlan.md",
+          "line": 29,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/ConformanceTestPlan.md",
+          "line": 29,
+          "kind": "reference"
+        },
+        {
+          "source": "spec/cross-cutting/conformance/ConformanceTestPlan.md",
+          "line": 42,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "TOOL-001",
+      "statement": "Tool execution MUST be authorized by Policy Engine before invocation.",
+      "severity": "critical",
+      "enforced_by": "Task Orchestrator",
+      "primary_source": "spec/orchestration/registry/ToolRegistry.md",
+      "occurrences": [
+        {
+          "source": "spec/orchestration/registry/ToolRegistry.md",
+          "line": 34,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/orchestration/registry/ToolRegistry.md",
+          "line": 34,
+          "kind": "reference"
+        }
+      ]
+    },
+    {
+      "id": "TRC-001",
+      "statement": "Every task execution path MUST preserve trace context.",
+      "severity": "critical",
+      "enforced_by": "Runtime",
+      "primary_source": "spec/observability/AgentTracing.md",
+      "occurrences": [
+        {
+          "source": "spec/observability/AgentTracing.md",
+          "line": 42,
+          "kind": "markdown_rule_table"
+        },
+        {
+          "source": "spec/observability/AgentTracing.md",
+          "line": 42,
+          "kind": "reference"
+        }
+      ]
+    }
+  ]
+}
