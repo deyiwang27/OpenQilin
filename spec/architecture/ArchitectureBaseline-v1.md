@@ -97,6 +97,7 @@ Normative precedence:
 
 ### 4.4 `llm_gateway`
 - Runtime boundary: `spec/infrastructure/architecture/LlmGatewayContract.md`
+- Routing profile and model catalog: `spec/infrastructure/architecture/LlmModelRoutingProfile-v1.md`
 - Governance budget/policy coupling: `spec/constitution/BudgetEngineContract.md`
 
 ### 4.5 `memory`

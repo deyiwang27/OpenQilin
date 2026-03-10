@@ -24,6 +24,7 @@ Each item must be `pass` before implementation kickoff.
 - `CHK-INT-002`: Request/response envelopes include required trace and policy metadata.
 - `CHK-INT-003`: Error handling maps to canonical code families with retryability semantics.
 - `CHK-INT-004`: Sync vs async boundaries are explicitly locked and consistent across docs.
+- `CHK-INT-005`: LLM gateway routing profile and model-class mapping contracts are defined.
 
 ### 2.3 Reliability and Failure Behavior
 - `CHK-REL-001`: A2A+ACP lifecycle defines retry, ack timeout, dead-letter, and idempotency behavior.
@@ -75,6 +76,7 @@ All criteria are mandatory for design-stage exit:
 | `design/v1/components/ControlPlaneComponentDesign-v1.md` | control-plane API contracts and identity/auth integration | `spec/orchestration/communication/OwnerInteractionModel.md`, `spec/cross-cutting/security/IdentityAndAccessModel.md`, `spec/cross-cutting/security/DiscordOwnerChannelIdentityHardening.md`, `spec/cross-cutting/contracts/ProjectTaskQueryContracts.md`, `spec/orchestration/control/TaskOrchestrator.md` |
 | `design/v1/data/DataAndMemoryComponentDesign-v1.md` | data boundaries, redis strategy, pgvector and CDC design | `spec/infrastructure/architecture/DataModelAndSchemas.md`, `spec/orchestration/memory/AgentMemoryModel.md`, `spec/orchestration/memory/ProjectArtifactModel.md`, `spec/infrastructure/data/ArtifactIngestionAndExtraction.md`, `spec/infrastructure/data/StorageAndRetention.md`, `spec/state-machines/MemoryStateMachine.md` |
 | `design/v1/components/ObservabilityComponentDesign-v1.md` | OTel/Grafana pipeline, correlation, alerts | `spec/observability/ObservabilityArchitecture.md`, `spec/observability/MetricsAndAlerts.md`, `spec/observability/SystemLogs.md`, `spec/observability/AgentTracing.md`, `spec/observability/AuditEvents.md` |
+| `design/v1/components/LlmGatewayComponentDesign-v1.md` | llm gateway routing, fallback, and model profile integration | `spec/infrastructure/architecture/LlmGatewayContract.md`, `spec/infrastructure/architecture/LlmModelRoutingProfile-v1.md`, `spec/constitution/BudgetEngineContract.md`, `spec/cross-cutting/runtime/ErrorCodesAndHandling.md` |
 
 ## 5. Required Handoff Evidence
 - Approved design artifacts (P0/P1/P2) present in repository.

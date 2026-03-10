@@ -5,64 +5,31 @@ Branch: design/v1-system-technical-design
 Goal:
 - Complete technical design artifacts for v1 based on `spec/architecture/ArchitectureBaseline-v1.md`.
 
-P0 (design kickoff)
-1) Finalize ADR-0001: Runtime Boundary and Service Topology
-- Status: completed (2026-03-10)
-- Define service boundaries (control plane, orchestrator worker, policy runtime, communication gateway, observability pipeline).
-- Lock sync vs async call boundaries.
-- Output:
-  - `design/v1/adr/ADR-0001-Runtime-Boundary-and-Service-Topology.md`
-  - `design/v1/sequences/SEQ-0001-Owner-Command-Policy-Budget-Sandbox.md`
+Active backlog:
+- None (design stage closed).
 
-2) Finalize ADR-0002: Policy and Orchestration Decision Path
-- Status: completed (2026-03-10)
-- Design the exact request/response flow across FastAPI -> Orchestrator -> OPA -> Budget -> Sandbox.
-- Define fail-closed behavior and timeout strategy per hop.
-- Output:
-  - `design/v1/adr/ADR-0002-Policy-and-Orchestration-Decision-Path.md`
-  - `design/v1/sequences/SEQ-0002-Fail-Closed-and-Timeout-Branches.md`
+Completed (2026-03-10):
+1) P0 design kickoff artifacts
+- `design/v1/adr/ADR-0001-Runtime-Boundary-and-Service-Topology.md`
+- `design/v1/adr/ADR-0002-Policy-and-Orchestration-Decision-Path.md`
+- `design/v1/adr/ADR-0003-A2A-ACP-Reliability-Pipeline.md`
+- `design/v1/sequences/SEQ-0001-Owner-Command-Policy-Budget-Sandbox.md`
+- `design/v1/sequences/SEQ-0002-Fail-Closed-and-Timeout-Branches.md`
+- `design/v1/sequences/SEQ-0003-A2A-ACP-Reliability-Lifecycle.md`
 
-3) Finalize ADR-0003: A2A + ACP Reliability Pipeline
-- Status: completed (2026-03-10)
-- Define message lifecycle, retries, dead-letter policy, and idempotency handling.
-- Define delivery ordering guarantees by channel type.
-- Output:
-  - `design/v1/adr/ADR-0003-A2A-ACP-Reliability-Pipeline.md`
-  - `design/v1/sequences/SEQ-0003-A2A-ACP-Reliability-Lifecycle.md`
+2) P1 component design artifacts
+- `design/v1/components/ControlPlaneComponentDesign-v1.md`
+- `design/v1/data/DataAndMemoryComponentDesign-v1.md`
+- `design/v1/components/ObservabilityComponentDesign-v1.md`
 
-P1 (component design)
-4) Control Plane Component Design
-- Status: completed (2026-03-10)
-- API surface design for owner commands, task/project query, and governance actions.
-- Identity and authorization integration points.
-- Output:
-  - `design/v1/components/ControlPlaneComponentDesign-v1.md`
+3) P2 readiness artifact
+- `design/v1/DesignReviewChecklistAndExitCriteria-v1.md`
 
-5) Data and Memory Component Design
-- Status: completed (2026-03-10)
-- PostgreSQL schema package boundaries.
-- Redis cache/idempotency key strategy.
-- pgvector retrieval path design and CDC/event flow.
-- Output:
-  - `design/v1/data/DataAndMemoryComponentDesign-v1.md`
-
-6) Observability Component Design
-- Status: completed (2026-03-10)
-- OTel collector pipeline, exporters, and correlation model.
-- Grafana dashboard/alert minimum set for v1 operations.
-- Output:
-  - `design/v1/components/ObservabilityComponentDesign-v1.md`
-
-P2 (readiness)
-7) Design Review Checklist and Exit Criteria
-- Status: completed (2026-03-10)
-- Define design acceptance checklist for implementation handoff.
-- Link design artifacts to corresponding `spec/` contracts.
-- Output:
-  - `design/v1/DesignReviewChecklistAndExitCriteria-v1.md`
+4) LLM gateway/model-selection closeout (Gemini free-tier for initial testing)
+- `spec/infrastructure/architecture/LlmGatewayContract.md`
+- `spec/infrastructure/architecture/LlmModelRoutingProfile-v1.md`
+- `design/v1/components/LlmGatewayComponentDesign-v1.md`
 
 Current status:
-- P0 design kickoff artifacts completed.
-- P1 component design artifacts completed.
-- P2 readiness artifacts completed.
-- Design stage complete for v1 baseline; next phase: implementation.
+- Design stage complete for v1 baseline.
+- Ready to proceed with implementation planning and execution.

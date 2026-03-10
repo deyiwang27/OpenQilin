@@ -7,6 +7,7 @@ Expected outputs:
 - control plane design
 - orchestrator worker design
 - policy runtime integration design
+- llm gateway design
 - communication gateway design
 - observability pipeline design
 
