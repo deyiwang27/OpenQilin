@@ -7,16 +7,28 @@ Goal:
 
 P0 (design kickoff)
 1) Finalize ADR-0001: Runtime Boundary and Service Topology
+- Status: completed (2026-03-10)
 - Define service boundaries (control plane, orchestrator worker, policy runtime, communication gateway, observability pipeline).
 - Lock sync vs async call boundaries.
+- Output:
+  - `design/v1/adr/ADR-0001-Runtime-Boundary-and-Service-Topology.md`
+  - `design/v1/sequences/SEQ-0001-Owner-Command-Policy-Budget-Sandbox.md`
 
 2) Finalize ADR-0002: Policy and Orchestration Decision Path
+- Status: completed (2026-03-10)
 - Design the exact request/response flow across FastAPI -> Orchestrator -> OPA -> Budget -> Sandbox.
 - Define fail-closed behavior and timeout strategy per hop.
+- Output:
+  - `design/v1/adr/ADR-0002-Policy-and-Orchestration-Decision-Path.md`
+  - `design/v1/sequences/SEQ-0002-Fail-Closed-and-Timeout-Branches.md`
 
 3) Finalize ADR-0003: A2A + ACP Reliability Pipeline
+- Status: completed (2026-03-10)
 - Define message lifecycle, retries, dead-letter policy, and idempotency handling.
 - Define delivery ordering guarantees by channel type.
+- Output:
+  - `design/v1/adr/ADR-0003-A2A-ACP-Reliability-Pipeline.md`
+  - `design/v1/sequences/SEQ-0003-A2A-ACP-Reliability-Lifecycle.md`
 
 P1 (component design)
 4) Control Plane Component Design
@@ -38,4 +50,5 @@ P2 (readiness)
 - Link design artifacts to corresponding `spec/` contracts.
 
 Current status:
-- Pending kickoff.
+- P0 design kickoff artifacts completed.
+- Next focus: P1 component design (control plane, data/memory, observability).
