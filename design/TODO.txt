@@ -54,7 +54,7 @@ P0 (must finish before writing implementation code)
   - `design/v1/RepoStructureAndPackageLayout-v1.md`
 
 4) Define major runtime modules and dependency boundaries
-- Status: pending
+- Status: completed (2026-03-10)
 - Lock the initial v1 module map and allowed dependency direction.
 - Proposed major modules:
   - `control_plane`
@@ -76,7 +76,7 @@ P0 (must finish before writing implementation code)
   - `design/v1/ModuleDependencyMap-v1.md`
 
 5) Define app/process topology and local runtime composition
-- Status: pending
+- Status: completed (2026-03-10)
 - Decide how many runnable apps/processes exist in v1 local-first deployment.
 - Minimum candidates:
   - `api_app`
@@ -89,7 +89,7 @@ P0 (must finish before writing implementation code)
   - `design/v1/AppEntrypointsAndProcessTopology-v1.md`
 
 6) Define configuration, secrets, and environment model
-- Status: pending
+- Status: completed (2026-03-10)
 - Define:
   - environment names (`local_dev`, `ci`, `staging`, `production`)
   - config precedence
@@ -101,7 +101,7 @@ P0 (must finish before writing implementation code)
   - `design/v1/ConfigurationAndEnvironmentModel-v1.md`
 
 7) Define testing strategy and test package layout
-- Status: pending
+- Status: completed (2026-03-10)
 - Decide the v1 automated test layers:
   - unit
   - component
@@ -113,7 +113,7 @@ P0 (must finish before writing implementation code)
   - `design/v1/TestStrategyAndLayout-v1.md`
 
 8) Define CI/CD, quality gates, and branch workflow
-- Status: pending
+- Status: completed (2026-03-10)
 - Design the CI/CD process as part of implementation readiness.
 - Define:
   - PR checks
@@ -127,7 +127,7 @@ P0 (must finish before writing implementation code)
   - `design/v1/CICDAndQualityGateDesign-v1.md`
 
 9) Define local bootstrap, migration, and seed workflow
-- Status: pending
+- Status: completed (2026-03-10)
 - Define:
   - DB migration flow
   - seed/bootstrap data for roles/policies/lookups
