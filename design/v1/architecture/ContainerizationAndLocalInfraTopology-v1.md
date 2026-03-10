@@ -76,33 +76,56 @@ Rule:
 9. `communication`
 10. `admin` one-shot tasks (`migrate`, `seed`, `smoke`)
 
-## 7. Network and Secret Posture
+## 7. Authoritative Local Bring-Up Contract
+This document is the authoritative source for local full-stack bring-up.
+
+Readiness rule:
+- the stack is considered `up` only when long-running services are healthy and the `admin bootstrap` one-shot flow has completed successfully
+
+Canonical full-stack sequence:
+1. `docker compose --profile full up -d`
+2. `docker compose run --rm admin bootstrap`
+3. verify health and smoke output from the bootstrap command
+
+Required `admin bootstrap` behavior in implementation:
+- run forward migrations
+- seed deterministic baseline data
+- run minimum smoke checks against `api`, `orchestrator`, and `communication`
+- exit non-zero on any failed prerequisite or smoke check
+
+Interpretation of the spec's single-command startup baseline:
+- `docker compose --profile full up -d` is the single command that starts the long-running baseline
+- `admin bootstrap` is the required one-shot readiness gate that makes the started stack usable for end-to-end development and tests
+- developers may use the lighter `core` profile during feature work, but `full + admin bootstrap` is the only authoritative design-signoff path
+
+## 8. Network and Secret Posture
 - Services communicate over a private Compose network.
 - No plaintext secrets are committed; runtime secrets come from env files excluded from version control.
 - Only `api` exposes inbound ports by default.
 - Grafana exposure is local-only in `phase_0_local_first`.
 - Provider credentials are injected only into `litellm` and components that strictly require them.
 
-## 8. CI Posture
+## 9. CI Posture
 CI baseline:
 - use containerized `postgres`, `redis`, `opa`, and `litellm`
 - observability backends may be slimmed for fast PR runs, but `otel-collector` stays in scope for telemetry wiring checks
-- full-stack smoke runs use the `full` topology before release/promote gates
+- full-stack smoke runs use the `full` topology and `admin bootstrap` readiness gate before release/promote gates
 
-## 9. Manual Preparation Steps
+## 10. Manual Preparation Steps
 You still need to do these outside the repo:
 1. Install Docker Desktop or equivalent Docker + Compose runtime.
 2. Confirm Docker has enough CPU and memory for Postgres, Redis, OPA, and Grafana stack together.
 3. Create local env files with Gemini and Discord credentials.
 4. Verify ports used by Postgres, Redis, Grafana, and API are free.
 
-## 10. Future Evolution
+## 11. Future Evolution
 Deferred beyond v1 initial implementation:
 - Kubernetes manifests and Helm charts
 - separate sandbox host/container pool
 - separate budget runtime service if isolation or scale requires it
 
-## 11. Related Design Artifacts
+## 12. Related Design Artifacts
 - `design/v1/foundation/ImplementationFoundation-v1.md`
 - `design/v1/architecture/ImplementationArchitecture-v1.md`
+- `design/v1/foundation/DeveloperWorkflowAndContributionGuide-v1.md`
 - `design/v1/components/ObservabilityComponentDesign-v1.md`

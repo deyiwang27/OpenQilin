@@ -116,11 +116,13 @@ Expected first-run flow:
 1. install prerequisites
 2. run `uv sync`
 3. provide local env vars/secrets
-4. start local infrastructure with Docker Compose
-5. run migrations
-6. seed baseline data
-7. start app processes
-8. run smoke checks
+4. start the long-running local stack with `docker compose --profile full up -d`
+5. run the one-shot readiness gate with `docker compose run --rm admin bootstrap`
+6. use the running stack for local development and tests
+
+Authoritative rule:
+- the exact local full-stack bring-up contract is defined in `design/v1/architecture/ContainerizationAndLocalInfraTopology-v1.md`
+- bootstrap, migration, seed, and smoke behavior must converge on the `admin bootstrap` one-shot command in implementation
 
 Migration rules:
 - schema changes are forward-only
@@ -137,6 +139,13 @@ Local migration command shape:
 uv run python -m openqilin.apps.admin_cli migrate
 ```
 
+Compose-first readiness command shape:
+```bash
+docker compose --profile full up -d
+docker compose run --rm admin bootstrap
+```
+
 ## 7. Related Follow-Ups
 - architecture and module map live in `design/v1/architecture/ImplementationArchitecture-v1.md`
+- authoritative local bring-up lives in `design/v1/architecture/ContainerizationAndLocalInfraTopology-v1.md`
 - quality and delivery details live in `design/v1/quality/QualityAndDelivery-v1.md`

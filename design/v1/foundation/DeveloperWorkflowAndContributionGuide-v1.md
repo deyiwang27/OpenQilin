@@ -5,20 +5,27 @@
 
 ## 2. Daily Workflow
 1. Sync dependencies with `uv sync`.
-2. Start required local services with Docker Compose.
-3. Run migrations and seed baseline data when schema changes require it.
-4. Run the target app or worker locally.
+2. Bring up the authoritative local stack with Docker Compose.
+3. Run the one-shot bootstrap/readiness gate when the environment is fresh or schema changes require it.
+4. Run the target app or worker locally only when using a non-container developer loop; otherwise use the running Compose services.
 5. Execute the smallest relevant test slice before opening a PR.
 
 ## 3. Standard Command Loop
 ```bash
 uv sync
-uv run python -m openqilin.apps.admin_cli migrate
-uv run python -m openqilin.apps.admin_cli seed
-uv run python -m openqilin.apps.api_app
+docker compose --profile full up -d
+docker compose run --rm admin bootstrap
+docker compose ps
 uv run pytest tests/unit tests/component
 uv run ruff check .
 uv run mypy .
+```
+
+Optional non-container app loop after dependencies are available:
+```bash
+uv run python -m openqilin.apps.api_app
+uv run python -m openqilin.apps.orchestrator_worker
+uv run python -m openqilin.apps.communication_worker
 ```
 
 ## 4. Branch and PR Rules
@@ -50,3 +57,4 @@ Before serious implementation work, you still need to:
 - `spec/` remains authoritative for contracts
 - `design/` remains authoritative for implementation-facing design decisions
 - `design/TODO.txt` is the live tracker for design-stage work
+- `design/v1/architecture/ContainerizationAndLocalInfraTopology-v1.md` is the authoritative local bring-up contract

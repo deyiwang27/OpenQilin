@@ -15,6 +15,9 @@ Scope of this folder:
 - Component-level design docs
 - Sequence and interaction design
 - Data and migration design
+- Implementation foundation and developer workflow design
+- Implementation architecture, container topology, and module-level design
+- Quality, planning, and readiness artifacts
 
 Current design cycle:
 - `v1/`
