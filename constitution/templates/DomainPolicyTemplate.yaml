@@ -1,0 +1,41 @@
+version: 0.1.0
+policy:
+  policy_id: REPLACE_WITH_POLICY_ID
+  title: Replace with policy title
+  status: draft
+  owner_role: owner
+  enforced_by:
+    - policy_engine
+
+scope:
+  applies_to:
+    roles: []
+    components: []
+    environments:
+      - local
+      - cloud
+
+controls:
+  required: []
+  prohibited: []
+  conditional: []
+
+decision_logic:
+  fail_mode: fail_closed
+  allow_conditions: []
+  deny_conditions: []
+  obligations_on_allow: []
+  obligations_on_deny:
+    - emit_audit_event
+
+audit:
+  decision_event_required: true
+  required_fields:
+    - policy_version
+    - policy_hash
+    - rule_ids
+    - trace_id
+
+conformance:
+  rule_ids: []
+  required_tests: []

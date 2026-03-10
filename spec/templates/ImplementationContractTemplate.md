@@ -1,4 +1,4 @@
-# Implementation Contract Template
+# OpenQilin - Implementation Contract Template Specification
 
 ## 1. Scope
 - Document name:
@@ -102,4 +102,3 @@
 - Date:
 - Author:
 - Summary:
-

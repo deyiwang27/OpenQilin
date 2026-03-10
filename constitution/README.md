@@ -1,21 +1,44 @@
 # Constitution Layer
 
-Purpose: runtime institutional source of truth that agents read and follow.
+Purpose: runtime constitutional source of truth for policy enforcement.
 
-## Canonical Rule Files
-- `Charter.md`
-- `AuthorityMatrix.yaml`
-- `PolicyRules.yaml`
-- `EscalationPolicy.yaml`
-- `BudgetPolicy.yaml`
-- `SafetyPolicy.yaml`
-- `ChangeControl.md`
+## How Agents Should Use This Folder
+1. Load `core/PolicyManifest.yaml` first.
+2. Validate required policy files listed in manifest.
+3. Apply rules using the single global active policy version.
+4. If any required file is missing/invalid, fail closed (`deny`).
 
-## Runtime Requirement
+## Canonical Runtime Policy Files (YAML)
+### Core
+- `core/PolicyManifest.yaml`
+- `core/AuthorityMatrix.yaml`
+- `core/PolicyRules.yaml`
+- `core/ObligationPolicy.yaml`
+
+### Domain
+- `domain/EscalationPolicy.yaml`
+- `domain/BudgetPolicy.yaml`
+- `domain/SafetyPolicy.yaml`
+- `domain/OperationsPolicy.yaml`
+
+## Supporting Governance Docs (Human-readable)
+- `governance/Charter.md`
+- `governance/ChangeControl.md`
+
+## Templates
+- `templates/DomainPolicyTemplate.yaml`
+- `templates/ReleaseRecordTemplate.yaml`
+
+## Runtime Decision Metadata (Required)
 Every governance-critical decision should include:
 - `policy_version`
 - `policy_hash`
-- matched `rule_ids`
+- `rule_ids`
+- `trace_id`
 
 ## Versioning
 Snapshot each approved release in `constitution/versions/`.
+
+Release integrity requirement:
+- `policy_bundle.bundle_hash` in runtime manifest must be set (not placeholder).
+- Snapshot `ReleaseRecord.yaml` must match runtime `policy_version` and `bundle_hash`.
