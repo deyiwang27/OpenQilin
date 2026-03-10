@@ -85,9 +85,9 @@ All criteria are mandatory for design-stage exit:
 ## 5. Required Handoff Evidence
 - Approved design artifacts (P0/P1/P2) present in repository.
 - Review record present:
-  - `design/v1/DesignReviewRecord-v1.md`
+  - `design/v1/readiness/DesignReviewRecord-v1.md`
 - Implementation backlog seeds linked to design sections:
-  - `design/v1/ImplementationBacklogSeed-v1.md`
+  - `design/v1/planning/ImplementationBacklogSeed-v1.md`
 - Conformance test coverage outline mapped to key rule families (`RT`, `POL`, `BUD`, `A2A`, `ACP`, `OBS`, `MET`, `LOG`, `SCHEMA`, `MEM`, `STR`).
 
 ## 6. Kickoff Decision Record

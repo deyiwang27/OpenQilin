@@ -11,6 +11,11 @@ Artifact groups:
 - `components/`: component-level design contracts
 - `sequences/`: interaction and runtime sequence designs
 - `data/`: schema, storage, migration, and dataflow design
+- `foundation/`: toolchain, workstation, configuration, and bootstrap guidance
+- `architecture/`: repo layout, module map, and app/process topology
+- `quality/`: testing strategy and CI/CD design
+- `planning/`: implementation backlog and execution planning
+- `readiness/`: review records and implementation handoff criteria
 
 Rule:
 - Design artifacts must not conflict with `constitution/` or `spec/`.

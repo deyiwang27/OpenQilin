@@ -3,144 +3,36 @@ Date: 2026-03-10
 Branch: design/v1-system-technical-design
 
 Goal:
-- Complete technical design artifacts for v1 based on `spec/architecture/ArchitectureBaseline-v1.md`.
+- Complete the remaining implementation-planning design work for v1.
 
-Active backlog:
-- Post-design implementation architecture and repo bootstrap planning.
+Current status:
+- Define stage is complete.
+- Core v1 technical design is complete.
+- Implementation-planning P0 is complete.
 
-Implementation planning backlog (prioritized)
+Completed summary:
+- Core runtime design:
+  - `design/v1/adr/`
+  - `design/v1/components/`
+  - `design/v1/data/`
+  - `design/v1/sequences/`
+- Implementation foundation:
+  - `design/v1/foundation/ImplementationFoundation-v1.md`
+- Implementation architecture:
+  - `design/v1/architecture/ImplementationArchitecture-v1.md`
+- Quality and delivery:
+  - `design/v1/quality/QualityAndDelivery-v1.md`
+- Planning and readiness:
+  - `design/v1/planning/ImplementationBacklogSeed-v1.md`
+  - `design/v1/readiness/DesignReviewChecklistAndExitCriteria-v1.md`
+  - `design/v1/readiness/DesignReviewRecord-v1.md`
 
-P0 (must finish before writing implementation code)
-1) Define Python toolchain and package-management baseline
-- Status: completed (2026-03-10)
-- Lock `uv` as the v1 Python dependency and environment manager.
-- Define:
-  - Python version policy
-  - `pyproject.toml` ownership and dependency-group strategy
-  - lockfile policy
-  - local developer commands (`uv sync`, `uv run`, test/lint entrypoints)
-  - replacement of `pip`/`requirements.txt` workflows
-- Output target:
-  - `design/v1/PythonToolchainAndDependencyManagement-v1.md`
-
-2) Define local workstation and prerequisite software baseline
-- Status: completed (2026-03-10)
-- Document what must be installed outside coding before implementation starts.
-- Minimum prerequisite set to evaluate:
-  - `uv`
-  - Docker / Docker Compose
-  - PostgreSQL access path
-  - Redis access path
-  - OPA runtime
-  - Grafana/OTel local stack path
-  - LiteLLM runtime path
-  - Discord developer/app setup prerequisites
-- Clarify what is required locally vs what can run in containers.
-- Clarify that Kubernetes is not required for initial v1 local-first implementation unless explicitly added as a later promotion target.
-- Output target:
-  - `design/v1/DeveloperWorkstationAndPrerequisites-v1.md`
-
-3) Define repository structure and top-level package layout
-- Status: completed (2026-03-10)
-- Decide the source tree shape for implementation:
-  - app entrypoints
-  - core packages
-  - shared contracts/utilities
-  - infra/config/migrations
-  - tests
-  - local ops/bootstrap assets
-- Decide whether v1 uses a single Python package with multiple apps or a multi-package workspace.
-- Output target:
-  - `design/v1/RepoStructureAndPackageLayout-v1.md`
-
-4) Define major runtime modules and dependency boundaries
-- Status: completed (2026-03-10)
-- Lock the initial v1 module map and allowed dependency direction.
-- Proposed major modules:
-  - `control_plane`
-  - `task_orchestrator`
-  - `policy_runtime_integration`
-  - `budget_runtime`
-  - `llm_gateway`
-  - `communication_gateway`
-  - `execution_sandbox`
-  - `data_access`
-  - `observability`
-  - `shared_kernel`
-- For each module, define:
-  - responsibilities
-  - public interfaces
-  - allowed dependencies
-  - forbidden cross-module shortcuts
-- Output target:
-  - `design/v1/ModuleDependencyMap-v1.md`
-
-5) Define app/process topology and local runtime composition
-- Status: completed (2026-03-10)
-- Decide how many runnable apps/processes exist in v1 local-first deployment.
-- Minimum candidates:
-  - `api_app`
-  - `orchestrator_worker`
-  - `communication_worker`
-  - `migration_admin` / ops CLI
-  - local observability support services
-- Define startup order, process ownership, and local Docker composition.
-- Output target:
-  - `design/v1/AppEntrypointsAndProcessTopology-v1.md`
-
-6) Define configuration, secrets, and environment model
-- Status: completed (2026-03-10)
-- Define:
-  - environment names (`local_dev`, `ci`, `staging`, `production`)
-  - config precedence
-  - secret reference conventions
-  - local vs cloud credential handling
-  - Gemini free-tier config for initial testing
-  - service endpoint configuration for Postgres/Redis/OPA/LiteLLM/Grafana stack
-- Output target:
-  - `design/v1/ConfigurationAndEnvironmentModel-v1.md`
-
-7) Define testing strategy and test package layout
-- Status: completed (2026-03-10)
-- Decide the v1 automated test layers:
-  - unit
-  - component
-  - contract
-  - integration
-  - recovery/conformance smoke tests
-- Define fixtures, test data, local test execution, and the minimum unit-test bar for each module before merge.
-- Output target:
-  - `design/v1/TestStrategyAndLayout-v1.md`
-
-8) Define CI/CD, quality gates, and branch workflow
-- Status: completed (2026-03-10)
-- Design the CI/CD process as part of implementation readiness.
-- Define:
-  - PR checks
-  - lint/type/test gates
-  - migration checks
-  - docs/spec drift checks
-  - build artifact/container image policy
-  - release and promotion gates
-  - branch and merge expectations
-- Output target:
-  - `design/v1/CICDAndQualityGateDesign-v1.md`
-
-9) Define local bootstrap, migration, and seed workflow
-- Status: completed (2026-03-10)
-- Define:
-  - DB migration flow
-  - seed/bootstrap data for roles/policies/lookups
-  - local dev startup sequence
-  - Docker compose expectations
-  - first-run initialization workflow
-- Output target:
-  - `design/v1/BootstrapAndMigrationWorkflow-v1.md`
+Active backlog (prioritized)
 
 P1 (finish before major feature implementation)
-10) Select implementation frameworks and baseline libraries
+1) Select implementation frameworks and baseline libraries
 - Status: pending
-- Decide and document concrete Python implementation choices still missing from Define:
+- Decide and document:
   - settings/config library
   - HTTP client stack
   - DB access pattern / ORM or SQL toolkit
@@ -153,7 +45,7 @@ P1 (finish before major feature implementation)
 - Output target:
   - `design/v1/ImplementationFrameworkSelection-v1.md`
 
-11) Define containerization and local infrastructure topology
+2) Define containerization and local infrastructure topology
 - Status: pending
 - Define the Docker-level runtime topology for v1:
   - app containers
@@ -168,7 +60,7 @@ P1 (finish before major feature implementation)
 - Output target:
   - `design/v1/ContainerizationAndLocalInfraTopology-v1.md`
 
-12) Define module-level implementation design: Control Plane
+3) Define module-level implementation design: Control Plane
 - Status: pending
 - Translate component design into package/module layout:
   - routers
@@ -179,7 +71,7 @@ P1 (finish before major feature implementation)
 - Output target:
   - `design/v1/modules/ControlPlaneModuleDesign-v1.md`
 
-13) Define module-level implementation design: Task Orchestrator
+4) Define module-level implementation design: Task Orchestrator
 - Status: pending
 - Define:
   - graph/workflow package layout
@@ -190,7 +82,7 @@ P1 (finish before major feature implementation)
 - Output target:
   - `design/v1/modules/TaskOrchestratorModuleDesign-v1.md`
 
-14) Define module-level implementation design: Policy/Budget integration
+5) Define module-level implementation design: Policy/Budget integration
 - Status: pending
 - Define:
   - policy client
@@ -201,7 +93,7 @@ P1 (finish before major feature implementation)
 - Output target:
   - `design/v1/modules/PolicyBudgetIntegrationModuleDesign-v1.md`
 
-15) Define module-level implementation design: Communication Gateway
+6) Define module-level implementation design: Communication Gateway
 - Status: pending
 - Define:
   - A2A validators
@@ -212,7 +104,7 @@ P1 (finish before major feature implementation)
 - Output target:
   - `design/v1/modules/CommunicationGatewayModuleDesign-v1.md`
 
-16) Define module-level implementation design: Execution Sandbox and Tool Plane
+7) Define module-level implementation design: Execution Sandbox and Tool Plane
 - Status: pending
 - Define:
   - sandbox runner abstraction
@@ -223,7 +115,7 @@ P1 (finish before major feature implementation)
 - Output target:
   - `design/v1/modules/ExecutionSandboxToolPlaneModuleDesign-v1.md`
 
-17) Define module-level implementation design: LLM Gateway
+8) Define module-level implementation design: LLM Gateway
 - Status: pending
 - Define:
   - routing-profile resolver
@@ -234,7 +126,7 @@ P1 (finish before major feature implementation)
 - Output target:
   - `design/v1/modules/LlmGatewayModuleDesign-v1.md`
 
-18) Define module-level implementation design: Data Access
+9) Define module-level implementation design: Data Access
 - Status: pending
 - Define:
   - repository/data-access patterns
@@ -245,7 +137,7 @@ P1 (finish before major feature implementation)
 - Output target:
   - `design/v1/modules/DataAccessModuleDesign-v1.md`
 
-19) Define module-level implementation design: Observability
+10) Define module-level implementation design: Observability
 - Status: pending
 - Define:
   - logger/tracer/metric facade
@@ -256,7 +148,7 @@ P1 (finish before major feature implementation)
   - `design/v1/modules/ObservabilityModuleDesign-v1.md`
 
 P2 (recommended before full end-to-end delivery)
-20) Define implementation milestones and first executable slice
+11) Define implementation milestones and first executable slice
 - Status: pending
 - Turn the implementation backlog into milestone-level execution order with explicit first slice.
 - Proposed first slice:
@@ -269,7 +161,7 @@ P2 (recommended before full end-to-end delivery)
 - Output target:
   - `design/v1/ImplementationMilestones-v1.md`
 
-21) Define end-to-end developer workflow and contribution guide
+12) Define end-to-end developer workflow and contribution guide
 - Status: pending
 - Define the standard developer path:
   - environment bootstrap
@@ -281,7 +173,7 @@ P2 (recommended before full end-to-end delivery)
 - Output target:
   - `design/v1/DeveloperWorkflowAndContributionGuide-v1.md`
 
-22) Define release, versioning, and rollback workflow
+13) Define release, versioning, and rollback workflow
 - Status: pending
 - Define:
   - app versioning strategy
@@ -290,39 +182,3 @@ P2 (recommended before full end-to-end delivery)
   - rollback constraints for schema/config/runtime
 - Output target:
   - `design/v1/ReleaseVersioningAndRollback-v1.md`
-
-Completed (2026-03-10):
-1) P0 design kickoff artifacts
-- `design/v1/adr/ADR-0001-Runtime-Boundary-and-Service-Topology.md`
-- `design/v1/adr/ADR-0002-Policy-and-Orchestration-Decision-Path.md`
-- `design/v1/adr/ADR-0003-A2A-ACP-Reliability-Pipeline.md`
-- `design/v1/sequences/SEQ-0001-Owner-Command-Policy-Budget-Sandbox.md`
-- `design/v1/sequences/SEQ-0002-Fail-Closed-and-Timeout-Branches.md`
-- `design/v1/sequences/SEQ-0003-A2A-ACP-Reliability-Lifecycle.md`
-
-2) P1 component design artifacts
-- `design/v1/components/ControlPlaneComponentDesign-v1.md`
-- `design/v1/components/TaskOrchestratorComponentDesign-v1.md`
-- `design/v1/components/PolicyRuntimeIntegrationDesign-v1.md`
-- `design/v1/components/CommunicationGatewayComponentDesign-v1.md`
-- `design/v1/components/ExecutionSandboxAndToolPlaneDesign-v1.md`
-- `design/v1/data/DataAndMemoryComponentDesign-v1.md`
-- `design/v1/components/ObservabilityComponentDesign-v1.md`
-
-3) P2 readiness artifact
-- `design/v1/DesignReviewChecklistAndExitCriteria-v1.md`
-
-4) LLM gateway/model-selection closeout (Gemini free-tier for initial testing)
-- `spec/infrastructure/architecture/LlmGatewayContract.md`
-- `spec/infrastructure/architecture/LlmModelRoutingProfile-v1.md`
-- `design/v1/components/LlmGatewayComponentDesign-v1.md`
-
-5) Implementation-readiness closeout
-- aligned control-plane ingress design with canonical owner interaction envelope
-- `design/v1/DesignReviewRecord-v1.md`
-- `design/v1/ImplementationBacklogSeed-v1.md`
-
-Current status:
-- Design stage complete for v1 baseline.
-- Define and Design stages are sufficient to proceed with v1 implementation.
-- Additional implementation-architecture work is now tracked to reduce build-time ambiguity before coding starts.
