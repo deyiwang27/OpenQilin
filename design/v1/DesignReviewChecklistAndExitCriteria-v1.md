@@ -74,18 +74,20 @@ All criteria are mandatory for design-stage exit:
 | `design/v1/sequences/SEQ-0002-Fail-Closed-and-Timeout-Branches.md` | critical failure branches and timeouts | `spec/cross-cutting/runtime/ErrorCodesAndHandling.md`, `spec/orchestration/control/TaskOrchestrator.md`, `spec/infrastructure/architecture/RuntimeArchitecture.md` |
 | `design/v1/sequences/SEQ-0003-A2A-ACP-Reliability-Lifecycle.md` | transport delivery state transitions and dead-letter outcomes | `spec/orchestration/communication/AgentCommunicationA2A.md`, `spec/orchestration/communication/AgentCommunicationACP.md`, `spec/state-machines/CommunicationStateMachine.md` |
 | `design/v1/components/ControlPlaneComponentDesign-v1.md` | control-plane API contracts and identity/auth integration | `spec/orchestration/communication/OwnerInteractionModel.md`, `spec/cross-cutting/security/IdentityAndAccessModel.md`, `spec/cross-cutting/security/DiscordOwnerChannelIdentityHardening.md`, `spec/cross-cutting/contracts/ProjectTaskQueryContracts.md`, `spec/orchestration/control/TaskOrchestrator.md` |
+| `design/v1/components/TaskOrchestratorComponentDesign-v1.md` | orchestrator admission, state management, and downstream dispatch boundaries | `spec/orchestration/control/TaskOrchestrator.md`, `spec/state-machines/TaskStateMachine.md`, `spec/governance/architecture/EscalationModel.md`, `spec/constitution/PolicyEngineContract.md`, `spec/constitution/BudgetEngineContract.md` |
+| `design/v1/components/PolicyRuntimeIntegrationDesign-v1.md` | policy request normalization and fail-closed integration | `spec/constitution/PolicyEngineContract.md`, `spec/constitution/ConstitutionBindingModel.md`, `spec/cross-cutting/runtime/ErrorCodesAndHandling.md` |
+| `design/v1/components/CommunicationGatewayComponentDesign-v1.md` | A2A/ACP producer-consumer runtime and dead-letter handling | `spec/orchestration/communication/AgentCommunicationA2A.md`, `spec/orchestration/communication/AgentCommunicationACP.md`, `spec/state-machines/CommunicationStateMachine.md`, `spec/cross-cutting/runtime/ErrorCodesAndHandling.md` |
+| `design/v1/components/ExecutionSandboxAndToolPlaneDesign-v1.md` | sandbox enforcement, tool registry, and skill-binding runtime | `spec/infrastructure/security/ExecutionSandbox.md`, `spec/orchestration/registry/SkillCatalogAndBindings.md`, `spec/orchestration/registry/ToolRegistry.md`, `spec/orchestration/registry/AgentRegistry.md` |
 | `design/v1/data/DataAndMemoryComponentDesign-v1.md` | data boundaries, redis strategy, pgvector and CDC design | `spec/infrastructure/architecture/DataModelAndSchemas.md`, `spec/orchestration/memory/AgentMemoryModel.md`, `spec/orchestration/memory/ProjectArtifactModel.md`, `spec/infrastructure/data/ArtifactIngestionAndExtraction.md`, `spec/infrastructure/data/StorageAndRetention.md`, `spec/state-machines/MemoryStateMachine.md` |
 | `design/v1/components/ObservabilityComponentDesign-v1.md` | OTel/Grafana pipeline, correlation, alerts | `spec/observability/ObservabilityArchitecture.md`, `spec/observability/MetricsAndAlerts.md`, `spec/observability/SystemLogs.md`, `spec/observability/AgentTracing.md`, `spec/observability/AuditEvents.md` |
 | `design/v1/components/LlmGatewayComponentDesign-v1.md` | llm gateway routing, fallback, and model profile integration | `spec/infrastructure/architecture/LlmGatewayContract.md`, `spec/infrastructure/architecture/LlmModelRoutingProfile-v1.md`, `spec/constitution/BudgetEngineContract.md`, `spec/cross-cutting/runtime/ErrorCodesAndHandling.md` |
 
 ## 5. Required Handoff Evidence
 - Approved design artifacts (P0/P1/P2) present in repository.
-- Review record per artifact with reviewer/date/status.
+- Review record present:
+  - `design/v1/DesignReviewRecord-v1.md`
 - Implementation backlog seeds linked to design sections:
-  - control-plane API and identity middleware tasks
-  - data schema migration tasks
-  - communication reliability and dedupe tasks
-  - observability pipeline and dashboard provisioning tasks
+  - `design/v1/ImplementationBacklogSeed-v1.md`
 - Conformance test coverage outline mapped to key rule families (`RT`, `POL`, `BUD`, `A2A`, `ACP`, `OBS`, `MET`, `LOG`, `SCHEMA`, `MEM`, `STR`).
 
 ## 6. Kickoff Decision Record

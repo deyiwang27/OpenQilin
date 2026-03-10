@@ -61,14 +61,37 @@ Common response envelope fields:
 | `POST` | `/v1/owner/commands` | submit owner command envelope | `accepted` with `task_id` and `trace_id`, or `denied/error` |
 | `POST` | `/v1/owner/discussions` | non-mutating discussion/info message ingress | `ok` |
 
-`POST /v1/owner/commands` minimum body:
+Canonical owner ingress envelope for `POST /v1/owner/commands`:
 - `message_id`
-- `actor` (`external_id`, `channel`, optional `principal_hint`)
-- `action`
-- `target`
+- `trace_id`
+- `sender`
+- `recipients`
+- `message_type` (`command`)
 - `priority`
+- `timestamp`
+- `content`
 - optional `project_id`
-- `payload`
+- connector metadata:
+  - `channel`
+  - `external_message_id`
+  - `actor_external_id`
+  - `idempotency_key`
+  - `raw_payload_hash`
+- command resolution block:
+  - `action`
+  - `target`
+  - `payload`
+
+`POST /v1/owner/commands` response:
+- `trace_id`
+- `status` (`accepted|denied|error`)
+- `policy_version`
+- `policy_hash`
+- `rule_ids`
+- `data`:
+  - `task_id`
+  - `admission_state` (`queued|blocked`)
+- `error` when applicable
 
 ### 4.2 Project/Task Query Contracts
 | Method | Endpoint | Contract |
@@ -79,6 +102,15 @@ Common response envelope fields:
 | `GET` | `/v1/tasks/{task_id}/runtime-context` | `get_task_runtime_context(task_id)` |
 | `POST` | `/v1/projects/{project_id}/artifacts/search` | `search_project_artifacts(project_id, query, filters)` |
 
+Query endpoint response contract:
+- `trace_id`
+- `contract_name`
+- `status` (`ok|denied|error`)
+- `policy_version`
+- `policy_hash`
+- `rule_ids`
+- `data` or `error`
+
 ### 4.3 Governed Mutation Contracts
 | Method | Endpoint | Contract |
 | --- | --- | --- |
@@ -86,6 +118,11 @@ Common response envelope fields:
 | `POST` | `/v1/artifacts` | `create_or_update_artifact(scope_type, scope_id, artifact_type, content_md, trace_id)` |
 | `POST` | `/v1/tasks/{task_id}/state-transitions` | `request_task_state_transition(task_id, event, reason, trace_id)` |
 | `POST` | `/v1/milestones/{milestone_id}/state-transitions` | `request_milestone_state_transition(milestone_id, event, reason, trace_id)` |
+
+Mutation endpoint request requirements:
+- request body must include canonical contract inputs from `ProjectTaskQueryContracts`
+- `X-Idempotency-Key` is mandatory
+- governed mutation response uses canonical response envelope plus mutation result reference
 
 ### 4.4 Governance Action Endpoints
 | Method | Endpoint | Governance intent |
@@ -100,6 +137,18 @@ Governance endpoints are mutation endpoints:
 - require idempotency key
 - require policy authorization through orchestrator
 - require immutable audit event on critical actions
+
+Governance action response:
+- `trace_id`
+- `status` (`accepted|denied|error`)
+- `policy_version`
+- `policy_hash`
+- `rule_ids`
+- `data`:
+  - `governance_action_id`
+  - `task_id` or `event_id`
+  - `admission_state`
+- `error` when applicable
 
 ## 5. Identity and Authorization Integration
 ### 5.1 Identity Resolution
@@ -159,6 +208,12 @@ Timeout budget alignment:
 | budget reservation failure/hard breach | orchestrator response | `budget_error` deny | false |
 | sandbox dispatch timeout/reject | orchestrator response | `runtime_error` deny | limited (orchestrator-governed) |
 | telemetry exporter outage | observability export | log and continue if durable append already succeeded | true |
+
+Canonical error mapping:
+- schema/required-field failures -> `validation_error`
+- identity/policy denies -> `authorization_error`
+- budget reservation/hard threshold -> `budget_error`
+- downstream unavailability/dispatch timeout -> `runtime_error`
 
 ## 9. Component Conformance Criteria
 - Every command is attributable to authenticated principal (`IAM-001`).

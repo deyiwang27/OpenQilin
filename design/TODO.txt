@@ -6,7 +6,7 @@ Goal:
 - Complete technical design artifacts for v1 based on `spec/architecture/ArchitectureBaseline-v1.md`.
 
 Active backlog:
-- None (design stage closed).
+- None (closeout tasks completed on 2026-03-10).
 
 Completed (2026-03-10):
 1) P0 design kickoff artifacts
@@ -19,6 +19,10 @@ Completed (2026-03-10):
 
 2) P1 component design artifacts
 - `design/v1/components/ControlPlaneComponentDesign-v1.md`
+- `design/v1/components/TaskOrchestratorComponentDesign-v1.md`
+- `design/v1/components/PolicyRuntimeIntegrationDesign-v1.md`
+- `design/v1/components/CommunicationGatewayComponentDesign-v1.md`
+- `design/v1/components/ExecutionSandboxAndToolPlaneDesign-v1.md`
 - `design/v1/data/DataAndMemoryComponentDesign-v1.md`
 - `design/v1/components/ObservabilityComponentDesign-v1.md`
 
@@ -30,6 +34,11 @@ Completed (2026-03-10):
 - `spec/infrastructure/architecture/LlmModelRoutingProfile-v1.md`
 - `design/v1/components/LlmGatewayComponentDesign-v1.md`
 
+5) Implementation-readiness closeout
+- aligned control-plane ingress design with canonical owner interaction envelope
+- `design/v1/DesignReviewRecord-v1.md`
+- `design/v1/ImplementationBacklogSeed-v1.md`
+
 Current status:
 - Design stage complete for v1 baseline.
-- Ready to proceed with implementation planning and execution.
+- Define and Design stages are sufficient to proceed with v1 implementation.
