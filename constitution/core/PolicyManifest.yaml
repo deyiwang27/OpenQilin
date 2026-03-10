@@ -51,4 +51,4 @@ policy_bundle:
     - domain/BudgetPolicy.yaml
     - domain/SafetyPolicy.yaml
     - domain/OperationsPolicy.yaml
-  bundle_hash: "UNSET_REGENERATE_ON_PUBLISH"
+  bundle_hash: "aee962b953610b2b7c6cb9f04951a38287e96e6785b0d89be380f8f70e456be8"

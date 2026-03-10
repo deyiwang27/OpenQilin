@@ -2,7 +2,7 @@ policy_version: "0.1.0"
 published_at: "2026-03-10T05:51:28Z"
 published_by_role: administrator
 approved_by_role: owner
-bundle_hash: "UNSET_REGENERATE_ON_PUBLISH"
+bundle_hash: "aee962b953610b2b7c6cb9f04951a38287e96e6785b0d89be380f8f70e456be8"
 artifact_hashes:
   core/AuthorityMatrix.yaml: "33934a11cdd366991f9a89f3751159d6a0a26bf35e212f6bad7bd36e45b6c16d"
   core/PolicyRules.yaml: "b2e311d0c567fa2301f75bf68d2668ae3ca7a723a4c51a38818f07f4953cd7dd"
@@ -12,4 +12,4 @@ artifact_hashes:
   domain/SafetyPolicy.yaml: "3aa707e7314b97c1578b0a92ab296c6ed410ec37df6f837f821ee8a975f12024"
   domain/OperationsPolicy.yaml: "480686ce0e1258bdb4957cc3f0a469fea538104610fa042dac10f944e862880e"
 change_summary: "Initial constitutional snapshot for v0.1.0 aligned with runtime manifest required_files."
-source_commit: "UNSET"
+source_commit: "b6562b12632fa2dfa13d3ced09aa131c3cf22912"

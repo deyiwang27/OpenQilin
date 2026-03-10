@@ -38,3 +38,7 @@ Every governance-critical decision should include:
 
 ## Versioning
 Snapshot each approved release in `constitution/versions/`.
+
+Release integrity requirement:
+- `policy_bundle.bundle_hash` in runtime manifest must be set (not placeholder).
+- Snapshot `ReleaseRecord.yaml` must match runtime `policy_version` and `bundle_hash`.

@@ -54,6 +54,12 @@ Release record (`constitution/versions/<version>/ReleaseRecord.yaml`) minimum fi
 - `change_summary`
 - `source_commit` (optional but recommended)
 
+Bundle hash generation (v1):
+- Compute SHA256 per required artifact file listed in `policy_bundle.required_files`.
+- Build canonical input as newline-separated `path:sha256` entries in required-files order.
+- Compute SHA256 of canonical input to produce `bundle_hash`.
+- `policy_bundle.bundle_hash` and release-record `bundle_hash` MUST match.
+
 ## 7. Rollback Rules
 - Rollback target must be a previously published immutable snapshot.
 - Rollback requires `owner` approval.

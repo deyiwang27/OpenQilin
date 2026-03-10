@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-10T05:51:05.989Z",
+  "generated_at": "2026-03-10T06:00:40.736Z",
   "source_roots": [
     "spec/",
     "constitution/"
@@ -224,6 +224,16 @@
           "kind": "yaml_rule_entry"
         },
         {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 75,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 75,
+          "kind": "yaml_rule_entry"
+        },
+        {
           "source": "spec/governance/architecture/AgentAuthorityGraph.md",
           "line": 46,
           "kind": "markdown_rule_table"
@@ -341,6 +351,16 @@
           "kind": "yaml_rule_entry"
         },
         {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 3,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 3,
+          "kind": "yaml_rule_entry"
+        },
+        {
           "source": "spec/governance/architecture/AgentAuthorityGraph.md",
           "line": 41,
           "kind": "markdown_rule_table"
@@ -410,6 +430,16 @@
           "kind": "yaml_rule_entry"
         },
         {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 9,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 9,
+          "kind": "yaml_rule_entry"
+        },
+        {
           "source": "spec/governance/architecture/AgentAuthorityGraph.md",
           "line": 42,
           "kind": "markdown_rule_table"
@@ -474,6 +504,16 @@
           "kind": "yaml_rule_entry"
         },
         {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 15,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 15,
+          "kind": "yaml_rule_entry"
+        },
+        {
           "source": "spec/governance/architecture/AgentAuthorityGraph.md",
           "line": 43,
           "kind": "markdown_rule_table"
@@ -504,6 +544,16 @@
         },
         {
           "source": "constitution/core/PolicyRules.yaml",
+          "line": 21,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 21,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
           "line": 21,
           "kind": "yaml_rule_entry"
         },
@@ -542,6 +592,16 @@
           "kind": "yaml_rule_entry"
         },
         {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 27,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 27,
+          "kind": "yaml_rule_entry"
+        },
+        {
           "source": "spec/governance/architecture/AgentAuthorityGraph.md",
           "line": 45,
           "kind": "markdown_rule_table"
@@ -572,6 +632,16 @@
         },
         {
           "source": "constitution/core/PolicyRules.yaml",
+          "line": 57,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 57,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
           "line": 57,
           "kind": "yaml_rule_entry"
         },
@@ -616,6 +686,16 @@
         },
         {
           "source": "constitution/core/PolicyRules.yaml",
+          "line": 63,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 63,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
           "line": 63,
           "kind": "yaml_rule_entry"
         },
@@ -802,6 +882,16 @@
         },
         {
           "source": "constitution/core/PolicyRules.yaml",
+          "line": 81,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 81,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
           "line": 81,
           "kind": "yaml_rule_entry"
         },
@@ -1285,6 +1375,16 @@
         },
         {
           "source": "constitution/core/PolicyRules.yaml",
+          "line": 33,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 33,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
           "line": 33,
           "kind": "yaml_rule_entry"
         },
@@ -2031,6 +2131,16 @@
           "kind": "yaml_rule_entry"
         },
         {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 39,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 39,
+          "kind": "yaml_rule_entry"
+        },
+        {
           "source": "spec/constitution/PolicyEngineContract.md",
           "line": 86,
           "kind": "markdown_rule_table"
@@ -2065,6 +2175,16 @@
           "kind": "yaml_rule_entry"
         },
         {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 45,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 45,
+          "kind": "yaml_rule_entry"
+        },
+        {
           "source": "spec/constitution/PolicyEngineContract.md",
           "line": 87,
           "kind": "markdown_rule_table"
@@ -2090,6 +2210,16 @@
         },
         {
           "source": "constitution/core/PolicyRules.yaml",
+          "line": 51,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 51,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
           "line": 51,
           "kind": "yaml_rule_entry"
         },
@@ -2152,12 +2282,12 @@
       "occurrences": [
         {
           "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
-          "line": 65,
+          "line": 71,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
-          "line": 65,
+          "line": 71,
           "kind": "reference"
         }
       ]
@@ -2171,12 +2301,12 @@
       "occurrences": [
         {
           "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
-          "line": 66,
+          "line": 72,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
-          "line": 66,
+          "line": 72,
           "kind": "reference"
         }
       ]
@@ -2190,12 +2320,12 @@
       "occurrences": [
         {
           "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
-          "line": 67,
+          "line": 73,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
-          "line": 67,
+          "line": 73,
           "kind": "reference"
         }
       ]
@@ -2209,12 +2339,12 @@
       "occurrences": [
         {
           "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
-          "line": 68,
+          "line": 74,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
-          "line": 68,
+          "line": 74,
           "kind": "reference"
         }
       ]
@@ -2247,12 +2377,12 @@
       "occurrences": [
         {
           "source": "spec/cross-cutting/conformance/RuleIdCatalog.md",
-          "line": 57,
+          "line": 67,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/cross-cutting/conformance/RuleIdCatalog.md",
-          "line": 57,
+          "line": 67,
           "kind": "reference"
         }
       ]
@@ -2266,12 +2396,12 @@
       "occurrences": [
         {
           "source": "spec/cross-cutting/conformance/RuleIdCatalog.md",
-          "line": 58,
+          "line": 68,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/cross-cutting/conformance/RuleIdCatalog.md",
-          "line": 58,
+          "line": 68,
           "kind": "reference"
         },
         {
@@ -2290,12 +2420,12 @@
       "occurrences": [
         {
           "source": "spec/cross-cutting/conformance/RuleIdCatalog.md",
-          "line": 59,
+          "line": 69,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/cross-cutting/conformance/RuleIdCatalog.md",
-          "line": 59,
+          "line": 69,
           "kind": "reference"
         }
       ]
@@ -2314,12 +2444,12 @@
         },
         {
           "source": "spec/cross-cutting/conformance/RuleIdCatalog.md",
-          "line": 60,
+          "line": 70,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/cross-cutting/conformance/RuleIdCatalog.md",
-          "line": 60,
+          "line": 70,
           "kind": "reference"
         },
         {
@@ -2467,6 +2597,16 @@
         },
         {
           "source": "constitution/core/PolicyRules.yaml",
+          "line": 69,
+          "kind": "yaml_rule_entry"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
+          "line": 69,
+          "kind": "reference"
+        },
+        {
+          "source": "constitution/versions/v0.1.0/core/PolicyRules.yaml",
           "line": 69,
           "kind": "yaml_rule_entry"
         },

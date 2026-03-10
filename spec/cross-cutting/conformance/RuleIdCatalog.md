@@ -51,7 +51,17 @@
 - Registry primary record is one entry per rule ID with all known occurrences.
 - Any canonical rule ID (matching Section 3 format) referenced in `spec/` or `constitution/` MUST exist in `RuleRegistry.json`.
 
-## 5. Rule Set
+## 5. Refresh Procedure (Documentation Stage)
+- When rule-bearing docs change, refresh both artifacts together:
+  - `spec/cross-cutting/conformance/RuleRegistry.json`
+  - `spec/cross-cutting/conformance/ConformanceCoverage.json`
+- Refresh output requirements:
+  - `generated_at` values must be current and identical between both files.
+  - `rule_count` and `coverage_count` must match.
+  - line references and source paths must reflect current files.
+- If no automated job is available in the current stage, manual regeneration is allowed, but output must satisfy all requirements above before merge/release.
+
+## 6. Rule Set
 | Rule ID | Statement | Severity | Enforced By |
 | --- | --- | --- | --- |
 | RID-001 | Rule IDs MUST be unique within the machine-readable registry. | critical | change_control |
@@ -59,7 +69,7 @@
 | RID-003 | Registry and coverage artifacts MUST be regenerated on rule updates. | high | ci_pipeline |
 | RID-004 | Integrity validation MUST fail on broken path references or unresolved rule IDs. | high | ci_pipeline |
 
-## 6. Conformance Tests
+## 7. Conformance Tests
 - Duplicate registry IDs fail generation/validation.
 - Unknown rule IDs referenced in docs fail integrity check.
 - Registry and coverage artifacts stay synchronized.
