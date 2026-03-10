@@ -4,13 +4,16 @@ Purpose: implementation-level specifications for AI engineering agents.
 
 ## Taxonomy
 
-### 1. Observability
+### 1. Architecture Baseline
+- `spec/architecture/ArchitectureBaseline-v1.md`
+
+### 2. Observability
 - `spec/observability/SystemLogs.md`
 - `spec/observability/AgentTracing.md`
 - `spec/observability/MetricsAndAlerts.md`
 - `spec/observability/AuditEvents.md`
 
-### 2. Governance
+### 3. Governance
 - `spec/governance/architecture/GovernanceArchitecture.md`
 - `spec/governance/architecture/AgentAuthorityGraph.md`
 - `spec/governance/roles/SecretaryRoleContract.md`
@@ -26,14 +29,14 @@ Purpose: implementation-level specifications for AI engineering agents.
 - `spec/governance/architecture/SafetyDoctrine.md`
 - `spec/governance/architecture/DecisionReviewGates.md`
 
-### 3. Constitution
+### 4. Constitution
 - `spec/constitution/ConstitutionManagement.md`
 - `spec/constitution/PolicyVersioningAndChangeControl.md`
 - `spec/constitution/ConstitutionBindingModel.md`
 - `spec/constitution/PolicyEngineContract.md`
 - `spec/constitution/BudgetEngineContract.md`
 
-### 4. Orchestration
+### 5. Orchestration
 - `spec/orchestration/communication/OwnerInteractionModel.md`
 - `spec/orchestration/registry/AgentRegistry.md`
 - `spec/orchestration/registry/SkillCatalogAndBindings.md`
@@ -45,7 +48,7 @@ Purpose: implementation-level specifications for AI engineering agents.
 - `spec/orchestration/registry/ToolRegistry.md`
 - `spec/orchestration/control/TaskOrchestrator.md`
 
-### 5. State Machines
+### 6. State Machines
 - `spec/state-machines/AgentStateMachine.md`
 - `spec/state-machines/ProjectStateMachine.md`
 - `spec/state-machines/MilestoneStateMachine.md`
@@ -54,7 +57,7 @@ Purpose: implementation-level specifications for AI engineering agents.
 - `spec/state-machines/CommunicationStateMachine.md`
 - `spec/state-machines/EventStateMachine.md`
 
-### 6. Infrastructure
+### 7. Infrastructure
 - `spec/infrastructure/architecture/RuntimeArchitecture.md`
 - `spec/infrastructure/architecture/DataModelAndSchemas.md`
 - `spec/infrastructure/architecture/LlmGatewayContract.md`
@@ -65,7 +68,7 @@ Purpose: implementation-level specifications for AI engineering agents.
 - `spec/infrastructure/data/StorageAndRetention.md`
 - `spec/infrastructure/operations/FailureAndRecoveryModel.md`
 
-### 7. Cross-Cutting
+### 8. Cross-Cutting
 - `spec/cross-cutting/runtime/ErrorCodesAndHandling.md`
 - `spec/cross-cutting/security/IdentityAndAccessModel.md`
 - `spec/cross-cutting/security/DiscordOwnerChannelIdentityHardening.md`
@@ -79,7 +82,7 @@ Purpose: implementation-level specifications for AI engineering agents.
 - `spec/cross-cutting/conformance/DocumentationTemplateAdoption.md`
 - `spec/cross-cutting/reference/Glossary.md`
 
-### 8. RFC Spikes
+### 9. RFC Spikes
 - `spec/rfcs/RFC-Process.md`
 - `spec/rfcs/RFC-01-Orchestration-Governance-ControlPlane.md`
 - `spec/rfcs/RFC-02-Memory-Intelligence-Observability.md`
@@ -88,7 +91,7 @@ Purpose: implementation-level specifications for AI engineering agents.
 - `spec/rfcs/RFC-05-Deployment-and-Cost-Strategy.md`
 - `spec/rfcs/RFC-06-Project-Task-Status-And-Work-Artifact-Management.md`
 
-### 9. Templates
+### 10. Templates
 - `spec/templates/ImplementationContractTemplate.md`
 - `spec/templates/RoleContractTemplate.md`
 
