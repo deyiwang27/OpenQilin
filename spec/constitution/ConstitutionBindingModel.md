@@ -10,20 +10,28 @@
 - Hot reload only on approved and published version change.
 - Single globally active version pointer.
 - Runtime must fail-closed if policy cannot be loaded/validated.
+- `constitution/core/PolicyManifest.yaml` is the runtime source of truth for required artifact membership.
 
 ## 3. Bound Artifacts (v1)
-- `AuthorityMatrix.yaml`
-- `PolicyRules.yaml`
-- `EscalationPolicy.yaml`
-- `BudgetPolicy.yaml`
-- `SafetyPolicy.yaml`
+The runtime bundle MUST bind all artifacts listed in `policy_bundle.required_files` from `constitution/core/PolicyManifest.yaml`.
+
+Canonical v1 artifact set:
+- `core/AuthorityMatrix.yaml`
+- `core/PolicyRules.yaml`
+- `core/ObligationPolicy.yaml`
+- `domain/EscalationPolicy.yaml`
+- `domain/BudgetPolicy.yaml`
+- `domain/SafetyPolicy.yaml`
+- `domain/OperationsPolicy.yaml`
 
 ## 4. Validation Pipeline
-1. Parse YAML artifacts.
-2. Validate schema and required keys.
-3. Validate cross-file references (rule IDs, roles, thresholds).
-4. Compute bundle hash.
-5. Activate version only if all checks pass.
+1. Parse `PolicyManifest.yaml` and resolve `policy_bundle.required_files`.
+2. Verify every required artifact exists under `constitution/`.
+3. Parse all required YAML artifacts.
+4. Validate schema and required keys.
+5. Validate cross-file references (rule IDs, roles, thresholds).
+6. Compute bundle hash.
+7. Activate version only if all checks pass.
 
 ## 5. Runtime Binding Output
 Every policy decision context must include:
@@ -45,6 +53,7 @@ Every policy decision context must include:
 
 ## 8. Conformance Tests
 - Action decision records include constitution version and rule IDs.
+- Missing any file declared in `policy_bundle.required_files` blocks activation.
 - Invalid YAML blocks activation.
 - Cross-file reference errors block activation.
 - Active version switch is atomic and auditable.

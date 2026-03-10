@@ -1,0 +1,15 @@
+policy_version: "0.1.0"
+published_at: "YYYY-MM-DDTHH:MM:SSZ"
+published_by_role: administrator
+approved_by_role: owner
+bundle_hash: "REPLACE_WITH_BUNDLE_HASH"
+artifact_hashes:
+  core/AuthorityMatrix.yaml: "REPLACE_WITH_HASH"
+  core/PolicyRules.yaml: "REPLACE_WITH_HASH"
+  core/ObligationPolicy.yaml: "REPLACE_WITH_HASH"
+  domain/EscalationPolicy.yaml: "REPLACE_WITH_HASH"
+  domain/BudgetPolicy.yaml: "REPLACE_WITH_HASH"
+  domain/SafetyPolicy.yaml: "REPLACE_WITH_HASH"
+  domain/OperationsPolicy.yaml: "REPLACE_WITH_HASH"
+change_summary: "Summarize approved changes in this release."
+source_commit: "optional-git-commit-sha"

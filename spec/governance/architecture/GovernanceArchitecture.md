@@ -80,6 +80,21 @@ Agents are granted autonomy within clearly defined authority boundaries. They ma
 
 The architecture is designed to isolate failures when they occur. Governance agents can pause projects, suspend agents, or revoke access when critical risks are detected.
 
+1.4 Normative and Informative Boundaries
+
+This document combines architecture intent and implementation guidance. To avoid contract drift:
+
+- Normative authority source of truth:
+  - `constitution/core/AuthorityMatrix.yaml`
+  - `spec/governance/architecture/AgentAuthorityGraph.md`
+- Normative role behavior source of truth:
+  - `spec/governance/roles/*.md`
+- Normative escalation and gate behavior source of truth:
+  - `spec/governance/architecture/EscalationModel.md`
+  - `spec/governance/architecture/DecisionReviewGates.md`
+
+If any statement in this document conflicts with those artifacts, the source-of-truth artifacts above take precedence.
+
 **2\. Governance Architecture Overview**
 
 This chapter describes the high-level governance structure of the OpenQilin system. The architecture models an AI workforce as a structured organization with clearly defined authority layers, responsibilities, and reporting relationships.
@@ -850,7 +865,9 @@ This process preserves the CEO's final decision authority while ensuring that pr
 
 The OpenQilin authority structure forms a layered governance hierarchy. Authority relationships are designed to mirror institutional governance systems where operational execution, oversight, and strategic direction remain distinct.
 
-The primary authority relationships are summarized below.
+This section is an informative summary. The normative authority contract is defined in:
+- `constitution/core/AuthorityMatrix.yaml`
+- `spec/governance/architecture/AgentAuthorityGraph.md`
 
 **Owner**
 
@@ -903,7 +920,7 @@ CWO
 
 CSO
 
-- Advisory authority on long-term strategy and portfolio allocation.
+- Decision authority on strategic direction and advisory authority on portfolio allocation.
 
 **Operations Layer Authority**
 
@@ -931,14 +948,28 @@ External systems such as AgentSwarm exist outside the internal authority graph. 
 
 | **Role** | **Decision** | **Command** | **Execution** | **Review** | **Advisory** | **Oversight** | **Workforce** |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Admin | -   | -   | -   | -   | -   | ✓   | -   |
-| Auditor | -   | -   | -   | -   | -   | ✓   | -   |
-| CEO | ✓   | ✓   | -   | -   | -   | -   | -   |
-| CWO | -   | ✓   | -   | -   | -   | -   | ✓   |
-| CSO | ✓   | -   | -   | -   | ✓   | -   | -   |
-| PM  | ✓   | ✓   | -   | -   | -   | -   | ✓   |
-| DL  | -   | -   | -   | ✓   | ✓   | -   | -   |
-| Specialist | -   | -   | ✓   | -   | -   | -   | -   |
+| owner | ✓ | ✓ | - | ✓ | ✓ | ✓ | ✓ |
+| secretary | - | - | - | - | ✓ | - | - |
+| administrator | - | - | - | - | - | ✓ | - |
+| auditor | - | - | - | - | - | ✓ | - |
+| ceo | ✓ | ✓ | - | - | - | - | - |
+| cwo | - | ✓ | - | - | - | - | ✓ |
+| cso | ✓ | - | - | - | ✓ | - | - |
+| project_manager | ✓ | ✓ | - | - | - | - | ✓ |
+| domain_lead | - | - | - | ✓ | ✓ | - | - |
+| specialist | - | - | ✓ | - | - | - | - |
+
+Display-name mapping used in narrative:
+- `owner` -> Owner
+- `secretary` -> Secretary
+- `administrator` -> Administrator
+- `auditor` -> Auditor
+- `ceo` -> CEO
+- `cwo` -> CWO
+- `cso` -> CSO
+- `project_manager` -> Project Manager
+- `domain_lead` -> Domain Lead
+- `specialist` -> Specialist
 
 4.5 Authority Escalation Paths
 
@@ -1170,8 +1201,8 @@ These agents form the institutional core of governance. Their continuity ensures
 
 Project leadership agents exist only within the lifecycle of a project. These agents are created when a project is initiated and are retired when the project is completed, cancelled, or paused indefinitely. Project leadership agents include:
 
-- Project Manager (PM)
-- Domain Lead (DL)
+- Project Manager (`project_manager`)
+- Domain Lead (`domain_lead`)
 
 Responsibilities of these agents are scoped to a single project. They coordinate execution and ensure that project activities remain aligned with governance rules and strategic direction.
 

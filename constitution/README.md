@@ -27,6 +27,7 @@ Purpose: runtime constitutional source of truth for policy enforcement.
 
 ## Templates
 - `templates/DomainPolicyTemplate.yaml`
+- `templates/ReleaseRecordTemplate.yaml`
 
 ## Runtime Decision Metadata (Required)
 Every governance-critical decision should include:

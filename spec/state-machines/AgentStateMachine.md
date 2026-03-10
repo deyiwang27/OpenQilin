@@ -2,7 +2,8 @@
 
 ## 1. Scope
 - Canonical lifecycle state machine for all runtime agents.
-- Must align with `spec/orchestration/control/AgentLifecycleManagement.md` and governance pause/escalation rules.
+- This document is the normative source for lifecycle transitions.
+- `spec/orchestration/control/AgentLifecycleManagement.md` defines orchestration enforcement behavior using this state machine.
 
 ## 2. States
 - `created`

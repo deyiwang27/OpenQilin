@@ -12,6 +12,7 @@
   - canonical role names match across authority matrix, policy manifest, and spec contracts
 - Constitution manifest consistency:
   - `PolicyManifest.yaml` required files align with actual constitutional policy files
+  - runtime manifest and release record contracts are both satisfied for versioned snapshots
 - Rule linkage:
   - changed rule statements are reflected in registry and coverage artifacts, or explicitly deferred with rationale
 - RFC decision carry-through:
@@ -28,6 +29,7 @@
   - deferred/adopt_later features have explicit activation criteria
 - Release evidence:
   - checklist completion evidence recorded with release metadata
+  - `constitution/versions/<version>/ReleaseRecord.yaml` present and aligned to runtime manifest (`policy_version`, `bundle_hash`)
 
 ## 4. Gate Outcome States
 - `pass`: all required checks complete with no unresolved blocking issues.

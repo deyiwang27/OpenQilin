@@ -10,3 +10,7 @@ Each snapshot should include:
 - `core/PolicyManifest.yaml`
 - all required YAML policy artifacts
 - manifest-level bundle hash
+- `ReleaseRecord.yaml` (publish metadata: version, published/approved roles, artifact hashes, change summary)
+
+Template:
+- `constitution/templates/ReleaseRecordTemplate.yaml`

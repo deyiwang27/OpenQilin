@@ -9,12 +9,13 @@
 - Authority matrix: `constitution/core/AuthorityMatrix.yaml`
 - Policy rule catalog: `constitution/core/PolicyRules.yaml`
 - Obligation policy: `constitution/core/ObligationPolicy.yaml`
-- Policy manifest: `constitution/core/PolicyManifest.yaml`
+- Runtime policy manifest: `constitution/core/PolicyManifest.yaml`
 - Escalation policy: `constitution/domain/EscalationPolicy.yaml`
 - Budget policy: `constitution/domain/BudgetPolicy.yaml`
 - Safety policy: `constitution/domain/SafetyPolicy.yaml`
 - Operations policy: `constitution/domain/OperationsPolicy.yaml`
 - Change control policy: `constitution/governance/ChangeControl.md`
+- Release snapshot record: `constitution/versions/<version>/ReleaseRecord.yaml`
 
 ## 3. Ownership and Approval Model (v1)
 - owner:
@@ -54,8 +55,14 @@ Secretary role model:
 - Policy format: YAML only.
 - Active policy mode: single global active version.
 - Policy enforcement mode: fail-closed.
+- Runtime artifact membership source: `policy_bundle.required_files` from `PolicyManifest.yaml`.
 
-## 6. Audit Strategy (Safety vs Cost)
+## 6. Publish Artifact Model
+- Runtime policy operation uses `constitution/core/PolicyManifest.yaml` and required YAML policy files.
+- Snapshot governance uses `constitution/versions/<version>/ReleaseRecord.yaml` for publish metadata (`published_at`, publisher/approver role, artifact hashes, change summary).
+- Runtime manifest and release record must agree on `policy_version` and `bundle_hash`.
+
+## 7. Audit Strategy (Safety vs Cost)
 - All policy decisions MUST emit immutable audit events.
 - Event detail levels:
   - `allow`: compact envelope (decision summary + hashes + rule IDs)
@@ -66,7 +73,7 @@ Secretary role model:
   - hot storage window for rapid diagnostics
   - compressed cold archival for long-term traceability
 
-## 7. Rule Set
+## 8. Rule Set
 | Rule ID | Statement | Severity | Enforced By |
 | --- | --- | --- | --- |
 | CONS-001 | Constitutional assets MUST be versioned and auditable. | critical | Observability |
@@ -75,8 +82,9 @@ Secretary role model:
 | CONS-004 | Runtime policy mode MUST use a single globally active policy version. | high | Constitution Binding |
 | CONS-005 | Unknown runtime roles MUST be denied by default. | critical | Policy Engine |
 
-## 8. Conformance Tests
+## 9. Conformance Tests
 - Policy loads include version and hash metadata.
 - Policy change requests without `owner` approval are rejected.
 - Runtime requests with unknown roles are denied.
 - Decision audit events match compact/full detail policy by decision type.
+- Snapshot publish includes `ReleaseRecord.yaml` with matching `policy_version`/`bundle_hash`.

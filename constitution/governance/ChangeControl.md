@@ -13,9 +13,9 @@ Defines how constitutional policy artifacts are modified.
 1. Proposal created (`ceo` or `owner`).
 2. Impact assessment prepared (affected rules, runtime effect, rollback plan).
 3. `owner` approval decision recorded.
-4. Policy bundle version incremented and published.
+4. Policy bundle version incremented and runtime manifest published.
 5. Global active version switched atomically.
-6. Snapshot stored in `constitution/versions/`.
+6. Snapshot stored in `constitution/versions/<version>/` with `ReleaseRecord.yaml`.
 7. Change event recorded in immutable audit log.
 
 ## Rollback Policy
@@ -31,3 +31,13 @@ All policy changes must log:
 - affected files
 - policy version before/after
 - change summary
+
+## Snapshot Release Record
+Each published snapshot must include `constitution/versions/<version>/ReleaseRecord.yaml` with:
+- `policy_version`
+- `published_at`
+- `published_by_role`
+- `approved_by_role`
+- `bundle_hash`
+- `artifact_hashes`
+- `change_summary`

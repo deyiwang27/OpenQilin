@@ -25,19 +25,34 @@
 1. Propose change (`ceo` or `owner`).
 2. Run impact review (scope, affected rule IDs, enforcement impact).
 3. `owner` approval decision.
-4. Publish approved bundle.
+4. Publish approved runtime manifest and required artifacts.
 5. Atomically switch global active version.
-6. Snapshot bundle to `constitution/versions/`.
+6. Snapshot bundle to `constitution/versions/` with release record.
 7. Emit change audit event and release note.
 
-## 6. Bundle Manifest Contract
-Minimum manifest fields:
+## 6. Runtime Manifest and Release Record Contract
+OpenQilin uses a two-artifact publish contract to avoid ambiguity:
+
+Runtime manifest (`constitution/core/PolicyManifest.yaml`) minimum fields:
+- `manifest_version`
+- `policy_bundle.policy_version`
+- `policy_bundle.status`
+- `policy_bundle.active_from`
+- `policy_bundle.approval.approved_by_role`
+- `policy_bundle.approval.approved_at`
+- `policy_bundle.enforcement.*`
+- `policy_bundle.required_files`
+- `policy_bundle.bundle_hash`
+
+Release record (`constitution/versions/<version>/ReleaseRecord.yaml`) minimum fields:
 - `policy_version`
 - `published_at`
-- `approved_by`
+- `published_by_role`
+- `approved_by_role`
 - `bundle_hash`
-- `artifact_hashes` (per YAML artifact)
+- `artifact_hashes` (per YAML artifact in `required_files`)
 - `change_summary`
+- `source_commit` (optional but recommended)
 
 ## 7. Rollback Rules
 - Rollback target must be a previously published immutable snapshot.
@@ -56,4 +71,5 @@ Minimum manifest fields:
 - Rollback to prior policy version preserves decision reproducibility.
 - Concurrent decision requests never observe mixed policy versions during switch.
 - Publish attempt without `owner` approval fails.
-- Manifest hash mismatch causes publish rejection.
+- Runtime manifest hash mismatch causes publish rejection.
+- Release record must exist for every published snapshot version.
