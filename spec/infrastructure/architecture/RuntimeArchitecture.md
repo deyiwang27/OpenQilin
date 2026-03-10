@@ -29,13 +29,13 @@
 
 ## 5. Runtime Contract Interfaces
 - Policy API: input/output per `spec/constitution/PolicyEngineContract.md`.
-- Task API: lifecycle and envelope per `spec/orchestration/TaskOrchestrator.md`.
+- Task API: lifecycle and envelope per `spec/orchestration/control/TaskOrchestrator.md`.
 - Communication API: A2A payload + ACP transport contracts.
-- LLM Gateway API: request/response and routing constraints per `spec/infrastructure/LlmGatewayContract.md`.
+- LLM Gateway API: request/response and routing constraints per `spec/infrastructure/architecture/LlmGatewayContract.md`.
 - Audit Event API: event schema per `spec/observability/AuditEvents.md`.
 
 ## 6. Deployment and Operations Alignment
-- Deployment topology and promotion gates are defined in `spec/infrastructure/DeploymentTopologyAndOps.md`.
+- Deployment topology and promotion gates are defined in `spec/infrastructure/operations/DeploymentTopologyAndOps.md`.
 - Runtime implementation order follows local-first then cloud promotion policy.
 
 ## 7. Rule Set

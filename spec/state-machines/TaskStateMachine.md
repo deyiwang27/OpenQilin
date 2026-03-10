@@ -2,7 +2,7 @@
 
 ## 1. Scope
 - Canonical task execution lifecycle state machine.
-- Must stay consistent with `spec/orchestration/TaskOrchestrator.md`.
+- Must stay consistent with `spec/orchestration/control/TaskOrchestrator.md`.
 
 ## 2. States
 - `created`

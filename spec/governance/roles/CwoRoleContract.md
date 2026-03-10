@@ -43,8 +43,8 @@
 - Route domain strategy disputes to `cso`; project-level execution risks to `project_manager`.
 
 ## 7. Runtime Interfaces
-- `spec/orchestration/AgentRegistry.md`
-- `spec/orchestration/TaskOrchestrator.md`
+- `spec/orchestration/registry/AgentRegistry.md`
+- `spec/orchestration/control/TaskOrchestrator.md`
 - `spec/constitution/BudgetEngineContract.md`
 
 ## 8. Normative Rule Bindings

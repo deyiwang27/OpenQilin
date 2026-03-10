@@ -200,10 +200,10 @@ Enforcement:
 
 ## 9. Spec Outputs
 - The following specs were added/updated from this RFC recommendation:
-- `spec/orchestration/ProjectArtifactModel.md` (artifact taxonomy + lifecycle)
-- `spec/infrastructure/ArtifactIngestionAndExtraction.md` (markdown->structured sync contract)
+- `spec/orchestration/memory/ProjectArtifactModel.md` (artifact taxonomy + lifecycle)
+- `spec/infrastructure/data/ArtifactIngestionAndExtraction.md` (markdown->structured sync contract)
 - `spec/state-machines/MilestoneStateMachine.md` (currently implied by project/task only)
-- `spec/cross-cutting/ProjectTaskQueryContracts.md` (agent-safe SQL contracts)
+- `spec/cross-cutting/contracts/ProjectTaskQueryContracts.md` (agent-safe SQL contracts)
 
 ## 10. Recommendation Summary
 For OpenQilin, use:

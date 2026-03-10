@@ -2,7 +2,7 @@
 
 ## 1. Scope
 - Defines required telemetry for governance, runtime, and auditability.
-- This document is a component-spec under `spec/infrastructure/RuntimeArchitecture.md`.
+- This document is a component-spec under `spec/infrastructure/architecture/RuntimeArchitecture.md`.
 - It MUST inherit global runtime contracts `RT-001..RT-006`.
 
 Observability stack posture (v1):

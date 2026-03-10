@@ -5,8 +5,8 @@
 - Governance model: `docs/GovernanceGuide.md`
 
 ## 2. Read Implementation Specs
-- Runtime: `spec/infrastructure/RuntimeArchitecture.md`
-- Governance: `spec/governance/GovernanceArchitecture.md`
+- Runtime: `spec/infrastructure/architecture/RuntimeArchitecture.md`
+- Governance: `spec/governance/architecture/GovernanceArchitecture.md`
 
 ## 3. Load Constitutional Policies
 - Charter: `constitution/governance/Charter.md`

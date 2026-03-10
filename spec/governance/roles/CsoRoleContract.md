@@ -43,9 +43,9 @@
 - Execution-level remediation requests are routed to `cwo` or `project_manager`.
 
 ## 7. Runtime Interfaces
-- `spec/governance/DecisionReviewGates.md`
-- `spec/orchestration/ProjectArtifactModel.md`
-- `spec/cross-cutting/ProjectTaskQueryContracts.md`
+- `spec/governance/architecture/DecisionReviewGates.md`
+- `spec/orchestration/memory/ProjectArtifactModel.md`
+- `spec/cross-cutting/contracts/ProjectTaskQueryContracts.md`
 
 ## 8. Normative Rule Bindings
 - `AUTH-001`, `AUTH-002`

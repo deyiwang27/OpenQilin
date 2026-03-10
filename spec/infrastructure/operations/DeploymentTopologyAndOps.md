@@ -61,8 +61,8 @@ Mandatory controls:
 
 ## 7. Contract Alignment
 - Runtime behavior must remain aligned with:
-  - `spec/infrastructure/RuntimeArchitecture.md`
-  - `spec/infrastructure/FailureAndRecoveryModel.md`
+  - `spec/infrastructure/architecture/RuntimeArchitecture.md`
+  - `spec/infrastructure/operations/FailureAndRecoveryModel.md`
   - `spec/constitution/BudgetEngineContract.md`
 - Communication posture remains A2A + ACP in runtime.
 

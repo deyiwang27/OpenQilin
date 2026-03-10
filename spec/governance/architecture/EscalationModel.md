@@ -2,7 +2,7 @@
 
 ## 1. Scope
 - Defines escalation paths for operational, strategic, governance, and infrastructure incidents.
-- Source of truth alignment: `spec/governance/GovernanceArchitecture.md` sections 4.5 and 8.6.
+- Source of truth alignment: `spec/governance/architecture/GovernanceArchitecture.md` sections 4.5 and 8.6.
 
 ## 2. Canonical Paths
 Escalation chains:

@@ -2,7 +2,7 @@
 
 ## 1. Scope
 - Defines safety principles, containment actions, and emergency controls.
-- Source of truth alignment: `spec/governance/GovernanceArchitecture.md` sections 8.1-8.7.
+- Source of truth alignment: `spec/governance/architecture/GovernanceArchitecture.md` sections 8.1-8.7.
 
 ## 2. Safety Principles
 - Containment first

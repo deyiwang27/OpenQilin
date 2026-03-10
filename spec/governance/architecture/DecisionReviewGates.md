@@ -2,7 +2,7 @@
 
 ## 1. Scope
 - Defines mandatory review gates for project and budget decisions.
-- Source of truth alignment: `spec/governance/GovernanceArchitecture.md` section 4.2.
+- Source of truth alignment: `spec/governance/architecture/GovernanceArchitecture.md` section 4.2.
 
 ## 2. Gate Flow
 - cwo proposal -> cso strategic review -> ceo decision -> project initialization

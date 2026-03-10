@@ -11,20 +11,20 @@ Purpose: implementation-level specifications for AI engineering agents.
 - `spec/observability/AuditEvents.md`
 
 ### 2. Governance
-- `spec/governance/GovernanceArchitecture.md`
-- `spec/governance/AgentAuthorityGraph.md`
-- `spec/governance/SecretaryRoleContract.md`
-- `spec/governance/AdministratorRoleContract.md`
-- `spec/governance/AuditorRoleContract.md`
-- `spec/governance/CeoRoleContract.md`
-- `spec/governance/CwoRoleContract.md`
-- `spec/governance/CsoRoleContract.md`
-- `spec/governance/ProjectManagerRoleContract.md`
-- `spec/governance/DomainLeadRoleContract.md`
-- `spec/governance/SpecialistRoleContract.md`
-- `spec/governance/EscalationModel.md`
-- `spec/governance/SafetyDoctrine.md`
-- `spec/governance/DecisionReviewGates.md`
+- `spec/governance/architecture/GovernanceArchitecture.md`
+- `spec/governance/architecture/AgentAuthorityGraph.md`
+- `spec/governance/roles/SecretaryRoleContract.md`
+- `spec/governance/roles/AdministratorRoleContract.md`
+- `spec/governance/roles/AuditorRoleContract.md`
+- `spec/governance/roles/CeoRoleContract.md`
+- `spec/governance/roles/CwoRoleContract.md`
+- `spec/governance/roles/CsoRoleContract.md`
+- `spec/governance/roles/ProjectManagerRoleContract.md`
+- `spec/governance/roles/DomainLeadRoleContract.md`
+- `spec/governance/roles/SpecialistRoleContract.md`
+- `spec/governance/architecture/EscalationModel.md`
+- `spec/governance/architecture/SafetyDoctrine.md`
+- `spec/governance/architecture/DecisionReviewGates.md`
 
 ### 3. Constitution
 - `spec/constitution/ConstitutionManagement.md`
@@ -34,16 +34,16 @@ Purpose: implementation-level specifications for AI engineering agents.
 - `spec/constitution/BudgetEngineContract.md`
 
 ### 4. Orchestration
-- `spec/orchestration/OwnerInteractionModel.md`
-- `spec/orchestration/AgentRegistry.md`
-- `spec/orchestration/SkillCatalogAndBindings.md`
-- `spec/orchestration/AgentCommunicationA2A.md`
-- `spec/orchestration/AgentCommunicationACP.md`
-- `spec/orchestration/AgentMemoryModel.md`
-- `spec/orchestration/ProjectArtifactModel.md`
-- `spec/orchestration/AgentLifecycleManagement.md`
-- `spec/orchestration/ToolRegistry.md`
-- `spec/orchestration/TaskOrchestrator.md`
+- `spec/orchestration/communication/OwnerInteractionModel.md`
+- `spec/orchestration/registry/AgentRegistry.md`
+- `spec/orchestration/registry/SkillCatalogAndBindings.md`
+- `spec/orchestration/communication/AgentCommunicationA2A.md`
+- `spec/orchestration/communication/AgentCommunicationACP.md`
+- `spec/orchestration/memory/AgentMemoryModel.md`
+- `spec/orchestration/memory/ProjectArtifactModel.md`
+- `spec/orchestration/control/AgentLifecycleManagement.md`
+- `spec/orchestration/registry/ToolRegistry.md`
+- `spec/orchestration/control/TaskOrchestrator.md`
 
 ### 5. State Machines
 - `spec/state-machines/AgentStateMachine.md`
@@ -55,29 +55,29 @@ Purpose: implementation-level specifications for AI engineering agents.
 - `spec/state-machines/EventStateMachine.md`
 
 ### 6. Infrastructure
-- `spec/infrastructure/RuntimeArchitecture.md`
-- `spec/infrastructure/DataModelAndSchemas.md`
-- `spec/infrastructure/LlmGatewayContract.md`
-- `spec/infrastructure/ArtifactIngestionAndExtraction.md`
-- `spec/infrastructure/DataMemoryOperationsPlaybooks.md`
-- `spec/infrastructure/DeploymentTopologyAndOps.md`
-- `spec/infrastructure/ExecutionSandbox.md`
-- `spec/infrastructure/StorageAndRetention.md`
-- `spec/infrastructure/FailureAndRecoveryModel.md`
+- `spec/infrastructure/architecture/RuntimeArchitecture.md`
+- `spec/infrastructure/architecture/DataModelAndSchemas.md`
+- `spec/infrastructure/architecture/LlmGatewayContract.md`
+- `spec/infrastructure/data/ArtifactIngestionAndExtraction.md`
+- `spec/infrastructure/operations/DataMemoryOperationsPlaybooks.md`
+- `spec/infrastructure/operations/DeploymentTopologyAndOps.md`
+- `spec/infrastructure/security/ExecutionSandbox.md`
+- `spec/infrastructure/data/StorageAndRetention.md`
+- `spec/infrastructure/operations/FailureAndRecoveryModel.md`
 
 ### 7. Cross-Cutting
-- `spec/cross-cutting/ErrorCodesAndHandling.md`
-- `spec/cross-cutting/IdentityAndAccessModel.md`
-- `spec/cross-cutting/DiscordOwnerChannelIdentityHardening.md`
-- `spec/cross-cutting/ConformanceTestPlan.md`
-- `spec/cross-cutting/RuleIdCatalog.md`
-- `spec/cross-cutting/RuleRegistry.json`
-- `spec/cross-cutting/ConformanceCoverage.json`
-- `spec/cross-cutting/ProjectTaskQueryContracts.md`
-- `spec/cross-cutting/SpecConstitutionReleaseChecklist.md`
-- `spec/cross-cutting/DeferredCapabilityActivationCriteria.md`
-- `spec/cross-cutting/DocumentationTemplateAdoption.md`
-- `spec/cross-cutting/Glossary.md`
+- `spec/cross-cutting/runtime/ErrorCodesAndHandling.md`
+- `spec/cross-cutting/security/IdentityAndAccessModel.md`
+- `spec/cross-cutting/security/DiscordOwnerChannelIdentityHardening.md`
+- `spec/cross-cutting/conformance/ConformanceTestPlan.md`
+- `spec/cross-cutting/conformance/RuleIdCatalog.md`
+- `spec/cross-cutting/conformance/RuleRegistry.json`
+- `spec/cross-cutting/conformance/ConformanceCoverage.json`
+- `spec/cross-cutting/contracts/ProjectTaskQueryContracts.md`
+- `spec/cross-cutting/conformance/SpecConstitutionReleaseChecklist.md`
+- `spec/cross-cutting/planning/DeferredCapabilityActivationCriteria.md`
+- `spec/cross-cutting/conformance/DocumentationTemplateAdoption.md`
+- `spec/cross-cutting/reference/Glossary.md`
 
 ### 8. RFC Spikes
 - `spec/rfcs/RFC-Process.md`
@@ -99,4 +99,4 @@ Purpose: implementation-level specifications for AI engineering agents.
 
 ## Quality Gates
 - Validate internal spec/constitution path references before merge.
-- Ensure `spec/cross-cutting/RuleRegistry.json` and `spec/cross-cutting/ConformanceCoverage.json` are updated whenever rule IDs or rule tables change.
+- Ensure `spec/cross-cutting/conformance/RuleRegistry.json` and `spec/cross-cutting/conformance/ConformanceCoverage.json` are updated whenever rule IDs or rule tables change.

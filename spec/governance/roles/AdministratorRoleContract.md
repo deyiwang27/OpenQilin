@@ -44,9 +44,9 @@
 - Escalate immediately when containment actions affect runtime availability.
 
 ## 7. Runtime Interfaces
-- `spec/infrastructure/StorageAndRetention.md`
-- `spec/infrastructure/FailureAndRecoveryModel.md`
-- `spec/infrastructure/DataMemoryOperationsPlaybooks.md`
+- `spec/infrastructure/data/StorageAndRetention.md`
+- `spec/infrastructure/operations/FailureAndRecoveryModel.md`
+- `spec/infrastructure/operations/DataMemoryOperationsPlaybooks.md`
 
 ## 8. Normative Rule Bindings
 - `AUTH-001`, `AUTH-002`

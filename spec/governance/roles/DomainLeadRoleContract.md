@@ -43,8 +43,8 @@
 - Advisory output cannot be used as command delegation.
 
 ## 7. Runtime Interfaces
-- `spec/orchestration/ProjectArtifactModel.md`
-- `spec/cross-cutting/ProjectTaskQueryContracts.md`
+- `spec/orchestration/memory/ProjectArtifactModel.md`
+- `spec/cross-cutting/contracts/ProjectTaskQueryContracts.md`
 - `spec/state-machines/TaskStateMachine.md`
 
 ## 8. Normative Rule Bindings

@@ -2,7 +2,7 @@
 
 ## 1. Scope
 - Defines authority types, role-to-authority mapping, constraints, and escalation primitives.
-- Source of truth alignment: `spec/governance/GovernanceArchitecture.md` sections 3.7, 4.1, 4.4, 4.5, 4.6.
+- Source of truth alignment: `spec/governance/architecture/GovernanceArchitecture.md` sections 3.7, 4.1, 4.4, 4.5, 4.6.
 - Runtime authority values MUST align with `constitution/core/AuthorityMatrix.yaml`.
 
 ## 2. Canonical Authorities

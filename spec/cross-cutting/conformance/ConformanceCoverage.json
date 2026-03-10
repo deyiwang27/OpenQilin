@@ -1,91 +1,91 @@
 {
-  "generated_at": "2026-03-09T23:06:07.390Z",
+  "generated_at": "2026-03-10T05:22:54.514Z",
   "coverage_count": 130,
   "coverage": [
     {
       "id": "A2A-001",
       "test_references": [
-        "spec/orchestration/AgentCommunicationA2A.md#conformance-tests"
+        "spec/orchestration/communication/AgentCommunicationA2A.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "A2A-002",
       "test_references": [
-        "spec/governance/ProjectManagerRoleContract.md#conformance-tests",
-        "spec/governance/SpecialistRoleContract.md#conformance-tests",
-        "spec/orchestration/AgentCommunicationA2A.md#conformance-tests"
+        "spec/governance/roles/ProjectManagerRoleContract.md#conformance-tests",
+        "spec/governance/roles/SpecialistRoleContract.md#conformance-tests",
+        "spec/orchestration/communication/AgentCommunicationA2A.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "A2A-003",
       "test_references": [
-        "spec/orchestration/AgentCommunicationA2A.md#conformance-tests"
+        "spec/orchestration/communication/AgentCommunicationA2A.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "A2A-004",
       "test_references": [
-        "spec/orchestration/AgentCommunicationA2A.md#conformance-tests"
+        "spec/orchestration/communication/AgentCommunicationA2A.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "A2A-005",
       "test_references": [
-        "spec/orchestration/AgentCommunicationA2A.md#conformance-tests"
+        "spec/orchestration/communication/AgentCommunicationA2A.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "ACP-001",
       "test_references": [
-        "spec/orchestration/AgentCommunicationACP.md#conformance-tests"
+        "spec/orchestration/communication/AgentCommunicationACP.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "ACP-002",
       "test_references": [
-        "spec/orchestration/AgentCommunicationACP.md#conformance-tests"
+        "spec/orchestration/communication/AgentCommunicationACP.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "ACP-003",
       "test_references": [
-        "spec/orchestration/AgentCommunicationACP.md#conformance-tests"
+        "spec/orchestration/communication/AgentCommunicationACP.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "ACP-004",
       "test_references": [
-        "spec/orchestration/AgentCommunicationACP.md#conformance-tests"
+        "spec/orchestration/communication/AgentCommunicationACP.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "ACP-005",
       "test_references": [
-        "spec/orchestration/AgentCommunicationACP.md#conformance-tests"
+        "spec/orchestration/communication/AgentCommunicationACP.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "AUD-001",
       "test_references": [
-        "spec/governance/AdministratorRoleContract.md#conformance-tests",
-        "spec/governance/AgentAuthorityGraph.md#conformance-tests",
-        "spec/governance/AuditorRoleContract.md#conformance-tests",
-        "spec/governance/CeoRoleContract.md#conformance-tests",
-        "spec/governance/CsoRoleContract.md#conformance-tests",
-        "spec/governance/CwoRoleContract.md#conformance-tests",
-        "spec/governance/DomainLeadRoleContract.md#conformance-tests",
-        "spec/governance/ProjectManagerRoleContract.md#conformance-tests",
-        "spec/governance/SpecialistRoleContract.md#conformance-tests",
+        "spec/governance/architecture/AgentAuthorityGraph.md#conformance-tests",
+        "spec/governance/roles/AdministratorRoleContract.md#conformance-tests",
+        "spec/governance/roles/AuditorRoleContract.md#conformance-tests",
+        "spec/governance/roles/CeoRoleContract.md#conformance-tests",
+        "spec/governance/roles/CsoRoleContract.md#conformance-tests",
+        "spec/governance/roles/CwoRoleContract.md#conformance-tests",
+        "spec/governance/roles/DomainLeadRoleContract.md#conformance-tests",
+        "spec/governance/roles/ProjectManagerRoleContract.md#conformance-tests",
+        "spec/governance/roles/SpecialistRoleContract.md#conformance-tests",
         "spec/observability/AuditEvents.md#conformance-tests"
       ],
       "status": "mapped"
@@ -107,53 +107,53 @@
     {
       "id": "AUTH-001",
       "test_references": [
-        "spec/governance/AdministratorRoleContract.md#conformance-tests",
-        "spec/governance/AgentAuthorityGraph.md#conformance-tests",
-        "spec/governance/AuditorRoleContract.md#conformance-tests",
-        "spec/governance/CeoRoleContract.md#conformance-tests",
-        "spec/governance/CsoRoleContract.md#conformance-tests",
-        "spec/governance/CwoRoleContract.md#conformance-tests",
-        "spec/governance/DomainLeadRoleContract.md#conformance-tests",
-        "spec/governance/ProjectManagerRoleContract.md#conformance-tests",
-        "spec/governance/SpecialistRoleContract.md#conformance-tests"
+        "spec/governance/architecture/AgentAuthorityGraph.md#conformance-tests",
+        "spec/governance/roles/AdministratorRoleContract.md#conformance-tests",
+        "spec/governance/roles/AuditorRoleContract.md#conformance-tests",
+        "spec/governance/roles/CeoRoleContract.md#conformance-tests",
+        "spec/governance/roles/CsoRoleContract.md#conformance-tests",
+        "spec/governance/roles/CwoRoleContract.md#conformance-tests",
+        "spec/governance/roles/DomainLeadRoleContract.md#conformance-tests",
+        "spec/governance/roles/ProjectManagerRoleContract.md#conformance-tests",
+        "spec/governance/roles/SpecialistRoleContract.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "AUTH-002",
       "test_references": [
-        "spec/governance/AdministratorRoleContract.md#conformance-tests",
-        "spec/governance/AgentAuthorityGraph.md#conformance-tests",
-        "spec/governance/AuditorRoleContract.md#conformance-tests",
-        "spec/governance/CeoRoleContract.md#conformance-tests",
-        "spec/governance/CsoRoleContract.md#conformance-tests",
-        "spec/governance/CwoRoleContract.md#conformance-tests",
-        "spec/governance/DomainLeadRoleContract.md#conformance-tests",
-        "spec/governance/ProjectManagerRoleContract.md#conformance-tests"
+        "spec/governance/architecture/AgentAuthorityGraph.md#conformance-tests",
+        "spec/governance/roles/AdministratorRoleContract.md#conformance-tests",
+        "spec/governance/roles/AuditorRoleContract.md#conformance-tests",
+        "spec/governance/roles/CeoRoleContract.md#conformance-tests",
+        "spec/governance/roles/CsoRoleContract.md#conformance-tests",
+        "spec/governance/roles/CwoRoleContract.md#conformance-tests",
+        "spec/governance/roles/DomainLeadRoleContract.md#conformance-tests",
+        "spec/governance/roles/ProjectManagerRoleContract.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "AUTH-003",
       "test_references": [
-        "spec/governance/AgentAuthorityGraph.md#conformance-tests",
-        "spec/governance/CwoRoleContract.md#conformance-tests"
+        "spec/governance/architecture/AgentAuthorityGraph.md#conformance-tests",
+        "spec/governance/roles/CwoRoleContract.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "AUTH-004",
       "test_references": [
-        "spec/governance/AgentAuthorityGraph.md#conformance-tests",
-        "spec/governance/SecretaryRoleContract.md#conformance-tests"
+        "spec/governance/architecture/AgentAuthorityGraph.md#conformance-tests",
+        "spec/governance/roles/SecretaryRoleContract.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "AUTH-005",
       "test_references": [
-        "spec/governance/AgentAuthorityGraph.md#conformance-tests",
-        "spec/governance/SecretaryRoleContract.md#conformance-tests"
+        "spec/governance/architecture/AgentAuthorityGraph.md#conformance-tests",
+        "spec/governance/roles/SecretaryRoleContract.md#conformance-tests"
       ],
       "status": "mapped"
     },
@@ -161,9 +161,9 @@
       "id": "BUD-001",
       "test_references": [
         "spec/constitution/BudgetEngineContract.md#conformance-tests",
-        "spec/cross-cutting/DeferredCapabilityActivationCriteria.md#conformance-tests",
-        "spec/governance/AuditorRoleContract.md#conformance-tests",
-        "spec/governance/CwoRoleContract.md#conformance-tests"
+        "spec/cross-cutting/planning/DeferredCapabilityActivationCriteria.md#conformance-tests",
+        "spec/governance/roles/AuditorRoleContract.md#conformance-tests",
+        "spec/governance/roles/CwoRoleContract.md#conformance-tests"
       ],
       "status": "mapped"
     },
@@ -171,7 +171,7 @@
       "id": "BUD-002",
       "test_references": [
         "spec/constitution/BudgetEngineContract.md#conformance-tests",
-        "spec/governance/AuditorRoleContract.md#conformance-tests"
+        "spec/governance/roles/AuditorRoleContract.md#conformance-tests"
       ],
       "status": "mapped"
     },
@@ -262,7 +262,7 @@
     {
       "id": "DOC-001",
       "test_references": [
-        "spec/cross-cutting/DocumentationTemplateAdoption.md#conformance-tests",
+        "spec/cross-cutting/conformance/DocumentationTemplateAdoption.md#conformance-tests",
         "spec/templates/ImplementationContractTemplate.md#conformance-tests"
       ],
       "status": "mapped"
@@ -270,147 +270,147 @@
     {
       "id": "ERR-001",
       "test_references": [
-        "spec/cross-cutting/ErrorCodesAndHandling.md#conformance-tests"
+        "spec/cross-cutting/runtime/ErrorCodesAndHandling.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "ESC-001",
       "test_references": [
-        "spec/governance/AuditorRoleContract.md#conformance-tests",
-        "spec/governance/EscalationModel.md#conformance-tests"
+        "spec/governance/architecture/EscalationModel.md#conformance-tests",
+        "spec/governance/roles/AuditorRoleContract.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "ESC-002",
       "test_references": [
-        "spec/governance/AuditorRoleContract.md#conformance-tests",
-        "spec/governance/EscalationModel.md#conformance-tests"
+        "spec/governance/architecture/EscalationModel.md#conformance-tests",
+        "spec/governance/roles/AuditorRoleContract.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "ESC-003",
       "test_references": [
-        "spec/governance/EscalationModel.md#conformance-tests"
+        "spec/governance/architecture/EscalationModel.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "ESC-004",
       "test_references": [
-        "spec/governance/EscalationModel.md#conformance-tests"
+        "spec/governance/architecture/EscalationModel.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "ESC-005",
       "test_references": [
-        "spec/governance/EscalationModel.md#conformance-tests"
+        "spec/governance/architecture/EscalationModel.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "ESC-006",
       "test_references": [
-        "spec/governance/EscalationModel.md#conformance-tests"
+        "spec/governance/architecture/EscalationModel.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "FRM-001",
       "test_references": [
-        "spec/infrastructure/FailureAndRecoveryModel.md#conformance-tests"
+        "spec/infrastructure/operations/FailureAndRecoveryModel.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "FRM-002",
       "test_references": [
-        "spec/cross-cutting/DeferredCapabilityActivationCriteria.md#conformance-tests",
-        "spec/infrastructure/FailureAndRecoveryModel.md#conformance-tests"
+        "spec/cross-cutting/planning/DeferredCapabilityActivationCriteria.md#conformance-tests",
+        "spec/infrastructure/operations/FailureAndRecoveryModel.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "FRM-003",
       "test_references": [
-        "spec/governance/AdministratorRoleContract.md#conformance-tests",
-        "spec/infrastructure/DataMemoryOperationsPlaybooks.md#conformance-tests",
-        "spec/infrastructure/FailureAndRecoveryModel.md#conformance-tests"
+        "spec/governance/roles/AdministratorRoleContract.md#conformance-tests",
+        "spec/infrastructure/operations/DataMemoryOperationsPlaybooks.md#conformance-tests",
+        "spec/infrastructure/operations/FailureAndRecoveryModel.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "FRM-004",
       "test_references": [
-        "spec/infrastructure/FailureAndRecoveryModel.md#conformance-tests"
+        "spec/infrastructure/operations/FailureAndRecoveryModel.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "FRM-005",
       "test_references": [
-        "spec/cross-cutting/DeferredCapabilityActivationCriteria.md#conformance-tests",
-        "spec/governance/AdministratorRoleContract.md#conformance-tests",
-        "spec/infrastructure/DataMemoryOperationsPlaybooks.md#conformance-tests",
-        "spec/infrastructure/FailureAndRecoveryModel.md#conformance-tests"
+        "spec/cross-cutting/planning/DeferredCapabilityActivationCriteria.md#conformance-tests",
+        "spec/governance/roles/AdministratorRoleContract.md#conformance-tests",
+        "spec/infrastructure/operations/DataMemoryOperationsPlaybooks.md#conformance-tests",
+        "spec/infrastructure/operations/FailureAndRecoveryModel.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "GATE-001",
       "test_references": [
-        "spec/governance/CsoRoleContract.md#conformance-tests",
-        "spec/governance/DecisionReviewGates.md#conformance-tests"
+        "spec/governance/architecture/DecisionReviewGates.md#conformance-tests",
+        "spec/governance/roles/CsoRoleContract.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "GATE-002",
       "test_references": [
-        "spec/governance/CsoRoleContract.md#conformance-tests",
-        "spec/governance/DecisionReviewGates.md#conformance-tests"
+        "spec/governance/architecture/DecisionReviewGates.md#conformance-tests",
+        "spec/governance/roles/CsoRoleContract.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "GATE-003",
       "test_references": [
-        "spec/governance/DecisionReviewGates.md#conformance-tests"
+        "spec/governance/architecture/DecisionReviewGates.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "GATE-004",
       "test_references": [
-        "spec/governance/DecisionReviewGates.md#conformance-tests"
+        "spec/governance/architecture/DecisionReviewGates.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "GLO-001",
       "test_references": [
-        "spec/cross-cutting/Glossary.md#conformance-tests"
+        "spec/cross-cutting/reference/Glossary.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "GOV-001",
       "test_references": [
-        "spec/governance/AdministratorRoleContract.md#conformance-tests",
-        "spec/governance/AuditorRoleContract.md#conformance-tests",
-        "spec/governance/CeoRoleContract.md#conformance-tests"
+        "spec/governance/roles/AdministratorRoleContract.md#conformance-tests",
+        "spec/governance/roles/AuditorRoleContract.md#conformance-tests",
+        "spec/governance/roles/CeoRoleContract.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "IAM-001",
       "test_references": [
-        "spec/cross-cutting/DiscordOwnerChannelIdentityHardening.md#conformance-tests",
-        "spec/cross-cutting/IdentityAndAccessModel.md#conformance-tests",
-        "spec/governance/SecretaryRoleContract.md#conformance-tests"
+        "spec/cross-cutting/security/DiscordOwnerChannelIdentityHardening.md#conformance-tests",
+        "spec/cross-cutting/security/IdentityAndAccessModel.md#conformance-tests",
+        "spec/governance/roles/SecretaryRoleContract.md#conformance-tests"
       ],
       "status": "mapped"
     },
@@ -438,49 +438,49 @@
     {
       "id": "MEM-001",
       "test_references": [
-        "spec/orchestration/AgentMemoryModel.md#conformance-tests"
+        "spec/orchestration/memory/AgentMemoryModel.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "MEM-002",
       "test_references": [
-        "spec/orchestration/AgentMemoryModel.md#conformance-tests"
+        "spec/orchestration/memory/AgentMemoryModel.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "MEM-003",
       "test_references": [
-        "spec/orchestration/AgentMemoryModel.md#conformance-tests"
+        "spec/orchestration/memory/AgentMemoryModel.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "MEM-004",
       "test_references": [
-        "spec/orchestration/AgentMemoryModel.md#conformance-tests"
+        "spec/orchestration/memory/AgentMemoryModel.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "MEM-005",
       "test_references": [
-        "spec/orchestration/AgentMemoryModel.md#conformance-tests"
+        "spec/orchestration/memory/AgentMemoryModel.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "MEM-006",
       "test_references": [
-        "spec/orchestration/AgentMemoryModel.md#conformance-tests"
+        "spec/orchestration/memory/AgentMemoryModel.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "MEM-007",
       "test_references": [
-        "spec/orchestration/AgentMemoryModel.md#conformance-tests"
+        "spec/orchestration/memory/AgentMemoryModel.md#conformance-tests"
       ],
       "status": "mapped"
     },
@@ -543,95 +543,95 @@
     {
       "id": "OIM-001",
       "test_references": [
-        "spec/cross-cutting/DiscordOwnerChannelIdentityHardening.md#conformance-tests",
-        "spec/governance/CeoRoleContract.md#conformance-tests",
-        "spec/orchestration/OwnerInteractionModel.md#conformance-tests"
+        "spec/cross-cutting/security/DiscordOwnerChannelIdentityHardening.md#conformance-tests",
+        "spec/governance/roles/CeoRoleContract.md#conformance-tests",
+        "spec/orchestration/communication/OwnerInteractionModel.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "OIM-002",
       "test_references": [
-        "spec/cross-cutting/DiscordOwnerChannelIdentityHardening.md#conformance-tests",
-        "spec/orchestration/OwnerInteractionModel.md#conformance-tests"
+        "spec/cross-cutting/security/DiscordOwnerChannelIdentityHardening.md#conformance-tests",
+        "spec/orchestration/communication/OwnerInteractionModel.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "OIM-003",
       "test_references": [
-        "spec/cross-cutting/DiscordOwnerChannelIdentityHardening.md#conformance-tests",
-        "spec/governance/CsoRoleContract.md#conformance-tests",
-        "spec/governance/DomainLeadRoleContract.md#conformance-tests",
-        "spec/governance/SecretaryRoleContract.md#conformance-tests",
-        "spec/orchestration/OwnerInteractionModel.md#conformance-tests"
+        "spec/cross-cutting/security/DiscordOwnerChannelIdentityHardening.md#conformance-tests",
+        "spec/governance/roles/CsoRoleContract.md#conformance-tests",
+        "spec/governance/roles/DomainLeadRoleContract.md#conformance-tests",
+        "spec/governance/roles/SecretaryRoleContract.md#conformance-tests",
+        "spec/orchestration/communication/OwnerInteractionModel.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "OIM-004",
       "test_references": [
-        "spec/cross-cutting/DiscordOwnerChannelIdentityHardening.md#conformance-tests",
-        "spec/orchestration/OwnerInteractionModel.md#conformance-tests"
+        "spec/cross-cutting/security/DiscordOwnerChannelIdentityHardening.md#conformance-tests",
+        "spec/orchestration/communication/OwnerInteractionModel.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "ORCH-001",
       "test_references": [
-        "spec/governance/CeoRoleContract.md#conformance-tests",
-        "spec/governance/CwoRoleContract.md#conformance-tests",
-        "spec/governance/ProjectManagerRoleContract.md#conformance-tests",
-        "spec/governance/SpecialistRoleContract.md#conformance-tests",
-        "spec/orchestration/TaskOrchestrator.md#conformance-tests"
+        "spec/governance/roles/CeoRoleContract.md#conformance-tests",
+        "spec/governance/roles/CwoRoleContract.md#conformance-tests",
+        "spec/governance/roles/ProjectManagerRoleContract.md#conformance-tests",
+        "spec/governance/roles/SpecialistRoleContract.md#conformance-tests",
+        "spec/orchestration/control/TaskOrchestrator.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "ORCH-002",
       "test_references": [
-        "spec/governance/CwoRoleContract.md#conformance-tests",
-        "spec/governance/ProjectManagerRoleContract.md#conformance-tests",
-        "spec/governance/SpecialistRoleContract.md#conformance-tests",
-        "spec/orchestration/TaskOrchestrator.md#conformance-tests"
+        "spec/governance/roles/CwoRoleContract.md#conformance-tests",
+        "spec/governance/roles/ProjectManagerRoleContract.md#conformance-tests",
+        "spec/governance/roles/SpecialistRoleContract.md#conformance-tests",
+        "spec/orchestration/control/TaskOrchestrator.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "ORCH-003",
       "test_references": [
-        "spec/orchestration/TaskOrchestrator.md#conformance-tests"
+        "spec/orchestration/control/TaskOrchestrator.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "ORCH-004",
       "test_references": [
-        "spec/orchestration/TaskOrchestrator.md#conformance-tests"
+        "spec/orchestration/control/TaskOrchestrator.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "ORCH-005",
       "test_references": [
-        "spec/governance/CeoRoleContract.md#conformance-tests",
-        "spec/orchestration/TaskOrchestrator.md#conformance-tests"
+        "spec/governance/roles/CeoRoleContract.md#conformance-tests",
+        "spec/orchestration/control/TaskOrchestrator.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "ORCH-006",
       "test_references": [
-        "spec/governance/ProjectManagerRoleContract.md#conformance-tests",
-        "spec/governance/SpecialistRoleContract.md#conformance-tests",
-        "spec/orchestration/TaskOrchestrator.md#conformance-tests"
+        "spec/governance/roles/ProjectManagerRoleContract.md#conformance-tests",
+        "spec/governance/roles/SpecialistRoleContract.md#conformance-tests",
+        "spec/orchestration/control/TaskOrchestrator.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "ORCH-007",
       "test_references": [
-        "spec/orchestration/TaskOrchestrator.md#conformance-tests"
+        "spec/orchestration/control/TaskOrchestrator.md#conformance-tests"
       ],
       "status": "mapped"
     },
@@ -653,7 +653,7 @@
       "id": "POL-003",
       "test_references": [
         "spec/constitution/PolicyEngineContract.md#conformance-tests",
-        "spec/cross-cutting/DeferredCapabilityActivationCriteria.md#conformance-tests"
+        "spec/cross-cutting/planning/DeferredCapabilityActivationCriteria.md#conformance-tests"
       ],
       "status": "mapped"
     },
@@ -716,45 +716,45 @@
     {
       "id": "REG-001",
       "test_references": [
-        "spec/orchestration/AgentRegistry.md#conformance-tests"
+        "spec/orchestration/registry/AgentRegistry.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "RID-001",
       "test_references": [
-        "spec/cross-cutting/RuleIdCatalog.md#conformance-tests"
+        "spec/cross-cutting/conformance/RuleIdCatalog.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "RID-002",
       "test_references": [
-        "spec/cross-cutting/RuleIdCatalog.md#conformance-tests",
-        "spec/cross-cutting/SpecConstitutionReleaseChecklist.md#conformance-tests"
+        "spec/cross-cutting/conformance/RuleIdCatalog.md#conformance-tests",
+        "spec/cross-cutting/conformance/SpecConstitutionReleaseChecklist.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "RID-003",
       "test_references": [
-        "spec/cross-cutting/RuleIdCatalog.md#conformance-tests"
+        "spec/cross-cutting/conformance/RuleIdCatalog.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "RID-004",
       "test_references": [
-        "spec/cross-cutting/DocumentationTemplateAdoption.md#conformance-tests",
-        "spec/cross-cutting/RuleIdCatalog.md#conformance-tests",
-        "spec/cross-cutting/SpecConstitutionReleaseChecklist.md#conformance-tests"
+        "spec/cross-cutting/conformance/DocumentationTemplateAdoption.md#conformance-tests",
+        "spec/cross-cutting/conformance/RuleIdCatalog.md#conformance-tests",
+        "spec/cross-cutting/conformance/SpecConstitutionReleaseChecklist.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "RT-001",
       "test_references": [
-        "spec/infrastructure/RuntimeArchitecture.md#conformance-tests",
+        "spec/infrastructure/architecture/RuntimeArchitecture.md#conformance-tests",
         "spec/observability/ObservabilityArchitecture.md#conformance-tests"
       ],
       "status": "mapped"
@@ -762,35 +762,35 @@
     {
       "id": "RT-002",
       "test_references": [
-        "spec/infrastructure/RuntimeArchitecture.md#conformance-tests"
+        "spec/infrastructure/architecture/RuntimeArchitecture.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "RT-003",
       "test_references": [
-        "spec/infrastructure/RuntimeArchitecture.md#conformance-tests"
+        "spec/infrastructure/architecture/RuntimeArchitecture.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "RT-004",
       "test_references": [
-        "spec/infrastructure/RuntimeArchitecture.md#conformance-tests"
+        "spec/infrastructure/architecture/RuntimeArchitecture.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "RT-005",
       "test_references": [
-        "spec/infrastructure/RuntimeArchitecture.md#conformance-tests"
+        "spec/infrastructure/architecture/RuntimeArchitecture.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "RT-006",
       "test_references": [
-        "spec/infrastructure/RuntimeArchitecture.md#conformance-tests",
+        "spec/infrastructure/architecture/RuntimeArchitecture.md#conformance-tests",
         "spec/observability/ObservabilityArchitecture.md#conformance-tests"
       ],
       "status": "mapped"
@@ -798,192 +798,192 @@
     {
       "id": "SAF-001",
       "test_references": [
-        "spec/governance/SafetyDoctrine.md#conformance-tests"
+        "spec/governance/architecture/SafetyDoctrine.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "SAF-002",
       "test_references": [
-        "spec/governance/SafetyDoctrine.md#conformance-tests"
+        "spec/governance/architecture/SafetyDoctrine.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "SAF-003",
       "test_references": [
-        "spec/governance/SafetyDoctrine.md#conformance-tests"
+        "spec/governance/architecture/SafetyDoctrine.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "SAF-004",
       "test_references": [
-        "spec/governance/SafetyDoctrine.md#conformance-tests"
+        "spec/governance/architecture/SafetyDoctrine.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "SAF-005",
       "test_references": [
-        "spec/governance/SafetyDoctrine.md#conformance-tests"
+        "spec/governance/architecture/SafetyDoctrine.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "SAN-001",
       "test_references": [
-        "spec/infrastructure/ExecutionSandbox.md#conformance-tests"
+        "spec/infrastructure/security/ExecutionSandbox.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "SAN-002",
       "test_references": [
-        "spec/infrastructure/ExecutionSandbox.md#conformance-tests"
+        "spec/infrastructure/security/ExecutionSandbox.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "SAN-003",
       "test_references": [
-        "spec/infrastructure/ExecutionSandbox.md#conformance-tests"
+        "spec/infrastructure/security/ExecutionSandbox.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "SAN-004",
       "test_references": [
-        "spec/infrastructure/ExecutionSandbox.md#conformance-tests"
+        "spec/infrastructure/security/ExecutionSandbox.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "SAN-005",
       "test_references": [
-        "spec/infrastructure/ExecutionSandbox.md#conformance-tests"
+        "spec/infrastructure/security/ExecutionSandbox.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "SCHEMA-001",
       "test_references": [
-        "spec/infrastructure/DataModelAndSchemas.md#conformance-tests"
+        "spec/infrastructure/architecture/DataModelAndSchemas.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "SCHEMA-002",
       "test_references": [
-        "spec/infrastructure/DataModelAndSchemas.md#conformance-tests"
+        "spec/infrastructure/architecture/DataModelAndSchemas.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "SCHEMA-003",
       "test_references": [
-        "spec/infrastructure/DataModelAndSchemas.md#conformance-tests"
+        "spec/infrastructure/architecture/DataModelAndSchemas.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "SCHEMA-004",
       "test_references": [
-        "spec/infrastructure/DataModelAndSchemas.md#conformance-tests"
+        "spec/infrastructure/architecture/DataModelAndSchemas.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "SCHEMA-005",
       "test_references": [
-        "spec/infrastructure/DataModelAndSchemas.md#conformance-tests"
+        "spec/infrastructure/architecture/DataModelAndSchemas.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "STR-001",
       "test_references": [
-        "spec/governance/AdministratorRoleContract.md#conformance-tests",
-        "spec/infrastructure/StorageAndRetention.md#conformance-tests"
+        "spec/governance/roles/AdministratorRoleContract.md#conformance-tests",
+        "spec/infrastructure/data/StorageAndRetention.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "STR-002",
       "test_references": [
-        "spec/governance/AdministratorRoleContract.md#conformance-tests",
-        "spec/infrastructure/DataMemoryOperationsPlaybooks.md#conformance-tests",
-        "spec/infrastructure/StorageAndRetention.md#conformance-tests"
+        "spec/governance/roles/AdministratorRoleContract.md#conformance-tests",
+        "spec/infrastructure/data/StorageAndRetention.md#conformance-tests",
+        "spec/infrastructure/operations/DataMemoryOperationsPlaybooks.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "STR-003",
       "test_references": [
-        "spec/infrastructure/DataMemoryOperationsPlaybooks.md#conformance-tests",
-        "spec/infrastructure/StorageAndRetention.md#conformance-tests"
+        "spec/infrastructure/data/StorageAndRetention.md#conformance-tests",
+        "spec/infrastructure/operations/DataMemoryOperationsPlaybooks.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "STR-004",
       "test_references": [
-        "spec/infrastructure/StorageAndRetention.md#conformance-tests"
+        "spec/infrastructure/data/StorageAndRetention.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "STR-005",
       "test_references": [
-        "spec/governance/AdministratorRoleContract.md#conformance-tests",
-        "spec/infrastructure/DataMemoryOperationsPlaybooks.md#conformance-tests",
-        "spec/infrastructure/StorageAndRetention.md#conformance-tests"
+        "spec/governance/roles/AdministratorRoleContract.md#conformance-tests",
+        "spec/infrastructure/data/StorageAndRetention.md#conformance-tests",
+        "spec/infrastructure/operations/DataMemoryOperationsPlaybooks.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "TEST-001",
       "test_references": [
-        "spec/cross-cutting/ConformanceTestPlan.md#conformance-tests",
-        "spec/cross-cutting/SpecConstitutionReleaseChecklist.md#conformance-tests"
+        "spec/cross-cutting/conformance/ConformanceTestPlan.md#conformance-tests",
+        "spec/cross-cutting/conformance/SpecConstitutionReleaseChecklist.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "TEST-002",
       "test_references": [
-        "spec/cross-cutting/ConformanceTestPlan.md#conformance-tests",
-        "spec/cross-cutting/DocumentationTemplateAdoption.md#conformance-tests",
-        "spec/cross-cutting/SpecConstitutionReleaseChecklist.md#conformance-tests"
+        "spec/cross-cutting/conformance/ConformanceTestPlan.md#conformance-tests",
+        "spec/cross-cutting/conformance/DocumentationTemplateAdoption.md#conformance-tests",
+        "spec/cross-cutting/conformance/SpecConstitutionReleaseChecklist.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "TEST-003",
       "test_references": [
-        "spec/cross-cutting/ConformanceTestPlan.md#conformance-tests"
+        "spec/cross-cutting/conformance/ConformanceTestPlan.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "TEST-004",
       "test_references": [
-        "spec/cross-cutting/ConformanceTestPlan.md#conformance-tests",
-        "spec/cross-cutting/SpecConstitutionReleaseChecklist.md#conformance-tests"
+        "spec/cross-cutting/conformance/ConformanceTestPlan.md#conformance-tests",
+        "spec/cross-cutting/conformance/SpecConstitutionReleaseChecklist.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "TEST-005",
       "test_references": [
-        "spec/cross-cutting/ConformanceTestPlan.md#conformance-tests"
+        "spec/cross-cutting/conformance/ConformanceTestPlan.md#conformance-tests"
       ],
       "status": "mapped"
     },
     {
       "id": "TOOL-001",
       "test_references": [
-        "spec/orchestration/ToolRegistry.md#conformance-tests"
+        "spec/orchestration/registry/ToolRegistry.md#conformance-tests"
       ],
       "status": "mapped"
     },

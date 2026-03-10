@@ -2,7 +2,7 @@
 
 ## 1. Scope
 - Defines lifecycle states for memory artifacts and retention transitions.
-- Must align with `spec/orchestration/AgentMemoryModel.md` and `spec/infrastructure/StorageAndRetention.md`.
+- Must align with `spec/orchestration/memory/AgentMemoryModel.md` and `spec/infrastructure/data/StorageAndRetention.md`.
 
 ## 2. States
 - `hot`

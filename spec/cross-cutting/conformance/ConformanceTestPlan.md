@@ -15,8 +15,8 @@
 - deployment promotion integrity (local-first gates before cloud phase)
 
 ## 3. Conformance Artifacts
-- Rule registry: `spec/cross-cutting/RuleRegistry.json`
-- Coverage mapping: `spec/cross-cutting/ConformanceCoverage.json`
+- Rule registry: `spec/cross-cutting/conformance/RuleRegistry.json`
+- Coverage mapping: `spec/cross-cutting/conformance/ConformanceCoverage.json`
 - Integrity checklist: path references resolve and all referenced rule IDs are present in rule registry.
 
 ## 4. Rule Set

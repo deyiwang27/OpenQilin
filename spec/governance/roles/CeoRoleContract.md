@@ -43,8 +43,8 @@
 - Route domain strategy concerns to `cso` and project concerns to `project_manager`.
 
 ## 7. Runtime Interfaces
-- `spec/governance/DecisionReviewGates.md`
-- `spec/orchestration/TaskOrchestrator.md`
+- `spec/governance/architecture/DecisionReviewGates.md`
+- `spec/orchestration/control/TaskOrchestrator.md`
 - `spec/constitution/PolicyEngineContract.md`
 
 ## 8. Normative Rule Bindings

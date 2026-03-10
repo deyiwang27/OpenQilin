@@ -4,8 +4,8 @@
 - Defines canonical rule ID namespaces and machine-readable registry behavior.
 
 ## 2. Canonical Artifacts
-- Registry artifact: `spec/cross-cutting/RuleRegistry.json`
-- Coverage artifact: `spec/cross-cutting/ConformanceCoverage.json`
+- Registry artifact: `spec/cross-cutting/conformance/RuleRegistry.json`
+- Coverage artifact: `spec/cross-cutting/conformance/ConformanceCoverage.json`
 - Maintenance requirement: registry and coverage artifacts must be updated together.
 - Validation requirement: path references and rule ID references must be checked before merge.
 

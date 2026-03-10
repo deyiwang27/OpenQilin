@@ -44,7 +44,7 @@
 - Severe violations require immediate escalation with immutable evidence.
 
 ## 7. Runtime Interfaces
-- `spec/governance/EscalationModel.md`
+- `spec/governance/architecture/EscalationModel.md`
 - `spec/constitution/BudgetEngineContract.md`
 - `spec/observability/AuditEvents.md`
 

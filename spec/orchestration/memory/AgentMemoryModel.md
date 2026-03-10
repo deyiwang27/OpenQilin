@@ -4,8 +4,8 @@
 - Defines memory tiers, access scopes, lifecycle controls, and CDC synchronization behavior.
 - Source alignment:
   - `constitution/domain/SafetyPolicy.yaml`
-  - `spec/infrastructure/StorageAndRetention.md`
-  - `spec/infrastructure/DataModelAndSchemas.md`
+  - `spec/infrastructure/data/StorageAndRetention.md`
+  - `spec/infrastructure/architecture/DataModelAndSchemas.md`
 
 ## 2. Design Principles
 - Source of record is structured persistence (`postgresql`), not vector index.

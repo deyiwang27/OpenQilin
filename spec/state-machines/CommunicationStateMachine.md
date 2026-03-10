@@ -2,7 +2,7 @@
 
 ## 1. Scope
 - Defines lifecycle states for A2A/ACP message delivery.
-- Must align with `spec/orchestration/AgentCommunicationA2A.md` and `spec/orchestration/AgentCommunicationACP.md`.
+- Must align with `spec/orchestration/communication/AgentCommunicationA2A.md` and `spec/orchestration/communication/AgentCommunicationACP.md`.
 
 ## 2. States
 - `created`

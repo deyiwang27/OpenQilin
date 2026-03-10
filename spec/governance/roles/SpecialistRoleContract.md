@@ -42,9 +42,9 @@
 - Governance/safety concerns must escalate via defined policy channels.
 
 ## 7. Runtime Interfaces
-- `spec/orchestration/TaskOrchestrator.md`
+- `spec/orchestration/control/TaskOrchestrator.md`
 - `spec/state-machines/TaskStateMachine.md`
-- `spec/orchestration/ProjectArtifactModel.md`
+- `spec/orchestration/memory/ProjectArtifactModel.md`
 
 ## 8. Normative Rule Bindings
 - `AUTH-001`

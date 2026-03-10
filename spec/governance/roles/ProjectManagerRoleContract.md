@@ -43,9 +43,9 @@
 - Route deep technical review to `domain_lead`.
 
 ## 7. Runtime Interfaces
-- `spec/orchestration/TaskOrchestrator.md`
+- `spec/orchestration/control/TaskOrchestrator.md`
 - `spec/state-machines/TaskStateMachine.md`
-- `spec/orchestration/ProjectArtifactModel.md`
+- `spec/orchestration/memory/ProjectArtifactModel.md`
 
 ## 8. Normative Rule Bindings
 - `AUTH-001`, `AUTH-002`

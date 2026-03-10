@@ -4,7 +4,7 @@
 - Defines agent identity, role binding, and access control boundaries.
 - Defines mapping between external channel identities and internal governed principals.
 - Defines v1 external channel hardening posture for Discord integration.
-- Channel-specific controls are detailed in `spec/cross-cutting/DiscordOwnerChannelIdentityHardening.md`.
+- Channel-specific controls are detailed in `spec/cross-cutting/security/DiscordOwnerChannelIdentityHardening.md`.
 
 ## 2. Identity Model
 Canonical identity fields:

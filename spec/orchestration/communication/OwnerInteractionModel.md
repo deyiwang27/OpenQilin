@@ -3,7 +3,7 @@
 ## 1. Scope
 - Defines owner-to-agent interaction patterns, channels, message types, alerts, and monitoring views.
 - Covers human-facing interaction semantics only; policy enforcement remains in constitution/runtime components.
-- Discord security profile is defined in `spec/cross-cutting/DiscordOwnerChannelIdentityHardening.md`.
+- Discord security profile is defined in `spec/cross-cutting/security/DiscordOwnerChannelIdentityHardening.md`.
 
 ## 2. Interaction Channels
 - Direct Message (owner <-> single agent)

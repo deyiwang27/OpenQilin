@@ -3,8 +3,8 @@
 ## 1. Scope
 - Plans, dispatches, tracks, and closes tasks under policy and budget constraints.
 - Source alignment:
-  - `spec/governance/AgentAuthorityGraph.md`
-  - `spec/governance/EscalationModel.md`
+  - `spec/governance/architecture/AgentAuthorityGraph.md`
+  - `spec/governance/architecture/EscalationModel.md`
   - `spec/constitution/PolicyEngineContract.md`
   - `spec/constitution/BudgetEngineContract.md`
   - `constitution/core/PolicyManifest.yaml`
