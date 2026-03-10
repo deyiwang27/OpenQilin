@@ -12,7 +12,7 @@ Implementation planning backlog (prioritized)
 
 P0 (must finish before writing implementation code)
 1) Define Python toolchain and package-management baseline
-- Status: pending
+- Status: completed (2026-03-10)
 - Lock `uv` as the v1 Python dependency and environment manager.
 - Define:
   - Python version policy
@@ -24,7 +24,7 @@ P0 (must finish before writing implementation code)
   - `design/v1/PythonToolchainAndDependencyManagement-v1.md`
 
 2) Define local workstation and prerequisite software baseline
-- Status: pending
+- Status: completed (2026-03-10)
 - Document what must be installed outside coding before implementation starts.
 - Minimum prerequisite set to evaluate:
   - `uv`
@@ -41,7 +41,7 @@ P0 (must finish before writing implementation code)
   - `design/v1/DeveloperWorkstationAndPrerequisites-v1.md`
 
 3) Define repository structure and top-level package layout
-- Status: pending
+- Status: completed (2026-03-10)
 - Decide the source tree shape for implementation:
   - app entrypoints
   - core packages
