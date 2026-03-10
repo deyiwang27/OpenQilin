@@ -11,10 +11,10 @@ Artifact groups:
 - `components/`: component-level design contracts
 - `sequences/`: interaction and runtime sequence designs
 - `data/`: schema, storage, migration, and dataflow design
-- `foundation/`: toolchain, workstation, configuration, and bootstrap guidance
-- `architecture/`: repo layout, module map, and app/process topology
-- `quality/`: testing strategy and CI/CD design
-- `planning/`: implementation backlog and execution planning
+- `foundation/`: toolchain, workstation, configuration, framework selection, and developer workflow guidance
+- `architecture/`: repo layout, module map, app and process topology, container topology, and module-level implementation design
+- `quality/`: testing strategy, CI/CD design, and release/rollback workflow
+- `planning/`: implementation backlog and milestone planning
 - `readiness/`: review records and implementation handoff criteria
 
 Rule:

@@ -2,7 +2,7 @@
 
 ## 1. Scope
 - Define the top-level implementation structure for the repo.
-- Consolidate package layout, module dependency rules, and runnable app topology.
+- Consolidate package layout, module dependency rules, runnable app topology, and module hosting decisions.
 
 ## 2. Repository and Package Layout
 v1 posture:
@@ -63,11 +63,11 @@ Allowed:
 - `apps -> runtime modules`
 - `runtime modules -> shared_kernel`
 - `runtime modules -> data_access` where persistence ownership requires it
-- `runtime modules -> observability` for telemetry/audit emission only
+- `runtime modules -> observability` for telemetry and audit emission only
 
 Forbidden:
 - `shared_kernel -> feature modules`
-- direct control-plane calls to sandbox/tool/provider execution
+- direct control-plane calls to sandbox, tool, or provider execution
 - communication gateway mutating task business state
 - execution sandbox making policy decisions
 - llm gateway owning orchestration logic
@@ -110,24 +110,39 @@ Runnable apps:
 - `communication_worker`
 - `admin_cli`
 
+Hosting rules:
+- `api_app` hosts `control_plane`, query read models, and ingress identity middleware.
+- `orchestrator_worker` hosts `task_orchestrator`, `policy_runtime_integration`, `budget_runtime`, `execution_sandbox`, and `llm_gateway` client boundaries.
+- `communication_worker` hosts `communication_gateway` retry, ack, and dead-letter loops.
+- `admin_cli` hosts migration, seed, smoke, and diagnostics commands.
+
+Budget runtime decision:
+- `budget_runtime` is a runtime module hosted inside `orchestrator_worker` in v1.
+- It is not a separate deployable process or container in `phase_0_local_first`.
+- This keeps the runtime topology small while preserving the Define-stage budget contract.
+
 Supporting infrastructure:
 - `postgres`
 - `redis`
 - `opa`
 - `otel_collector`
+- `prometheus`
+- `tempo`
+- `loki`
 - `grafana`
-- selected trace/log backends
-- optional externalized `litellm`
+- externalized `litellm`
 
 Startup order:
 1. `postgres`
 2. `redis`
 3. `opa`
-4. `otel_collector`
-5. local observability backends
-6. `api_app`
-7. `orchestrator_worker`
-8. `communication_worker`
+4. `litellm`
+5. `otel_collector`
+6. `prometheus`, `tempo`, `loki`, `grafana`
+7. `api_app`
+8. `orchestrator_worker`
+9. `communication_worker`
+10. `admin_cli` one-shot commands
 
 ## 7. Local Docker Compose Posture
 Compose should support:
@@ -141,18 +156,16 @@ Recommended profiles:
 - `obs`
 - `full`
 
+`full` is the design-signoff baseline.
+
 ## 8. Process Ownership Rules
 - `api_app` handles ingress and request admission only
-- `orchestrator_worker` owns task business transitions
+- `orchestrator_worker` owns task business transitions and governed dispatch decisions
 - `communication_worker` owns retries and dead-letter behavior
 - `admin_cli` owns migrations, seed/bootstrap, and diagnostics
 
-## 9. Future Evolution
-Possible later changes:
-- split modules into separate deployable packages
-- adopt a workspace if dependency isolation becomes necessary
-- add Kubernetes/deployment manifests in later phases
-
-## 10. Related Follow-Ups
+## 9. Related Follow-Ups
 - foundation details live in `design/v1/foundation/ImplementationFoundation-v1.md`
+- framework details live in `design/v1/foundation/ImplementationFrameworkSelection-v1.md`
+- container topology lives in `design/v1/architecture/ContainerizationAndLocalInfraTopology-v1.md`
 - quality and delivery details live in `design/v1/quality/QualityAndDelivery-v1.md`

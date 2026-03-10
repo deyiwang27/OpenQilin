@@ -8,8 +8,9 @@ Goal:
 Current status:
 - Define stage is complete.
 - Core v1 technical design is complete.
-- Implementation-planning P0 is complete.
-- Repository review identified follow-up consistency and readiness tasks that must be closed before the design set can be treated as a clean implementation handoff.
+- Implementation-planning design is complete.
+- Design-stage repository consistency review is closed.
+- `design/TODO.txt` is the authoritative live tracker; `design/v1/planning/ImplementationBacklogSeed-v1.md` is the stable planning reference.
 
 Completed summary:
 - Core runtime design:
@@ -17,202 +18,33 @@ Completed summary:
   - `design/v1/components/`
   - `design/v1/data/`
   - `design/v1/sequences/`
-- Implementation foundation:
+- Foundation and developer workflow:
   - `design/v1/foundation/ImplementationFoundation-v1.md`
-- Implementation architecture:
+  - `design/v1/foundation/ImplementationFrameworkSelection-v1.md`
+  - `design/v1/foundation/DeveloperWorkflowAndContributionGuide-v1.md`
+- Implementation architecture and module-level design:
   - `design/v1/architecture/ImplementationArchitecture-v1.md`
-- Quality and delivery:
+  - `design/v1/architecture/ContainerizationAndLocalInfraTopology-v1.md`
+  - `design/v1/architecture/ControlPlaneModuleDesign-v1.md`
+  - `design/v1/architecture/TaskOrchestratorModuleDesign-v1.md`
+  - `design/v1/architecture/PolicyBudgetIntegrationModuleDesign-v1.md`
+  - `design/v1/architecture/CommunicationGatewayModuleDesign-v1.md`
+  - `design/v1/architecture/ExecutionSandboxToolPlaneModuleDesign-v1.md`
+  - `design/v1/architecture/LlmGatewayModuleDesign-v1.md`
+  - `design/v1/architecture/DataAccessModuleDesign-v1.md`
+  - `design/v1/architecture/ObservabilityModuleDesign-v1.md`
+- Quality, release, planning, and readiness:
   - `design/v1/quality/QualityAndDelivery-v1.md`
-- Planning and readiness:
+  - `design/v1/quality/ReleaseVersioningAndRollback-v1.md`
   - `design/v1/planning/ImplementationBacklogSeed-v1.md`
+  - `design/v1/planning/ImplementationMilestones-v1.md`
   - `design/v1/readiness/DesignReviewChecklistAndExitCriteria-v1.md`
   - `design/v1/readiness/DesignReviewRecord-v1.md`
 
-Active backlog (prioritized)
+Active backlog:
+- None.
 
-P0 (must complete before the design set is treated as a clean implementation handoff)
-1) Reconcile design-stage status with readiness decision
-- Status: pending
-- Resolve the current mismatch between active pending design tasks and the `go` implementation decision.
-- Decide whether to:
-  - downgrade readiness to `conditional_go`, or
-  - close the remaining design backlog before restoring `go`
-- Update the relevant readiness and planning docs so they say the same thing.
-
-2) Realign backlog output targets to the current `design/v1` taxonomy
-- Status: pending
-- Replace stale output targets that still point to pre-reorganization paths.
-- Remove references to non-existent directories such as `design/v1/modules/`.
-- Ensure future module-level artifacts are placed under existing category folders or a newly declared category in `design/v1/README.md`.
-
-3) Resolve budget runtime process-topology ambiguity
-- Status: pending
-- Make `design/` and `spec/` say the same thing about whether `budget_runtime` is:
-  - a separate runnable service, or
-  - an internal module hosted inside an existing worker/runtime process
-- Align:
-  - deployment topology
-  - implementation architecture
-  - startup ordering
-  - containerization assumptions
-
-4) Declare the authoritative implementation-planning tracker
-- Status: pending
-- Remove ambiguity between:
-  - `design/TODO.txt` as the live execution tracker
-  - `design/v1/planning/ImplementationBacklogSeed-v1.md` as the stable planning reference
-- Add a simple rule to prevent future sequencing drift.
-
-P1 (finish before major feature implementation)
-5) Select implementation frameworks and baseline libraries
-- Status: pending
-- Decide and document:
-  - settings/config library
-  - HTTP client stack
-  - DB access pattern / ORM or SQL toolkit
-  - migration framework
-  - background job/runtime packaging
-  - validation/schema library usage conventions
-  - testing libraries and test runner conventions
-  - lint/format/type-check tooling
-- Align choices to `uv` workflow.
-- Output target:
-  - `design/v1/foundation/ImplementationFrameworkSelection-v1.md`
-
-6) Define containerization and local infrastructure topology
-- Status: pending
-- Define the Docker-level runtime topology for v1:
-  - app containers
-  - Postgres
-  - Redis
-  - OPA
-  - LiteLLM
-  - OTel collector
-  - Grafana-compatible backing services
-- Clarify what is mandatory for local implementation/testing and what is optional.
-- Clarify whether Kubernetes is explicitly out of scope for initial v1 implementation design.
-- Output target:
-  - `design/v1/architecture/ContainerizationAndLocalInfraTopology-v1.md`
-
-7) Define module-level implementation design: Control Plane
-- Status: pending
-- Translate component design into package/module layout:
-  - routers
-  - request schemas
-  - identity middleware
-  - command/query handlers
-  - response/error mappers
-- Output target:
-  - `design/v1/architecture/ControlPlaneModuleDesign-v1.md`
-
-8) Define module-level implementation design: Task Orchestrator
-- Status: pending
-- Define:
-  - graph/workflow package layout
-  - state transition service
-  - target dispatch adapters
-  - idempotency handling
-  - orchestration persistence boundary
-- Output target:
-  - `design/v1/architecture/TaskOrchestratorModuleDesign-v1.md`
-
-9) Define module-level implementation design: Policy/Budget integration
-- Status: pending
-- Define:
-  - policy client
-  - policy request normalizer
-  - budget reservation adapter
-  - fail-closed wrappers
-  - version/hash propagation utilities
-- Output target:
-  - `design/v1/architecture/PolicyBudgetIntegrationModuleDesign-v1.md`
-
-10) Define module-level implementation design: Communication Gateway
-- Status: pending
-- Define:
-  - A2A validators
-  - ACP transport adapters
-  - retry scheduler
-  - DLQ writer
-  - delivery outcome callbacks
-- Output target:
-  - `design/v1/architecture/CommunicationGatewayModuleDesign-v1.md`
-
-11) Define module-level implementation design: Execution Sandbox and Tool Plane
-- Status: pending
-- Define:
-  - sandbox runner abstraction
-  - profile enforcement
-  - tool invocation adapters
-  - skill/tool binding resolvers
-  - artifact/output capture boundary
-- Output target:
-  - `design/v1/architecture/ExecutionSandboxToolPlaneModuleDesign-v1.md`
-
-12) Define module-level implementation design: LLM Gateway
-- Status: pending
-- Define:
-  - routing-profile resolver
-  - provider adapter abstraction
-  - Gemini free-tier local/CI profile wiring
-  - fallback/usage accounting hooks
-  - request/response normalization
-- Output target:
-  - `design/v1/architecture/LlmGatewayModuleDesign-v1.md`
-
-13) Define module-level implementation design: Data Access
-- Status: pending
-- Define:
-  - repository/data-access patterns
-  - transaction boundary rules
-  - outbox writer
-  - checkpoint store
-  - query-contract read models
-- Output target:
-  - `design/v1/architecture/DataAccessModuleDesign-v1.md`
-
-14) Define module-level implementation design: Observability
-- Status: pending
-- Define:
-  - logger/tracer/metric facade
-  - audit event writer
-  - correlation helpers
-  - alert event emitters
-- Output target:
-  - `design/v1/architecture/ObservabilityModuleDesign-v1.md`
-
-P2 (recommended before full end-to-end delivery)
-15) Define implementation milestones and first executable slice
-- Status: pending
-- Turn the implementation backlog into milestone-level execution order with explicit first slice.
-- Proposed first slice:
-  - API ingress
-  - task admission
-  - policy check
-  - budget reserve
-  - sandbox or llm dispatch stub
-  - audit/trace emission
-- Output target:
-  - `design/v1/planning/ImplementationMilestones-v1.md`
-
-16) Define end-to-end developer workflow and contribution guide
-- Status: pending
-- Define the standard developer path:
-  - environment bootstrap
-  - local run loop
-  - local test loop
-  - CI expectations
-  - migration workflow
-  - debugging/observability workflow
-- Output target:
-  - `design/v1/foundation/DeveloperWorkflowAndContributionGuide-v1.md`
-
-17) Define release, versioning, and rollback workflow
-- Status: pending
-- Define:
-  - app versioning strategy
-  - migration compatibility expectations
-  - release artifact strategy
-  - rollback constraints for schema/config/runtime
-- Output target:
-  - `design/v1/quality/ReleaseVersioningAndRollback-v1.md`
+Design-stage closeout notes:
+- Readiness decision is `go` and is aligned with the closed backlog.
+- `budget_runtime` is a v1 runtime module hosted inside `orchestrator_worker`, not a separate deployable service.
+- Container topology, framework selection, module boundaries, CI/test posture, milestone plan, and release workflow are now explicitly documented.
