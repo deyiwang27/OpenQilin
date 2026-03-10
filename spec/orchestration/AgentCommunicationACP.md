@@ -70,6 +70,14 @@ Nack frame:
 - Dead-letter when retries exhausted or non-retryable `nack` received.
 - Dead-letter payload must include original frame + terminal error metadata.
 
+OpenQilin reliability profile v1 (ACP transport):
+- `ack_deadline_ms`: `30000`.
+- `max_attempts`: `5` total attempts.
+- Retry trigger: ack timeout or `retryable=true` nack.
+- Retry backoff schedule: `500ms`, `1s`, `2s`, `4s`, `8s` (jittered, cap `10s`).
+- Dead-letter on non-retryable nack or retry exhaustion.
+- ACP payload idempotency MUST be enforced by upstream A2A `idempotency_key`.
+
 ## 5. Security and Validation
 - Frames without valid `auth` context are rejected before route execution.
 - `policy_version` and `policy_hash` must be carried end-to-end.

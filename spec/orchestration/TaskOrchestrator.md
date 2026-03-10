@@ -88,6 +88,15 @@ If any required obligation cannot be satisfied, transition to `blocked` (fail-cl
   - transient dispatch failures may retry with bounded attempts and backoff.
   - safety-critical failures do not auto-retry before containment.
 
+Communication reliability profile lock (A2A + ACP):
+- Orchestrator must enforce OpenQilin reliability profile v1 for message dispatch:
+  - `ack_deadline_ms`: `30000`
+  - `max_attempts`: `5`
+  - retry trigger: ack timeout or retryable nack
+  - retry backoff: bounded exponential with jitter (`500ms`, `1s`, `2s`, `4s`, `8s`, cap `10s`)
+  - dead-letter trigger: non-retryable nack or retry exhaustion
+- Command/event dispatch without `idempotency_key` is invalid and must fail closed.
+
 ## 10. Escalation Integration
 - Escalation paths follow `constitution/domain/EscalationPolicy.yaml`.
 - Operational failures use operational path.

@@ -33,3 +33,10 @@
 - No release if rule registry and coverage artifacts are outdated.
 - No release if unresolved P0 TODO items remain.
 - No cloud promotion if phase_0 local readiness gates are incomplete.
+
+## 6. Conformance Tests
+- `TEST-001`: Critical rules have at least one mapped conformance reference.
+- `TEST-002`: Spec integrity validation passes before merge/release.
+- `TEST-003`: State-machine transitions are verified against orchestration/runtime contracts.
+- `TEST-004`: Constitution/spec role-authority consistency checks pass.
+- `TEST-005`: RFC adopt/defer decision records are present before baseline lock.

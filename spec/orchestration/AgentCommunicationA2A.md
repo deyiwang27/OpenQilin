@@ -52,6 +52,14 @@
 - Ordering guarantee: monotonic `sequence` per `ordering_key`.
 - Dead-letter requirement: messages exceeding retry limit MUST be dead-lettered with failure reason.
 
+OpenQilin reliability profile v1 (A2A + ACP):
+- `idempotency_key` is mandatory for command/event message handling.
+- `ack_deadline_ms`: `30000`.
+- `max_attempts`: `5` total attempts.
+- Retry trigger: ack timeout or retryable nack.
+- Retry backoff: bounded exponential with jitter (`500ms`, `1s`, `2s`, `4s`, `8s`, cap `10s`).
+- Dead-letter trigger: non-retryable nack or retry exhaustion.
+
 ## 4. Access and Trust Constraints
 - `auditor` may observe all channels in `read_only` mode.
 - Observer roles MUST NOT emit command/event payloads into observed channels.
