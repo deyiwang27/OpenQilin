@@ -12,26 +12,13 @@ P0 (must complete before implementation kickoff)
 - Status: pending
 - Exit criteria: one baseline document mapping selected stack to runtime components and authoritative interfaces (`policy`, `task`, `a2a+acp`, `llm_gateway`, `memory`, `audit`).
 
-P1 (important for implementation readiness)
-
-2) Refresh Conformance Registry Artifacts After Spec Updates
-- Status: pending
-- Why: rule-bearing docs changed (constitution binding, governance architecture, runtime error handling, tracing), but `RuleRegistry.json` / `ConformanceCoverage.json` were not regenerated in this pass.
-- Exit criteria:
-  - `spec/cross-cutting/conformance/RuleRegistry.json` updated with current statements/occurrences/line references.
-  - `spec/cross-cutting/conformance/ConformanceCoverage.json` refreshed to match current rule references.
-  - `generated_at` timestamps reflect refresh run.
-
-P2 (quality and release hygiene)
-
-3) Add Initial Versioned Constitution Snapshot Package
-- Status: pending
-- Why: release-record contract now exists, but no concrete `constitution/versions/<version>/` snapshot package has been created yet.
-- Exit criteria:
-  - Create `constitution/versions/v0.1.0/` (or current active version).
-  - Include required policy files and `ReleaseRecord.yaml` (from template).
-  - Ensure snapshot `policy_version` and `bundle_hash` align with runtime manifest.
-
 Review Notes (2026-03-10)
-- No major spec/constitution conflicts found after this update pass.
+- Completed in this pass:
+  - Conformance artifacts refreshed:
+    - `spec/cross-cutting/conformance/RuleRegistry.json`
+    - `spec/cross-cutting/conformance/ConformanceCoverage.json`
+  - Initial versioned constitution snapshot created:
+    - `constitution/versions/v0.1.0/` with required core/domain policy files
+    - `constitution/versions/v0.1.0/ReleaseRecord.yaml`
+- No major spec/constitution conflicts found in current documentation set.
 - No redundant files require immediate deletion.

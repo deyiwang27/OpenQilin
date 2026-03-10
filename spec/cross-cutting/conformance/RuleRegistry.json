@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-10T05:22:54.514Z",
+  "generated_at": "2026-03-10T05:51:05.989Z",
   "source_roots": [
     "spec/",
     "constitution/"
@@ -702,12 +702,12 @@
       "occurrences": [
         {
           "source": "spec/constitution/ConstitutionBindingModel.md",
-          "line": 41,
+          "line": 49,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/constitution/ConstitutionBindingModel.md",
-          "line": 41,
+          "line": 49,
           "kind": "reference"
         }
       ]
@@ -721,12 +721,12 @@
       "occurrences": [
         {
           "source": "spec/constitution/ConstitutionBindingModel.md",
-          "line": 42,
+          "line": 50,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/constitution/ConstitutionBindingModel.md",
-          "line": 42,
+          "line": 50,
           "kind": "reference"
         }
       ]
@@ -740,12 +740,12 @@
       "occurrences": [
         {
           "source": "spec/constitution/ConstitutionBindingModel.md",
-          "line": 43,
+          "line": 51,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/constitution/ConstitutionBindingModel.md",
-          "line": 43,
+          "line": 51,
           "kind": "reference"
         }
       ]
@@ -759,12 +759,12 @@
       "occurrences": [
         {
           "source": "spec/constitution/ConstitutionBindingModel.md",
-          "line": 44,
+          "line": 52,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/constitution/ConstitutionBindingModel.md",
-          "line": 44,
+          "line": 52,
           "kind": "reference"
         }
       ]
@@ -778,12 +778,12 @@
       "occurrences": [
         {
           "source": "spec/constitution/ConstitutionManagement.md",
-          "line": 72,
+          "line": 79,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/constitution/ConstitutionManagement.md",
-          "line": 72,
+          "line": 79,
           "kind": "reference"
         }
       ]
@@ -807,12 +807,12 @@
         },
         {
           "source": "spec/constitution/ConstitutionManagement.md",
-          "line": 73,
+          "line": 80,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/constitution/ConstitutionManagement.md",
-          "line": 73,
+          "line": 80,
           "kind": "reference"
         }
       ]
@@ -826,12 +826,12 @@
       "occurrences": [
         {
           "source": "spec/constitution/ConstitutionManagement.md",
-          "line": 74,
+          "line": 81,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/constitution/ConstitutionManagement.md",
-          "line": 74,
+          "line": 81,
           "kind": "reference"
         }
       ]
@@ -845,12 +845,12 @@
       "occurrences": [
         {
           "source": "spec/constitution/ConstitutionManagement.md",
-          "line": 75,
+          "line": 82,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/constitution/ConstitutionManagement.md",
-          "line": 75,
+          "line": 82,
           "kind": "reference"
         }
       ]
@@ -864,32 +864,27 @@
       "occurrences": [
         {
           "source": "spec/constitution/ConstitutionManagement.md",
-          "line": 76,
+          "line": 83,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/constitution/ConstitutionManagement.md",
-          "line": 76,
+          "line": 83,
           "kind": "reference"
         }
       ]
     },
     {
       "id": "DOC-001",
-      "statement": "Example `MUST` rule.",
-      "severity": "critical",
-      "enforced_by": "component | test/monitor",
-      "primary_source": "spec/templates/ImplementationContractTemplate.md",
+      "statement": "UNSPECIFIED_RULE_STATEMENT",
+      "severity": "unknown",
+      "enforced_by": "unknown",
+      "primary_source": "spec/cross-cutting/conformance/DocumentationTemplateAdoption.md",
       "occurrences": [
         {
           "source": "spec/cross-cutting/conformance/DocumentationTemplateAdoption.md",
           "line": 44,
           "kind": "reference"
-        },
-        {
-          "source": "spec/templates/ImplementationContractTemplate.md",
-          "line": 26,
-          "kind": "markdown_rule_table"
         },
         {
           "source": "spec/templates/ImplementationContractTemplate.md",
@@ -905,19 +900,19 @@
     },
     {
       "id": "ERR-001",
-      "statement": "Error responses MUST include canonical code and actionable reason.",
+      "statement": "Error responses MUST include canonical code, actionable reason, and deterministic handling metadata.",
       "severity": "high",
       "enforced_by": "Runtime",
       "primary_source": "spec/cross-cutting/runtime/ErrorCodesAndHandling.md",
       "occurrences": [
         {
           "source": "spec/cross-cutting/runtime/ErrorCodesAndHandling.md",
-          "line": 12,
+          "line": 48,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/cross-cutting/runtime/ErrorCodesAndHandling.md",
-          "line": 12,
+          "line": 48,
           "kind": "reference"
         }
       ]
@@ -2157,12 +2152,12 @@
       "occurrences": [
         {
           "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
-          "line": 50,
+          "line": 65,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
-          "line": 50,
+          "line": 65,
           "kind": "reference"
         }
       ]
@@ -2176,12 +2171,12 @@
       "occurrences": [
         {
           "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
-          "line": 51,
+          "line": 66,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
-          "line": 51,
+          "line": 66,
           "kind": "reference"
         }
       ]
@@ -2195,12 +2190,12 @@
       "occurrences": [
         {
           "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
-          "line": 52,
+          "line": 67,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
-          "line": 52,
+          "line": 67,
           "kind": "reference"
         }
       ]
@@ -2214,12 +2209,12 @@
       "occurrences": [
         {
           "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
-          "line": 53,
+          "line": 68,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/constitution/PolicyVersioningAndChangeControl.md",
-          "line": 53,
+          "line": 68,
           "kind": "reference"
         }
       ]
@@ -2281,7 +2276,7 @@
         },
         {
           "source": "spec/cross-cutting/conformance/SpecConstitutionReleaseChecklist.md",
-          "line": 47,
+          "line": 49,
           "kind": "reference"
         }
       ]
@@ -2329,7 +2324,7 @@
         },
         {
           "source": "spec/cross-cutting/conformance/SpecConstitutionReleaseChecklist.md",
-          "line": 48,
+          "line": 50,
           "kind": "reference"
         }
       ]
@@ -2902,7 +2897,7 @@
         },
         {
           "source": "spec/cross-cutting/conformance/SpecConstitutionReleaseChecklist.md",
-          "line": 44,
+          "line": 46,
           "kind": "reference"
         }
       ]
@@ -2936,7 +2931,7 @@
         },
         {
           "source": "spec/cross-cutting/conformance/SpecConstitutionReleaseChecklist.md",
-          "line": 45,
+          "line": 47,
           "kind": "reference"
         }
       ]
@@ -2989,7 +2984,7 @@
         },
         {
           "source": "spec/cross-cutting/conformance/SpecConstitutionReleaseChecklist.md",
-          "line": 46,
+          "line": 48,
           "kind": "reference"
         }
       ]
@@ -3046,12 +3041,12 @@
       "occurrences": [
         {
           "source": "spec/observability/AgentTracing.md",
-          "line": 12,
+          "line": 42,
           "kind": "markdown_rule_table"
         },
         {
           "source": "spec/observability/AgentTracing.md",
-          "line": 12,
+          "line": 42,
           "kind": "reference"
         }
       ]
