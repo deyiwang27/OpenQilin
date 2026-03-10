@@ -32,23 +32,37 @@ P0 (design kickoff)
 
 P1 (component design)
 4) Control Plane Component Design
+- Status: completed (2026-03-10)
 - API surface design for owner commands, task/project query, and governance actions.
 - Identity and authorization integration points.
+- Output:
+  - `design/v1/components/ControlPlaneComponentDesign-v1.md`
 
 5) Data and Memory Component Design
+- Status: completed (2026-03-10)
 - PostgreSQL schema package boundaries.
 - Redis cache/idempotency key strategy.
 - pgvector retrieval path design and CDC/event flow.
+- Output:
+  - `design/v1/data/DataAndMemoryComponentDesign-v1.md`
 
 6) Observability Component Design
+- Status: completed (2026-03-10)
 - OTel collector pipeline, exporters, and correlation model.
 - Grafana dashboard/alert minimum set for v1 operations.
+- Output:
+  - `design/v1/components/ObservabilityComponentDesign-v1.md`
 
 P2 (readiness)
 7) Design Review Checklist and Exit Criteria
+- Status: completed (2026-03-10)
 - Define design acceptance checklist for implementation handoff.
 - Link design artifacts to corresponding `spec/` contracts.
+- Output:
+  - `design/v1/DesignReviewChecklistAndExitCriteria-v1.md`
 
 Current status:
 - P0 design kickoff artifacts completed.
-- Next focus: P1 component design (control plane, data/memory, observability).
+- P1 component design artifacts completed.
+- P2 readiness artifacts completed.
+- Design stage complete for v1 baseline; next phase: implementation.
