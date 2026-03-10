@@ -1,0 +1,1 @@
+"""Outbox writer placeholder."""

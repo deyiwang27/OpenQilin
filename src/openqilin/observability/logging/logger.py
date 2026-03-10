@@ -1,0 +1,1 @@
+"""Structured logger placeholder."""

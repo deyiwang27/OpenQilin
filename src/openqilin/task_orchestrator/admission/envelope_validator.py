@@ -1,0 +1,1 @@
+"""Admission envelope validator placeholder."""

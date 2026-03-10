@@ -1,0 +1,62 @@
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "openqilin"
+version = "0.1.0"
+description = "OpenQilin v1 runtime implementation scaffold."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.116,<1",
+  "uvicorn>=0.35,<1",
+  "pydantic>=2.11,<3",
+  "pydantic-settings>=2.8,<3",
+  "httpx>=0.28,<1",
+  "sqlalchemy>=2.0,<3",
+  "psycopg[binary]>=3.2,<4",
+  "redis>=5.2,<6",
+  "typer>=0.16,<1",
+  "tenacity>=9,<10",
+  "structlog>=25,<26",
+  "opentelemetry-api>=1.35,<2",
+  "opentelemetry-sdk>=1.35,<2",
+]
+
+[dependency-groups]
+dev = [
+  "pre-commit>=4.2,<5",
+]
+test = [
+  "pytest>=8.4,<9",
+  "pytest-asyncio>=1.1,<2",
+  "pytest-cov>=6.2,<7",
+  "respx>=0.22,<1",
+]
+lint = [
+  "ruff>=0.11,<1",
+  "mypy>=1.16,<2",
+  "types-redis>=4.6,<5",
+]
+ops = [
+  "alembic>=1.16,<2",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/openqilin"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.mypy]
+python_version = "3.12"
+warn_unused_configs = true
+strict = false
+pretty = true
+mypy_path = ["src"]

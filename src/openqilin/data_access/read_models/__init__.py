@@ -1,0 +1,1 @@
+"""Read-model query package."""

@@ -1,0 +1,1 @@
+"""Sandbox event callback placeholder."""

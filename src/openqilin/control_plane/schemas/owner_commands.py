@@ -1,0 +1,1 @@
+"""Owner command schema placeholder."""

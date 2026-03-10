@@ -1,0 +1,1 @@
+"""Provider base interface placeholder."""
