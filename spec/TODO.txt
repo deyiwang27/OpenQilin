@@ -9,8 +9,11 @@ Execution model:
 P0 (must complete before implementation kickoff)
 
 1) Publish v1 Architecture Baseline
-- Status: pending
-- Exit criteria: one baseline document mapping selected stack to runtime components and authoritative interfaces (`policy`, `task`, `a2a+acp`, `llm_gateway`, `memory`, `audit`).
+- Status: completed
+- Output:
+  - `spec/architecture/ArchitectureBaseline-v1.md`
+- Exit criteria result:
+  - Selected stack mapped to runtime components and authoritative interfaces (`policy`, `task`, `a2a+acp`, `llm_gateway`, `memory`, `audit`).
 
 Review Notes (2026-03-10)
 - Completed in this pass:
@@ -27,5 +30,12 @@ Review Notes (2026-03-10)
     - documented deterministic bundle-hash generation in constitution/spec change-control docs
     - updated `docs/QuickStart.md` to include manifest-first load and release verification
     - added conformance artifact refresh procedure in `spec/cross-cutting/conformance/RuleIdCatalog.md`
+  - v1 architecture baseline published:
+    - `spec/architecture/ArchitectureBaseline-v1.md`
 - No major spec/constitution conflicts found in current documentation set.
 - No redundant files require immediate deletion.
+
+Current status:
+- No open TODO items remain in `spec/` backlog for the Define phase.
+- Next phase starts in `design/` with technical design artifacts.
+- Repository review on 2026-03-10 did not identify new Define-stage backlog items; follow-up work is design-only and is tracked in `design/TODO.txt`.

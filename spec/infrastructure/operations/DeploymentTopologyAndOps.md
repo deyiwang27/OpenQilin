@@ -17,11 +17,11 @@ Mandatory services:
 - control plane API/runtime
 - task orchestration workers
 - policy engine runtime
-- budget engine runtime
+- budget engine runtime hosted inside the task orchestration worker process in v1
 - Redis
 - PostgreSQL (local profile)
 - OpenTelemetry Collector
-- Grafana
+- Grafana and compatible local telemetry backends
 
 Local baseline requirements:
 - single-command startup (`docker compose up` profile)
@@ -47,9 +47,10 @@ Move beyond cloud baseline when sustained signals are observed:
 - resilience targets require lower RTO/RPO than single runtime host
 
 Evolution path:
-1. split runtime across multiple app/worker nodes
+1. split runtime across multiple app and worker nodes
 2. move Redis to managed HA tier
-3. evolve observability from single-host to gateway/managed pattern
+3. externalize budget runtime or sandbox pools only if isolation or scale requires it
+4. evolve observability from single-host to gateway and managed pattern
 
 ## 6. Operational Control Set
 Mandatory controls:

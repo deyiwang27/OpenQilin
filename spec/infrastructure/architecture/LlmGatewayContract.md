@@ -17,6 +17,7 @@ Minimum request fields:
 - `agent_id`
 - `skill_id` (if skill-governed flow)
 - `model_class`
+- `routing_profile`
 - `messages_or_prompt`
 - `max_tokens`
 - `temperature`
@@ -25,6 +26,9 @@ Minimum request fields:
 
 ## 4. Routing and Fallback
 - Model selection uses policy-approved model classes.
+- Model-class to provider/model resolution MUST use an active routing profile.
+- Routing profile authority: `spec/infrastructure/architecture/LlmModelRoutingProfile-v1.md`.
+- v1 local/CI default profile: `dev_gemini_free` (free-tier Gemini path for initial testing).
 - Fallback is bounded and explicit per routing profile.
 - Retries and fallback decisions must emit decision metadata.
 
@@ -53,5 +57,6 @@ Minimum response fields:
 ## 8. Conformance Tests
 - Direct provider access path is blocked for governed runtime components.
 - Same routing profile and input produce deterministic policy-compliant route class.
+- Requests with unknown `routing_profile` are denied.
 - Fallback path emits required trace and audit metadata.
 - Budget attribution fields are present for all completed requests.
