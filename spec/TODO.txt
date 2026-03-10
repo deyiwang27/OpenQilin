@@ -38,3 +38,4 @@ Review Notes (2026-03-10)
 Current status:
 - No open TODO items remain in `spec/` backlog for the Define phase.
 - Next phase starts in `design/` with technical design artifacts.
+- Repository review on 2026-03-10 did not identify new Define-stage backlog items; follow-up work is design-only and is tracked in `design/TODO.txt`.

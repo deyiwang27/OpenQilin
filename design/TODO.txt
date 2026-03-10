@@ -9,6 +9,7 @@ Current status:
 - Define stage is complete.
 - Core v1 technical design is complete.
 - Implementation-planning P0 is complete.
+- Repository review identified follow-up consistency and readiness tasks that must be closed before the design set can be treated as a clean implementation handoff.
 
 Completed summary:
 - Core runtime design:
@@ -29,8 +30,41 @@ Completed summary:
 
 Active backlog (prioritized)
 
+P0 (must complete before the design set is treated as a clean implementation handoff)
+1) Reconcile design-stage status with readiness decision
+- Status: pending
+- Resolve the current mismatch between active pending design tasks and the `go` implementation decision.
+- Decide whether to:
+  - downgrade readiness to `conditional_go`, or
+  - close the remaining design backlog before restoring `go`
+- Update the relevant readiness and planning docs so they say the same thing.
+
+2) Realign backlog output targets to the current `design/v1` taxonomy
+- Status: pending
+- Replace stale output targets that still point to pre-reorganization paths.
+- Remove references to non-existent directories such as `design/v1/modules/`.
+- Ensure future module-level artifacts are placed under existing category folders or a newly declared category in `design/v1/README.md`.
+
+3) Resolve budget runtime process-topology ambiguity
+- Status: pending
+- Make `design/` and `spec/` say the same thing about whether `budget_runtime` is:
+  - a separate runnable service, or
+  - an internal module hosted inside an existing worker/runtime process
+- Align:
+  - deployment topology
+  - implementation architecture
+  - startup ordering
+  - containerization assumptions
+
+4) Declare the authoritative implementation-planning tracker
+- Status: pending
+- Remove ambiguity between:
+  - `design/TODO.txt` as the live execution tracker
+  - `design/v1/planning/ImplementationBacklogSeed-v1.md` as the stable planning reference
+- Add a simple rule to prevent future sequencing drift.
+
 P1 (finish before major feature implementation)
-1) Select implementation frameworks and baseline libraries
+5) Select implementation frameworks and baseline libraries
 - Status: pending
 - Decide and document:
   - settings/config library
@@ -43,9 +77,9 @@ P1 (finish before major feature implementation)
   - lint/format/type-check tooling
 - Align choices to `uv` workflow.
 - Output target:
-  - `design/v1/ImplementationFrameworkSelection-v1.md`
+  - `design/v1/foundation/ImplementationFrameworkSelection-v1.md`
 
-2) Define containerization and local infrastructure topology
+6) Define containerization and local infrastructure topology
 - Status: pending
 - Define the Docker-level runtime topology for v1:
   - app containers
@@ -58,9 +92,9 @@ P1 (finish before major feature implementation)
 - Clarify what is mandatory for local implementation/testing and what is optional.
 - Clarify whether Kubernetes is explicitly out of scope for initial v1 implementation design.
 - Output target:
-  - `design/v1/ContainerizationAndLocalInfraTopology-v1.md`
+  - `design/v1/architecture/ContainerizationAndLocalInfraTopology-v1.md`
 
-3) Define module-level implementation design: Control Plane
+7) Define module-level implementation design: Control Plane
 - Status: pending
 - Translate component design into package/module layout:
   - routers
@@ -69,9 +103,9 @@ P1 (finish before major feature implementation)
   - command/query handlers
   - response/error mappers
 - Output target:
-  - `design/v1/modules/ControlPlaneModuleDesign-v1.md`
+  - `design/v1/architecture/ControlPlaneModuleDesign-v1.md`
 
-4) Define module-level implementation design: Task Orchestrator
+8) Define module-level implementation design: Task Orchestrator
 - Status: pending
 - Define:
   - graph/workflow package layout
@@ -80,9 +114,9 @@ P1 (finish before major feature implementation)
   - idempotency handling
   - orchestration persistence boundary
 - Output target:
-  - `design/v1/modules/TaskOrchestratorModuleDesign-v1.md`
+  - `design/v1/architecture/TaskOrchestratorModuleDesign-v1.md`
 
-5) Define module-level implementation design: Policy/Budget integration
+9) Define module-level implementation design: Policy/Budget integration
 - Status: pending
 - Define:
   - policy client
@@ -91,9 +125,9 @@ P1 (finish before major feature implementation)
   - fail-closed wrappers
   - version/hash propagation utilities
 - Output target:
-  - `design/v1/modules/PolicyBudgetIntegrationModuleDesign-v1.md`
+  - `design/v1/architecture/PolicyBudgetIntegrationModuleDesign-v1.md`
 
-6) Define module-level implementation design: Communication Gateway
+10) Define module-level implementation design: Communication Gateway
 - Status: pending
 - Define:
   - A2A validators
@@ -102,9 +136,9 @@ P1 (finish before major feature implementation)
   - DLQ writer
   - delivery outcome callbacks
 - Output target:
-  - `design/v1/modules/CommunicationGatewayModuleDesign-v1.md`
+  - `design/v1/architecture/CommunicationGatewayModuleDesign-v1.md`
 
-7) Define module-level implementation design: Execution Sandbox and Tool Plane
+11) Define module-level implementation design: Execution Sandbox and Tool Plane
 - Status: pending
 - Define:
   - sandbox runner abstraction
@@ -113,9 +147,9 @@ P1 (finish before major feature implementation)
   - skill/tool binding resolvers
   - artifact/output capture boundary
 - Output target:
-  - `design/v1/modules/ExecutionSandboxToolPlaneModuleDesign-v1.md`
+  - `design/v1/architecture/ExecutionSandboxToolPlaneModuleDesign-v1.md`
 
-8) Define module-level implementation design: LLM Gateway
+12) Define module-level implementation design: LLM Gateway
 - Status: pending
 - Define:
   - routing-profile resolver
@@ -124,9 +158,9 @@ P1 (finish before major feature implementation)
   - fallback/usage accounting hooks
   - request/response normalization
 - Output target:
-  - `design/v1/modules/LlmGatewayModuleDesign-v1.md`
+  - `design/v1/architecture/LlmGatewayModuleDesign-v1.md`
 
-9) Define module-level implementation design: Data Access
+13) Define module-level implementation design: Data Access
 - Status: pending
 - Define:
   - repository/data-access patterns
@@ -135,9 +169,9 @@ P1 (finish before major feature implementation)
   - checkpoint store
   - query-contract read models
 - Output target:
-  - `design/v1/modules/DataAccessModuleDesign-v1.md`
+  - `design/v1/architecture/DataAccessModuleDesign-v1.md`
 
-10) Define module-level implementation design: Observability
+14) Define module-level implementation design: Observability
 - Status: pending
 - Define:
   - logger/tracer/metric facade
@@ -145,10 +179,10 @@ P1 (finish before major feature implementation)
   - correlation helpers
   - alert event emitters
 - Output target:
-  - `design/v1/modules/ObservabilityModuleDesign-v1.md`
+  - `design/v1/architecture/ObservabilityModuleDesign-v1.md`
 
 P2 (recommended before full end-to-end delivery)
-11) Define implementation milestones and first executable slice
+15) Define implementation milestones and first executable slice
 - Status: pending
 - Turn the implementation backlog into milestone-level execution order with explicit first slice.
 - Proposed first slice:
@@ -159,9 +193,9 @@ P2 (recommended before full end-to-end delivery)
   - sandbox or llm dispatch stub
   - audit/trace emission
 - Output target:
-  - `design/v1/ImplementationMilestones-v1.md`
+  - `design/v1/planning/ImplementationMilestones-v1.md`
 
-12) Define end-to-end developer workflow and contribution guide
+16) Define end-to-end developer workflow and contribution guide
 - Status: pending
 - Define the standard developer path:
   - environment bootstrap
@@ -171,9 +205,9 @@ P2 (recommended before full end-to-end delivery)
   - migration workflow
   - debugging/observability workflow
 - Output target:
-  - `design/v1/DeveloperWorkflowAndContributionGuide-v1.md`
+  - `design/v1/foundation/DeveloperWorkflowAndContributionGuide-v1.md`
 
-13) Define release, versioning, and rollback workflow
+17) Define release, versioning, and rollback workflow
 - Status: pending
 - Define:
   - app versioning strategy
@@ -181,4 +215,4 @@ P2 (recommended before full end-to-end delivery)
   - release artifact strategy
   - rollback constraints for schema/config/runtime
 - Output target:
-  - `design/v1/ReleaseVersioningAndRollback-v1.md`
+  - `design/v1/quality/ReleaseVersioningAndRollback-v1.md`
