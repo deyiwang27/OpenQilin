@@ -14,5 +14,5 @@ Current implementation cycle:
 - `v1/`
 
 Start:
-- Read `implementation/TODO.txt`
+- Read `implementation/v1/planning/TODO.txt`
 - Read `implementation/v1/README.md`

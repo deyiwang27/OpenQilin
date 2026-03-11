@@ -79,7 +79,7 @@ body:
         - [ ] Acceptance criteria satisfied.
         - [ ] Required tests/checks passed.
         - [ ] Evidence links updated.
-        - [ ] ImplementationProgress-v1.md updated when milestone status changes.
+        - [ ] implementation/v1/planning/ImplementationProgress-v1.md updated when milestone status changes.
     validations:
       required: true
 

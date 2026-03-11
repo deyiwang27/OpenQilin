@@ -9,6 +9,7 @@ Artifact groups:
 - `quality/`: quality gates, CI delivery posture, release/rollback operations
 
 Planning docs:
+- `planning/TODO.txt`
 - `planning/ImplementationBacklogSeed-v1.md`
 - `planning/ImplementationMilestones-v1.md`
 - `planning/ImplementationExecutionPlan-v1.md`
@@ -26,4 +27,4 @@ Quality docs:
 Tracking authority:
 - GitHub Issues/PRs/Project are the operational source of truth.
 - `planning/ImplementationProgress-v1.md` is the in-repo milestone mirror.
-- `../../implementation/TODO.txt` is the short-horizon checklist mirror.
+- `planning/TODO.txt` is the short-horizon checklist mirror.

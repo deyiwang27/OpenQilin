@@ -8,7 +8,7 @@
 - `design/TODO.txt` remains the historical and design-stage tracker. It is not reused as the live implementation backlog.
 - GitHub Issues/Project is the primary execution system for implementation tracking and day-to-day status.
 - `implementation/v1/planning/ImplementationProgress-v1.md` is the in-repo mirror for milestone-level progress snapshots.
-- `implementation/TODO.txt` is the implementation-stage working checklist mirror and must not override GitHub/Progress evidence.
+- `implementation/v1/planning/TODO.txt` is the implementation-stage working checklist mirror and must not override GitHub/Progress evidence.
 
 ## 3. Milestone Model
 Milestone names and ordering match `implementation/v1/planning/ImplementationMilestones-v1.md`.
