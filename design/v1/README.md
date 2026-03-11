@@ -14,8 +14,14 @@ Artifact groups:
 - `foundation/`: toolchain, workstation, configuration, framework selection, and developer workflow guidance
 - `architecture/`: repo layout, module map, app and process topology, container topology, and module-level implementation design
 - `quality/`: testing strategy, CI/CD design, and release/rollback workflow
-- `planning/`: implementation backlog and milestone planning
+- `planning/`: implementation backlog, milestone planning, execution plan, and progress ledger
 - `readiness/`: review records and implementation handoff criteria
+
+Planning docs:
+- `planning/ImplementationBacklogSeed-v1.md`
+- `planning/ImplementationMilestones-v1.md`
+- `planning/ImplementationExecutionPlan-v1.md`
+- `planning/ImplementationProgress-v1.md`
 
 Rule:
 - Design artifacts must not conflict with `constitution/` or `spec/`.
