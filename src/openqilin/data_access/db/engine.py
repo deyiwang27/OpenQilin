@@ -58,3 +58,23 @@ def ping_database(database_url: str) -> tuple[bool, str]:
     finally:
         if engine is not None:
             engine.dispose()
+
+
+def check_pgvector_extension(database_url: str) -> tuple[bool, str]:
+    """Verify pgvector extension availability in target PostgreSQL database."""
+
+    engine: Engine | None = None
+    try:
+        engine = create_sqlalchemy_engine(database_url)
+        with engine.connect() as connection:
+            result = connection.execute(
+                text("SELECT extname FROM pg_extension WHERE extname = 'vector'")
+            ).scalar()
+        if result == "vector":
+            return True, "pgvector extension is available"
+        return False, "pgvector extension is not installed in target database"
+    except Exception as error:
+        return False, f"pgvector extension check failed: {error}"
+    finally:
+        if engine is not None:
+            engine.dispose()

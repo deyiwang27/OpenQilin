@@ -901,10 +901,16 @@ def submit_owner_command(
             attributes={"stage": "execution_dispatch"},
         ) as dispatch_span:
             dispatch_span.set_attribute("correlation.task_id", task_id)
-            dispatch_outcome = task_dispatch_service.dispatch_admitted_task(admission_result.task)
+            dispatch_outcome = task_dispatch_service.dispatch_admitted_task(
+                admission_result.task,
+                policy_version=policy_version,
+                policy_hash=policy_hash,
+                rule_ids=tuple(rule_ids),
+            )
         if not dispatch_outcome.accepted:
+            dispatch_source = dispatch_outcome.source
             details = {
-                "source": "dispatch_stub",
+                "source": dispatch_source,
                 "task_id": admission_result.task.task_id,
                 "replayed": str(dispatch_outcome.replayed).lower(),
                 "dispatch_target": dispatch_outcome.target,
@@ -917,7 +923,7 @@ def submit_owner_command(
 
             span.set_status("error")
             span.set_attribute("outcome", "denied")
-            span.set_attribute("source", "dispatch_stub")
+            span.set_attribute("source", dispatch_source)
             span.set_attribute("dispatch_target", dispatch_outcome.target)
             _emit_outcome_observability(
                 tracer=tracer,
@@ -928,7 +934,7 @@ def submit_owner_command(
                 task_id=task_id,
                 principal_id=principal_id,
                 principal_role=admission_result.task.principal_role,
-                source="dispatch_stub",
+                source=dispatch_source,
                 outcome="denied",
                 error_code=dispatch_outcome.error_code or "execution_dispatch_failed",
                 message=dispatch_outcome.message,
@@ -937,13 +943,16 @@ def submit_owner_command(
                 rule_ids=rule_ids,
                 attributes={"dispatch_target": dispatch_outcome.target},
             )
+            source_component = (
+                "llm_gateway" if dispatch_source == "dispatch_llm_gateway" else "sandbox"
+            )
             return _denied_response(
                 status_code=status.HTTP_403_FORBIDDEN,
                 trace_id=trace_id,
                 code=dispatch_outcome.error_code or "execution_dispatch_failed",
                 error_class="runtime_error",
                 message=dispatch_outcome.message,
-                source_component="sandbox",
+                source_component=source_component,
                 details=details,
                 policy_version=policy_version,
                 policy_hash=policy_hash,
@@ -997,6 +1006,31 @@ def submit_owner_command(
                 accepted_args=list(response_task.args),
                 dispatch_target=dispatch_outcome.target,
                 dispatch_id=dispatch_outcome.dispatch_id or "dispatch-id-missing",
+                llm_execution=(
+                    {
+                        "decision": dispatch_outcome.llm_metadata.decision,
+                        "model_selected": dispatch_outcome.llm_metadata.model_selected,
+                        "routing_profile": dispatch_outcome.llm_metadata.routing_profile,
+                        "quota_limit_source": dispatch_outcome.llm_metadata.quota_limit_source,
+                        "usage": {
+                            "input_tokens": dispatch_outcome.llm_metadata.input_tokens,
+                            "output_tokens": dispatch_outcome.llm_metadata.output_tokens,
+                            "total_tokens": dispatch_outcome.llm_metadata.total_tokens,
+                            "request_units": dispatch_outcome.llm_metadata.request_units,
+                        },
+                        "cost": {
+                            "estimated_cost_usd": dispatch_outcome.llm_metadata.estimated_cost_usd,
+                            "actual_cost_usd": dispatch_outcome.llm_metadata.actual_cost_usd,
+                            "cost_source": dispatch_outcome.llm_metadata.cost_source,
+                        },
+                        "budget_usage": {
+                            "currency_delta_usd": dispatch_outcome.llm_metadata.currency_delta_usd,
+                            "quota_token_units": dispatch_outcome.llm_metadata.quota_token_units,
+                        },
+                    }
+                    if dispatch_outcome.llm_metadata is not None
+                    else None
+                ),
             ),
         )
     raise RuntimeError("unreachable owner command control flow")

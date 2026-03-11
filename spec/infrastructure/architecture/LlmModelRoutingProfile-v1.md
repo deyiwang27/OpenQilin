@@ -10,6 +10,7 @@
 - Routing behavior is deterministic for the same `routing_profile + model_class`.
 - Provider/model identifiers are referenced by aliases in config, not hardcoded in runtime logic.
 - Profile changes follow normal change control and must be auditable.
+- Routing-profile budget guardrails define model-route safety caps, not per-project allocation shares.
 
 ## 3. Routing Contract
 Each routing profile must define:
@@ -17,7 +18,10 @@ Each routing profile must define:
 - `environments` (`local_dev|ci|staging|production`)
 - `model_class_map` (`model_class -> provider_model_alias[]` in priority order)
 - `fallback_policy` (`max_fallback_hops`, retry posture)
-- `budget_guardrails` (`per_request_cap`, optional rate caps)
+- `budget_guardrails`:
+  - `currency_caps` (`per_request_usd_cap`, optional windowed caps)
+  - `quota_caps` (`per_request_token_cap`, `window_request_cap`, `window_token_cap`)
+- project-level ratio/floor/cap allocation is governed by Budget Engine policy, then intersected with these route guardrails
 - `status` (`active|inactive`)
 
 ## 4. v1 Model Classes
@@ -50,6 +54,7 @@ Fallback policy:
 Budget/cost posture:
 - target is near-zero provider cost for early-stage validation
 - requests exceeding configured free-tier-safe limits are denied or truncated by policy
+- free-tier profile MUST define active quota caps even when currency caps are effectively zero
 
 ### 5.2 `prod_controlled`
 Purpose:
@@ -84,6 +89,7 @@ Alias rules:
 | LLM-003 | `dev_gemini_free` MUST be the default profile for `local_dev` and `ci` in v1 initial testing. | high | platform config |
 | LLM-004 | Fallback decisions MUST emit trace-correlated audit metadata. | high | llm_gateway |
 | LLM-005 | Provider/model alias changes MUST be auditable and change-controlled. | high | administrator |
+| LLM-006 | Free-tier routing profiles MUST include enforceable quota caps for request/token usage. | critical | llm_gateway |
 
 ## 8. Conformance Tests
 - `local_dev` and `ci` requests default to `dev_gemini_free` unless explicitly overridden by approved config.
@@ -91,3 +97,4 @@ Alias rules:
 - Deterministic input/profile returns deterministic route class selection.
 - Fallback events include `trace_id`, selected alias, and reason metadata.
 - Unresolved Gemini alias fails closed for governed actions.
+- `dev_gemini_free` enforces quota caps even when computed currency impact is `0`.

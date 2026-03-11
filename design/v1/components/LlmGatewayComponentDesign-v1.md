@@ -13,6 +13,9 @@ Responsibilities:
 - Resolve `model_class` using `routing_profile`.
 - Enforce bounded fallback and retry behavior.
 - Attach usage/cost metadata to every completed request.
+- Attach dual-budget attribution metadata to every completed request:
+  - currency metadata (USD fields)
+  - quota metadata (request/token units)
 - Emit trace/audit metadata for route and fallback decisions.
 
 Non-responsibilities:
@@ -32,7 +35,7 @@ Minimum request fields:
 - `messages_or_prompt`
 - `max_tokens`
 - `temperature`
-- `budget_context`
+- `budget_context` (currency + quota dimensions + allocation metadata)
 - `policy_context`
 
 ### 3.2 Response
@@ -42,7 +45,10 @@ Minimum response fields:
 - `decision` (`served|fallback_served|denied`)
 - `model_selected` (provider alias + resolved model identifier)
 - `usage`
-- `estimated_cost`
+- `cost` (`estimated_cost_usd`, `actual_cost_usd` optional, `cost_source`)
+- `budget_usage` (`currency_delta_usd`, `quota_delta`)
+- `budget_context_effective` (`allocation_mode`, optional `project_share_ratio`, `effective_budget`)
+- `quota_limit_source` (`policy_guardrail|provider_config|provider_signal`)
 - `latency_ms`
 - `policy_context`
 - `route_metadata` (`routing_profile`, `fallback_hops`, `route_reason`)
@@ -60,6 +66,7 @@ v1 active defaults:
 - uses Gemini free-tier provider aliases for `interactive_fast` and `reasoning_general`
 - bounded fallback (`max_fallback_hops=1`)
 - request controls tuned for initial testing cost posture
+- quota caps remain mandatory even when cost is near zero
 
 ## 5. Runtime Flow
 ```mermaid
@@ -68,20 +75,29 @@ sequenceDiagram
     participant ORCH as task_orchestrator
     participant GW as llm_gateway
     participant ROUTE as routing_profile_resolver
+    participant BUD as budget_runtime
     participant LLM as provider_adapter
 
     ORCH->>GW: invoke(request_id, model_class, routing_profile, trace_id)
     GW->>ROUTE: resolve profile + class mapping
     ROUTE-->>GW: primary alias + fallback alias
+    GW->>BUD: reserve(predicted currency/quota usage)
+    BUD-->>GW: reservation outcome
     GW->>LLM: call primary alias
 
     alt primary success
         LLM-->>GW: model response + usage
+        GW->>BUD: reconcile(actual usage + cost source)
+        BUD-->>GW: reconciliation outcome
         GW-->>ORCH: served(model_selected, usage, cost)
     else primary failure retryable
         GW->>LLM: call fallback alias
         LLM-->>GW: response or terminal failure
         GW-->>ORCH: fallback_served or denied
+    else provider quota exhausted
+        LLM-->>GW: 429 / RESOURCE_EXHAUSTED + limit signal
+        GW->>BUD: record provider quota signal
+        GW-->>ORCH: denied(fail-closed for governed path)
     end
 ```
 
@@ -96,6 +112,8 @@ Fail-closed cases:
 - unknown model class for active profile
 - unresolved provider alias
 - governed request without required policy/budget context
+- missing usage data or unreconcilable budget metadata on governed responses
+- provider quota exhaustion with no compliant fallback budget path
 
 Failure code alignment:
 - use canonical runtime codes from `ErrorCodesAndHandling` with deterministic `retryable` value.
@@ -106,7 +124,7 @@ Failure code alignment:
   - `llm_gateway_provider_call`
   - `llm_gateway_fallback`
 - Required structured fields:
-  - `trace_id`, `request_id`, `routing_profile`, `model_class`, `model_selected`, `fallback_hops`, `estimated_cost`
+  - `trace_id`, `request_id`, `routing_profile`, `model_class`, `model_selected`, `fallback_hops`, `estimated_cost_usd`, `cost_source`, `quota_delta`, `quota_limit_source`, `allocation_mode`
 - Required events:
   - route_selected
   - fallback_triggered
@@ -124,6 +142,8 @@ Failure code alignment:
 - Unknown profile/class requests are denied fail-closed.
 - Fallback events are trace-correlated and auditable.
 - Usage/cost metadata is present for all served responses.
+- Free-tier served responses still emit quota usage metadata and enforce quota limits.
+- Quota-limit source is traceable (`policy_guardrail|provider_config|provider_signal`) for governed responses.
 
 ## 10. Related `spec/` References
 - `spec/infrastructure/architecture/LlmGatewayContract.md`

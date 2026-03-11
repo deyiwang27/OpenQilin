@@ -81,6 +81,7 @@ class OwnerCommandAcceptedData(BaseModel):
     accepted_args: list[str]
     dispatch_target: str | None = None
     dispatch_id: str | None = None
+    llm_execution: dict[str, Any] | None = None
 
 
 class OwnerCommandError(BaseModel):

@@ -17,6 +17,8 @@ src/openqilin/llm_gateway/
   accounting/
     usage_recorder.py
     cost_estimator.py
+    quota_source_resolver.py
+    allocation_context_normalizer.py
   schemas/
     requests.py
     responses.py
@@ -28,6 +30,10 @@ src/openqilin/llm_gateway/
 - `LiteLLMAdapter.complete(request)`
 - `RequestGuard.validate(governed_request)`
 - `UsageRecorder.record(response_metadata)`
+- `CostEstimator.estimate(request, usage)` with explicit `cost_source`
+- `BudgetUsageNormalizer.normalize(usage, cost)` for currency + quota attribution
+- `QuotaSourceResolver.resolve(policy_guardrail, provider_config, provider_signal)`
+- `AllocationContextNormalizer.normalize(project_allocation_context)`
 
 ## 4. Routing Rules
 - local and CI default to `dev_gemini_free`
@@ -45,3 +51,6 @@ src/openqilin/llm_gateway/
 - Gemini free-tier default wiring
 - fallback behavior
 - usage and cost metadata persistence
+- free-tier path enforcement where `cost=0` but quota usage is non-zero
+- reservation/reconciliation compatibility with budget runtime dual-budget model
+- hybrid allocation (`ratio + floor/cap`) context propagation to budget reservation/reconciliation

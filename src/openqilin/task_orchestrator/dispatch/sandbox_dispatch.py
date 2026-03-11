@@ -1,14 +1,15 @@
-"""Sandbox dispatch stub for M1 governed-path handoff."""
+"""Sandbox execution adapter boundary for governed dispatch handoff."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Protocol
 from uuid import uuid4
 
 
 @dataclass(frozen=True, slots=True)
 class SandboxDispatchRequest:
-    """Dispatch payload for sandbox stub."""
+    """Dispatch payload for sandbox adapter."""
 
     task_id: str
     trace_id: str
@@ -18,7 +19,7 @@ class SandboxDispatchRequest:
 
 @dataclass(frozen=True, slots=True)
 class SandboxDispatchReceipt:
-    """Dispatch acceptance/rejection receipt."""
+    """Sandbox adapter acceptance/rejection receipt."""
 
     accepted: bool
     dispatch_id: str | None
@@ -26,18 +27,25 @@ class SandboxDispatchReceipt:
     message: str
 
 
-class SandboxDispatchStub:
-    """Deterministic dispatch stub used by M1-WP5."""
+class SandboxExecutionAdapter(Protocol):
+    """Sandbox execution adapter contract for task dispatch handoff."""
 
     def dispatch(self, payload: SandboxDispatchRequest) -> SandboxDispatchReceipt:
-        """Simulate sandbox dispatch acceptance/rejection."""
+        """Dispatch an admitted task through sandbox adapter boundary."""
+
+
+class InMemorySandboxExecutionAdapter:
+    """Deterministic in-memory sandbox adapter for local and test execution."""
+
+    def dispatch(self, payload: SandboxDispatchRequest) -> SandboxDispatchReceipt:
+        """Simulate sandbox adapter acceptance/rejection outcomes."""
 
         if payload.command == "dispatch_timeout":
             return SandboxDispatchReceipt(
                 accepted=False,
                 dispatch_id=None,
                 error_code="execution_dispatch_timeout",
-                message="dispatch timed out at sandbox boundary",
+                message="dispatch timed out at sandbox adapter boundary",
             )
 
         if payload.command == "dispatch_reject":
@@ -45,12 +53,16 @@ class SandboxDispatchStub:
                 accepted=False,
                 dispatch_id=None,
                 error_code="execution_dispatch_failed",
-                message="sandbox rejected dispatch request",
+                message="sandbox adapter rejected dispatch request",
             )
 
         return SandboxDispatchReceipt(
             accepted=True,
             dispatch_id=str(uuid4()),
             error_code=None,
-            message="sandbox dispatch accepted",
+            message="sandbox adapter accepted dispatch request",
         )
+
+
+class SandboxDispatchStub(InMemorySandboxExecutionAdapter):
+    """Backward-compatible alias retained for existing tests/imports."""

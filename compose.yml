@@ -2,7 +2,7 @@ name: openqilin
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     profiles: ["core", "full"]
     environment:
       POSTGRES_DB: openqilin

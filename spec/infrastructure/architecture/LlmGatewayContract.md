@@ -21,7 +21,10 @@ Minimum request fields:
 - `messages_or_prompt`
 - `max_tokens`
 - `temperature`
-- `budget_context`
+- `budget_context`:
+  - currency + quota dimensions
+  - reservation reference when present
+  - allocation metadata (`allocation_mode`, `project_share_ratio`, `effective_budget_window`)
 - `policy_context` (`policy_version`, `policy_hash`, `rule_ids`)
 
 ## 4. Routing and Fallback
@@ -34,8 +37,23 @@ Minimum request fields:
 
 ## 5. Budget and Cost Semantics
 - Every request carries attribution dimensions (`project_id`, `agent_id`, `task_id` optional).
-- Soft/hard budget signals are enforced before or during dispatch based on policy.
-- Response includes normalized usage and estimated cost metadata.
+- Soft/hard budget signals are enforced before or during dispatch based on policy across dual dimensions:
+  - currency budget (USD)
+  - quota budget (request/token units)
+- Gateway MUST support pre-call reservation and post-call reconciliation for budget accounting.
+- Response includes normalized usage, cost metadata, and quota-attribution metadata.
+- Free-tier model behavior:
+  - `cost_usd` MAY be `0`
+  - quota usage MUST still be recorded and enforced
+- Quota limit handling must follow source precedence:
+  - `policy_guardrail` (authoritative)
+  - `provider_config`
+  - `provider_signal` (`429`, `RESOURCE_EXHAUSTED`, rate-limit headers)
+- Provider-limit signals must be captured in response metadata and observability streams.
+- `cost_source` MUST be explicit:
+  - `provider_reported`
+  - `catalog_estimated`
+  - `none` (for free-tier/no-price path)
 
 ## 6. Response Contract
 Minimum response fields:
@@ -43,8 +61,11 @@ Minimum response fields:
 - `trace_id`
 - `decision` (`served|fallback_served|denied`)
 - `model_selected`
-- `usage` (`input_tokens`, `output_tokens`, `total_tokens`)
-- `estimated_cost`
+- `usage` (`input_tokens`, `output_tokens`, `total_tokens`, `request_units`)
+- `cost` (`estimated_cost_usd`, `actual_cost_usd` optional, `cost_source`)
+- `budget_usage` (`currency_delta_usd`, `quota_delta` with `request_units`, `token_units`)
+- `budget_context_effective` (`allocation_mode`, `project_share_ratio` optional, `effective_budget`)
+- `quota_limit_source` (`policy_guardrail|provider_config|provider_signal`)
 - `latency_ms`
 - `policy_context`
 - `route_metadata`
@@ -60,3 +81,6 @@ Minimum response fields:
 - Requests with unknown `routing_profile` are denied.
 - Fallback path emits required trace and audit metadata.
 - Budget attribution fields are present for all completed requests.
+- Free-tier served responses include quota usage fields even when `cost.actual_cost_usd == 0`.
+- Missing usage data for governed responses triggers deterministic deny/fail-closed handling.
+- Quota-limit source and provider-limit signals are included for governed responses when available.
