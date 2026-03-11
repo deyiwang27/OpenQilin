@@ -51,4 +51,5 @@ Primary issue: `#6` (`M2: Execution Targets Kickoff`)
 - `M2-WP2` issue + evidence: https://github.com/deyiwang27/OpenQilin/issues/8, https://github.com/deyiwang27/OpenQilin/issues/8#issuecomment-4041918081
 - `M2-WP3` issue + evidence: https://github.com/deyiwang27/OpenQilin/issues/9, https://github.com/deyiwang27/OpenQilin/issues/9#issuecomment-4042027286
 - `M2-WP4` issue + evidence: https://github.com/deyiwang27/OpenQilin/issues/10, https://github.com/deyiwang27/OpenQilin/issues/10#issuecomment-4042180056
-- `M2-WP5` issue: https://github.com/deyiwang27/OpenQilin/issues/11
+- `M2-WP5` issue + evidence: https://github.com/deyiwang27/OpenQilin/issues/11, https://github.com/deyiwang27/OpenQilin/issues/11#issuecomment-4042243972
+- Parent issue update: https://github.com/deyiwang27/OpenQilin/issues/6#issuecomment-4042246242
