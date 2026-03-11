@@ -19,6 +19,9 @@
   - `project` (when using GitHub Projects)
 
 ## 4. Issue Management Standard
+Issue template:
+- `.github/ISSUE_TEMPLATE/implementation_work_item.yml`
+
 ### 4.1 Issue Required Fields
 Each implementation issue should include:
 - `Milestone`
@@ -44,6 +47,9 @@ Use consistent labels:
 5. Close issue only after merge and evidence links are complete.
 
 ## 5. Branch and PR Operations
+PR template:
+- `.github/pull_request_template.md`
+
 ### 5.1 Branch Naming
 Branch format:
 - `<type>/<issue-id>-<short-slug>`
