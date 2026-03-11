@@ -23,6 +23,7 @@
 - Issue:
 - Test run:
 - Trace/Audit (if governed path impacted):
+- Governance check (if structure/policy/docs changed):
 
 ## Policy and Quality Checklist
 - [ ] Branch name follows `<type>/<issue-id>-<short-slug>`.
@@ -32,6 +33,7 @@
 - [ ] Required checks for this change type are green.
 - [ ] Contract or migration changes include corresponding design/spec updates.
 - [ ] `implementation/v1/planning/ImplementationProgress-v1.md` updated when milestone status/evidence changed.
+- [ ] Repository consistency/governance checks are completed when applicable (`implementation/v1/workflow/RepositoryConsistencyAndGovernanceCheck-v1.md`).
 
 ## Reviewer Notes
 - Risks:

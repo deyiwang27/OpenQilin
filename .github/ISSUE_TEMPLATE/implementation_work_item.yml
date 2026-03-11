@@ -80,6 +80,7 @@ body:
         - [ ] Required tests/checks passed.
         - [ ] Evidence links updated.
         - [ ] implementation/v1/planning/ImplementationProgress-v1.md updated when milestone status changes.
+        - [ ] Repository consistency/governance check scope considered for this work item.
     validations:
       required: true
 

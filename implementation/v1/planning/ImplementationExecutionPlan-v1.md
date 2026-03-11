@@ -43,6 +43,7 @@ Required label groups:
 - PR-linked updates: every implementation PR references issue IDs and updates issue acceptance checklist status.
 - Weekly summary: update `ImplementationProgress-v1.md` once per week with milestone percentages, active features, blockers, and evidence links.
 - Milestone close rule: milestone can close only when exit evidence is attached and all required feature issues are closed.
+- Governance check rule: run consistency/governance checks per `implementation/v1/workflow/RepositoryConsistencyAndGovernanceCheck-v1.md` (PR-level light checks; deep checks on milestone close and major structure/policy changes).
 
 ## 6. Related Documents
 - `implementation/v1/workflow/AIAssistedDeliveryWorkflow-v1.md`
@@ -50,3 +51,4 @@ Required label groups:
 - `implementation/v1/planning/ImplementationMilestones-v1.md`
 - `implementation/v1/planning/ImplementationProgress-v1.md`
 - `implementation/v1/workflow/GitHubOperationsManagementGuide-v1.md`
+- `implementation/v1/workflow/RepositoryConsistencyAndGovernanceCheck-v1.md`

@@ -64,6 +64,7 @@ Examples:
 - PR scope remains one coherent change set.
 - PR description includes exact local verification commands executed.
 - Contract or migration changes must include corresponding design/spec updates.
+- Repository consistency/governance check evidence is required when structure/policy/docs are materially changed (see `implementation/v1/workflow/RepositoryConsistencyAndGovernanceCheck-v1.md`).
 
 ### 5.3 Merge Standard
 - Use squash merge.
@@ -85,6 +86,7 @@ Hotfix posture:
 - Weekly cadence: update `ImplementationProgress-v1.md` with status, blockers, and evidence links.
 - PR cadence: each merged PR should update issue acceptance checklists and evidence links.
 - Milestone closeout: validate all linked feature issues are closed with evidence before closing milestone status.
+- Milestone closeout must include deep-level governance check evidence per `implementation/v1/workflow/RepositoryConsistencyAndGovernanceCheck-v1.md`.
 
 ## 8. GitHub CLI Command Reference
 Issue operations:
@@ -128,6 +130,7 @@ Fallback for repositories where branch protection is unavailable:
 ## 10. Related Documents
 - `implementation/v1/workflow/AIAssistedDeliveryWorkflow-v1.md`
 - `implementation/v1/workflow/DeveloperWorkflowAndContributionGuide-v1.md`
+- `implementation/v1/workflow/RepositoryConsistencyAndGovernanceCheck-v1.md`
 - `implementation/v1/quality/QualityAndDelivery-v1.md`
 - `implementation/v1/planning/ImplementationExecutionPlan-v1.md`
 - `implementation/v1/planning/ImplementationProgress-v1.md`

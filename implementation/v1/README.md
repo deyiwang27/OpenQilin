@@ -19,6 +19,7 @@ Workflow docs:
 - `workflow/AIAssistedDeliveryWorkflow-v1.md`
 - `workflow/DeveloperWorkflowAndContributionGuide-v1.md`
 - `workflow/GitHubOperationsManagementGuide-v1.md`
+- `workflow/RepositoryConsistencyAndGovernanceCheck-v1.md`
 
 Quality docs:
 - `quality/QualityAndDelivery-v1.md`

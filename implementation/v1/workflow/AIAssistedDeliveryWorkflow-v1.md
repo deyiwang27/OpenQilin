@@ -17,9 +17,10 @@
 5. Implement in small increments with frequent local validation.
 6. Run required tests/checks by change type.
 7. Run Codex self-review pass before PR creation.
-8. Open PR linked to issue (`Closes #...`) with validation commands and evidence links.
-9. Complete merge gate checks, squash merge, and delete branch.
-10. Close issue and update `ImplementationProgress-v1.md` when milestone status/evidence changed.
+8. Run repository consistency/governance checks when applicable (structure/policy/docs changes, milestone close prep).
+9. Open PR linked to issue (`Closes #...`) with validation commands and evidence links.
+10. Complete merge gate checks, squash merge, and delete branch.
+11. Close issue and update `ImplementationProgress-v1.md` when milestone status/evidence changed.
 
 ## 4. Ready Gate (Before Coding)
 All items must be true before implementation starts:
@@ -80,6 +81,7 @@ All items must be true before merge:
 ## 10. Related Documents
 - `implementation/v1/workflow/GitHubOperationsManagementGuide-v1.md`
 - `implementation/v1/workflow/DeveloperWorkflowAndContributionGuide-v1.md`
+- `implementation/v1/workflow/RepositoryConsistencyAndGovernanceCheck-v1.md`
 - `implementation/v1/quality/QualityAndDelivery-v1.md`
 - `implementation/v1/planning/ImplementationExecutionPlan-v1.md`
 - `implementation/v1/planning/ImplementationProgress-v1.md`

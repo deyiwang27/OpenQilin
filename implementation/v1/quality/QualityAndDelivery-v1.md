@@ -51,6 +51,7 @@ Additional checks when relevant:
 - migration validation for schema changes
 - conformance smoke tests for governance-core behavior changes
 - docs/spec drift checks for contract changes
+- repository consistency/governance check for structure or policy/documentation refactors (see `implementation/v1/workflow/RepositoryConsistencyAndGovernanceCheck-v1.md`)
 
 ## 4. Quality Gates
 Merge blocked when:
@@ -64,6 +65,7 @@ Release blocked when:
 - critical conformance checks fail
 - restore/recovery evidence is missing
 - unresolved high-priority implementation blockers remain
+- unresolved high-risk governance drift or unaddressed folder-fit/duplication conflicts remain
 
 ## 5. Delivery Posture
 Initial v1 posture:
@@ -85,3 +87,4 @@ Manual promotion gates:
 - implementation architecture lives in `design/v1/architecture/ImplementationArchitecture-v1.md`
 - foundation/bootstrap details live in `design/v1/foundation/ImplementationFoundation-v1.md`
 - GitHub issue/PR/release operations live in `implementation/v1/workflow/GitHubOperationsManagementGuide-v1.md`
+- repository consistency/governance check process lives in `implementation/v1/workflow/RepositoryConsistencyAndGovernanceCheck-v1.md`

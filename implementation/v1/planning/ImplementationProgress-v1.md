@@ -45,6 +45,7 @@ Status values:
 - `2026-03-11`: implementation-stage working checklist added at `implementation/v1/planning/TODO.txt`; design/spec TODO files marked archived.
 - `2026-03-11`: latest full-repo audit confirms reference/link consistency after structure migration; known scaffold gap recorded (`admin_cli` commands still placeholder).
 - `2026-03-11`: overall repo review pass completed (conflict/redundancy/structure/readiness); baseline checks re-confirmed (`ruff`, `mypy`, `pytest`) while Docker-dependent validation is intentionally deferred.
+- `2026-03-11`: repository consistency/governance check process formalized at `implementation/v1/workflow/RepositoryConsistencyAndGovernanceCheck-v1.md` and wired into workflow/quality/PR enforcement.
 
 ## 6. Sample Progress Update Entry
 Use this shape when recording weekly or PR-linked evidence:

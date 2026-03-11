@@ -33,6 +33,7 @@ uv run python -m openqilin.apps.communication_worker
 
 ## 4. Branch and PR Rules
 - follow `implementation/v1/workflow/GitHubOperationsManagementGuide-v1.md` as the canonical branch/issue/PR operations policy
+- follow `implementation/v1/workflow/RepositoryConsistencyAndGovernanceCheck-v1.md` for structure/authority/folder-fit checks
 - work on short-lived branches from latest `main` using `<type>/<issue-id>-<short-slug>`
 - keep PR scope narrow to one coherent change set
 - every PR links at least one issue
@@ -65,3 +66,4 @@ Before serious implementation work, you still need to:
 - `design/v1/architecture/ContainerizationAndLocalInfraTopology-v1.md` is the authoritative local bring-up contract
 - GitHub execution operations are governed by `implementation/v1/workflow/GitHubOperationsManagementGuide-v1.md`
 - day-to-day human+Codex execution loop is governed by `implementation/v1/workflow/AIAssistedDeliveryWorkflow-v1.md`
+- periodic structure/conflict/self-consistency review is governed by `implementation/v1/workflow/RepositoryConsistencyAndGovernanceCheck-v1.md`

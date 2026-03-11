@@ -25,6 +25,11 @@ Checklist:
 - implementation tracker consolidated under `implementation/v1/planning/`
 - workflow docs aligned with current scaffold limitations
 
+0.1) Governance check formalization - `done`
+- canonical governance check doc added
+- trigger policy defined (PR-level and deep-level)
+- enforcement wired into PR template and workflow/quality/GitHub policy docs
+
 1) M1 governed path kickoff (`issue #4`) - `in_progress`
 - ingress envelope validation shell
 - task admission shell
