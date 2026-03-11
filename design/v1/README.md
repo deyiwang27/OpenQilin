@@ -17,6 +17,12 @@ Artifact groups:
 - `planning/`: implementation backlog, milestone planning, execution plan, and progress ledger
 - `readiness/`: review records and implementation handoff criteria
 
+Foundation docs:
+- `foundation/ImplementationFoundation-v1.md`
+- `foundation/ImplementationFrameworkSelection-v1.md`
+- `foundation/DeveloperWorkflowAndContributionGuide-v1.md`
+- `foundation/GitHubOperationsManagementGuide-v1.md`
+
 Planning docs:
 - `planning/ImplementationBacklogSeed-v1.md`
 - `planning/ImplementationMilestones-v1.md`

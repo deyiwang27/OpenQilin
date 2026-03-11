@@ -58,3 +58,4 @@ Before serious implementation work, you still need to:
 - `design/` remains authoritative for implementation-facing design decisions
 - `design/TODO.txt` is the live tracker for design-stage work
 - `design/v1/architecture/ContainerizationAndLocalInfraTopology-v1.md` is the authoritative local bring-up contract
+- GitHub execution operations are governed by `design/v1/foundation/GitHubOperationsManagementGuide-v1.md`

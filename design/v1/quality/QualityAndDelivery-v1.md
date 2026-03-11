@@ -83,3 +83,4 @@ Manual promotion gates:
 ## 7. Related Follow-Ups
 - implementation architecture lives in `design/v1/architecture/ImplementationArchitecture-v1.md`
 - foundation/bootstrap details live in `design/v1/foundation/ImplementationFoundation-v1.md`
+- GitHub issue/PR/release operations live in `design/v1/foundation/GitHubOperationsManagementGuide-v1.md`

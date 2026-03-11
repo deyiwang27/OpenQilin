@@ -47,3 +47,4 @@ Required label groups:
 - `design/v1/planning/ImplementationBacklogSeed-v1.md`
 - `design/v1/planning/ImplementationMilestones-v1.md`
 - `design/v1/planning/ImplementationProgress-v1.md`
+- `design/v1/foundation/GitHubOperationsManagementGuide-v1.md`
