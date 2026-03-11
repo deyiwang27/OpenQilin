@@ -23,5 +23,5 @@ Current design cycle:
 - `v1/`
 
 Start:
-- Read `design/TODO.txt`
+- `design/TODO.txt` is archived for historical design closeout.
 - Read `design/v1/README.md`

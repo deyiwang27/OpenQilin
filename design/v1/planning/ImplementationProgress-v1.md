@@ -3,6 +3,7 @@
 ## 1. Purpose
 - Provide an in-repo milestone progress mirror for implementation.
 - Keep a concise snapshot that references primary execution artifacts in GitHub Issues/PRs.
+- Keep `implementation/TODO.txt` synchronized as the short-horizon working checklist.
 
 ## 2. Tracking Schema
 Canonical row schema:
@@ -41,6 +42,7 @@ Status values:
 - `2026-03-11`: full repo consistency audit pass completed; policy conflicts and status drift corrected.
 - `2026-03-11`: GitHub protection-policy fallback documented for repositories without branch-protection feature support.
 - `2026-03-11`: second full-repo review pass completed; tracker-authority wording aligned and baseline validation checks (`ruff`, `mypy`, `pytest`) re-confirmed.
+- `2026-03-11`: implementation-stage working checklist added at `implementation/TODO.txt`; design/spec TODO files marked archived.
 
 ## 6. Sample Progress Update Entry
 Use this shape when recording weekly or PR-linked evidence:

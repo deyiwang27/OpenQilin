@@ -1,5 +1,6 @@
 OpenQilin Spec TODO Backlog
 Date: 2026-03-10
+Archive status: archived
 
 Execution model:
 - Focus: documentation and investigation only (no implementation code changes).

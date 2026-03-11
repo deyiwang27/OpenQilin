@@ -45,6 +45,7 @@ It locks:
 - `docs/`: concise human-facing documentation for GitHub users
 - `constitution/`: constitutional runtime rules that agents must follow
 - `design/`: technical design artifacts and implementation execution guidance
+- `implementation/`: implementation-stage TODO/checklist mirror
 - `src/`: OpenQilin runtime implementation packages
 - `tests/`: unit/component/contract/integration/conformance test suites
 - `migrations/`: forward-only schema migration assets

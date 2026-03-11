@@ -1,6 +1,7 @@
 OpenQilin Design TODO Backlog
 Date: 2026-03-10
 Branch: design/v1-system-technical-design
+Archive status: archived
 
 Goal:
 - Complete the remaining implementation-planning design work for v1.
