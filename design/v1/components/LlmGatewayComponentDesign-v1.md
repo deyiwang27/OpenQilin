@@ -35,7 +35,7 @@ Minimum request fields:
 - `messages_or_prompt`
 - `max_tokens`
 - `temperature`
-- `budget_context` (currency + quota dimensions)
+- `budget_context` (currency + quota dimensions + allocation metadata)
 - `policy_context`
 
 ### 3.2 Response
@@ -47,6 +47,8 @@ Minimum response fields:
 - `usage`
 - `cost` (`estimated_cost_usd`, `actual_cost_usd` optional, `cost_source`)
 - `budget_usage` (`currency_delta_usd`, `quota_delta`)
+- `budget_context_effective` (`allocation_mode`, optional `project_share_ratio`, `effective_budget`)
+- `quota_limit_source` (`policy_guardrail|provider_config|provider_signal`)
 - `latency_ms`
 - `policy_context`
 - `route_metadata` (`routing_profile`, `fallback_hops`, `route_reason`)
@@ -92,6 +94,10 @@ sequenceDiagram
         GW->>LLM: call fallback alias
         LLM-->>GW: response or terminal failure
         GW-->>ORCH: fallback_served or denied
+    else provider quota exhausted
+        LLM-->>GW: 429 / RESOURCE_EXHAUSTED + limit signal
+        GW->>BUD: record provider quota signal
+        GW-->>ORCH: denied(fail-closed for governed path)
     end
 ```
 
@@ -107,6 +113,7 @@ Fail-closed cases:
 - unresolved provider alias
 - governed request without required policy/budget context
 - missing usage data or unreconcilable budget metadata on governed responses
+- provider quota exhaustion with no compliant fallback budget path
 
 Failure code alignment:
 - use canonical runtime codes from `ErrorCodesAndHandling` with deterministic `retryable` value.
@@ -117,7 +124,7 @@ Failure code alignment:
   - `llm_gateway_provider_call`
   - `llm_gateway_fallback`
 - Required structured fields:
-  - `trace_id`, `request_id`, `routing_profile`, `model_class`, `model_selected`, `fallback_hops`, `estimated_cost_usd`, `cost_source`, `quota_delta`
+  - `trace_id`, `request_id`, `routing_profile`, `model_class`, `model_selected`, `fallback_hops`, `estimated_cost_usd`, `cost_source`, `quota_delta`, `quota_limit_source`, `allocation_mode`
 - Required events:
   - route_selected
   - fallback_triggered
@@ -136,6 +143,7 @@ Failure code alignment:
 - Fallback events are trace-correlated and auditable.
 - Usage/cost metadata is present for all served responses.
 - Free-tier served responses still emit quota usage metadata and enforce quota limits.
+- Quota-limit source is traceable (`policy_guardrail|provider_config|provider_signal`) for governed responses.
 
 ## 10. Related `spec/` References
 - `spec/infrastructure/architecture/LlmGatewayContract.md`

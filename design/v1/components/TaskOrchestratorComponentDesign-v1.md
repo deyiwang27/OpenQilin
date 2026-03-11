@@ -76,6 +76,10 @@ Rules:
 - dual budget dimensions are enforced:
   - currency usage (USD)
   - quota usage (request/token units)
+- allocation policy context is enforced from Budget Engine effective allocation:
+  - `absolute`
+  - `ratio`
+  - `hybrid` (`ratio + floor/cap`)
 - hard breach or unavailability blocks dispatch
 
 ### 6.3 Execution Sandbox
