@@ -46,7 +46,11 @@ Checklist:
 - evidence: `uv run pytest tests/unit/test_m1_wp1_ingress_primitives.py tests/unit/test_m1_wp2_admission_idempotency.py tests/component/test_m1_wp1_owner_command_router.py tests/integration/test_m1_wp1_governed_ingress_path.py`
 - evidence: `uv run ruff check src tests`
 - evidence: `uv run mypy src`
-- `M1-WP3`: policy decision path + fail-closed policy uncertainty handling (`policy_runtime_integration`) - `todo`
+- `M1-WP3`: policy decision path + fail-closed policy uncertainty handling (`policy_runtime_integration`) - `done`
+- evidence: `uv run pytest tests/unit/test_m1_wp1_ingress_primitives.py tests/unit/test_m1_wp2_admission_idempotency.py tests/unit/test_m1_wp3_policy_runtime.py tests/component/test_m1_wp1_owner_command_router.py tests/integration/test_m1_wp1_governed_ingress_path.py`
+- evidence: `uv run ruff check src tests`
+- evidence: `uv run ruff format --check .`
+- evidence: `uv run mypy src`
 - `M1-WP4`: budget reservation path + fail-closed budget uncertainty handling (`budget_runtime`) - `todo`
 - `M1-WP5`: dispatch stub and task lifecycle wiring (`task_orchestrator/dispatch`, `task_orchestrator/services`) - `todo`
 - `M1-WP6`: trace/audit/metric emission on accept/block paths (`observability`) - `todo`

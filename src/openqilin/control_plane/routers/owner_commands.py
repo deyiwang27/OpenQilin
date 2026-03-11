@@ -8,7 +8,10 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, Header, Request, status
 from fastapi.responses import JSONResponse
 
-from openqilin.control_plane.api.dependencies import get_admission_service
+from openqilin.control_plane.api.dependencies import (
+    get_admission_service,
+    get_policy_runtime_client,
+)
 from openqilin.control_plane.identity.principal_resolver import (
     PrincipalResolutionError,
     resolve_principal,
@@ -18,6 +21,9 @@ from openqilin.control_plane.schemas.owner_commands import (
     OwnerCommandRejectedResponse,
     OwnerCommandRequest,
 )
+from openqilin.policy_runtime_integration.client import InMemoryPolicyRuntimeClient
+from openqilin.policy_runtime_integration.fail_closed import evaluate_with_fail_closed
+from openqilin.policy_runtime_integration.normalizer import normalize_policy_input
 from openqilin.task_orchestrator.admission.envelope_validator import (
     EnvelopeValidationError,
     validate_owner_command_envelope,
@@ -52,12 +58,14 @@ def _blocked_response(
     responses={
         status.HTTP_400_BAD_REQUEST: {"model": OwnerCommandRejectedResponse},
         status.HTTP_409_CONFLICT: {"model": OwnerCommandRejectedResponse},
+        status.HTTP_403_FORBIDDEN: {"model": OwnerCommandRejectedResponse},
     },
 )
 def submit_owner_command(
     payload: OwnerCommandRequest,
     request: Request,
     admission_service: AdmissionService = Depends(get_admission_service),
+    policy_runtime_client: InMemoryPolicyRuntimeClient = Depends(get_policy_runtime_client),
     x_openqilin_trace_id: Annotated[str | None, Header(alias="X-OpenQilin-Trace-Id")] = None,
 ) -> OwnerCommandAcceptedResponse | JSONResponse:
     """Validate ingress identity and envelope before admission execution."""
@@ -91,6 +99,26 @@ def submit_owner_command(
             message=error.message,
             details={"source": "idempotency"},
             status_code=status.HTTP_409_CONFLICT,
+        )
+
+    policy_input = normalize_policy_input(admission_result.task)
+    policy_outcome = evaluate_with_fail_closed(policy_input, policy_runtime_client)
+    if not policy_outcome.allowed:
+        details = {
+            "source": "policy_runtime",
+            "task_id": admission_result.task.task_id,
+            "replayed": str(admission_result.replayed).lower(),
+        }
+        if policy_outcome.policy_result is not None:
+            details["decision"] = policy_outcome.policy_result.decision
+            details["reason_code"] = policy_outcome.policy_result.reason_code
+            details["policy_version"] = policy_outcome.policy_result.policy_version
+
+        return _blocked_response(
+            error_code=policy_outcome.error_code or "policy_blocked",
+            message=policy_outcome.message,
+            details=details,
+            status_code=status.HTTP_403_FORBIDDEN,
         )
 
     return OwnerCommandAcceptedResponse(

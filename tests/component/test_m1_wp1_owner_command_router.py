@@ -136,3 +136,51 @@ def test_submit_owner_command_blocks_idempotency_key_conflict() -> None:
     assert second_body["status"] == "blocked"
     assert second_body["error_code"] == "idempotency_key_reused_with_different_payload"
     assert second_body["details"]["source"] == "idempotency"
+
+
+def test_submit_owner_command_blocks_policy_deny() -> None:
+    client = TestClient(create_control_plane_app())
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers={
+            "X-OpenQilin-User-Id": "owner_policy_deny",
+            "X-OpenQilin-Connector": "discord",
+        },
+        json={
+            "command": "deny_delete_project",
+            "args": ["project_1"],
+            "idempotency_key": "idem-policy-deny-component-12345",
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 403
+    assert body["status"] == "blocked"
+    assert body["error_code"] == "policy_denied"
+    assert body["details"]["source"] == "policy_runtime"
+    assert body["details"]["decision"] == "deny"
+
+
+def test_submit_owner_command_blocks_policy_uncertain_fail_closed() -> None:
+    client = TestClient(create_control_plane_app())
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers={
+            "X-OpenQilin-User-Id": "owner_policy_uncertain",
+            "X-OpenQilin-Connector": "discord",
+        },
+        json={
+            "command": "policy_uncertain",
+            "args": ["project_1"],
+            "idempotency_key": "idem-policy-uncertain-component-12345",
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 403
+    assert body["status"] == "blocked"
+    assert body["error_code"] == "policy_uncertain_fail_closed"
+    assert body["details"]["source"] == "policy_runtime"
+    assert body["details"]["decision"] == "uncertain"

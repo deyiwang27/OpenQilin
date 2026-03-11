@@ -62,3 +62,26 @@ def test_governed_ingress_replay_is_deterministic() -> None:
     assert first_body["task_id"] == second_body["task_id"]
     assert first_body["request_id"] == second_body["request_id"]
     assert first_body["trace_id"] == second_body["trace_id"]
+
+
+def test_governed_ingress_fail_closed_on_policy_runtime_error() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers={
+            "X-OpenQilin-User-Id": "owner_policy_error_integration",
+            "X-OpenQilin-Connector": "discord",
+        },
+        json={
+            "command": "policy_error",
+            "args": ["alpha"],
+            "idempotency_key": "idem-integration-policy-error-12345",
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 403
+    assert body["status"] == "blocked"
+    assert body["error_code"] == "policy_runtime_error_fail_closed"
+    assert body["details"]["source"] == "policy_runtime"
