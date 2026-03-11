@@ -22,7 +22,10 @@ from openqilin.task_orchestrator.admission.envelope_validator import (
     EnvelopeValidationError,
     validate_owner_command_envelope,
 )
-from openqilin.task_orchestrator.admission.service import AdmissionIdempotencyError, AdmissionService
+from openqilin.task_orchestrator.admission.service import (
+    AdmissionIdempotencyError,
+    AdmissionService,
+)
 
 router = APIRouter(prefix="/v1/owner/commands", tags=["owner_commands"])
 
@@ -70,7 +73,9 @@ def submit_owner_command(
 
     trace_id = x_openqilin_trace_id.strip() if x_openqilin_trace_id else str(uuid4())
     try:
-        envelope = validate_owner_command_envelope(payload=payload, principal=principal, trace_id=trace_id)
+        envelope = validate_owner_command_envelope(
+            payload=payload, principal=principal, trace_id=trace_id
+        )
     except EnvelopeValidationError as error:
         return _blocked_response(
             error_code=error.code,
