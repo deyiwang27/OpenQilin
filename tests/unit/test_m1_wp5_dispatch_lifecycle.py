@@ -10,6 +10,7 @@ from openqilin.task_orchestrator.dispatch.sandbox_dispatch import (
     SandboxDispatchReceipt,
 )
 from openqilin.task_orchestrator.dispatch.llm_dispatch import LlmGatewayDispatchAdapter
+from openqilin.shared_kernel.config import RuntimeSettings
 from openqilin.llm_gateway.service import build_llm_gateway_service
 from openqilin.task_orchestrator.services.lifecycle_service import TaskLifecycleService
 from openqilin.task_orchestrator.services.task_service import TaskDispatchService
@@ -141,6 +142,33 @@ def test_dispatch_service_blocks_on_llm_gateway_failure() -> None:
     assert updated is not None
     assert updated.status == "blocked"
     assert updated.outcome_source == "dispatch_llm_gateway"
+
+
+def test_dispatch_service_uses_runtime_llm_dispatch_settings() -> None:
+    task, repository = _build_task("llm_summarize")
+    lifecycle = TaskLifecycleService(runtime_state_repo=repository)
+    service = TaskDispatchService(
+        lifecycle_service=lifecycle,
+        sandbox_execution_adapter=InMemorySandboxExecutionAdapter(),
+        llm_dispatch_adapter=LlmGatewayDispatchAdapter(
+            llm_gateway_service=build_llm_gateway_service(),
+            settings=RuntimeSettings(
+                llm_default_routing_profile="prod_controlled",
+                llm_default_quota_request_cap=500,
+                llm_default_quota_token_cap=40000,
+                llm_default_allocation_mode="ratio",
+                llm_default_project_share_ratio=0.2,
+                llm_default_budget_window="weekly",
+            ),
+        ),
+    )
+
+    outcome = service.dispatch_admitted_task(task)
+
+    assert outcome.accepted is True
+    assert outcome.target == "llm"
+    assert outcome.llm_metadata is not None
+    assert outcome.llm_metadata.routing_profile == "prod_controlled"
 
 
 class _RaisingSandboxAdapter:

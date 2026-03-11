@@ -109,6 +109,10 @@ Checklist:
 - evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
 - evidence: `uv run ruff check .`
 - evidence: `uv run mypy .`
+- `M2 post-review top-3 remediation`: query identity+project-scope+policy gate, retrieval unexpected-error fail-closed hardening, and llm dispatch routing/budget de-hardcode via runtime settings - `done`
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
+- evidence: `uv run ruff check .`
+- evidence: `uv run mypy .`
 - `M2-WP4` PostgreSQL `pgvector` enablement + migration contract (`issue #10`) - `todo`
 - `M2-WP5` M2 evidence pack + milestone exit validation (`issue #11`) - `todo`
 

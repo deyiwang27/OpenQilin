@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Protocol, cast
 from uuid import uuid4
 
 from openqilin.llm_gateway.schemas.requests import (
+    AllocationMode,
     LlmBudgetContext,
     LlmGatewayRequest,
     LlmModelClass,
@@ -14,6 +15,7 @@ from openqilin.llm_gateway.schemas.requests import (
 )
 from openqilin.llm_gateway.schemas.responses import LlmGatewayResponse
 from openqilin.llm_gateway.service import LlmGatewayService
+from openqilin.shared_kernel.config import RuntimeSettings
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,8 +55,13 @@ class LlmDispatchAdapter(Protocol):
 class LlmGatewayDispatchAdapter:
     """Adapter that forwards dispatch payloads into llm_gateway service."""
 
-    def __init__(self, llm_gateway_service: LlmGatewayService) -> None:
+    def __init__(
+        self,
+        llm_gateway_service: LlmGatewayService,
+        settings: RuntimeSettings | None = None,
+    ) -> None:
         self._llm_gateway_service = llm_gateway_service
+        self._settings = settings or RuntimeSettings()
 
     def dispatch(self, payload: LlmDispatchRequest) -> LlmDispatchReceipt:
         """Dispatch llm task and map gateway decision to dispatch receipt."""
@@ -70,17 +77,19 @@ class LlmGatewayDispatchAdapter:
             task_id=payload.task_id,
             skill_id=None,
             model_class=model_class,
-            routing_profile="dev_gemini_free",
+            routing_profile=self._settings.llm_default_routing_profile,
             messages_or_prompt=self._build_prompt(payload),
             max_tokens=128,
             temperature=0.2,
             budget_context=LlmBudgetContext(
                 currency_cap_usd=None,
-                quota_request_cap=1_000,
-                quota_token_cap=100_000,
-                allocation_mode="hybrid",
-                project_share_ratio=0.1,
-                effective_budget_window="daily",
+                quota_request_cap=self._settings.llm_default_quota_request_cap,
+                quota_token_cap=self._settings.llm_default_quota_token_cap,
+                allocation_mode=_normalize_allocation_mode(
+                    self._settings.llm_default_allocation_mode
+                ),
+                project_share_ratio=self._settings.llm_default_project_share_ratio,
+                effective_budget_window=self._settings.llm_default_budget_window,
             ),
             policy_context=LlmPolicyContext(
                 policy_version=payload.policy_version,
@@ -111,3 +120,10 @@ class LlmGatewayDispatchAdapter:
         if args:
             return f"{payload.command}: {args}"
         return payload.command
+
+
+def _normalize_allocation_mode(value: str) -> AllocationMode:
+    normalized = value.strip().lower()
+    if normalized in {"absolute", "ratio", "hybrid"}:
+        return cast(AllocationMode, normalized)
+    return "hybrid"

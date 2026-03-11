@@ -1,5 +1,5 @@
-from openqilin.retrieval_runtime.models import RetrievalQueryRequest
-from openqilin.retrieval_runtime.service import build_retrieval_query_service
+from openqilin.retrieval_runtime.models import RetrievalArtifactHit, RetrievalQueryRequest
+from openqilin.retrieval_runtime.service import RetrievalQueryService, build_retrieval_query_service
 
 
 def test_retrieval_query_returns_scoped_hits() -> None:
@@ -50,3 +50,24 @@ def test_retrieval_query_applies_project_scope_even_on_common_terms() -> None:
     assert result.decision == "ok"
     assert result.hits
     assert {hit.project_id for hit in result.hits} == {"project_2"}
+
+
+class _UnexpectedReadModel:
+    def search(self, request: RetrievalQueryRequest) -> tuple[RetrievalArtifactHit, ...]:
+        raise RuntimeError(f"unexpected failure for {request.project_id}")
+
+
+def test_retrieval_query_fail_closed_on_unexpected_runtime_error() -> None:
+    service = RetrievalQueryService(read_model=_UnexpectedReadModel())
+
+    result = service.search_project_artifacts(
+        RetrievalQueryRequest(
+            project_id="project_1",
+            query="status",
+            limit=3,
+        )
+    )
+
+    assert result.decision == "denied"
+    assert result.error_code == "retrieval_runtime_unexpected_fail_closed"
+    assert result.retryable is False

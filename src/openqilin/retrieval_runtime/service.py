@@ -48,6 +48,14 @@ class RetrievalQueryService:
                 message="retrieval runtime unavailable; query denied fail-closed",
                 retryable=True,
             )
+        except Exception:
+            return RetrievalQueryResult(
+                decision="denied",
+                hits=(),
+                error_code="retrieval_runtime_unexpected_fail_closed",
+                message="unexpected retrieval runtime failure; query denied fail-closed",
+                retryable=False,
+            )
         return RetrievalQueryResult(
             decision="ok",
             hits=hits,

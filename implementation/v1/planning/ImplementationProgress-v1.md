@@ -33,6 +33,7 @@ Status values:
 - Week of `2026-03-11`: complete `M2-WP1` by replacing sandbox dispatch stub wiring with sandbox adapter boundary and fail-closed adapter exception mapping.
 - Week of `2026-03-11`: complete `M2-WP2` by wiring LiteLLM gateway routing/fallback and normalized usage-cost-quota metadata through governed `llm` dispatch.
 - Week of `2026-03-11`: complete `M2-WP3` by wiring retrieval runtime boundary and scoped artifact-search query contract with deterministic fail-closed behavior.
+- Week of `2026-03-11`: complete M2 top-3 review remediation by enforcing query identity/scope/policy gates, hardening retrieval unexpected-failure fail-closed behavior, and moving llm dispatch routing/budget defaults to runtime settings.
 
 ## 4. Milestone Ledger
 | Milestone | Status | Completion % | Active Features | Blockers | Evidence Links | Last Updated |
@@ -81,6 +82,8 @@ Status values:
 - `2026-03-11`: `M2-WP2` validation completed on branch `feat/6-m2-execution-targets-kickoff` (`uv run ruff check .`, `uv run mypy .`, `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` => `71 passed`).
 - `2026-03-11`: `M2-WP3` delivered in code: retrieval runtime boundary (`RetrievalQueryService`) and in-memory artifact search read model were implemented, and control-plane query contract endpoint `POST /v1/projects/{project_id}/artifacts/search` was added with deterministic project-scope filtering plus fail-closed deny semantics on retrieval runtime uncertainty.
 - `2026-03-11`: `M2-WP3` validation completed on branch `feat/6-m2-execution-targets-kickoff` (`uv run ruff check .`, `uv run mypy .`, `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` => `78 passed`).
+- `2026-03-11`: M2 post-review top-3 remediation delivered in code: query contract endpoint now requires resolved principal headers plus explicit project scope and policy-runtime allow path before retrieval execution; retrieval service now fail-closes on unexpected runtime exceptions; llm dispatch adapter now takes routing/quota/allocation defaults from runtime settings instead of hardcoded values.
+- `2026-03-11`: M2 remediation validation completed (`uv run ruff check .`, `uv run mypy .`, `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` => `82 passed`).
 
 ## 6. Sample Progress Update Entry
 Use this shape when recording weekly or PR-linked evidence:
