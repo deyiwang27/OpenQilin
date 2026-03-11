@@ -138,7 +138,7 @@ def test_governed_ingress_fail_closed_on_dispatch_reject() -> None:
     before_span_count = len(services.tracer.get_spans())
     before_metric_value = services.metric_recorder.get_counter_value(
         "owner_command_admission_outcomes_total",
-        labels={"outcome": "denied", "source": "dispatch_stub"},
+        labels={"outcome": "denied", "source": "dispatch_sandbox_adapter"},
     )
     payload = build_owner_command_request_dict(
         action="dispatch_reject",
@@ -157,11 +157,11 @@ def test_governed_ingress_fail_closed_on_dispatch_reject() -> None:
     assert response.status_code == 403
     assert body["status"] == "denied"
     assert body["error"]["code"] == "execution_dispatch_failed"
-    assert body["error"]["details"]["source"] == "dispatch_stub"
+    assert body["error"]["details"]["source"] == "dispatch_sandbox_adapter"
 
     after_metric_value = services.metric_recorder.get_counter_value(
         "owner_command_admission_outcomes_total",
-        labels={"outcome": "denied", "source": "dispatch_stub"},
+        labels={"outcome": "denied", "source": "dispatch_sandbox_adapter"},
     )
     assert after_metric_value == before_metric_value + 1
 

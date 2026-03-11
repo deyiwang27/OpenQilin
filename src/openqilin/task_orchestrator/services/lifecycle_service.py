@@ -41,13 +41,14 @@ class TaskLifecycleService:
         error_code: str | None,
         message: str,
         dispatch_target: str,
+        outcome_source: str = "dispatch_sandbox_adapter",
     ) -> TaskRecord | None:
         """Mark task as blocked due to dispatch boundary failure."""
 
         return self._runtime_state_repo.update_task_status(
             task_id,
             "blocked",
-            outcome_source="dispatch_stub",
+            outcome_source=outcome_source,
             outcome_error_code=error_code,
             outcome_message=message,
             dispatch_target=dispatch_target,

@@ -15,10 +15,12 @@ from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
 from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
 from openqilin.observability.tracing.tracer import InMemoryTracer
 from openqilin.policy_runtime_integration.client import InMemoryPolicyRuntimeClient
-from openqilin.task_orchestrator.dispatch.sandbox_dispatch import SandboxDispatchStub
 from openqilin.task_orchestrator.admission.service import AdmissionService
 from openqilin.task_orchestrator.services.lifecycle_service import TaskLifecycleService
-from openqilin.task_orchestrator.services.task_service import TaskDispatchService
+from openqilin.task_orchestrator.services.task_service import (
+    TaskDispatchService,
+    build_task_dispatch_service,
+)
 
 
 @dataclass(slots=True)
@@ -51,10 +53,7 @@ def build_runtime_services() -> RuntimeServices:
     budget_runtime_client = InMemoryBudgetRuntimeClient()
     budget_reservation_service = BudgetReservationService(client=budget_runtime_client)
     lifecycle_service = TaskLifecycleService(runtime_state_repo=runtime_state_repo)
-    task_dispatch_service = TaskDispatchService(
-        lifecycle_service=lifecycle_service,
-        sandbox_dispatch_stub=SandboxDispatchStub(),
-    )
+    task_dispatch_service = build_task_dispatch_service(lifecycle_service=lifecycle_service)
     tracer = InMemoryTracer()
     audit_writer = InMemoryAuditWriter()
     metric_recorder = InMemoryMetricRecorder()
@@ -108,7 +107,7 @@ def get_runtime_state_repository(request: Request) -> InMemoryRuntimeStateReposi
 
 
 def get_task_dispatch_service(request: Request) -> TaskDispatchService:
-    """Provide task-dispatch service for controlled dispatch stub flow."""
+    """Provide task-dispatch service for governed execution dispatch."""
 
     return get_runtime_services(request).task_dispatch_service
 

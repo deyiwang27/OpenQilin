@@ -903,8 +903,9 @@ def submit_owner_command(
             dispatch_span.set_attribute("correlation.task_id", task_id)
             dispatch_outcome = task_dispatch_service.dispatch_admitted_task(admission_result.task)
         if not dispatch_outcome.accepted:
+            dispatch_source = dispatch_outcome.source
             details = {
-                "source": "dispatch_stub",
+                "source": dispatch_source,
                 "task_id": admission_result.task.task_id,
                 "replayed": str(dispatch_outcome.replayed).lower(),
                 "dispatch_target": dispatch_outcome.target,
@@ -917,7 +918,7 @@ def submit_owner_command(
 
             span.set_status("error")
             span.set_attribute("outcome", "denied")
-            span.set_attribute("source", "dispatch_stub")
+            span.set_attribute("source", dispatch_source)
             span.set_attribute("dispatch_target", dispatch_outcome.target)
             _emit_outcome_observability(
                 tracer=tracer,
@@ -928,7 +929,7 @@ def submit_owner_command(
                 task_id=task_id,
                 principal_id=principal_id,
                 principal_role=admission_result.task.principal_role,
-                source="dispatch_stub",
+                source=dispatch_source,
                 outcome="denied",
                 error_code=dispatch_outcome.error_code or "execution_dispatch_failed",
                 message=dispatch_outcome.message,
