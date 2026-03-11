@@ -43,8 +43,12 @@ from openqilin.task_orchestrator.admission.service import (
     AdmissionIdempotencyError,
     AdmissionService,
 )
+from openqilin.task_orchestrator.dispatch.target_selector import select_dispatch_target
 from openqilin.task_orchestrator.services.task_service import TaskDispatchService
-from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
+from openqilin.data_access.repositories.runtime_state import (
+    InMemoryRuntimeStateRepository,
+    TaskRecord,
+)
 
 router = APIRouter(prefix="/v1/owner/commands", tags=["owner_commands"])
 
@@ -98,6 +102,39 @@ def _emit_outcome_observability(
     )
 
 
+def _emit_replay_observability(
+    *,
+    audit_writer: InMemoryAuditWriter,
+    metric_recorder: InMemoryMetricRecorder,
+    task: TaskRecord,
+    outcome: str,
+    source: str,
+    message: str,
+) -> None:
+    """Record replay access without re-emitting stage decision events."""
+
+    metric_recorder.increment_counter(
+        "owner_command_replays_total",
+        labels={"outcome": outcome, "source": source},
+    )
+    audit_writer.write_event(
+        event_type="owner_command.replayed",
+        outcome=outcome,
+        trace_id=task.trace_id,
+        request_id=task.request_id,
+        task_id=task.task_id,
+        principal_id=task.principal_id,
+        source=source,
+        reason_code=task.outcome_error_code,
+        message=message,
+        attributes={
+            "replayed": "true",
+            "status": task.status,
+            "dispatch_target": task.dispatch_target or "unknown",
+        },
+    )
+
+
 def _emit_stage_decision_audit(
     *,
     audit_writer: InMemoryAuditWriter,
@@ -125,6 +162,45 @@ def _emit_stage_decision_audit(
         reason_code=reason_code,
         message=message,
         attributes=attributes,
+    )
+
+
+def _replayed_response(task: TaskRecord) -> OwnerCommandAcceptedResponse | JSONResponse:
+    """Reconstruct deterministic response from previously processed task state."""
+
+    if task.status == "dispatched":
+        dispatch_target = task.dispatch_target or select_dispatch_target(task)
+        dispatch_id = task.dispatch_id or "dispatch-id-missing"
+        return OwnerCommandAcceptedResponse(
+            task_id=task.task_id,
+            replayed=True,
+            request_id=task.request_id,
+            trace_id=task.trace_id,
+            principal_id=task.principal_id,
+            connector=task.connector,
+            command=task.command,
+            accepted_args=list(task.args),
+            dispatch_target=dispatch_target,
+            dispatch_id=dispatch_id,
+        )
+
+    source = task.outcome_source or "governance"
+    error_code = task.outcome_error_code or "governance_blocked"
+    message = task.outcome_message or "task replay resolved to prior blocked outcome"
+    details = {
+        "source": source,
+        "task_id": task.task_id,
+        "replayed": "true",
+    }
+    if task.dispatch_target is not None:
+        details["dispatch_target"] = task.dispatch_target
+    if task.outcome_error_code is not None:
+        details["reason_code"] = task.outcome_error_code
+    return _blocked_response(
+        error_code=error_code,
+        message=message,
+        details=details,
+        status_code=status.HTTP_403_FORBIDDEN,
     )
 
 
@@ -249,8 +325,30 @@ def submit_owner_command(
         task_id = admission_result.task.task_id
         request_id = admission_result.task.request_id
         principal_id = admission_result.task.principal_id
+        trace_id = admission_result.task.trace_id
+        span.set_attribute("correlation.trace_id", trace_id)
         span.set_attribute("correlation.task_id", task_id)
         span.set_attribute("replayed", str(admission_result.replayed).lower())
+        if admission_result.replayed and admission_result.task.status != "admitted":
+            replay_outcome = (
+                "accepted" if admission_result.task.status == "dispatched" else "blocked"
+            )
+            replay_source = admission_result.task.outcome_source or "governance"
+            replay_message = (
+                admission_result.task.outcome_message
+                or "replayed owner command resolved from prior task outcome"
+            )
+            span.set_attribute("outcome", replay_outcome)
+            span.set_attribute("source", replay_source)
+            _emit_replay_observability(
+                audit_writer=audit_writer,
+                metric_recorder=metric_recorder,
+                task=admission_result.task,
+                outcome=replay_outcome,
+                source=replay_source,
+                message=replay_message,
+            )
+            return _replayed_response(admission_result.task)
 
         policy_input = normalize_policy_input(admission_result.task)
         policy_outcome = evaluate_with_fail_closed(policy_input, policy_runtime_client)
@@ -296,7 +394,13 @@ def submit_owner_command(
                 details["reason_code"] = policy_outcome.policy_result.reason_code
                 details["policy_version"] = policy_outcome.policy_result.policy_version
 
-            runtime_state_repo.update_task_status(admission_result.task.task_id, "blocked_policy")
+            runtime_state_repo.update_task_status(
+                admission_result.task.task_id,
+                "blocked_policy",
+                outcome_source="policy_runtime",
+                outcome_error_code=policy_outcome.error_code or "policy_blocked",
+                outcome_message=policy_outcome.message,
+            )
             span.set_status("error")
             span.set_attribute("outcome", "blocked")
             span.set_attribute("source", "policy_runtime")
@@ -365,7 +469,13 @@ def submit_owner_command(
                 if budget_outcome.reservation.remaining_units is not None:
                     details["remaining_units"] = str(budget_outcome.reservation.remaining_units)
 
-            runtime_state_repo.update_task_status(admission_result.task.task_id, "blocked_budget")
+            runtime_state_repo.update_task_status(
+                admission_result.task.task_id,
+                "blocked_budget",
+                outcome_source="budget_runtime",
+                outcome_error_code=budget_outcome.error_code or "budget_blocked",
+                outcome_message=budget_outcome.message,
+            )
             span.set_status("error")
             span.set_attribute("outcome", "blocked")
             span.set_attribute("source", "budget_runtime")

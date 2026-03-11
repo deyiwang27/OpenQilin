@@ -24,6 +24,11 @@ class TaskRecord:
     idempotency_key: str
     status: str
     created_at: datetime
+    outcome_source: str | None = None
+    outcome_error_code: str | None = None
+    outcome_message: str | None = None
+    dispatch_target: str | None = None
+    dispatch_id: str | None = None
 
 
 class InMemoryRuntimeStateRepository:
@@ -70,12 +75,36 @@ class InMemoryRuntimeStateRepository:
             return None
         return self._task_by_id.get(task_id)
 
-    def update_task_status(self, task_id: str, status: str) -> TaskRecord | None:
+    def update_task_status(
+        self,
+        task_id: str,
+        status: str,
+        *,
+        outcome_source: str | None = None,
+        outcome_error_code: str | None = None,
+        outcome_message: str | None = None,
+        dispatch_target: str | None = None,
+        dispatch_id: str | None = None,
+    ) -> TaskRecord | None:
         """Update persisted task status for downstream decision consistency."""
 
         task = self._task_by_id.get(task_id)
         if task is None:
             return None
-        updated = replace(task, status=status)
+        updated = replace(
+            task,
+            status=status,
+            outcome_source=outcome_source if outcome_source is not None else task.outcome_source,
+            outcome_error_code=(
+                outcome_error_code if outcome_error_code is not None else task.outcome_error_code
+            ),
+            outcome_message=outcome_message
+            if outcome_message is not None
+            else task.outcome_message,
+            dispatch_target=dispatch_target
+            if dispatch_target is not None
+            else task.dispatch_target,
+            dispatch_id=dispatch_id if dispatch_id is not None else task.dispatch_id,
+        )
         self._task_by_id[task_id] = updated
         return updated

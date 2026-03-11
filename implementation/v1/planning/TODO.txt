@@ -77,6 +77,11 @@ Checklist:
 - evidence: `uv run ruff format --check .`
 - evidence: `uv run mypy .`
 - evidence doc: `implementation/v1/planning/M1EvidencePack-v1.md`
+- `M1 post-review flaw remediation`: replay determinism + live smoke default + workflow doc alignment - `done`
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
+- evidence: `uv run ruff check .`
+- evidence: `uv run ruff format --check .`
+- evidence: `uv run mypy .`
 
 2) M2 execution targets prep - `todo`
 - sandbox adapter wiring plan

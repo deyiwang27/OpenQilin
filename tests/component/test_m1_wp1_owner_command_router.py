@@ -85,7 +85,8 @@ def test_submit_owner_command_blocks_blank_command() -> None:
 
 
 def test_submit_owner_command_replay_returns_same_task() -> None:
-    client = TestClient(create_control_plane_app())
+    app = create_control_plane_app()
+    client = TestClient(app)
 
     headers = {
         "X-OpenQilin-User-Id": "owner_999",
@@ -110,6 +111,55 @@ def test_submit_owner_command_replay_returns_same_task() -> None:
     assert first_body["request_id"] == second_body["request_id"]
     assert first_body["dispatch_target"] == second_body["dispatch_target"]
     assert first_body["dispatch_id"] == second_body["dispatch_id"]
+    events = app.state.runtime_services.audit_writer.get_events()
+    assert [event.event_type for event in events] == [
+        "policy.decision",
+        "budget.decision",
+        "owner_command.accepted",
+        "owner_command.replayed",
+    ]
+
+
+def test_submit_owner_command_replay_returns_prior_block_without_re_evaluation() -> None:
+    app = create_control_plane_app()
+    client = TestClient(app)
+    headers = {
+        "X-OpenQilin-User-Id": "owner_replay_block",
+        "X-OpenQilin-Connector": "discord",
+        "X-OpenQilin-Trace-Id": "trace-replay-block-first",
+    }
+    payload = {
+        "command": "policy_uncertain",
+        "args": ["alpha"],
+        "idempotency_key": "idem-replay-block-component-12345",
+    }
+
+    first = client.post("/v1/owner/commands", headers=headers, json=payload)
+    second = client.post(
+        "/v1/owner/commands",
+        headers={
+            "X-OpenQilin-User-Id": "owner_replay_block",
+            "X-OpenQilin-Connector": "discord",
+            "X-OpenQilin-Trace-Id": "trace-replay-block-second",
+        },
+        json=payload,
+    )
+
+    first_body = first.json()
+    second_body = second.json()
+    assert first.status_code == 403
+    assert second.status_code == 403
+    assert first_body["error_code"] == "policy_uncertain_fail_closed"
+    assert second_body["error_code"] == "policy_uncertain_fail_closed"
+    assert first_body["details"]["task_id"] == second_body["details"]["task_id"]
+    assert second_body["details"]["replayed"] == "true"
+
+    events = app.state.runtime_services.audit_writer.get_events()
+    assert [event.event_type for event in events] == [
+        "policy.decision",
+        "owner_command.blocked",
+        "owner_command.replayed",
+    ]
 
 
 def test_submit_owner_command_blocks_idempotency_key_conflict() -> None:

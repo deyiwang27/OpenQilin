@@ -66,17 +66,28 @@ class TaskDispatchService:
                 )
             )
             if receipt.accepted:
-                self._lifecycle_service.mark_dispatched(task.task_id)
+                dispatch_id = receipt.dispatch_id or f"sandbox-{uuid4()}"
+                self._lifecycle_service.mark_dispatched(
+                    task.task_id,
+                    dispatch_target=target,
+                    dispatch_id=dispatch_id,
+                    message=receipt.message,
+                )
                 outcome = TaskDispatchOutcome(
                     accepted=True,
                     target=target,
-                    dispatch_id=receipt.dispatch_id,
+                    dispatch_id=dispatch_id,
                     error_code=None,
                     message=receipt.message,
                     replayed=False,
                 )
             else:
-                self._lifecycle_service.mark_blocked_dispatch(task.task_id)
+                self._lifecycle_service.mark_blocked_dispatch(
+                    task.task_id,
+                    error_code=receipt.error_code,
+                    message=receipt.message,
+                    dispatch_target=target,
+                )
                 outcome = TaskDispatchOutcome(
                     accepted=False,
                     target=target,
@@ -87,13 +98,20 @@ class TaskDispatchService:
                 )
         else:
             # M1 keeps non-sandbox execution targets as controlled stubs.
-            self._lifecycle_service.mark_dispatched(task.task_id)
+            dispatch_id = f"{target}-{uuid4()}"
+            message = f"{target} dispatch stub accepted"
+            self._lifecycle_service.mark_dispatched(
+                task.task_id,
+                dispatch_target=target,
+                dispatch_id=dispatch_id,
+                message=message,
+            )
             outcome = TaskDispatchOutcome(
                 accepted=True,
                 target=target,
-                dispatch_id=f"{target}-{uuid4()}",
+                dispatch_id=dispatch_id,
                 error_code=None,
-                message=f"{target} dispatch stub accepted",
+                message=message,
                 replayed=False,
             )
 

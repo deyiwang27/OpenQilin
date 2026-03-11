@@ -68,6 +68,43 @@ def test_governed_ingress_replay_is_deterministic() -> None:
     assert first_body["dispatch_id"] == second_body["dispatch_id"]
 
 
+def test_governed_ingress_blocked_replay_is_deterministic() -> None:
+    client = TestClient(app)
+    payload = {
+        "command": "policy_uncertain",
+        "args": ["arg_1"],
+        "idempotency_key": "idem-integration-replay-blocked-12345",
+    }
+
+    first = client.post(
+        "/v1/owner/commands",
+        headers={
+            "X-OpenQilin-User-Id": "owner_integ_replay_blocked",
+            "X-OpenQilin-Connector": "discord",
+            "X-OpenQilin-Trace-Id": "trace-integration-blocked-first",
+        },
+        json=payload,
+    )
+    second = client.post(
+        "/v1/owner/commands",
+        headers={
+            "X-OpenQilin-User-Id": "owner_integ_replay_blocked",
+            "X-OpenQilin-Connector": "discord",
+            "X-OpenQilin-Trace-Id": "trace-integration-blocked-second",
+        },
+        json=payload,
+    )
+
+    first_body = first.json()
+    second_body = second.json()
+    assert first.status_code == 403
+    assert second.status_code == 403
+    assert first_body["error_code"] == "policy_uncertain_fail_closed"
+    assert second_body["error_code"] == "policy_uncertain_fail_closed"
+    assert first_body["details"]["task_id"] == second_body["details"]["task_id"]
+    assert second_body["details"]["replayed"] == "true"
+
+
 def test_governed_ingress_fail_closed_on_policy_runtime_error() -> None:
     client = TestClient(app)
 

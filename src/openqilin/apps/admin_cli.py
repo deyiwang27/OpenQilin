@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
 
+import httpx
 import typer
 from alembic import command
 from alembic.config import Config
@@ -24,6 +25,7 @@ from openqilin.shared_kernel.config import RuntimeSettings
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_ALEMBIC_INI = PROJECT_ROOT / "alembic.ini"
 OWNER_COMMAND_ROUTE = "/v1/owner/commands"
+DEFAULT_API_BASE_URL = "http://127.0.0.1:8000"
 
 app = typer.Typer(help="OpenQilin administrative CLI.")
 
@@ -67,8 +69,16 @@ def run_migration_check(alembic_ini_path: Path) -> CheckResult:
     return CheckResult("migrate", True, "migrations applied to head")
 
 
-def run_smoke_check() -> CheckResult:
-    """Exercise owner-command ingress path as an operational smoke check."""
+def _smoke_payload() -> dict[str, object]:
+    return {
+        "command": "run_task",
+        "args": ["smoke"],
+        "idempotency_key": f"idem-admin-smoke-{uuid4()}",
+    }
+
+
+def run_in_process_smoke_check() -> CheckResult:
+    """Exercise owner-command ingress path in-process."""
 
     app_instance = create_app()
     if OWNER_COMMAND_ROUTE not in _route_paths(app_instance):
@@ -86,36 +96,83 @@ def run_smoke_check() -> CheckResult:
             "X-OpenQilin-Connector": "discord",
             "X-OpenQilin-Trace-Id": "trace-admin-smoke",
         },
-        json={
-            "command": "run_task",
-            "args": ["smoke"],
-            "idempotency_key": f"idem-admin-smoke-{uuid4()}",
-        },
+        json=_smoke_payload(),
     )
     if response.status_code != 202:
         return CheckResult(
-            "smoke_owner_command_ingress",
+            "smoke_owner_command_ingress_in_process",
             False,
             f"expected 202 from {OWNER_COMMAND_ROUTE}, got {response.status_code}",
         )
 
     body = response.json()
     return CheckResult(
-        "smoke_owner_command_ingress",
+        "smoke_owner_command_ingress_in_process",
         True,
         f"accepted task_id={body.get('task_id', 'missing-task-id')}",
     )
 
 
-def run_bootstrap_checks(*, skip_migrate: bool, alembic_ini_path: Path) -> list[CheckResult]:
+def run_smoke_check(*, api_base_url: str, timeout_seconds: float = 5.0) -> CheckResult:
+    """Exercise owner-command ingress path against a running API service."""
+
+    route_url = f"{api_base_url.rstrip('/')}{OWNER_COMMAND_ROUTE}"
+    try:
+        with httpx.Client(timeout=timeout_seconds) as client:
+            response = client.post(
+                route_url,
+                headers={
+                    "X-OpenQilin-User-Id": "owner_admin_smoke",
+                    "X-OpenQilin-Connector": "discord",
+                    "X-OpenQilin-Trace-Id": "trace-admin-smoke",
+                },
+                json=_smoke_payload(),
+            )
+    except Exception as error:
+        return CheckResult(
+            "smoke_owner_command_ingress_live",
+            False,
+            f"request failed for {route_url}: {error}",
+        )
+
+    if response.status_code != 202:
+        return CheckResult(
+            "smoke_owner_command_ingress_live",
+            False,
+            f"expected 202 from {route_url}, got {response.status_code}",
+        )
+
+    body = response.json()
+    return CheckResult(
+        "smoke_owner_command_ingress_live",
+        True,
+        f"accepted task_id={body.get('task_id', 'missing-task-id')}",
+    )
+
+
+def run_bootstrap_checks(
+    *,
+    skip_migrate: bool,
+    alembic_ini_path: Path,
+    smoke_api_base_url: str,
+    smoke_in_process: bool,
+) -> list[CheckResult]:
     """Run baseline bootstrap checks used by `bootstrap` command."""
 
     results: list[CheckResult] = []
     if skip_migrate:
         results.append(CheckResult("migrate", True, "migration step skipped by flag"))
     else:
-        results.append(run_migration_check(alembic_ini_path))
-    results.append(run_smoke_check())
+        migration_result = run_migration_check(alembic_ini_path)
+        results.append(migration_result)
+        if not migration_result.success:
+            return results
+    smoke_result = (
+        run_in_process_smoke_check()
+        if smoke_in_process
+        else run_smoke_check(api_base_url=smoke_api_base_url)
+    )
+    results.append(smoke_result)
     return results
 
 
@@ -203,17 +260,48 @@ def bootstrap(
         "--alembic-ini",
         help="Path to Alembic config file.",
     ),
+    smoke_api_base_url: str = typer.Option(
+        DEFAULT_API_BASE_URL,
+        "--smoke-api-base-url",
+        help="Base URL for live smoke probe (used unless --smoke-in-process is set).",
+    ),
+    smoke_in_process: bool = typer.Option(
+        False,
+        "--smoke-in-process",
+        help="Run in-process smoke check instead of live API probe.",
+    ),
 ) -> None:
     """Run baseline bootstrap and readiness checks."""
 
-    _render_and_exit(run_bootstrap_checks(skip_migrate=skip_migrate, alembic_ini_path=alembic_ini))
+    _render_and_exit(
+        run_bootstrap_checks(
+            skip_migrate=skip_migrate,
+            alembic_ini_path=alembic_ini,
+            smoke_api_base_url=smoke_api_base_url,
+            smoke_in_process=smoke_in_process,
+        )
+    )
 
 
 @app.command()
-def smoke() -> None:
+def smoke(
+    api_base_url: str = typer.Option(
+        DEFAULT_API_BASE_URL,
+        "--api-base-url",
+        help="Base URL for live smoke probe.",
+    ),
+    in_process: bool = typer.Option(
+        False,
+        "--in-process",
+        help="Run in-process smoke check instead of live API probe.",
+    ),
+) -> None:
     """Run operational smoke checks."""
 
-    _render_and_exit([run_smoke_check()])
+    result = (
+        run_in_process_smoke_check() if in_process else run_smoke_check(api_base_url=api_base_url)
+    )
+    _render_and_exit([result])
 
 
 @app.command()

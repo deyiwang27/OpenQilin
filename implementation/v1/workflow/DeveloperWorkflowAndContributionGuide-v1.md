@@ -7,7 +7,7 @@
 1. Sync dependencies with `uv sync`.
 2. Install Git hooks once per clone with `uv run pre-commit install --hook-type pre-commit --hook-type pre-push`.
 3. Bring up the authoritative local stack with Docker Compose.
-4. Run the one-shot bootstrap/readiness gate when the environment is fresh or schema changes require it (after admin bootstrap command is implemented beyond scaffold placeholder behavior).
+4. Run the one-shot bootstrap/readiness gate when the environment is fresh or schema changes require it.
 5. Run the target app or worker locally only when using a non-container developer loop; otherwise use the running Compose services.
 6. Execute the smallest relevant test slice before opening a PR.
 
@@ -15,7 +15,7 @@
 ```bash
 uv sync
 docker compose --profile full up -d
-docker compose run --rm admin bootstrap
+docker compose run --rm admin bootstrap --smoke-in-process
 docker compose ps
 uv run pytest tests/unit tests/component
 uv run ruff check .
@@ -23,8 +23,8 @@ uv run ruff format --check .
 uv run mypy .
 ```
 
-Current scaffold note:
-- `openqilin.apps.admin_cli` command handlers (`migrate`, `bootstrap`, `smoke`, `diagnostics`) are placeholders and must be implemented before treating bootstrap/smoke results as production-like readiness evidence.
+Current command behavior note:
+- `openqilin.apps.admin_cli smoke` probes a running API service by default (`--api-base-url`), and supports `--in-process` for local contract self-checks.
 
 Optional non-container app loop after dependencies are available:
 ```bash
