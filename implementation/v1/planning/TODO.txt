@@ -20,6 +20,11 @@ Current focus:
 - Active branch: `feat/4-m1-governed-path-kickoff`
 
 Checklist:
+0) Repo structure and documentation consistency review (post-migration) - `done`
+- stale path references removed
+- implementation tracker consolidated under `implementation/v1/planning/`
+- workflow docs aligned with current scaffold limitations
+
 1) M1 governed path kickoff (`issue #4`) - `in_progress`
 - ingress envelope validation shell
 - task admission shell
@@ -28,6 +33,7 @@ Checklist:
 - dispatch stub path
 - audit + trace emission path
 - fail-closed path tests for policy/budget uncertainty
+- admin CLI command implementation for `migrate`, `bootstrap`, `smoke`, and `diagnostics` (currently scaffold placeholders)
 
 2) M2 execution targets prep - `todo`
 - sandbox adapter wiring plan

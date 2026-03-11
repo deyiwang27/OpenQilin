@@ -18,14 +18,14 @@ Status values:
 - `completed`
 
 ## 3. Current Sprint/Week Focus
-- Week of `2026-03-11`: finalize M0 baseline and policy consistency pass after full-repo audit.
-- Week of `2026-03-11`: start M1 governed-path implementation on issue `#4`.
+- Week of `2026-03-11`: maintain M0 baseline stability and repo consistency while advancing M1.
+- Week of `2026-03-11`: execute M1 governed-path implementation on issue `#4`, including admin CLI bootstrap/smoke/diagnostics command implementation.
 
 ## 4. Milestone Ledger
 | Milestone | Status | Completion % | Active Features | Blockers | Evidence Links | Last Updated |
 | --- | --- | --- | --- | --- | --- | --- |
 | `M0 Foundation Scaffold` | `completed` | `100%` | `uv project + lock`, `compose baseline`, `CI workflow`, `migration scaffold`, `test scaffold`, `env template` | `N/A` | `branch: feat/4-m1-governed-path-kickoff`, `Issue: https://github.com/deyiwang27/OpenQilin/issues/4` | `2026-03-11` |
-| `M1 First Executable Slice` | `in_progress` | `10%` | `issue definition and workflow hardening`, `implementation branch active` | `N/A` | `Issue: https://github.com/deyiwang27/OpenQilin/issues/4` | `2026-03-11` |
+| `M1 First Executable Slice` | `in_progress` | `10%` | `issue definition and workflow hardening`, `implementation branch active`, `admin CLI scaffold gap captured` | `admin bootstrap/smoke/diagnostics behavior still placeholder` | `Issue: https://github.com/deyiwang27/OpenQilin/issues/4` | `2026-03-11` |
 | `M2 Execution Targets` | `not_started` | `0%` | `N/A` | `depends on M1 exit` | `N/A` | `2026-03-11` |
 | `M3 Communication Reliability` | `not_started` | `0%` | `N/A` | `depends on M1 + M2 stability` | `N/A` | `2026-03-11` |
 | `M4 Hardening and Release Readiness` | `not_started` | `0%` | `N/A` | `depends on M2 + M3 end-to-end evidence` | `N/A` | `2026-03-11` |
@@ -43,6 +43,8 @@ Status values:
 - `2026-03-11`: GitHub protection-policy fallback documented for repositories without branch-protection feature support.
 - `2026-03-11`: second full-repo review pass completed; tracker-authority wording aligned and baseline validation checks (`ruff`, `mypy`, `pytest`) re-confirmed.
 - `2026-03-11`: implementation-stage working checklist added at `implementation/v1/planning/TODO.txt`; design/spec TODO files marked archived.
+- `2026-03-11`: latest full-repo audit confirms reference/link consistency after structure migration; known scaffold gap recorded (`admin_cli` commands still placeholder).
+- `2026-03-11`: overall repo review pass completed (conflict/redundancy/structure/readiness); baseline checks re-confirmed (`ruff`, `mypy`, `pytest`) while Docker-dependent validation is intentionally deferred.
 
 ## 6. Sample Progress Update Entry
 Use this shape when recording weekly or PR-linked evidence:

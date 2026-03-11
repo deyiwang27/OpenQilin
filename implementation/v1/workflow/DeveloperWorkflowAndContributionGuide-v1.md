@@ -6,7 +6,7 @@
 ## 2. Daily Workflow
 1. Sync dependencies with `uv sync`.
 2. Bring up the authoritative local stack with Docker Compose.
-3. Run the one-shot bootstrap/readiness gate when the environment is fresh or schema changes require it.
+3. Run the one-shot bootstrap/readiness gate when the environment is fresh or schema changes require it (after admin bootstrap command is implemented beyond scaffold placeholder behavior).
 4. Run the target app or worker locally only when using a non-container developer loop; otherwise use the running Compose services.
 5. Execute the smallest relevant test slice before opening a PR.
 
@@ -20,6 +20,9 @@ uv run pytest tests/unit tests/component
 uv run ruff check .
 uv run mypy .
 ```
+
+Current scaffold note:
+- `openqilin.apps.admin_cli` command handlers (`migrate`, `bootstrap`, `smoke`, `diagnostics`) are placeholders and must be implemented before treating bootstrap/smoke results as production-like readiness evidence.
 
 Optional non-container app loop after dependencies are available:
 ```bash
