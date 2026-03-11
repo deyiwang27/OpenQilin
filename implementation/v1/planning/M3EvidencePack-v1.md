@@ -51,4 +51,5 @@ Primary issue: `#13` (`M3: Communication Reliability Kickoff`)
 - `M3-WP2` issue + evidence: https://github.com/deyiwang27/OpenQilin/issues/15, https://github.com/deyiwang27/OpenQilin/issues/15#issuecomment-4042681776
 - `M3-WP3` issue + evidence: https://github.com/deyiwang27/OpenQilin/issues/16, https://github.com/deyiwang27/OpenQilin/issues/16#issuecomment-4042744335
 - `M3-WP4` issue + evidence: https://github.com/deyiwang27/OpenQilin/issues/17, https://github.com/deyiwang27/OpenQilin/issues/17#issuecomment-4042798885
-- `M3-WP5` issue + evidence: https://github.com/deyiwang27/OpenQilin/issues/18
+- `M3-WP5` issue + evidence: https://github.com/deyiwang27/OpenQilin/issues/18, https://github.com/deyiwang27/OpenQilin/issues/18#issuecomment-4042874734
+- Parent progress update for WP5: https://github.com/deyiwang27/OpenQilin/issues/13#issuecomment-4042876018

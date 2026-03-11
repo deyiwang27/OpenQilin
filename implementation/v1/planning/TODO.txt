@@ -154,6 +154,7 @@ Checklist:
 - evidence: `uv run ruff check .`
 - evidence: `uv run mypy .`
 - evidence doc: `implementation/v1/planning/M3EvidencePack-v1.md`
+- issue closeout: `#18` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/18#issuecomment-4042874734`) and issue closed - `done`
 
 4) M4 hardening prep - `todo`
 - release-gate checklist draft
