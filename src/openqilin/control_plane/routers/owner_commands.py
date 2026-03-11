@@ -943,9 +943,12 @@ def submit_owner_command(
                 rule_ids=rule_ids,
                 attributes={"dispatch_target": dispatch_outcome.target},
             )
-            source_component = (
-                "llm_gateway" if dispatch_source == "dispatch_llm_gateway" else "sandbox"
-            )
+            if dispatch_source == "dispatch_llm_gateway":
+                source_component = "llm_gateway"
+            elif dispatch_source.startswith("dispatch_communication"):
+                source_component = "communication_gateway"
+            else:
+                source_component = "sandbox"
             return _denied_response(
                 status_code=status.HTTP_403_FORBIDDEN,
                 trace_id=trace_id,

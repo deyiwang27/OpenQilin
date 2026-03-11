@@ -13,6 +13,11 @@ from openqilin.task_orchestrator.dispatch.llm_dispatch import (
     LlmDispatchRequest,
     LlmGatewayDispatchAdapter,
 )
+from openqilin.task_orchestrator.dispatch.communication_dispatch import (
+    CommunicationDispatchAdapter,
+    CommunicationDispatchRequest,
+    InMemoryCommunicationDispatchAdapter,
+)
 from openqilin.task_orchestrator.dispatch.sandbox_dispatch import (
     InMemorySandboxExecutionAdapter,
     SandboxDispatchRequest,
@@ -66,10 +71,14 @@ class TaskDispatchService:
         lifecycle_service: TaskLifecycleService,
         sandbox_execution_adapter: SandboxExecutionAdapter,
         llm_dispatch_adapter: LlmDispatchAdapter,
+        communication_dispatch_adapter: CommunicationDispatchAdapter | None = None,
     ) -> None:
         self._lifecycle_service = lifecycle_service
         self._sandbox_execution_adapter = sandbox_execution_adapter
         self._llm_dispatch_adapter = llm_dispatch_adapter
+        self._communication_dispatch_adapter = (
+            communication_dispatch_adapter or InMemoryCommunicationDispatchAdapter()
+        )
         self._task_outcomes: dict[str, TaskDispatchOutcome] = {}
 
     def dispatch_admitted_task(
@@ -234,8 +243,81 @@ class TaskDispatchService:
                     source="dispatch_llm_gateway",
                     llm_metadata=_extract_llm_metadata(llm_receipt.gateway_response),
                 )
+        elif target == "communication":
+            try:
+                communication_receipt = self._communication_dispatch_adapter.dispatch(
+                    CommunicationDispatchRequest(
+                        task_id=task.task_id,
+                        trace_id=task.trace_id,
+                        principal_id=task.principal_id,
+                        connector=task.connector,
+                        command=task.command,
+                        target=task.target,
+                        args=task.args,
+                        idempotency_key=task.idempotency_key,
+                        project_id=task.project_id,
+                        created_at=task.created_at,
+                        metadata=task.metadata,
+                    )
+                )
+            except Exception:
+                self._lifecycle_service.mark_blocked_dispatch(
+                    task.task_id,
+                    error_code="communication_dispatch_adapter_error",
+                    message="communication adapter execution failed",
+                    dispatch_target=target,
+                    outcome_source="dispatch_communication_gateway",
+                )
+                outcome = TaskDispatchOutcome(
+                    accepted=False,
+                    target=target,
+                    dispatch_id=None,
+                    error_code="communication_dispatch_adapter_error",
+                    message="communication adapter execution failed",
+                    replayed=False,
+                    source="dispatch_communication_gateway",
+                    llm_metadata=None,
+                )
+                self._task_outcomes[task.task_id] = outcome
+                return outcome
+            if communication_receipt.accepted:
+                dispatch_id = communication_receipt.dispatch_id or f"communication-{uuid4()}"
+                self._lifecycle_service.mark_dispatched(
+                    task.task_id,
+                    dispatch_target=target,
+                    dispatch_id=dispatch_id,
+                    message=communication_receipt.message,
+                )
+                outcome = TaskDispatchOutcome(
+                    accepted=True,
+                    target=target,
+                    dispatch_id=dispatch_id,
+                    error_code=None,
+                    message=communication_receipt.message,
+                    replayed=False,
+                    source="dispatch_communication_gateway",
+                    llm_metadata=None,
+                )
+            else:
+                self._lifecycle_service.mark_blocked_dispatch(
+                    task.task_id,
+                    error_code=communication_receipt.error_code or "communication_dispatch_failed",
+                    message=communication_receipt.message,
+                    dispatch_target=target,
+                    outcome_source="dispatch_communication_gateway",
+                )
+                outcome = TaskDispatchOutcome(
+                    accepted=False,
+                    target=target,
+                    dispatch_id=None,
+                    error_code=communication_receipt.error_code or "communication_dispatch_failed",
+                    message=communication_receipt.message,
+                    replayed=False,
+                    source="dispatch_communication_gateway",
+                    llm_metadata=None,
+                )
         else:
-            # Communication target remains controlled stub in M2-WP2 scope.
+            # Fallback is retained for forward-compatible targets not yet modeled.
             dispatch_id = f"{target}-{uuid4()}"
             message = f"{target} dispatch stub accepted"
             self._lifecycle_service.mark_dispatched(
@@ -268,6 +350,7 @@ def build_task_dispatch_service(lifecycle_service: TaskLifecycleService) -> Task
         llm_dispatch_adapter=LlmGatewayDispatchAdapter(
             llm_gateway_service=build_llm_gateway_service(),
         ),
+        communication_dispatch_adapter=InMemoryCommunicationDispatchAdapter(),
     )
 
 

@@ -58,6 +58,53 @@ def test_governed_ingress_llm_accept_includes_usage_cost_metadata() -> None:
     assert body["data"]["llm_execution"]["cost"]["estimated_cost_usd"] >= 0
 
 
+def test_governed_ingress_accepts_communication_target() -> None:
+    client = TestClient(app)
+    payload = build_owner_command_request_dict(
+        action="msg_notify",
+        args=["agent_99"],
+        actor_id="owner_communication_integ_001",
+        idempotency_key="idem-integration-communication-accept-12345",
+        target="communication",
+    )
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers=build_owner_command_headers(payload),
+        json=payload,
+    )
+
+    body = response.json()
+    assert response.status_code == 202
+    assert body["status"] == "accepted"
+    assert body["data"]["dispatch_target"] == "communication"
+    assert body["data"]["dispatch_id"]
+
+
+def test_governed_ingress_fail_closed_on_communication_contract_violation() -> None:
+    client = TestClient(app)
+    payload = build_owner_command_request_dict(
+        action="msg_notify",
+        args=[],
+        actor_id="owner_communication_integ_002",
+        idempotency_key="idem-integration-communication-denied-12345",
+        target="communication",
+    )
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers=build_owner_command_headers(payload),
+        json=payload,
+    )
+
+    body = response.json()
+    assert response.status_code == 403
+    assert body["status"] == "denied"
+    assert body["error"]["code"] == "a2a_missing_recipient_args"
+    assert body["error"]["details"]["source"] == "dispatch_communication_gateway"
+    assert body["error"]["source_component"] == "communication_gateway"
+
+
 def test_governed_ingress_replay_is_deterministic() -> None:
     client = TestClient(app)
     payload = build_owner_command_request_dict(
