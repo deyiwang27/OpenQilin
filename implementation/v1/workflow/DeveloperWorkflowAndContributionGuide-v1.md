@@ -5,10 +5,11 @@
 
 ## 2. Daily Workflow
 1. Sync dependencies with `uv sync`.
-2. Bring up the authoritative local stack with Docker Compose.
-3. Run the one-shot bootstrap/readiness gate when the environment is fresh or schema changes require it (after admin bootstrap command is implemented beyond scaffold placeholder behavior).
-4. Run the target app or worker locally only when using a non-container developer loop; otherwise use the running Compose services.
-5. Execute the smallest relevant test slice before opening a PR.
+2. Install Git hooks once per clone with `uv run pre-commit install --hook-type pre-commit --hook-type pre-push`.
+3. Bring up the authoritative local stack with Docker Compose.
+4. Run the one-shot bootstrap/readiness gate when the environment is fresh or schema changes require it (after admin bootstrap command is implemented beyond scaffold placeholder behavior).
+5. Run the target app or worker locally only when using a non-container developer loop; otherwise use the running Compose services.
+6. Execute the smallest relevant test slice before opening a PR.
 
 ## 3. Standard Command Loop
 ```bash
@@ -18,6 +19,7 @@ docker compose run --rm admin bootstrap
 docker compose ps
 uv run pytest tests/unit tests/component
 uv run ruff check .
+uv run ruff format --check .
 uv run mypy .
 ```
 
