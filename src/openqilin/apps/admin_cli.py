@@ -24,7 +24,11 @@ from openqilin.apps.api_app import create_app
 from openqilin.apps.communication_worker import main as communication_worker_main
 from openqilin.apps.orchestrator_worker import main as orchestrator_worker_main
 from openqilin.control_plane.identity.connector_security import sign_payload_hash
-from openqilin.data_access.db.engine import ping_database, resolve_database_url
+from openqilin.data_access.db.engine import (
+    check_pgvector_extension,
+    ping_database,
+    resolve_database_url,
+)
 from openqilin.shared_kernel.config import RuntimeSettings
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -206,10 +210,19 @@ def run_bootstrap_checks(
     results: list[CheckResult] = []
     if skip_migrate:
         results.append(CheckResult("migrate", True, "migration step skipped by flag"))
+        results.append(
+            CheckResult("pgvector_extension", True, "pgvector extension check skipped by flag")
+        )
     else:
         migration_result = run_migration_check(alembic_ini_path)
         results.append(migration_result)
         if not migration_result.success:
+            return results
+        database_url = resolve_database_url(alembic_ini_path=alembic_ini_path)
+        pgvector_ok, pgvector_message = check_pgvector_extension(database_url)
+        pgvector_result = CheckResult("pgvector_extension", pgvector_ok, pgvector_message)
+        results.append(pgvector_result)
+        if not pgvector_ok:
             return results
     smoke_result = (
         run_in_process_smoke_check()

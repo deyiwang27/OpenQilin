@@ -96,6 +96,7 @@ def test_bootstrap_command_runs_without_migration_when_flag_enabled() -> None:
 
     assert result.exit_code == 0
     assert "[OK] migrate: migration step skipped by flag" in result.stdout
+    assert "[OK] pgvector_extension: pgvector extension check skipped by flag" in result.stdout
     assert "[OK] smoke_owner_command_ingress_in_process: accepted task_id=" in result.stdout
 
 
@@ -124,6 +125,40 @@ def test_bootstrap_short_circuits_smoke_when_migration_fails(monkeypatch, tmp_pa
     assert result.exit_code == 1
     assert smoke_called["value"] is False
     assert "[FAIL] migrate: migration failed: migration error" in result.stdout
+
+
+def test_bootstrap_short_circuits_smoke_when_pgvector_extension_missing(
+    monkeypatch, tmp_path: Path
+) -> None:
+    alembic_ini = tmp_path / "alembic.ini"
+    alembic_ini.write_text("[alembic]\nscript_location = migrations\n", encoding="utf-8")
+
+    def fake_apply(_: Path) -> None:
+        return None
+
+    def fake_check_pgvector_extension(_: str) -> tuple[bool, str]:
+        return False, "pgvector extension is not installed in target database"
+
+    smoke_called = {"value": False}
+
+    def fake_smoke(*, api_base_url: str, timeout_seconds: float = 5.0) -> admin_cli.CheckResult:
+        smoke_called["value"] = True
+        return admin_cli.CheckResult("smoke_owner_command_ingress_live", True, "ok")
+
+    monkeypatch.setattr(admin_cli, "apply_migrations", fake_apply)
+    monkeypatch.setattr(admin_cli, "check_pgvector_extension", fake_check_pgvector_extension)
+    monkeypatch.setattr(admin_cli, "run_smoke_check", fake_smoke)
+
+    result = RUNNER.invoke(
+        admin_cli.app,
+        ["bootstrap", "--alembic-ini", str(alembic_ini)],
+    )
+
+    assert result.exit_code == 1
+    assert smoke_called["value"] is False
+    assert "[FAIL] pgvector_extension: pgvector extension is not installed in target database" in (
+        result.stdout
+    )
 
 
 def test_diagnostics_command_reports_database_ping_failure(monkeypatch) -> None:
