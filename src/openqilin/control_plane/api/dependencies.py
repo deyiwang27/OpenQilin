@@ -11,6 +11,9 @@ from openqilin.budget_runtime.client import InMemoryBudgetRuntimeClient
 from openqilin.budget_runtime.reservation_service import BudgetReservationService
 from openqilin.control_plane.idempotency.ingress_dedupe import InMemoryIngressDedupe
 from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
+from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
+from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
+from openqilin.observability.tracing.tracer import InMemoryTracer
 from openqilin.policy_runtime_integration.client import InMemoryPolicyRuntimeClient
 from openqilin.task_orchestrator.dispatch.sandbox_dispatch import SandboxDispatchStub
 from openqilin.task_orchestrator.admission.service import AdmissionService
@@ -30,6 +33,9 @@ class RuntimeServices:
     budget_reservation_service: BudgetReservationService
     lifecycle_service: TaskLifecycleService
     task_dispatch_service: TaskDispatchService
+    tracer: InMemoryTracer
+    audit_writer: InMemoryAuditWriter
+    metric_recorder: InMemoryMetricRecorder
 
 
 def build_runtime_services() -> RuntimeServices:
@@ -49,6 +55,9 @@ def build_runtime_services() -> RuntimeServices:
         lifecycle_service=lifecycle_service,
         sandbox_dispatch_stub=SandboxDispatchStub(),
     )
+    tracer = InMemoryTracer()
+    audit_writer = InMemoryAuditWriter()
+    metric_recorder = InMemoryMetricRecorder()
     return RuntimeServices(
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
@@ -58,6 +67,9 @@ def build_runtime_services() -> RuntimeServices:
         budget_reservation_service=budget_reservation_service,
         lifecycle_service=lifecycle_service,
         task_dispatch_service=task_dispatch_service,
+        tracer=tracer,
+        audit_writer=audit_writer,
+        metric_recorder=metric_recorder,
     )
 
 
@@ -99,3 +111,21 @@ def get_task_dispatch_service(request: Request) -> TaskDispatchService:
     """Provide task-dispatch service for controlled dispatch stub flow."""
 
     return get_runtime_services(request).task_dispatch_service
+
+
+def get_tracer(request: Request) -> InMemoryTracer:
+    """Provide tracer for governed-path span emission."""
+
+    return get_runtime_services(request).tracer
+
+
+def get_audit_writer(request: Request) -> InMemoryAuditWriter:
+    """Provide audit writer for governed-path decision evidence."""
+
+    return get_runtime_services(request).audit_writer
+
+
+def get_metric_recorder(request: Request) -> InMemoryMetricRecorder:
+    """Provide metric recorder for governed-path counters."""
+
+    return get_runtime_services(request).metric_recorder

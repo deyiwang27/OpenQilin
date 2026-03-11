@@ -116,6 +116,13 @@ def test_governed_ingress_fail_closed_on_budget_runtime_error() -> None:
 
 def test_governed_ingress_fail_closed_on_dispatch_reject() -> None:
     client = TestClient(app)
+    services = app.state.runtime_services
+    before_event_count = len(services.audit_writer.get_events())
+    before_span_count = len(services.tracer.get_spans())
+    before_metric_value = services.metric_recorder.get_counter_value(
+        "owner_command_admission_outcomes_total",
+        labels={"outcome": "blocked", "source": "dispatch_stub"},
+    )
 
     response = client.post(
         "/v1/owner/commands",
@@ -135,3 +142,21 @@ def test_governed_ingress_fail_closed_on_dispatch_reject() -> None:
     assert body["status"] == "blocked"
     assert body["error_code"] == "execution_dispatch_failed"
     assert body["details"]["source"] == "dispatch_stub"
+
+    after_metric_value = services.metric_recorder.get_counter_value(
+        "owner_command_admission_outcomes_total",
+        labels={"outcome": "blocked", "source": "dispatch_stub"},
+    )
+    assert after_metric_value == before_metric_value + 1
+
+    new_events = services.audit_writer.get_events()[before_event_count:]
+    assert [event.event_type for event in new_events] == [
+        "policy.decision",
+        "budget.decision",
+        "owner_command.blocked",
+    ]
+    assert new_events[-1].task_id == body["details"]["task_id"]
+
+    new_spans = services.tracer.get_spans()[before_span_count:]
+    assert len(new_spans) == 1
+    assert new_spans[0].status == "error"

@@ -357,3 +357,99 @@ def test_submit_owner_command_accepts_llm_target_stub() -> None:
     assert body["status"] == "accepted"
     assert body["dispatch_target"] == "llm"
     assert body["dispatch_id"]
+
+
+def test_submit_owner_command_emits_observability_on_accept() -> None:
+    app = create_control_plane_app()
+    client = TestClient(app)
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers={
+            "X-OpenQilin-User-Id": "owner_obs_accept",
+            "X-OpenQilin-Connector": "discord",
+            "X-OpenQilin-Trace-Id": "trace-observability-accept-component",
+        },
+        json={
+            "command": "run_task",
+            "args": ["alpha"],
+            "idempotency_key": "idem-observability-accept-component-12345",
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 202
+    services = app.state.runtime_services
+    metric_value = services.metric_recorder.get_counter_value(
+        "owner_command_admission_outcomes_total",
+        labels={"outcome": "accepted", "source": "dispatch_sandbox"},
+    )
+    assert metric_value == 1
+
+    audit_events = services.audit_writer.get_events()
+    assert [event.event_type for event in audit_events] == [
+        "policy.decision",
+        "budget.decision",
+        "owner_command.accepted",
+    ]
+    accepted_event = audit_events[-1]
+    assert accepted_event.outcome == "accepted"
+    assert accepted_event.trace_id == body["trace_id"]
+    assert accepted_event.request_id == body["request_id"]
+    assert accepted_event.task_id == body["task_id"]
+
+    spans = services.tracer.get_spans()
+    assert len(spans) == 1
+    span_attrs = dict(spans[0].attributes)
+    assert spans[0].trace_id == body["trace_id"]
+    assert spans[0].name == "owner_command.ingress"
+    assert span_attrs["outcome"] == "accepted"
+    assert span_attrs["correlation.task_id"] == body["task_id"]
+
+
+def test_submit_owner_command_emits_observability_on_policy_block() -> None:
+    app = create_control_plane_app()
+    client = TestClient(app)
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers={
+            "X-OpenQilin-User-Id": "owner_obs_policy_block",
+            "X-OpenQilin-Connector": "discord",
+            "X-OpenQilin-Trace-Id": "trace-observability-policy-block-component",
+        },
+        json={
+            "command": "deny_delete_project",
+            "args": ["alpha"],
+            "idempotency_key": "idem-observability-policy-block-component-12345",
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 403
+    services = app.state.runtime_services
+    metric_value = services.metric_recorder.get_counter_value(
+        "owner_command_admission_outcomes_total",
+        labels={"outcome": "blocked", "source": "policy_runtime"},
+    )
+    assert metric_value == 1
+
+    audit_events = services.audit_writer.get_events()
+    assert [event.event_type for event in audit_events] == [
+        "policy.decision",
+        "owner_command.blocked",
+    ]
+    blocked_event = audit_events[-1]
+    blocked_task = services.runtime_state_repo.get_task_by_id(body["details"]["task_id"])
+    assert blocked_task is not None
+    assert blocked_event.outcome == "blocked"
+    assert blocked_event.source == "policy_runtime"
+    assert blocked_event.trace_id == blocked_task.trace_id
+    assert blocked_event.task_id == blocked_task.task_id
+
+    spans = services.tracer.get_spans()
+    assert len(spans) == 1
+    span_attrs = dict(spans[0].attributes)
+    assert spans[0].status == "error"
+    assert span_attrs["outcome"] == "blocked"
+    assert span_attrs["source"] == "policy_runtime"
