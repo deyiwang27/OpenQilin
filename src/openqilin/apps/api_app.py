@@ -2,10 +2,12 @@
 
 from fastapi import FastAPI
 
+from openqilin.control_plane.api.app import create_control_plane_app
+
 
 def create_app() -> FastAPI:
     """Create the API application instance."""
-    return FastAPI(title="OpenQilin API", version="0.1.0")
+    return create_control_plane_app()
 
 
 app = create_app()

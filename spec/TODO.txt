@@ -1,5 +1,6 @@
 OpenQilin Spec TODO Backlog
 Date: 2026-03-10
+Archive status: archived
 
 Execution model:
 - Focus: documentation and investigation only (no implementation code changes).
@@ -37,5 +38,5 @@ Review Notes (2026-03-10)
 
 Current status:
 - No open TODO items remain in `spec/` backlog for the Define phase.
-- Next phase starts in `design/` with technical design artifacts.
-- Repository review on 2026-03-10 did not identify new Define-stage backlog items; follow-up work is design-only and is tracked in `design/TODO.txt`.
+- This file is a historical closeout snapshot for the Define phase (`2026-03-10`).
+- Design and implementation phases continued after this snapshot; active implementation tracking is in GitHub Issues/PRs/Project with `implementation/v1/planning/ImplementationProgress-v1.md` as the in-repo mirror.

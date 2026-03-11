@@ -1,6 +1,7 @@
 OpenQilin Design TODO Backlog
 Date: 2026-03-10
 Branch: design/v1-system-technical-design
+Archive status: archived
 
 Goal:
 - Complete the remaining implementation-planning design work for v1.
@@ -10,7 +11,8 @@ Current status:
 - Core v1 technical design is complete.
 - Implementation-planning design is complete.
 - Design-stage repository consistency review is closed.
-- `design/TODO.txt` is the authoritative live tracker; `design/v1/planning/ImplementationBacklogSeed-v1.md` is the stable planning reference.
+- `design/TODO.txt` is a design-stage historical closeout record (not an implementation live tracker).
+- Implementation tracking authority moved to GitHub Issues/PRs/Project with `implementation/v1/planning/ImplementationProgress-v1.md` as the in-repo mirror.
 
 Completed summary:
 - Core runtime design:
@@ -21,7 +23,7 @@ Completed summary:
 - Foundation and developer workflow:
   - `design/v1/foundation/ImplementationFoundation-v1.md`
   - `design/v1/foundation/ImplementationFrameworkSelection-v1.md`
-  - `design/v1/foundation/DeveloperWorkflowAndContributionGuide-v1.md`
+  - `implementation/v1/workflow/DeveloperWorkflowAndContributionGuide-v1.md`
 - Implementation architecture and module-level design:
   - `design/v1/architecture/ImplementationArchitecture-v1.md`
   - `design/v1/architecture/ContainerizationAndLocalInfraTopology-v1.md`
@@ -34,10 +36,10 @@ Completed summary:
   - `design/v1/architecture/DataAccessModuleDesign-v1.md`
   - `design/v1/architecture/ObservabilityModuleDesign-v1.md`
 - Quality, release, planning, and readiness:
-  - `design/v1/quality/QualityAndDelivery-v1.md`
-  - `design/v1/quality/ReleaseVersioningAndRollback-v1.md`
-  - `design/v1/planning/ImplementationBacklogSeed-v1.md`
-  - `design/v1/planning/ImplementationMilestones-v1.md`
+  - `implementation/v1/quality/QualityAndDelivery-v1.md`
+  - `implementation/v1/quality/ReleaseVersioningAndRollback-v1.md`
+  - `implementation/v1/planning/ImplementationBacklogSeed-v1.md`
+  - `implementation/v1/planning/ImplementationMilestones-v1.md`
   - `design/v1/readiness/DesignReviewChecklistAndExitCriteria-v1.md`
   - `design/v1/readiness/DesignReviewRecord-v1.md`
 

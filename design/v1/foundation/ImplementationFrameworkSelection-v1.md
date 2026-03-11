@@ -84,4 +84,4 @@ A new library should not be introduced unless it:
 ## 8. Related Design Artifacts
 - `design/v1/foundation/ImplementationFoundation-v1.md`
 - `design/v1/architecture/ImplementationArchitecture-v1.md`
-- `design/v1/quality/QualityAndDelivery-v1.md`
+- `implementation/v1/quality/QualityAndDelivery-v1.md`

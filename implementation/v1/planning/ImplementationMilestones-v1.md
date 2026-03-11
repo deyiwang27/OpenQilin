@@ -5,9 +5,10 @@
 - Lock the first executable slice for governance-core validation.
 
 ## 2. Planning Authority
-- `design/TODO.txt` is the authoritative live tracker for open and closed work.
-- `design/v1/planning/ImplementationBacklogSeed-v1.md` is the stable reference for workstream intent and delivery rationale.
-- If the two differ, `design/TODO.txt` wins until the next design consolidation pass updates the backlog seed.
+- `design/TODO.txt` is a design-stage tracker and historical closeout record.
+- GitHub Issues/PRs/Project are the authoritative implementation execution tracker.
+- `implementation/v1/planning/ImplementationProgress-v1.md` is the in-repo milestone/status mirror.
+- If implementation status differs, GitHub issue/PR evidence is authoritative and the progress mirror must be updated.
 
 ## 3. Milestones
 ### M0 Foundation Scaffold

@@ -1,0 +1,113 @@
+OpenQilin Implementation TODO Tracker
+Date: 2026-03-11
+Stage: implementation/v1
+Archive status: active
+
+Tracking model:
+- GitHub Issues/PRs/Project remain the execution source of truth.
+- This file is the implementation-stage working checklist mirror for fast local progress scanning.
+- Milestone-level status authority remains in `implementation/v1/planning/ImplementationProgress-v1.md`.
+
+Status legend:
+- `todo`
+- `in_progress`
+- `blocked`
+- `done`
+
+Current focus:
+- Milestone: `M1 First Executable Slice`
+- Primary issue: `#4` (Governed Path Kickoff)
+- Active branch: `feat/4-m1-governed-path-kickoff`
+
+Checklist:
+0) Repo structure and documentation consistency review (post-migration) - `done`
+- stale path references removed
+- implementation tracker consolidated under `implementation/v1/planning/`
+- workflow docs aligned with current scaffold limitations
+
+0.1) Governance check formalization - `done`
+- canonical governance check doc added
+- trigger policy defined (PR-level and deep-level)
+- enforcement wired into PR template and workflow/quality/GitHub policy docs
+
+0.2) Host/application prerequisite verification - `done`
+- Docker and Docker Compose installed; Docker daemon reachable
+- `uv` toolchain active and project environment synced with Python `3.12`
+- baseline CLI tooling verified (`git`, `gh`, `uv`, `docker`, `docker compose`)
+- compose profiles/services resolve from `compose.yml`
+
+1) M1 governed path kickoff (`issue #4`) - `in_progress`
+- M1 implementation workplan decomposition and tracker sync (execution plan/progress/TODO alignment) - `done`
+- `M1-WP1`: owner command contract + ingress validation (`control_plane` + `task_orchestrator/admission`) - `done`
+- evidence: `uv run pytest tests/unit/test_m1_wp1_ingress_primitives.py tests/component/test_m1_wp1_owner_command_router.py tests/integration/test_m1_wp1_governed_ingress_path.py`
+- evidence: `uv run ruff check src tests`
+- evidence: `uv run mypy src`
+- `M1-WP2`: task admission + idempotency shell (`task_orchestrator/admission`, `control_plane/idempotency`, `runtime_state`) - `done`
+- evidence: `uv run pytest tests/unit/test_m1_wp1_ingress_primitives.py tests/unit/test_m1_wp2_admission_idempotency.py tests/component/test_m1_wp1_owner_command_router.py tests/integration/test_m1_wp1_governed_ingress_path.py`
+- evidence: `uv run ruff check src tests`
+- evidence: `uv run mypy src`
+- `M1-WP3`: policy decision path + fail-closed policy uncertainty handling (`policy_runtime_integration`) - `done`
+- evidence: `uv run pytest tests/unit/test_m1_wp1_ingress_primitives.py tests/unit/test_m1_wp2_admission_idempotency.py tests/unit/test_m1_wp3_policy_runtime.py tests/component/test_m1_wp1_owner_command_router.py tests/integration/test_m1_wp1_governed_ingress_path.py`
+- evidence: `uv run ruff check src tests`
+- evidence: `uv run ruff format --check .`
+- evidence: `uv run mypy src`
+- `M1-WP4`: budget reservation path + fail-closed budget uncertainty handling (`budget_runtime`) - `done`
+- evidence: `uv run pytest tests/unit/test_m1_wp1_ingress_primitives.py tests/unit/test_m1_wp2_admission_idempotency.py tests/unit/test_m1_wp3_policy_runtime.py tests/unit/test_m1_wp4_budget_runtime.py tests/component/test_m1_wp1_owner_command_router.py tests/integration/test_m1_wp1_governed_ingress_path.py`
+- evidence: `uv run ruff check src tests`
+- evidence: `uv run ruff format --check .`
+- evidence: `uv run mypy src`
+- `M1-WP5`: dispatch stub and task lifecycle wiring (`task_orchestrator/dispatch`, `task_orchestrator/services`) - `done`
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
+- evidence: `uv run ruff check .`
+- evidence: `uv run ruff format --check .`
+- evidence: `uv run mypy .`
+- `M1-WP6`: trace/audit/metric emission on accept/block paths (`observability`) - `done`
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
+- evidence: `uv run ruff check .`
+- evidence: `uv run ruff format --check .`
+- evidence: `uv run mypy .`
+- `M1-WP7`: admin CLI command implementation for `migrate`, `bootstrap`, `smoke`, and `diagnostics` (`apps/admin_cli.py`) - `done`
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
+- evidence: `uv run ruff check .`
+- evidence: `uv run ruff format --check .`
+- evidence: `uv run mypy .`
+- `M1-WP8`: M1 test + evidence pack (unit/component/integration/contract + issue/PR links) - `done`
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
+- evidence: `uv run ruff check .`
+- evidence: `uv run ruff format --check .`
+- evidence: `uv run mypy .`
+- evidence doc: `implementation/v1/planning/M1EvidencePack-v1.md`
+- `M1 post-review flaw remediation`: replay determinism + blocked replay detail parity + env-configurable live smoke default + admin container bootstrap/runability + workflow/progress doc alignment - `done`
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
+- evidence: `uv run ruff check .`
+- evidence: `uv run ruff format --check .`
+- evidence: `uv run mypy .`
+- `M1 spec/design top-2 conformance remediation`: canonical owner command ingress/response envelope + connector signature validation + external identity mapping shell - `done`
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
+- evidence: `uv run ruff check .`
+- evidence: `uv run ruff format --check .`
+- evidence: `uv run mypy .`
+- `M1 spec/design conformance hardening`: canonical orchestrator status transitions + audit required fields (`actor_id`, `actor_role`, `policy_version`, `policy_hash`, `rule_ids`, `payload`) + required trace span boundaries (`owner_ingress`, `task_orchestration`, `policy_evaluation`, `budget_reservation`, `execution_sandbox`, `audit_emit`) - `done`
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
+- evidence: `uv run ruff check .`
+- evidence: `uv run ruff format --check .`
+- evidence: `uv run mypy .`
+
+2) M2 execution targets prep - `todo`
+- sandbox adapter wiring plan
+- LiteLLM runtime integration plan
+- retrieval-backed query baseline plan
+- PostgreSQL `pgvector` enablement plan (image/extension bootstrap + migration contract)
+
+3) M3 reliability prep - `todo`
+- A2A/ACP validation contract test inventory
+- retry/dead-letter behavior test inventory
+
+4) M4 hardening prep - `todo`
+- release-gate checklist draft
+- rollback validation checklist draft
+
+Update routine:
+- On issue start: add/update item here with branch + issue id.
+- On PR open/merge: update item status and attach PR link in GitHub issue evidence.
+- Weekly: sync milestone percentage and evidence into `implementation/v1/planning/ImplementationProgress-v1.md`.

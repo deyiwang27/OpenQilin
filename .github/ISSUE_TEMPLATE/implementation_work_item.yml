@@ -1,0 +1,96 @@
+name: Implementation Work Item
+description: Track a v1 implementation feature/task with required governance fields.
+title: "M?: <short implementation title>"
+labels:
+  - type:feature
+body:
+  - type: dropdown
+    id: milestone
+    attributes:
+      label: Milestone
+      description: Select the implementation milestone.
+      options:
+        - M0 Foundation Scaffold
+        - M1 First Executable Slice
+        - M2 Execution Targets
+        - M3 Communication Reliability
+        - M4 Hardening and Release Readiness
+    validations:
+      required: true
+
+  - type: input
+    id: goal
+    attributes:
+      label: Goal
+      description: One-sentence outcome this issue delivers.
+      placeholder: Deliver the first governed task admission and decision path.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: In-scope changes for this issue.
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: Testable criteria that must pass before closing.
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: Blocking issues, PRs, environments, or decisions.
+      placeholder: "#12, #15, local docker baseline"
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence Links
+      description: Add PR/test/trace/audit links during implementation.
+      placeholder: |
+        - PR:
+        - Test run:
+        - Trace/Audit:
+    validations:
+      required: true
+
+  - type: textarea
+    id: definition_of_done
+    attributes:
+      label: Definition of Done
+      description: Completion checklist for issue closure.
+      value: |
+        - [ ] Acceptance criteria satisfied.
+        - [ ] Required tests/checks passed.
+        - [ ] Evidence links updated.
+        - [ ] implementation/v1/planning/ImplementationProgress-v1.md updated when milestone status changes.
+        - [ ] Repository consistency/governance check scope considered for this work item.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: policy_checks
+    attributes:
+      label: Policy Checks
+      description: Confirm required workflow constraints before opening.
+      options:
+        - label: I will use branch format `<type>/<issue-id>-<short-slug>`.
+          required: true
+        - label: I will link this issue in the PR and include verification commands.
+          required: true

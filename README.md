@@ -6,11 +6,11 @@ The goal is to help a solopreneur operate a coordinated, long-running AI organiz
 
 ## Current Status
 
-This repository is currently **documentation-first**.
+This repository is currently in **implementation kickoff**.
 
-- Define phase is complete at baseline level.
-- v1 architecture baseline is published.
-- Next phase is technical design, then implementation.
+- Define and Design phases are complete for v1 baseline.
+- v1 implementation scaffold is initialized (`src/`, `tests/`, `migrations/`, `ops/`).
+- Active work is M0/M1 implementation delivery with issue/PR-driven execution.
 
 ## Core Idea
 
@@ -44,7 +44,12 @@ It locks:
 - `spec/`: implementation-level specifications for AI engineering agents
 - `docs/`: concise human-facing documentation for GitHub users
 - `constitution/`: constitutional runtime rules that agents must follow
-- `design/`: technical design artifacts for the current design cycle (initialized in design branch)
+- `design/`: technical design artifacts and readiness records
+- `implementation/`: implementation execution docs (planning, workflow, quality, TODO tracking)
+- `src/`: OpenQilin runtime implementation packages
+- `tests/`: unit/component/contract/integration/conformance test suites
+- `migrations/`: forward-only schema migration assets
+- `ops/`: docker/bootstrap/scripts assets for local and CI operations
 
 Precedence:
 
