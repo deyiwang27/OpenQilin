@@ -19,13 +19,14 @@ Status values:
 
 ## 3. Current Sprint/Week Focus
 - Week of `2026-03-11`: maintain M0 baseline stability and repo consistency while advancing M1.
-- Week of `2026-03-11`: execute M1 governed-path implementation on issue `#4`, including admin CLI bootstrap/smoke/diagnostics command implementation.
+- Week of `2026-03-11`: decompose M1 into executable work packages (`M1-WP1`..`M1-WP8`) and synchronize plan/progress/TODO trackers.
+- Week of `2026-03-11`: execute M1 governed-path implementation on issue `#4`, including admin CLI `migrate`/`bootstrap`/`smoke`/`diagnostics` implementation and fail-closed policy/budget test evidence.
 
 ## 4. Milestone Ledger
 | Milestone | Status | Completion % | Active Features | Blockers | Evidence Links | Last Updated |
 | --- | --- | --- | --- | --- | --- | --- |
 | `M0 Foundation Scaffold` | `completed` | `100%` | `uv project + lock`, `compose baseline`, `CI workflow`, `migration scaffold`, `test scaffold`, `env template` | `N/A` | `branch: feat/4-m1-governed-path-kickoff`, `Issue: https://github.com/deyiwang27/OpenQilin/issues/4` | `2026-03-11` |
-| `M1 First Executable Slice` | `in_progress` | `10%` | `issue definition and workflow hardening`, `implementation branch active`, `admin CLI scaffold gap captured` | `admin bootstrap/smoke/diagnostics behavior still placeholder` | `Issue: https://github.com/deyiwang27/OpenQilin/issues/4` | `2026-03-11` |
+| `M1 First Executable Slice` | `in_progress` | `15%` | `issue definition and workflow hardening`, `implementation branch active`, `M1 work package plan M1-WP1..M1-WP8 defined`, `admin CLI + governed-path implementation sequence locked` | `governed-path modules still placeholder-heavy`, `admin CLI commands still placeholder behavior` | `Issue: https://github.com/deyiwang27/OpenQilin/issues/4`, `Plan: implementation/v1/planning/ImplementationExecutionPlan-v1.md (Section 4)` | `2026-03-11` |
 | `M2 Execution Targets` | `not_started` | `0%` | `N/A` | `depends on M1 exit` | `N/A` | `2026-03-11` |
 | `M3 Communication Reliability` | `not_started` | `0%` | `N/A` | `depends on M1 + M2 stability` | `N/A` | `2026-03-11` |
 | `M4 Hardening and Release Readiness` | `not_started` | `0%` | `N/A` | `depends on M2 + M3 end-to-end evidence` | `N/A` | `2026-03-11` |
@@ -47,6 +48,7 @@ Status values:
 - `2026-03-11`: overall repo review pass completed (conflict/redundancy/structure/readiness); baseline checks re-confirmed (`ruff`, `mypy`, `pytest`) while Docker-dependent validation is intentionally deferred.
 - `2026-03-11`: repository consistency/governance check process formalized at `implementation/v1/workflow/RepositoryConsistencyAndGovernanceCheck-v1.md` and wired into workflow/quality/PR enforcement.
 - `2026-03-11`: host prerequisite verification completed: Docker daemon reachable, Compose profiles/services resolve, `uv sync --all-groups --python 3.12` completed, and CLI toolchain (`git`, `gh`, `uv`, `docker`) validated.
+- `2026-03-11`: M1 kickoff planning sync completed: concrete work packages (`M1-WP1`..`M1-WP8`) added to `ImplementationExecutionPlan-v1.md`, and M1 checklist/progress mirrors updated in `TODO.txt` and this file.
 
 ## 6. Sample Progress Update Entry
 Use this shape when recording weekly or PR-linked evidence:

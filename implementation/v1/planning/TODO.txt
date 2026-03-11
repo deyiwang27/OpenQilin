@@ -37,14 +37,15 @@ Checklist:
 - compose profiles/services resolve from `compose.yml`
 
 1) M1 governed path kickoff (`issue #4`) - `in_progress`
-- ingress envelope validation shell
-- task admission shell
-- policy decision path integration shell
-- budget reservation integration shell
-- dispatch stub path
-- audit + trace emission path
-- fail-closed path tests for policy/budget uncertainty
-- admin CLI command implementation for `migrate`, `bootstrap`, `smoke`, and `diagnostics` (currently scaffold placeholders)
+- M1 implementation workplan decomposition and tracker sync (execution plan/progress/TODO alignment) - `done`
+- `M1-WP1`: owner command contract + ingress validation (`control_plane` + `task_orchestrator/admission`) - `in_progress`
+- `M1-WP2`: task admission + idempotency shell (`task_orchestrator/admission`, `control_plane/idempotency`, `runtime_state`) - `todo`
+- `M1-WP3`: policy decision path + fail-closed policy uncertainty handling (`policy_runtime_integration`) - `todo`
+- `M1-WP4`: budget reservation path + fail-closed budget uncertainty handling (`budget_runtime`) - `todo`
+- `M1-WP5`: dispatch stub and task lifecycle wiring (`task_orchestrator/dispatch`, `task_orchestrator/services`) - `todo`
+- `M1-WP6`: trace/audit/metric emission on accept/block paths (`observability`) - `todo`
+- `M1-WP7`: admin CLI command implementation for `migrate`, `bootstrap`, `smoke`, and `diagnostics` (`apps/admin_cli.py`) - `todo`
+- `M1-WP8`: M1 test + evidence pack (unit/component/integration/contract + issue/PR links) - `todo`
 
 2) M2 execution targets prep - `todo`
 - sandbox adapter wiring plan
