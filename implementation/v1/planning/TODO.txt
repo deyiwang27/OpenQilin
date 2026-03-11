@@ -15,9 +15,9 @@ Status legend:
 - `done`
 
 Current focus:
-- Milestone: `M2 Execution Targets`
-- Primary issue: `#6` (Execution Targets Kickoff)
-- Active branch: `feat/6-m2-execution-targets-kickoff`
+- Milestone: `M3 Communication Reliability`
+- Primary issue: `#13` (Communication Reliability Kickoff)
+- Active branch: `feat/13-m3-communication-reliability-kickoff`
 
 Checklist:
 0) Repo structure and documentation consistency review (post-migration) - `done`
@@ -94,7 +94,7 @@ Checklist:
 - evidence: `uv run mypy .`
 - milestone closeout: merged to `main`; issue `#4` closed - `done`
 
-2) M2 execution targets kickoff (`issue #6`) - `in_progress`
+2) M2 execution targets kickoff (`issue #6`) - `done`
 - decomposition + dependency wiring with child WPs (`#7`..`#11`) - `done`
 - labels applied (`milestone:M2`, `type:*`, `area:*`, `risk:execution-core`) - `done`
 - `M2-WP1` sandbox adapter wiring (`issue #7`) - `done`
@@ -122,8 +122,11 @@ Checklist:
 - evidence: `uv run ruff check .`
 - evidence: `uv run mypy .`
 - evidence doc: `implementation/v1/planning/M2EvidencePack-v1.md`
+- milestone closeout: merged to `main` via `PR #12`; issue `#6` closed - `done`
 
-3) M3 reliability prep - `todo`
+3) M3 reliability prep - `in_progress`
+- kickoff issue created: `#13` (`milestone:M3`, `type:feature`, `area:task_orchestrator`, `risk:execution-core`) - `done`
+- implementation branch created and pushed: `feat/13-m3-communication-reliability-kickoff` - `done`
 - A2A/ACP validation contract test inventory
 - retry/dead-letter behavior test inventory
 
