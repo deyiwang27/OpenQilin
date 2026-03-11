@@ -282,7 +282,7 @@ def test_submit_owner_command_denies_dispatch_reject() -> None:
     assert task.status == "blocked"
 
 
-def test_submit_owner_command_accepts_llm_target_stub() -> None:
+def test_submit_owner_command_accepts_llm_target_with_usage_cost_metadata() -> None:
     client = TestClient(create_control_plane_app())
     payload = build_owner_command_request_dict(
         action="llm_summarize",
@@ -302,6 +302,42 @@ def test_submit_owner_command_accepts_llm_target_stub() -> None:
     assert body["status"] == "accepted"
     assert body["data"]["dispatch_target"] == "llm"
     assert body["data"]["dispatch_id"]
+    assert body["data"]["llm_execution"]["model_selected"]
+    assert body["data"]["llm_execution"]["routing_profile"] == "dev_gemini_free"
+    assert body["data"]["llm_execution"]["usage"]["total_tokens"] > 0
+    assert body["data"]["llm_execution"]["cost"]["cost_source"] in {
+        "none",
+        "catalog_estimated",
+        "provider_reported",
+    }
+
+
+def test_submit_owner_command_denies_llm_gateway_runtime_failure() -> None:
+    app = create_control_plane_app()
+    client = TestClient(app)
+    payload = build_owner_command_request_dict(
+        action="llm_runtime_error",
+        args=["project_1"],
+        actor_id="owner_llm_runtime_failure",
+        idempotency_key="idem-llm-runtime-failure-component-12345",
+    )
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers=build_owner_command_headers(payload),
+        json=payload,
+    )
+
+    body = response.json()
+    assert response.status_code == 403
+    assert body["status"] == "denied"
+    assert body["error"]["code"] == "llm_provider_unavailable"
+    assert body["error"]["details"]["source"] == "dispatch_llm_gateway"
+    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(
+        body["error"]["details"]["task_id"]
+    )
+    assert task is not None
+    assert task.status == "blocked"
 
 
 def test_submit_owner_command_emits_observability_on_accept() -> None:

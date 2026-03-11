@@ -34,6 +34,30 @@ def test_governed_ingress_accepts_canonical_envelope() -> None:
     assert isinstance(body["trace_id"], str)
 
 
+def test_governed_ingress_llm_accept_includes_usage_cost_metadata() -> None:
+    client = TestClient(app)
+    payload = build_owner_command_request_dict(
+        action="llm_summarize",
+        args=["alpha"],
+        actor_id="owner_llm_integ_001",
+        idempotency_key="idem-integration-llm-accept-12345",
+    )
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers=build_owner_command_headers(payload),
+        json=payload,
+    )
+
+    body = response.json()
+    assert response.status_code == 202
+    assert body["status"] == "accepted"
+    assert body["data"]["dispatch_target"] == "llm"
+    assert body["data"]["llm_execution"]["model_selected"]
+    assert body["data"]["llm_execution"]["usage"]["total_tokens"] > 0
+    assert body["data"]["llm_execution"]["cost"]["estimated_cost_usd"] >= 0
+
+
 def test_governed_ingress_replay_is_deterministic() -> None:
     client = TestClient(app)
     payload = build_owner_command_request_dict(
@@ -182,3 +206,35 @@ def test_governed_ingress_fail_closed_on_dispatch_reject() -> None:
     assert "execution_sandbox" in span_names
     assert "audit_emit" in span_names
     assert any(span.status == "error" for span in new_spans)
+
+
+def test_governed_ingress_fail_closed_on_llm_gateway_runtime_error() -> None:
+    client = TestClient(app)
+    services = app.state.runtime_services
+    before_metric_value = services.metric_recorder.get_counter_value(
+        "owner_command_admission_outcomes_total",
+        labels={"outcome": "denied", "source": "dispatch_llm_gateway"},
+    )
+    payload = build_owner_command_request_dict(
+        action="llm_runtime_error",
+        args=["alpha"],
+        actor_id="owner_llm_runtime_error_integration",
+        idempotency_key="idem-integration-llm-runtime-error-12345",
+    )
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers=build_owner_command_headers(payload),
+        json=payload,
+    )
+
+    body = response.json()
+    assert response.status_code == 403
+    assert body["status"] == "denied"
+    assert body["error"]["code"] == "llm_provider_unavailable"
+    assert body["error"]["details"]["source"] == "dispatch_llm_gateway"
+    after_metric_value = services.metric_recorder.get_counter_value(
+        "owner_command_admission_outcomes_total",
+        labels={"outcome": "denied", "source": "dispatch_llm_gateway"},
+    )
+    assert after_metric_value == before_metric_value + 1

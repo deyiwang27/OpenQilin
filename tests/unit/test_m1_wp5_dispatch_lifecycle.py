@@ -9,6 +9,8 @@ from openqilin.task_orchestrator.dispatch.sandbox_dispatch import (
     SandboxDispatchRequest,
     SandboxDispatchReceipt,
 )
+from openqilin.task_orchestrator.dispatch.llm_dispatch import LlmGatewayDispatchAdapter
+from openqilin.llm_gateway.service import build_llm_gateway_service
 from openqilin.task_orchestrator.services.lifecycle_service import TaskLifecycleService
 from openqilin.task_orchestrator.services.task_service import TaskDispatchService
 from openqilin.testing.owner_command import build_owner_command_request_model
@@ -40,6 +42,9 @@ def test_dispatch_service_marks_dispatched_on_success() -> None:
     service = TaskDispatchService(
         lifecycle_service=lifecycle,
         sandbox_execution_adapter=InMemorySandboxExecutionAdapter(),
+        llm_dispatch_adapter=LlmGatewayDispatchAdapter(
+            llm_gateway_service=build_llm_gateway_service()
+        ),
     )
 
     outcome = service.dispatch_admitted_task(task)
@@ -58,6 +63,9 @@ def test_dispatch_service_marks_blocked_dispatch_on_reject() -> None:
     service = TaskDispatchService(
         lifecycle_service=lifecycle,
         sandbox_execution_adapter=InMemorySandboxExecutionAdapter(),
+        llm_dispatch_adapter=LlmGatewayDispatchAdapter(
+            llm_gateway_service=build_llm_gateway_service()
+        ),
     )
 
     outcome = service.dispatch_admitted_task(task)
@@ -76,6 +84,9 @@ def test_dispatch_service_is_replay_safe_by_task_id() -> None:
     service = TaskDispatchService(
         lifecycle_service=lifecycle,
         sandbox_execution_adapter=InMemorySandboxExecutionAdapter(),
+        llm_dispatch_adapter=LlmGatewayDispatchAdapter(
+            llm_gateway_service=build_llm_gateway_service()
+        ),
     )
 
     first = service.dispatch_admitted_task(task)
@@ -93,6 +104,9 @@ def test_dispatch_service_selects_llm_target_stub() -> None:
     service = TaskDispatchService(
         lifecycle_service=lifecycle,
         sandbox_execution_adapter=InMemorySandboxExecutionAdapter(),
+        llm_dispatch_adapter=LlmGatewayDispatchAdapter(
+            llm_gateway_service=build_llm_gateway_service()
+        ),
     )
 
     outcome = service.dispatch_admitted_task(task)
@@ -100,6 +114,33 @@ def test_dispatch_service_selects_llm_target_stub() -> None:
     assert outcome.accepted is True
     assert outcome.target == "llm"
     assert outcome.dispatch_id
+    assert outcome.source == "dispatch_llm_gateway"
+    assert outcome.llm_metadata is not None
+    assert outcome.llm_metadata.total_tokens > 0
+    assert outcome.llm_metadata.cost_source in {"none", "catalog_estimated", "provider_reported"}
+
+
+def test_dispatch_service_blocks_on_llm_gateway_failure() -> None:
+    task, repository = _build_task("llm_runtime_error")
+    lifecycle = TaskLifecycleService(runtime_state_repo=repository)
+    service = TaskDispatchService(
+        lifecycle_service=lifecycle,
+        sandbox_execution_adapter=InMemorySandboxExecutionAdapter(),
+        llm_dispatch_adapter=LlmGatewayDispatchAdapter(
+            llm_gateway_service=build_llm_gateway_service()
+        ),
+    )
+
+    outcome = service.dispatch_admitted_task(task)
+
+    assert outcome.accepted is False
+    assert outcome.target == "llm"
+    assert outcome.source == "dispatch_llm_gateway"
+    assert outcome.error_code == "llm_provider_unavailable"
+    updated = repository.get_task_by_id(task.task_id)
+    assert updated is not None
+    assert updated.status == "blocked"
+    assert updated.outcome_source == "dispatch_llm_gateway"
 
 
 class _RaisingSandboxAdapter:
@@ -113,6 +154,9 @@ def test_dispatch_service_fails_closed_when_sandbox_adapter_raises() -> None:
     service = TaskDispatchService(
         lifecycle_service=lifecycle,
         sandbox_execution_adapter=_RaisingSandboxAdapter(),
+        llm_dispatch_adapter=LlmGatewayDispatchAdapter(
+            llm_gateway_service=build_llm_gateway_service()
+        ),
     )
 
     outcome = service.dispatch_admitted_task(task)

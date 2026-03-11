@@ -101,7 +101,10 @@ Checklist:
 - evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
 - evidence: `uv run ruff check .`
 - evidence: `uv run mypy .`
-- `M2-WP2` LiteLLM runtime integration (`issue #8`) - `todo`
+- `M2-WP2` LiteLLM runtime integration (`issue #8`) - `done`
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
+- evidence: `uv run ruff check .`
+- evidence: `uv run mypy .`
 - `M2-WP3` retrieval-backed query baseline (`issue #9`) - `todo`
 - `M2-WP4` PostgreSQL `pgvector` enablement + migration contract (`issue #10`) - `todo`
 - `M2-WP5` M2 evidence pack + milestone exit validation (`issue #11`) - `todo`
