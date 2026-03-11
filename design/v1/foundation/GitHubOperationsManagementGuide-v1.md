@@ -120,6 +120,7 @@ Repository administrators should enforce:
 - branch auto-delete after merge
 
 ## 10. Related Documents
+- `design/v1/foundation/AIAssistedDeliveryWorkflow-v1.md`
 - `design/v1/foundation/DeveloperWorkflowAndContributionGuide-v1.md`
 - `design/v1/quality/QualityAndDelivery-v1.md`
 - `design/v1/planning/ImplementationExecutionPlan-v1.md`

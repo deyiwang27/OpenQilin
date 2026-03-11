@@ -22,6 +22,7 @@ Foundation docs:
 - `foundation/ImplementationFrameworkSelection-v1.md`
 - `foundation/DeveloperWorkflowAndContributionGuide-v1.md`
 - `foundation/GitHubOperationsManagementGuide-v1.md`
+- `foundation/AIAssistedDeliveryWorkflow-v1.md`
 
 Planning docs:
 - `planning/ImplementationBacklogSeed-v1.md`

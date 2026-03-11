@@ -44,6 +44,7 @@ Required label groups:
 - Milestone close rule: milestone can close only when exit evidence is attached and all required feature issues are closed.
 
 ## 6. Related Documents
+- `design/v1/foundation/AIAssistedDeliveryWorkflow-v1.md`
 - `design/v1/planning/ImplementationBacklogSeed-v1.md`
 - `design/v1/planning/ImplementationMilestones-v1.md`
 - `design/v1/planning/ImplementationProgress-v1.md`
