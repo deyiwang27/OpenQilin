@@ -43,6 +43,7 @@ Primary issue: `#4` (`M1: Governed Path Kickoff`)
 6. Audit evidence emitted on decision/outcome points: covered by WP6 observability tests.
 7. Required test slices pass: unit/component/integration/contract/conformance command suite passes.
 8. Canonical owner command envelope + connector signature/external-identity checks: covered by updated component/integration/contract owner-command tests and `tests/unit/test_m1_wp1_ingress_primitives.py`.
+9. Canonical orchestrator state progression + required audit fields + required trace span boundaries: covered by updated owner-command component/integration observability assertions and `tests/unit/test_m1_wp5_dispatch_lifecycle.py` + `tests/unit/test_m1_wp6_observability.py`.
 
 ## 5. GitHub Issue Evidence Links
 - https://github.com/deyiwang27/OpenQilin/issues/4#issuecomment-4036337089

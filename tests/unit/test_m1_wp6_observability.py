@@ -44,6 +44,10 @@ def test_in_memory_audit_writer_appends_event_with_correlation_fields() -> None:
     assert event.trace_id == "trace-wp6-unit-2"
     assert event.request_id == "req-wp6-unit-2"
     assert event.task_id == "task-wp6-unit-2"
+    assert event.actor_id == "owner_wp6_unit_2"
+    assert event.actor_role == "unknown-role"
+    assert event.policy_version == "policy-version-unknown"
+    assert event.policy_hash == "policy-hash-unknown"
     assert ("dispatch_id", "dispatch-wp6-unit-2") in event.attributes
 
 

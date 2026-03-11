@@ -174,5 +174,11 @@ def test_governed_ingress_fail_closed_on_dispatch_reject() -> None:
     assert new_events[-1].task_id == body["error"]["details"]["task_id"]
 
     new_spans = services.tracer.get_spans()[before_span_count:]
-    assert len(new_spans) == 1
-    assert new_spans[0].status == "error"
+    span_names = [span.name for span in new_spans]
+    assert "owner_ingress" in span_names
+    assert "task_orchestration" in span_names
+    assert "policy_evaluation" in span_names
+    assert "budget_reservation" in span_names
+    assert "execution_sandbox" in span_names
+    assert "audit_emit" in span_names
+    assert any(span.status == "error" for span in new_spans)

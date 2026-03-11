@@ -60,7 +60,7 @@ def test_dispatch_service_marks_blocked_dispatch_on_reject() -> None:
     assert outcome.error_code == "execution_dispatch_failed"
     updated = repository.get_task_by_id(task.task_id)
     assert updated is not None
-    assert updated.status == "blocked_dispatch"
+    assert updated.status == "blocked"
 
 
 def test_dispatch_service_is_replay_safe_by_task_id() -> None:

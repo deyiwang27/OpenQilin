@@ -6,7 +6,12 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Mapping
 
-OWNER_COMMAND_INGRESS_SPAN = "owner_command.ingress"
+OWNER_COMMAND_INGRESS_SPAN = "owner_ingress"
+POLICY_EVALUATION_SPAN = "policy_evaluation"
+TASK_ORCHESTRATION_SPAN = "task_orchestration"
+BUDGET_RESERVATION_SPAN = "budget_reservation"
+EXECUTION_SANDBOX_SPAN = "execution_sandbox"
+AUDIT_EMIT_SPAN = "audit_emit"
 
 
 @dataclass(frozen=True, slots=True)

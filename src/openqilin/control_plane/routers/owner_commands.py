@@ -39,7 +39,14 @@ from openqilin.data_access.repositories.runtime_state import (
 )
 from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
 from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
-from openqilin.observability.tracing.spans import OWNER_COMMAND_INGRESS_SPAN
+from openqilin.observability.tracing.spans import (
+    AUDIT_EMIT_SPAN,
+    BUDGET_RESERVATION_SPAN,
+    EXECUTION_SANDBOX_SPAN,
+    OWNER_COMMAND_INGRESS_SPAN,
+    POLICY_EVALUATION_SPAN,
+    TASK_ORCHESTRATION_SPAN,
+)
 from openqilin.observability.tracing.tracer import InMemoryTracer
 from openqilin.policy_runtime_integration.client import InMemoryPolicyRuntimeClient
 from openqilin.policy_runtime_integration.fail_closed import evaluate_with_fail_closed
@@ -166,16 +173,21 @@ def _denied_response(
 
 def _emit_outcome_observability(
     *,
+    tracer: InMemoryTracer,
     audit_writer: InMemoryAuditWriter,
     metric_recorder: InMemoryMetricRecorder,
     trace_id: str,
     request_id: str | None,
     task_id: str | None,
     principal_id: str | None,
+    principal_role: str | None,
     source: str,
     outcome: str,
     error_code: str | None,
     message: str,
+    policy_version: str | None = None,
+    policy_hash: str | None = None,
+    rule_ids: list[str] | None = None,
     attributes: dict[str, object] | None = None,
 ) -> None:
     """Record final owner-command outcome in metrics and audit streams."""
@@ -184,22 +196,42 @@ def _emit_outcome_observability(
         "owner_command_admission_outcomes_total",
         labels={"outcome": outcome, "source": source},
     )
-    audit_writer.write_event(
-        event_type=f"owner_command.{outcome}",
-        outcome=outcome,
+    with tracer.start_span(
         trace_id=trace_id or "missing-trace-id",
-        request_id=request_id,
-        task_id=task_id,
-        principal_id=principal_id,
-        source=source,
-        reason_code=error_code,
-        message=message,
-        attributes=attributes,
-    )
+        name=AUDIT_EMIT_SPAN,
+        attributes={"audit.event_type": f"owner_command.{outcome}", "source": source},
+    ) as span:
+        span.set_attribute("correlation.trace_id", trace_id or "missing-trace-id")
+        span.set_attribute("outcome", outcome)
+        audit_writer.write_event(
+            event_type=f"owner_command.{outcome}",
+            outcome=outcome,
+            trace_id=trace_id or "missing-trace-id",
+            request_id=request_id,
+            task_id=task_id,
+            principal_id=principal_id,
+            principal_role=principal_role,
+            source=source,
+            reason_code=error_code,
+            message=message,
+            policy_version=policy_version,
+            policy_hash=policy_hash,
+            rule_ids=rule_ids,
+            payload={
+                "outcome": outcome,
+                "source": source,
+                "error_code": error_code,
+                "message": message,
+                "request_id": request_id,
+                "task_id": task_id,
+            },
+            attributes=attributes,
+        )
 
 
 def _emit_replay_observability(
     *,
+    tracer: InMemoryTracer,
     audit_writer: InMemoryAuditWriter,
     metric_recorder: InMemoryMetricRecorder,
     task: TaskRecord,
@@ -213,52 +245,92 @@ def _emit_replay_observability(
         "owner_command_replays_total",
         labels={"outcome": outcome, "source": source},
     )
-    audit_writer.write_event(
-        event_type="owner_command.replayed",
-        outcome=outcome,
+    outcome_details = dict(task.outcome_details or ())
+    rule_ids = _parse_rule_ids(outcome_details.get("rule_ids"))
+    with tracer.start_span(
         trace_id=task.trace_id,
-        request_id=task.request_id,
-        task_id=task.task_id,
-        principal_id=task.principal_id,
-        source=source,
-        reason_code=task.outcome_error_code,
-        message=message,
-        attributes={
-            "replayed": "true",
-            "status": task.status,
-            "dispatch_target": task.dispatch_target or "unknown",
-        },
-    )
+        name=AUDIT_EMIT_SPAN,
+        attributes={"audit.event_type": "owner_command.replayed", "source": source},
+    ) as span:
+        span.set_attribute("correlation.task_id", task.task_id)
+        span.set_attribute("outcome", outcome)
+        audit_writer.write_event(
+            event_type="owner_command.replayed",
+            outcome=outcome,
+            trace_id=task.trace_id,
+            request_id=task.request_id,
+            task_id=task.task_id,
+            principal_id=task.principal_id,
+            principal_role=task.principal_role,
+            source=source,
+            reason_code=task.outcome_error_code,
+            message=message,
+            policy_version=outcome_details.get("policy_version"),
+            policy_hash=outcome_details.get("policy_hash"),
+            rule_ids=rule_ids,
+            payload={
+                "replayed": "true",
+                "status": task.status,
+                "dispatch_target": task.dispatch_target or "unknown",
+            },
+            attributes={
+                "replayed": "true",
+                "status": task.status,
+                "dispatch_target": task.dispatch_target or "unknown",
+            },
+        )
 
 
 def _emit_stage_decision_audit(
     *,
+    tracer: InMemoryTracer,
     audit_writer: InMemoryAuditWriter,
     trace_id: str,
     request_id: str,
     task_id: str,
     principal_id: str,
+    principal_role: str,
     stage: str,
     decision: str,
     source: str,
     reason_code: str | None,
     message: str,
+    policy_version: str | None = None,
+    policy_hash: str | None = None,
+    rule_ids: list[str] | None = None,
     attributes: dict[str, object] | None = None,
 ) -> None:
     """Record policy/budget stage decisions as immutable audit events."""
 
-    audit_writer.write_event(
-        event_type=f"{stage}.decision",
-        outcome=decision,
+    with tracer.start_span(
         trace_id=trace_id,
-        request_id=request_id,
-        task_id=task_id,
-        principal_id=principal_id,
-        source=source,
-        reason_code=reason_code,
-        message=message,
-        attributes=attributes,
-    )
+        name=AUDIT_EMIT_SPAN,
+        attributes={"audit.event_type": f"{stage}.decision", "stage": stage},
+    ) as span:
+        span.set_attribute("correlation.task_id", task_id)
+        span.set_attribute("decision", decision)
+        audit_writer.write_event(
+            event_type=f"{stage}.decision",
+            outcome=decision,
+            trace_id=trace_id,
+            request_id=request_id,
+            task_id=task_id,
+            principal_id=principal_id,
+            principal_role=principal_role,
+            source=source,
+            reason_code=reason_code,
+            message=message,
+            policy_version=policy_version,
+            policy_hash=policy_hash,
+            rule_ids=rule_ids,
+            payload={
+                "stage": stage,
+                "decision": decision,
+                "source": source,
+                "reason_code": reason_code,
+            },
+            attributes=attributes,
+        )
 
 
 def _replayed_response(task: TaskRecord) -> OwnerCommandResponse | JSONResponse:
@@ -412,12 +484,14 @@ def submit_owner_command(
             span.set_attribute("outcome", "denied")
             span.set_attribute("source", "connector_security")
             _emit_outcome_observability(
+                tracer=tracer,
                 audit_writer=audit_writer,
                 metric_recorder=metric_recorder,
                 trace_id=trace_id,
                 request_id=request_id,
                 task_id=task_id,
                 principal_id=principal_id,
+                principal_role=payload.sender.actor_role,
                 source="connector_security",
                 outcome="denied",
                 error_code=error.code,
@@ -446,12 +520,14 @@ def submit_owner_command(
             span.set_attribute("outcome", "denied")
             span.set_attribute("source", "identity")
             _emit_outcome_observability(
+                tracer=tracer,
                 audit_writer=audit_writer,
                 metric_recorder=metric_recorder,
                 trace_id=trace_id,
                 request_id=request_id,
                 task_id=task_id,
                 principal_id=principal_id,
+                principal_role=payload.sender.actor_role,
                 source="identity",
                 outcome="denied",
                 error_code=error.code,
@@ -483,12 +559,14 @@ def submit_owner_command(
             span.set_attribute("outcome", "denied")
             span.set_attribute("source", "payload")
             _emit_outcome_observability(
+                tracer=tracer,
                 audit_writer=audit_writer,
                 metric_recorder=metric_recorder,
                 trace_id=trace_id,
                 request_id=request_id,
                 task_id=task_id,
                 principal_id=principal_id,
+                principal_role=principal.principal_role,
                 source="payload",
                 outcome="denied",
                 error_code=error.code,
@@ -508,18 +586,26 @@ def submit_owner_command(
         request_id = envelope.request_id
         span.set_attribute("correlation.request_id", request_id)
         try:
-            admission_result = admission_service.admit_owner_command(envelope)
+            with tracer.start_span(
+                trace_id=trace_id,
+                name=TASK_ORCHESTRATION_SPAN,
+                attributes={"stage": "admission"},
+            ) as orchestration_span:
+                orchestration_span.set_attribute("correlation.request_id", request_id)
+                admission_result = admission_service.admit_owner_command(envelope)
         except AdmissionIdempotencyError as error:
             span.set_status("error")
             span.set_attribute("outcome", "denied")
             span.set_attribute("source", "idempotency")
             _emit_outcome_observability(
+                tracer=tracer,
                 audit_writer=audit_writer,
                 metric_recorder=metric_recorder,
                 trace_id=trace_id,
                 request_id=request_id,
                 task_id=task_id,
                 principal_id=principal_id,
+                principal_role=principal.principal_role,
                 source="idempotency",
                 outcome="denied",
                 error_code=error.code,
@@ -544,7 +630,10 @@ def submit_owner_command(
         span.set_attribute("correlation.task_id", task_id)
         span.set_attribute("replayed", str(admission_result.replayed).lower())
 
-        if admission_result.replayed and admission_result.task.status != "admitted":
+        if admission_result.replayed and admission_result.task.status not in {
+            "queued",
+            "authorized",
+        }:
             replay_outcome = (
                 "accepted" if admission_result.task.status == "dispatched" else "denied"
             )
@@ -556,6 +645,7 @@ def submit_owner_command(
             span.set_attribute("outcome", replay_outcome)
             span.set_attribute("source", replay_source)
             _emit_replay_observability(
+                tracer=tracer,
                 audit_writer=audit_writer,
                 metric_recorder=metric_recorder,
                 task=admission_result.task,
@@ -565,8 +655,14 @@ def submit_owner_command(
             )
             return _replayed_response(admission_result.task)
 
-        policy_input = normalize_policy_input(admission_result.task)
-        policy_outcome = evaluate_with_fail_closed(policy_input, policy_runtime_client)
+        with tracer.start_span(
+            trace_id=trace_id,
+            name=POLICY_EVALUATION_SPAN,
+            attributes={"stage": "policy_evaluation"},
+        ) as policy_span:
+            policy_span.set_attribute("correlation.task_id", task_id)
+            policy_input = normalize_policy_input(admission_result.task)
+            policy_outcome = evaluate_with_fail_closed(policy_input, policy_runtime_client)
         policy_decision = (
             policy_outcome.policy_result.decision
             if policy_outcome.policy_result is not None
@@ -594,16 +690,21 @@ def submit_owner_command(
         )
 
         _emit_stage_decision_audit(
+            tracer=tracer,
             audit_writer=audit_writer,
             trace_id=trace_id,
             request_id=request_id,
             task_id=task_id,
             principal_id=principal_id,
+            principal_role=admission_result.task.principal_role,
             stage="policy",
             decision=policy_decision,
             source="policy_runtime",
             reason_code=policy_reason,
             message=policy_outcome.message,
+            policy_version=policy_version,
+            policy_hash=policy_hash,
+            rule_ids=rule_ids,
             attributes={
                 "policy_version": policy_version,
                 "policy_hash": policy_hash,
@@ -627,7 +728,7 @@ def submit_owner_command(
 
             runtime_state_repo.update_task_status(
                 admission_result.task.task_id,
-                "blocked_policy",
+                "blocked",
                 outcome_source="policy_runtime",
                 outcome_error_code=policy_outcome.error_code or "policy_blocked",
                 outcome_message=policy_outcome.message,
@@ -637,16 +738,21 @@ def submit_owner_command(
             span.set_attribute("outcome", "denied")
             span.set_attribute("source", "policy_runtime")
             _emit_outcome_observability(
+                tracer=tracer,
                 audit_writer=audit_writer,
                 metric_recorder=metric_recorder,
                 trace_id=trace_id,
                 request_id=request_id,
                 task_id=task_id,
                 principal_id=principal_id,
+                principal_role=admission_result.task.principal_role,
                 source="policy_runtime",
                 outcome="denied",
                 error_code=policy_outcome.error_code or "policy_blocked",
                 message=policy_outcome.message,
+                policy_version=policy_version,
+                policy_hash=policy_hash,
+                rule_ids=rule_ids,
                 attributes={
                     "decision": policy_decision,
                     "policy_version": policy_version,
@@ -667,7 +773,29 @@ def submit_owner_command(
                 rule_ids=rule_ids,
             )
 
-        budget_outcome = budget_reservation_service.reserve_with_fail_closed(admission_result.task)
+        runtime_state_repo.update_task_status(
+            admission_result.task.task_id,
+            "authorized",
+            outcome_source="policy_runtime",
+            outcome_error_code=None,
+            outcome_message="policy authorized command",
+            outcome_details={
+                "decision": policy_decision,
+                "policy_version": policy_version,
+                "policy_hash": policy_hash,
+                "rule_ids": ",".join(rule_ids),
+            },
+        )
+
+        with tracer.start_span(
+            trace_id=trace_id,
+            name=BUDGET_RESERVATION_SPAN,
+            attributes={"stage": "budget_reservation"},
+        ) as budget_span:
+            budget_span.set_attribute("correlation.task_id", task_id)
+            budget_outcome = budget_reservation_service.reserve_with_fail_closed(
+                admission_result.task
+            )
         budget_decision = (
             budget_outcome.reservation.decision
             if budget_outcome.reservation is not None
@@ -685,16 +813,21 @@ def submit_owner_command(
         )
 
         _emit_stage_decision_audit(
+            tracer=tracer,
             audit_writer=audit_writer,
             trace_id=trace_id,
             request_id=request_id,
             task_id=task_id,
             principal_id=principal_id,
+            principal_role=admission_result.task.principal_role,
             stage="budget",
             decision=budget_decision,
             source="budget_runtime",
             reason_code=budget_reason,
             message=budget_outcome.message,
+            policy_version=policy_version,
+            policy_hash=policy_hash,
+            rule_ids=rule_ids,
             attributes={
                 "budget_version": budget_version,
                 "policy_version": policy_version,
@@ -722,7 +855,7 @@ def submit_owner_command(
 
             runtime_state_repo.update_task_status(
                 admission_result.task.task_id,
-                "blocked_budget",
+                "blocked",
                 outcome_source="budget_runtime",
                 outcome_error_code=budget_outcome.error_code or "budget_blocked",
                 outcome_message=budget_outcome.message,
@@ -732,16 +865,21 @@ def submit_owner_command(
             span.set_attribute("outcome", "denied")
             span.set_attribute("source", "budget_runtime")
             _emit_outcome_observability(
+                tracer=tracer,
                 audit_writer=audit_writer,
                 metric_recorder=metric_recorder,
                 trace_id=trace_id,
                 request_id=request_id,
                 task_id=task_id,
                 principal_id=principal_id,
+                principal_role=admission_result.task.principal_role,
                 source="budget_runtime",
                 outcome="denied",
                 error_code=budget_outcome.error_code or "budget_blocked",
                 message=budget_outcome.message,
+                policy_version=policy_version,
+                policy_hash=policy_hash,
+                rule_ids=rule_ids,
                 attributes={"decision": budget_decision, "budget_version": budget_version},
             )
             return _denied_response(
@@ -757,7 +895,13 @@ def submit_owner_command(
                 rule_ids=rule_ids,
             )
 
-        dispatch_outcome = task_dispatch_service.dispatch_admitted_task(admission_result.task)
+        with tracer.start_span(
+            trace_id=trace_id,
+            name=EXECUTION_SANDBOX_SPAN,
+            attributes={"stage": "execution_dispatch"},
+        ) as dispatch_span:
+            dispatch_span.set_attribute("correlation.task_id", task_id)
+            dispatch_outcome = task_dispatch_service.dispatch_admitted_task(admission_result.task)
         if not dispatch_outcome.accepted:
             details = {
                 "source": "dispatch_stub",
@@ -776,16 +920,21 @@ def submit_owner_command(
             span.set_attribute("source", "dispatch_stub")
             span.set_attribute("dispatch_target", dispatch_outcome.target)
             _emit_outcome_observability(
+                tracer=tracer,
                 audit_writer=audit_writer,
                 metric_recorder=metric_recorder,
                 trace_id=trace_id,
                 request_id=request_id,
                 task_id=task_id,
                 principal_id=principal_id,
+                principal_role=admission_result.task.principal_role,
                 source="dispatch_stub",
                 outcome="denied",
                 error_code=dispatch_outcome.error_code or "execution_dispatch_failed",
                 message=dispatch_outcome.message,
+                policy_version=policy_version,
+                policy_hash=policy_hash,
+                rule_ids=rule_ids,
                 attributes={"dispatch_target": dispatch_outcome.target},
             )
             return _denied_response(
@@ -809,16 +958,21 @@ def submit_owner_command(
         span.set_attribute("source", "dispatch")
         span.set_attribute("dispatch_target", dispatch_outcome.target)
         _emit_outcome_observability(
+            tracer=tracer,
             audit_writer=audit_writer,
             metric_recorder=metric_recorder,
             trace_id=response_task.trace_id,
             request_id=response_task.request_id,
             task_id=response_task.task_id,
             principal_id=response_task.principal_id,
+            principal_role=response_task.principal_role,
             source=f"dispatch_{dispatch_outcome.target}",
             outcome="accepted",
             error_code=None,
             message=dispatch_outcome.message,
+            policy_version=policy_version,
+            policy_hash=policy_hash,
+            rule_ids=rule_ids,
             attributes={
                 "dispatch_target": dispatch_outcome.target,
                 "dispatch_id": dispatch_outcome.dispatch_id or "dispatch-id-missing",

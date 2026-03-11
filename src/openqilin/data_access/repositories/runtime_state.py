@@ -61,7 +61,7 @@ class InMemoryRuntimeStateRepository:
             metadata=envelope.metadata,
             project_id=envelope.project_id,
             idempotency_key=envelope.idempotency_key,
-            status="admitted",
+            status="queued",
             created_at=datetime.now(tz=UTC),
         )
         self._task_by_id[task.task_id] = task

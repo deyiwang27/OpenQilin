@@ -46,7 +46,7 @@ class TaskLifecycleService:
 
         return self._runtime_state_repo.update_task_status(
             task_id,
-            "blocked_dispatch",
+            "blocked",
             outcome_source="dispatch_stub",
             outcome_error_code=error_code,
             outcome_message=message,

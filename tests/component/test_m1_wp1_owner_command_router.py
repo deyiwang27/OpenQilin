@@ -223,7 +223,7 @@ def test_submit_owner_command_denies_policy_deny() -> None:
         body["error"]["details"]["task_id"]
     )
     assert task is not None
-    assert task.status == "blocked_policy"
+    assert task.status == "blocked"
 
 
 def test_submit_owner_command_denies_budget_deny() -> None:
@@ -251,7 +251,7 @@ def test_submit_owner_command_denies_budget_deny() -> None:
         body["error"]["details"]["task_id"]
     )
     assert task is not None
-    assert task.status == "blocked_budget"
+    assert task.status == "blocked"
 
 
 def test_submit_owner_command_denies_dispatch_reject() -> None:
@@ -279,7 +279,7 @@ def test_submit_owner_command_denies_dispatch_reject() -> None:
         body["error"]["details"]["task_id"]
     )
     assert task is not None
-    assert task.status == "blocked_dispatch"
+    assert task.status == "blocked"
 
 
 def test_submit_owner_command_accepts_llm_target_stub() -> None:
@@ -343,12 +343,13 @@ def test_submit_owner_command_emits_observability_on_accept() -> None:
     assert accepted_event.task_id == body["data"]["task_id"]
 
     spans = services.tracer.get_spans()
-    assert len(spans) == 1
-    span_attrs = dict(spans[0].attributes)
-    assert spans[0].trace_id == body["trace_id"]
-    assert spans[0].name == "owner_command.ingress"
-    assert span_attrs["outcome"] == "accepted"
-    assert span_attrs["correlation.task_id"] == body["data"]["task_id"]
+    span_names = [span.name for span in spans]
+    assert "owner_ingress" in span_names
+    assert "task_orchestration" in span_names
+    assert "policy_evaluation" in span_names
+    assert "budget_reservation" in span_names
+    assert "execution_sandbox" in span_names
+    assert "audit_emit" in span_names
 
 
 def test_submit_owner_command_emits_observability_on_policy_deny() -> None:
@@ -391,8 +392,9 @@ def test_submit_owner_command_emits_observability_on_policy_deny() -> None:
     assert denied_event.task_id == denied_task.task_id
 
     spans = services.tracer.get_spans()
-    assert len(spans) == 1
-    span_attrs = dict(spans[0].attributes)
-    assert spans[0].status == "error"
-    assert span_attrs["outcome"] == "denied"
-    assert span_attrs["source"] == "policy_runtime"
+    span_names = [span.name for span in spans]
+    assert "owner_ingress" in span_names
+    assert "task_orchestration" in span_names
+    assert "policy_evaluation" in span_names
+    assert "audit_emit" in span_names
+    assert any(span.status == "error" for span in spans)
