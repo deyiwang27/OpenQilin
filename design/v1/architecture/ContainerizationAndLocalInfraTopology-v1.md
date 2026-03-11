@@ -127,5 +127,5 @@ Deferred beyond v1 initial implementation:
 ## 12. Related Design Artifacts
 - `design/v1/foundation/ImplementationFoundation-v1.md`
 - `design/v1/architecture/ImplementationArchitecture-v1.md`
-- `design/v1/foundation/DeveloperWorkflowAndContributionGuide-v1.md`
+- `implementation/v1/workflow/DeveloperWorkflowAndContributionGuide-v1.md`
 - `design/v1/components/ObservabilityComponentDesign-v1.md`

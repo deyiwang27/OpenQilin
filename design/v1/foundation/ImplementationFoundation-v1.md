@@ -152,4 +152,4 @@ docker compose run --rm admin bootstrap
 ## 7. Related Follow-Ups
 - architecture and module map live in `design/v1/architecture/ImplementationArchitecture-v1.md`
 - authoritative local bring-up lives in `design/v1/architecture/ContainerizationAndLocalInfraTopology-v1.md`
-- quality and delivery details live in `design/v1/quality/QualityAndDelivery-v1.md`
+- quality and delivery details live in `implementation/v1/quality/QualityAndDelivery-v1.md`

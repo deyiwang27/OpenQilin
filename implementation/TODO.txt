@@ -6,7 +6,7 @@ Archive status: active
 Tracking model:
 - GitHub Issues/PRs/Project remain the execution source of truth.
 - This file is the implementation-stage working checklist mirror for fast local progress scanning.
-- Milestone-level status authority remains in `design/v1/planning/ImplementationProgress-v1.md`.
+- Milestone-level status authority remains in `implementation/v1/planning/ImplementationProgress-v1.md`.
 
 Status legend:
 - `todo`
@@ -45,4 +45,4 @@ Checklist:
 Update routine:
 - On issue start: add/update item here with branch + issue id.
 - On PR open/merge: update item status and attach PR link in GitHub issue evidence.
-- Weekly: sync milestone percentage and evidence into `design/v1/planning/ImplementationProgress-v1.md`.
+- Weekly: sync milestone percentage and evidence into `implementation/v1/planning/ImplementationProgress-v1.md`.

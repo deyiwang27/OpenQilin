@@ -49,6 +49,6 @@ Config rollback:
 - release promotion remains manual in the local-first phase
 
 ## 7. Related Design Artifacts
-- `design/v1/quality/QualityAndDelivery-v1.md`
+- `implementation/v1/quality/QualityAndDelivery-v1.md`
 - `design/v1/architecture/ContainerizationAndLocalInfraTopology-v1.md`
 - `design/v1/readiness/DesignReviewChecklistAndExitCriteria-v1.md`

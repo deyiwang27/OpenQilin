@@ -31,7 +31,7 @@ Fixture rules:
 
 ## 3. CI Workflow
 Recommended branch workflow:
-- follow `design/v1/foundation/GitHubOperationsManagementGuide-v1.md` as canonical branch policy
+- follow `implementation/v1/workflow/GitHubOperationsManagementGuide-v1.md` as canonical branch policy
 - short-lived branches only, created from latest `main`
 - PR into protected `main` (or documented procedural equivalent) using squash merge
 - no direct commits to `main` for implementation code
@@ -84,4 +84,4 @@ Manual promotion gates:
 ## 7. Related Follow-Ups
 - implementation architecture lives in `design/v1/architecture/ImplementationArchitecture-v1.md`
 - foundation/bootstrap details live in `design/v1/foundation/ImplementationFoundation-v1.md`
-- GitHub issue/PR/release operations live in `design/v1/foundation/GitHubOperationsManagementGuide-v1.md`
+- GitHub issue/PR/release operations live in `implementation/v1/workflow/GitHubOperationsManagementGuide-v1.md`

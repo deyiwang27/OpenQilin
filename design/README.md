@@ -15,9 +15,9 @@ Scope of this folder:
 - Component-level design docs
 - Sequence and interaction design
 - Data and migration design
-- Implementation foundation and developer workflow design
+- Foundation and framework design decisions
 - Implementation architecture, container topology, and module-level design
-- Quality, planning, and readiness artifacts
+- Design review and readiness artifacts
 
 Current design cycle:
 - `v1/`
@@ -25,3 +25,4 @@ Current design cycle:
 Start:
 - `design/TODO.txt` is archived for historical design closeout.
 - Read `design/v1/README.md`
+- For active implementation execution docs, read `implementation/v1/README.md`.

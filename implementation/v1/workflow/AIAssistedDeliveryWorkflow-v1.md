@@ -78,8 +78,8 @@ All items must be true before merge:
 - record any regressions/incidents as new tracked issues.
 
 ## 10. Related Documents
-- `design/v1/foundation/GitHubOperationsManagementGuide-v1.md`
-- `design/v1/foundation/DeveloperWorkflowAndContributionGuide-v1.md`
-- `design/v1/quality/QualityAndDelivery-v1.md`
-- `design/v1/planning/ImplementationExecutionPlan-v1.md`
-- `design/v1/planning/ImplementationProgress-v1.md`
+- `implementation/v1/workflow/GitHubOperationsManagementGuide-v1.md`
+- `implementation/v1/workflow/DeveloperWorkflowAndContributionGuide-v1.md`
+- `implementation/v1/quality/QualityAndDelivery-v1.md`
+- `implementation/v1/planning/ImplementationExecutionPlan-v1.md`
+- `implementation/v1/planning/ImplementationProgress-v1.md`

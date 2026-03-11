@@ -7,11 +7,11 @@
 ## 2. Authority and Tracking Boundary
 - `design/TODO.txt` remains the historical and design-stage tracker. It is not reused as the live implementation backlog.
 - GitHub Issues/Project is the primary execution system for implementation tracking and day-to-day status.
-- `design/v1/planning/ImplementationProgress-v1.md` is the in-repo mirror for milestone-level progress snapshots.
+- `implementation/v1/planning/ImplementationProgress-v1.md` is the in-repo mirror for milestone-level progress snapshots.
 - `implementation/TODO.txt` is the implementation-stage working checklist mirror and must not override GitHub/Progress evidence.
 
 ## 3. Milestone Model
-Milestone names and ordering match `design/v1/planning/ImplementationMilestones-v1.md`.
+Milestone names and ordering match `implementation/v1/planning/ImplementationMilestones-v1.md`.
 
 | Milestone | Goal | Feature Set | Exit Evidence |
 | --- | --- | --- | --- |
@@ -45,8 +45,8 @@ Required label groups:
 - Milestone close rule: milestone can close only when exit evidence is attached and all required feature issues are closed.
 
 ## 6. Related Documents
-- `design/v1/foundation/AIAssistedDeliveryWorkflow-v1.md`
-- `design/v1/planning/ImplementationBacklogSeed-v1.md`
-- `design/v1/planning/ImplementationMilestones-v1.md`
-- `design/v1/planning/ImplementationProgress-v1.md`
-- `design/v1/foundation/GitHubOperationsManagementGuide-v1.md`
+- `implementation/v1/workflow/AIAssistedDeliveryWorkflow-v1.md`
+- `implementation/v1/planning/ImplementationBacklogSeed-v1.md`
+- `implementation/v1/planning/ImplementationMilestones-v1.md`
+- `implementation/v1/planning/ImplementationProgress-v1.md`
+- `implementation/v1/workflow/GitHubOperationsManagementGuide-v1.md`

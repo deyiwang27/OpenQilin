@@ -7,7 +7,7 @@
 ## 2. Planning Authority
 - `design/TODO.txt` is a design-stage tracker and historical closeout record.
 - GitHub Issues/PRs/Project are the authoritative implementation execution tracker.
-- `design/v1/planning/ImplementationProgress-v1.md` is the in-repo milestone/status mirror.
+- `implementation/v1/planning/ImplementationProgress-v1.md` is the in-repo milestone/status mirror.
 - If implementation status differs, GitHub issue/PR evidence is authoritative and the progress mirror must be updated.
 
 ## 3. Milestones

@@ -39,4 +39,4 @@ Review Notes (2026-03-10)
 Current status:
 - No open TODO items remain in `spec/` backlog for the Define phase.
 - This file is a historical closeout snapshot for the Define phase (`2026-03-10`).
-- Design and implementation phases continued after this snapshot; active implementation tracking is in GitHub Issues/PRs/Project with `design/v1/planning/ImplementationProgress-v1.md` as the in-repo mirror.
+- Design and implementation phases continued after this snapshot; active implementation tracking is in GitHub Issues/PRs/Project with `implementation/v1/planning/ImplementationProgress-v1.md` as the in-repo mirror.

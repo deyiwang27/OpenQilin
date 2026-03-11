@@ -6,7 +6,7 @@
 
 ## 2. Operational Source of Truth
 - GitHub Issues/PRs/Project are the primary execution tracking system.
-- `design/v1/planning/ImplementationProgress-v1.md` is the in-repo mirror for milestone-level status and evidence.
+- `implementation/v1/planning/ImplementationProgress-v1.md` is the in-repo mirror for milestone-level status and evidence.
 - `main` is the integration branch for implementation PRs.
 
 ## 3. Access and Tooling Prerequisites
@@ -126,8 +126,8 @@ Fallback for repositories where branch protection is unavailable:
 - record governance exception in issue/PR evidence when protection controls are not technically available
 
 ## 10. Related Documents
-- `design/v1/foundation/AIAssistedDeliveryWorkflow-v1.md`
-- `design/v1/foundation/DeveloperWorkflowAndContributionGuide-v1.md`
-- `design/v1/quality/QualityAndDelivery-v1.md`
-- `design/v1/planning/ImplementationExecutionPlan-v1.md`
-- `design/v1/planning/ImplementationProgress-v1.md`
+- `implementation/v1/workflow/AIAssistedDeliveryWorkflow-v1.md`
+- `implementation/v1/workflow/DeveloperWorkflowAndContributionGuide-v1.md`
+- `implementation/v1/quality/QualityAndDelivery-v1.md`
+- `implementation/v1/planning/ImplementationExecutionPlan-v1.md`
+- `implementation/v1/planning/ImplementationProgress-v1.md`

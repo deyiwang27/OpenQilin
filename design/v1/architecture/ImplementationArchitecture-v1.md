@@ -168,4 +168,4 @@ Recommended profiles:
 - foundation details live in `design/v1/foundation/ImplementationFoundation-v1.md`
 - framework details live in `design/v1/foundation/ImplementationFrameworkSelection-v1.md`
 - container topology lives in `design/v1/architecture/ContainerizationAndLocalInfraTopology-v1.md`
-- quality and delivery details live in `design/v1/quality/QualityAndDelivery-v1.md`
+- quality and delivery details live in `implementation/v1/quality/QualityAndDelivery-v1.md`

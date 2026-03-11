@@ -84,7 +84,7 @@ All criteria are mandatory for design-stage exit:
 | `design/v1/components/LlmGatewayComponentDesign-v1.md` | llm gateway routing, fallback, and model profile integration | `spec/infrastructure/architecture/LlmGatewayContract.md`, `spec/infrastructure/architecture/LlmModelRoutingProfile-v1.md`, `spec/constitution/BudgetEngineContract.md`, `spec/cross-cutting/runtime/ErrorCodesAndHandling.md` |
 | `design/v1/foundation/ImplementationFoundation-v1.md` | toolchain, prerequisites, configuration, and bootstrap posture | `spec/infrastructure/operations/DeploymentTopologyAndOps.md`, `spec/infrastructure/operations/FailureAndRecoveryModel.md`, `spec/infrastructure/architecture/RuntimeArchitecture.md` |
 | `design/v1/foundation/ImplementationFrameworkSelection-v1.md` | baseline Python library and framework selection | `spec/architecture/ArchitectureBaseline-v1.md`, `spec/infrastructure/architecture/RuntimeArchitecture.md` |
-| `design/v1/foundation/DeveloperWorkflowAndContributionGuide-v1.md` | developer contribution, local run, and merge workflow | `spec/infrastructure/operations/DeploymentTopologyAndOps.md`, `spec/cross-cutting/conformance/ConformanceTestPlan.md` |
+| `implementation/v1/workflow/DeveloperWorkflowAndContributionGuide-v1.md` | developer contribution, local run, and merge workflow | `spec/infrastructure/operations/DeploymentTopologyAndOps.md`, `spec/cross-cutting/conformance/ConformanceTestPlan.md` |
 | `design/v1/architecture/ImplementationArchitecture-v1.md` | repo layout, module map, hosting topology | `spec/architecture/ArchitectureBaseline-v1.md`, `spec/infrastructure/architecture/RuntimeArchitecture.md`, `spec/infrastructure/operations/DeploymentTopologyAndOps.md` |
 | `design/v1/architecture/ContainerizationAndLocalInfraTopology-v1.md` | local container topology and mandatory signoff stack | `spec/infrastructure/operations/DeploymentTopologyAndOps.md`, `spec/observability/ObservabilityArchitecture.md` |
 | `design/v1/architecture/ControlPlaneModuleDesign-v1.md` | implementation package split for control-plane runtime | `spec/orchestration/communication/OwnerInteractionModel.md`, `spec/cross-cutting/contracts/ProjectTaskQueryContracts.md`, `spec/cross-cutting/runtime/ErrorCodesAndHandling.md` |
@@ -95,10 +95,10 @@ All criteria are mandatory for design-stage exit:
 | `design/v1/architecture/LlmGatewayModuleDesign-v1.md` | implementation package split for llm gateway runtime | `spec/infrastructure/architecture/LlmGatewayContract.md`, `spec/infrastructure/architecture/LlmModelRoutingProfile-v1.md` |
 | `design/v1/architecture/DataAccessModuleDesign-v1.md` | implementation package split for persistence, outbox, and cache layers | `spec/infrastructure/architecture/DataModelAndSchemas.md`, `spec/infrastructure/data/StorageAndRetention.md` |
 | `design/v1/architecture/ObservabilityModuleDesign-v1.md` | implementation package split for logs, traces, metrics, alerts, and audit append | `spec/observability/ObservabilityArchitecture.md`, `spec/observability/AuditEvents.md` |
-| `design/v1/quality/QualityAndDelivery-v1.md` | test strategy, CI gates, and release posture | `spec/cross-cutting/conformance/ConformanceTestPlan.md`, `spec/infrastructure/operations/DeploymentTopologyAndOps.md` |
-| `design/v1/quality/ReleaseVersioningAndRollback-v1.md` | release packaging, versioning, and rollback rules | `spec/infrastructure/operations/DeploymentTopologyAndOps.md`, `spec/infrastructure/operations/FailureAndRecoveryModel.md` |
-| `design/v1/planning/ImplementationBacklogSeed-v1.md` | stable workstream and delivery-order reference | `spec/architecture/ArchitectureBaseline-v1.md`, `spec/cross-cutting/conformance/ConformanceTestPlan.md` |
-| `design/v1/planning/ImplementationMilestones-v1.md` | milestone sequencing and first executable slice | `spec/architecture/ArchitectureBaseline-v1.md`, `spec/cross-cutting/conformance/ConformanceTestPlan.md` |
+| `implementation/v1/quality/QualityAndDelivery-v1.md` | test strategy, CI gates, and release posture | `spec/cross-cutting/conformance/ConformanceTestPlan.md`, `spec/infrastructure/operations/DeploymentTopologyAndOps.md` |
+| `implementation/v1/quality/ReleaseVersioningAndRollback-v1.md` | release packaging, versioning, and rollback rules | `spec/infrastructure/operations/DeploymentTopologyAndOps.md`, `spec/infrastructure/operations/FailureAndRecoveryModel.md` |
+| `implementation/v1/planning/ImplementationBacklogSeed-v1.md` | stable workstream and delivery-order reference | `spec/architecture/ArchitectureBaseline-v1.md`, `spec/cross-cutting/conformance/ConformanceTestPlan.md` |
+| `implementation/v1/planning/ImplementationMilestones-v1.md` | milestone sequencing and first executable slice | `spec/architecture/ArchitectureBaseline-v1.md`, `spec/cross-cutting/conformance/ConformanceTestPlan.md` |
 | `design/v1/readiness/DesignReviewChecklistAndExitCriteria-v1.md` | design exit criteria and cross-artifact traceability | `spec/architecture/ArchitectureBaseline-v1.md`, `spec/cross-cutting/conformance/ConformanceTestPlan.md` |
 | `design/v1/readiness/DesignReviewRecord-v1.md` | design-stage review evidence and kickoff decision | `spec/architecture/ArchitectureBaseline-v1.md`, `spec/cross-cutting/conformance/ConformanceTestPlan.md` |
 
@@ -107,7 +107,7 @@ All criteria are mandatory for design-stage exit:
 - Review record present:
   - `design/v1/readiness/DesignReviewRecord-v1.md`
 - Implementation backlog seeds linked to design sections:
-  - `design/v1/planning/ImplementationBacklogSeed-v1.md`
+  - `implementation/v1/planning/ImplementationBacklogSeed-v1.md`
   - `design/TODO.txt` as the design-stage historical tracker
 - Conformance test coverage outline mapped to key rule families (`RT`, `POL`, `BUD`, `A2A`, `ACP`, `OBS`, `MET`, `LOG`, `SCHEMA`, `MEM`, `STR`).
 

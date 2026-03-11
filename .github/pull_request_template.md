@@ -31,7 +31,7 @@
 - [ ] Local verification commands are listed above.
 - [ ] Required checks for this change type are green.
 - [ ] Contract or migration changes include corresponding design/spec updates.
-- [ ] `design/v1/planning/ImplementationProgress-v1.md` updated when milestone status/evidence changed.
+- [ ] `implementation/v1/planning/ImplementationProgress-v1.md` updated when milestone status/evidence changed.
 
 ## Reviewer Notes
 - Risks:
