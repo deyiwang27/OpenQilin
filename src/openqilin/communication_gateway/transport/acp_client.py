@@ -57,10 +57,23 @@ class AcpClient(Protocol):
 class InMemoryAcpClient:
     """Deterministic in-memory ACP client for send/ack/nack lifecycle tests."""
 
+    def __init__(self) -> None:
+        self._attempt_by_message_key: dict[str, int] = {}
+
     def send(self, payload: AcpSendRequest) -> AcpSendReceipt:
         """Send message and return deterministic ack/nack outcome."""
 
+        message_key = f"{payload.command}:{payload.message_id}:{payload.external_message_id}"
+        attempt = self._attempt_by_message_key.get(message_key, 0) + 1
+        self._attempt_by_message_key[message_key] = attempt
+
         if payload.command == "msg_transport_error":
+            raise AcpClientError(
+                code="acp_transport_unavailable",
+                message="ACP transport unavailable during send",
+                retryable=True,
+            )
+        if payload.command == "msg_transport_retry_then_ack" and attempt == 1:
             raise AcpClientError(
                 code="acp_transport_unavailable",
                 message="ACP transport unavailable during send",
@@ -69,6 +82,15 @@ class InMemoryAcpClient:
 
         dispatch_id = f"acp-{uuid4()}"
         delivery_id = f"delivery-{uuid4()}"
+        if payload.command == "msg_dispatch_retry_then_ack" and attempt == 1:
+            return AcpSendReceipt(
+                dispatch_id=dispatch_id,
+                delivery_id=delivery_id,
+                status="nack",
+                code="acp_delivery_nack_retryable",
+                message="ACP transport returned retryable nack",
+                retryable=True,
+            )
         if payload.command == "msg_dispatch_reject":
             return AcpSendReceipt(
                 dispatch_id=dispatch_id,

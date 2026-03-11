@@ -7,6 +7,7 @@ from uuid import uuid4
 
 from openqilin.data_access.repositories.runtime_state import TaskRecord
 from openqilin.data_access.repositories.communication import CommunicationMessageRecord
+from openqilin.communication_gateway.storage.idempotency_store import CommunicationIdempotencyRecord
 from openqilin.llm_gateway.schemas.responses import LlmGatewayResponse
 from openqilin.llm_gateway.service import build_llm_gateway_service
 from openqilin.task_orchestrator.dispatch.llm_dispatch import (
@@ -367,6 +368,16 @@ class TaskDispatchService:
         adapter = self._communication_dispatch_adapter
         if isinstance(adapter, InMemoryCommunicationDispatchAdapter):
             return adapter.list_message_records(task_id=task_id)
+        return ()
+
+    def list_communication_idempotency_records(
+        self,
+    ) -> tuple[CommunicationIdempotencyRecord, ...]:
+        """Expose communication idempotency records for diagnostics/tests."""
+
+        adapter = self._communication_dispatch_adapter
+        if isinstance(adapter, InMemoryCommunicationDispatchAdapter):
+            return adapter.list_idempotency_records()
         return ()
 
 

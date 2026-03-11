@@ -11,6 +11,7 @@ from openqilin.communication_gateway.delivery.publisher import (
     InMemoryDeliveryPublisher,
     PublishRequest,
 )
+from openqilin.communication_gateway.storage.idempotency_store import CommunicationIdempotencyRecord
 from openqilin.data_access.repositories.communication import CommunicationMessageRecord
 from openqilin.communication_gateway.transport.route_resolver import (
     RouteResolutionError,
@@ -107,12 +108,15 @@ class InMemoryCommunicationDispatchAdapter:
             PublishRequest(
                 task_id=payload.task_id,
                 trace_id=payload.trace_id,
+                principal_id=payload.principal_id,
+                idempotency_key=payload.idempotency_key,
                 message_id=envelope.message_id,
                 external_message_id=envelope.external_message_id,
                 connector=envelope.connector,
                 command=envelope.command,
                 target=envelope.target,
                 args=envelope.args,
+                project_id=envelope.project_id,
                 route_key=route.route_key,
                 endpoint=route.endpoint,
             )
@@ -145,4 +149,12 @@ class InMemoryCommunicationDispatchAdapter:
         publisher = self._publisher
         if isinstance(publisher, InMemoryDeliveryPublisher):
             return publisher.list_message_records(task_id=task_id)
+        return ()
+
+    def list_idempotency_records(self) -> tuple[CommunicationIdempotencyRecord, ...]:
+        """List communication idempotency records for diagnostics/tests."""
+
+        publisher = self._publisher
+        if isinstance(publisher, InMemoryDeliveryPublisher):
+            return publisher.list_idempotency_records()
         return ()
