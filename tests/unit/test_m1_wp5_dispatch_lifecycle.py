@@ -1,5 +1,4 @@
 from openqilin.control_plane.identity.principal_resolver import resolve_principal
-from openqilin.control_plane.schemas.owner_commands import OwnerCommandRequest
 from openqilin.data_access.repositories.runtime_state import (
     InMemoryRuntimeStateRepository,
     TaskRecord,
@@ -8,25 +7,24 @@ from openqilin.task_orchestrator.admission.envelope_validator import validate_ow
 from openqilin.task_orchestrator.dispatch.sandbox_dispatch import SandboxDispatchStub
 from openqilin.task_orchestrator.services.lifecycle_service import TaskLifecycleService
 from openqilin.task_orchestrator.services.task_service import TaskDispatchService
+from openqilin.testing.owner_command import build_owner_command_request_model
 
 
 def _build_task(command: str) -> tuple[TaskRecord, InMemoryRuntimeStateRepository]:
-    payload = OwnerCommandRequest(
-        command=command,
+    payload = build_owner_command_request_model(
+        action=command,
         args=["alpha"],
+        actor_id="owner_dispatch_001",
         idempotency_key=f"idem-{command}-12345678",
+        trace_id="trace-dispatch-test",
     )
     principal = resolve_principal(
         {
-            "x-openqilin-user-id": "owner_dispatch_001",
-            "x-openqilin-connector": "discord",
+            "x-external-channel": "discord",
+            "x-openqilin-actor-external-id": "owner_dispatch_001",
         }
     )
-    envelope = validate_owner_command_envelope(
-        payload=payload,
-        principal=principal,
-        trace_id="trace-dispatch-test",
-    )
+    envelope = validate_owner_command_envelope(payload=payload, principal=principal)
     repository = InMemoryRuntimeStateRepository()
     task = repository.create_task_from_envelope(envelope)
     return task, repository

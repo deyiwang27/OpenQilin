@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 import platform
 import sys
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any, Mapping
 from uuid import uuid4
 
 import httpx
@@ -19,6 +23,7 @@ from fastapi.testclient import TestClient
 from openqilin.apps.api_app import create_app
 from openqilin.apps.communication_worker import main as communication_worker_main
 from openqilin.apps.orchestrator_worker import main as orchestrator_worker_main
+from openqilin.control_plane.identity.connector_security import sign_payload_hash
 from openqilin.data_access.db.engine import ping_database, resolve_database_url
 from openqilin.shared_kernel.config import RuntimeSettings
 
@@ -71,12 +76,41 @@ def run_migration_check(alembic_ini_path: Path) -> CheckResult:
     return CheckResult("migrate", True, "migrations applied to head")
 
 
-def _smoke_payload() -> dict[str, object]:
-    return {
-        "command": "run_task",
-        "args": ["smoke"],
-        "idempotency_key": f"idem-admin-smoke-{uuid4()}",
+def _serialize_for_hash(data: Mapping[str, Any]) -> bytes:
+    return json.dumps(data, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
+
+
+def _smoke_payload() -> tuple[dict[str, Any], str]:
+    idempotency_key = f"idem-admin-smoke-{uuid4()}"
+    trace_id = f"trace-admin-smoke-{uuid4()}"
+    core_payload: dict[str, Any] = {
+        "message_id": f"msg-admin-smoke-{uuid4()}",
+        "trace_id": trace_id,
+        "sender": {"actor_id": "owner_admin_smoke", "actor_role": "owner"},
+        "recipients": [{"recipient_id": "sandbox", "recipient_type": "runtime"}],
+        "message_type": "command",
+        "priority": "normal",
+        "timestamp": datetime.now(tz=UTC).isoformat(),
+        "content": "admin smoke command",
+        "project_id": "smoke-project",
+        "connector": {
+            "channel": "discord",
+            "external_message_id": f"ext-admin-smoke-{uuid4()}",
+            "actor_external_id": "owner_admin_smoke",
+            "idempotency_key": idempotency_key,
+        },
+        "command": {
+            "action": "run_task",
+            "target": "sandbox",
+            "payload": {"args": ["smoke"]},
+        },
     }
+    raw_payload_hash = hashlib.sha256(_serialize_for_hash(core_payload)).hexdigest()
+    connector = dict(core_payload["connector"])
+    connector["raw_payload_hash"] = raw_payload_hash
+    payload = dict(core_payload)
+    payload["connector"] = connector
+    return payload, raw_payload_hash
 
 
 def run_in_process_smoke_check() -> CheckResult:
@@ -91,14 +125,18 @@ def run_in_process_smoke_check() -> CheckResult:
         )
 
     client = TestClient(app_instance)
+    payload, raw_payload_hash = _smoke_payload()
+    signature = sign_payload_hash(raw_payload_hash, RuntimeSettings().connector_shared_secret)
     response = client.post(
         OWNER_COMMAND_ROUTE,
         headers={
-            "X-OpenQilin-User-Id": "owner_admin_smoke",
-            "X-OpenQilin-Connector": "discord",
-            "X-OpenQilin-Trace-Id": "trace-admin-smoke",
+            "X-OpenQilin-Trace-Id": str(payload["trace_id"]),
+            "X-External-Channel": "discord",
+            "X-External-Actor-Id": "owner_admin_smoke",
+            "X-Idempotency-Key": str(payload["connector"]["idempotency_key"]),
+            "X-OpenQilin-Signature": signature,
         },
-        json=_smoke_payload(),
+        json=payload,
     )
     if response.status_code != 202:
         return CheckResult(
@@ -119,16 +157,20 @@ def run_smoke_check(*, api_base_url: str, timeout_seconds: float = 5.0) -> Check
     """Exercise owner-command ingress path against a running API service."""
 
     route_url = f"{api_base_url.rstrip('/')}{OWNER_COMMAND_ROUTE}"
+    payload, raw_payload_hash = _smoke_payload()
+    signature = sign_payload_hash(raw_payload_hash, RuntimeSettings().connector_shared_secret)
     try:
         with httpx.Client(timeout=timeout_seconds) as client:
             response = client.post(
                 route_url,
                 headers={
-                    "X-OpenQilin-User-Id": "owner_admin_smoke",
-                    "X-OpenQilin-Connector": "discord",
-                    "X-OpenQilin-Trace-Id": "trace-admin-smoke",
+                    "X-OpenQilin-Trace-Id": str(payload["trace_id"]),
+                    "X-External-Channel": "discord",
+                    "X-External-Actor-Id": "owner_admin_smoke",
+                    "X-Idempotency-Key": str(payload["connector"]["idempotency_key"]),
+                    "X-OpenQilin-Signature": signature,
                 },
-                json=_smoke_payload(),
+                json=payload,
             )
     except Exception as error:
         return CheckResult(

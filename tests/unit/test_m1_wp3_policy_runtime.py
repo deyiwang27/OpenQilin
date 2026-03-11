@@ -1,5 +1,4 @@
 from openqilin.control_plane.identity.principal_resolver import resolve_principal
-from openqilin.control_plane.schemas.owner_commands import OwnerCommandRequest
 from openqilin.data_access.repositories.runtime_state import (
     InMemoryRuntimeStateRepository,
     TaskRecord,
@@ -8,25 +7,24 @@ from openqilin.policy_runtime_integration.client import InMemoryPolicyRuntimeCli
 from openqilin.policy_runtime_integration.fail_closed import evaluate_with_fail_closed
 from openqilin.policy_runtime_integration.normalizer import normalize_policy_input
 from openqilin.task_orchestrator.admission.envelope_validator import validate_owner_command_envelope
+from openqilin.testing.owner_command import build_owner_command_request_model
 
 
 def _build_task(command: str) -> TaskRecord:
-    payload = OwnerCommandRequest(
-        command=command,
+    payload = build_owner_command_request_model(
+        action=command,
         args=["alpha"],
+        actor_id="owner_policy_001",
         idempotency_key=f"idem-{command}-12345678",
+        trace_id="trace-policy-test",
     )
     principal = resolve_principal(
         {
-            "x-openqilin-user-id": "owner_policy_001",
-            "x-openqilin-connector": "discord",
+            "x-external-channel": "discord",
+            "x-openqilin-actor-external-id": "owner_policy_001",
         }
     )
-    envelope = validate_owner_command_envelope(
-        payload=payload,
-        principal=principal,
-        trace_id="trace-policy-test",
-    )
+    envelope = validate_owner_command_envelope(payload=payload, principal=principal)
     repository = InMemoryRuntimeStateRepository()
     return repository.create_task_from_envelope(envelope)
 
@@ -39,7 +37,7 @@ def test_normalize_policy_input_maps_task_fields() -> None:
     assert policy_input.task_id == task.task_id
     assert policy_input.request_id == task.request_id
     assert policy_input.trace_id == task.trace_id
-    assert policy_input.command == task.command
+    assert policy_input.action == task.command
 
 
 def test_policy_fail_closed_allows_on_allow_decision() -> None:

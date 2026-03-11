@@ -21,7 +21,7 @@ Primary issue: `#4` (`M1: Governed Path Kickoff`)
 - `tests/component/test_m1_wp1_owner_command_router.py`
 - `tests/integration/test_m1_wp1_governed_ingress_path.py`
 
-### 3.2 Owner Command Accept/Block
+### 3.2 Owner Command Accept/Deny
 - `tests/component/test_m1_wp1_owner_command_router.py`
 - `tests/integration/test_m1_wp1_governed_ingress_path.py`
 - `tests/contract/test_m1_wp8_owner_command_contract.py`
@@ -35,13 +35,14 @@ Primary issue: `#4` (`M1: Governed Path Kickoff`)
 - `tests/integration/test_m1_wp1_governed_ingress_path.py`
 
 ## 4. Acceptance Criteria Mapping
-1. Owner command deterministic `accepted`/`blocked` outcomes: covered by component/integration/contract tests above.
+1. Owner command deterministic `accepted`/`denied` outcomes: covered by component/integration/contract tests above.
 2. Policy uncertainty fail-closed block: covered by policy runtime + router + integration tests.
 3. Budget uncertainty/runtime-failure fail-closed block: covered by budget runtime + router + integration tests.
 4. Admission idempotency replay safety: covered by `tests/unit/test_m1_wp2_admission_idempotency.py` and router/integration replay tests.
 5. Trace metadata on governed path: covered by integration trace-id tests and observability tests.
 6. Audit evidence emitted on decision/outcome points: covered by WP6 observability tests.
 7. Required test slices pass: unit/component/integration/contract/conformance command suite passes.
+8. Canonical owner command envelope + connector signature/external-identity checks: covered by updated component/integration/contract owner-command tests and `tests/unit/test_m1_wp1_ingress_primitives.py`.
 
 ## 5. GitHub Issue Evidence Links
 - https://github.com/deyiwang27/OpenQilin/issues/4#issuecomment-4036337089
@@ -55,3 +56,4 @@ Primary issue: `#4` (`M1: Governed Path Kickoff`)
 - https://github.com/deyiwang27/OpenQilin/issues/4#issuecomment-4036790944
 - https://github.com/deyiwang27/OpenQilin/issues/4#issuecomment-4036825182
 - https://github.com/deyiwang27/OpenQilin/issues/4#issuecomment-4036865485
+- https://github.com/deyiwang27/OpenQilin/issues/4#issuecomment-4036991382

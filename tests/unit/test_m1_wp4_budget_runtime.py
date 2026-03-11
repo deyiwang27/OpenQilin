@@ -2,31 +2,29 @@ from openqilin.budget_runtime.client import InMemoryBudgetRuntimeClient
 from openqilin.budget_runtime.reservation_service import BudgetReservationService
 from openqilin.budget_runtime.threshold_evaluator import estimate_cost_units
 from openqilin.control_plane.identity.principal_resolver import resolve_principal
-from openqilin.control_plane.schemas.owner_commands import OwnerCommandRequest
 from openqilin.data_access.repositories.runtime_state import (
     InMemoryRuntimeStateRepository,
     TaskRecord,
 )
 from openqilin.task_orchestrator.admission.envelope_validator import validate_owner_command_envelope
+from openqilin.testing.owner_command import build_owner_command_request_model
 
 
 def _build_task(command: str) -> TaskRecord:
-    payload = OwnerCommandRequest(
-        command=command,
+    payload = build_owner_command_request_model(
+        action=command,
         args=["alpha"],
+        actor_id="owner_budget_001",
         idempotency_key=f"idem-{command}-12345678",
+        trace_id="trace-budget-test",
     )
     principal = resolve_principal(
         {
-            "x-openqilin-user-id": "owner_budget_001",
-            "x-openqilin-connector": "discord",
+            "x-external-channel": "discord",
+            "x-openqilin-actor-external-id": "owner_budget_001",
         }
     )
-    envelope = validate_owner_command_envelope(
-        payload=payload,
-        principal=principal,
-        trace_id="trace-budget-test",
-    )
+    envelope = validate_owner_command_envelope(payload=payload, principal=principal)
     repository = InMemoryRuntimeStateRepository()
     return repository.create_task_from_envelope(envelope)
 

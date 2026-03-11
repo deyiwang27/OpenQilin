@@ -21,6 +21,8 @@ class Principal:
 
     principal_id: str
     connector: str
+    principal_role: str
+    trust_domain: str
 
 
 def _required_header(headers: Mapping[str, str], header_name: str) -> str:
@@ -40,9 +42,50 @@ def _required_header(headers: Mapping[str, str], header_name: str) -> str:
     return normalized
 
 
-def resolve_principal(headers: Mapping[str, str]) -> Principal:
-    """Resolve principal identity from HTTP headers."""
+def _optional_header(headers: Mapping[str, str], header_name: str) -> str | None:
+    value = headers.get(header_name)
+    if value is None:
+        return None
+    normalized = value.strip()
+    return normalized or None
 
-    principal_id = _required_header(headers, "x-openqilin-user-id")
-    connector = _required_header(headers, "x-openqilin-connector")
-    return Principal(principal_id=principal_id, connector=connector)
+
+def resolve_principal(headers: Mapping[str, str]) -> Principal:
+    """Resolve principal identity from connector-originated HTTP headers."""
+
+    connector = _optional_header(headers, "x-external-channel") or _optional_header(
+        headers, "x-openqilin-connector"
+    )
+    if connector is None:
+        raise PrincipalResolutionError(
+            code="principal_missing_header",
+            message="missing required header: x-external-channel",
+        )
+    if connector not in {"discord", "internal"}:
+        raise PrincipalResolutionError(
+            code="principal_invalid_connector",
+            message=f"unsupported connector: {connector}",
+        )
+
+    actor_external_id = (
+        _optional_header(headers, "x-openqilin-actor-external-id")
+        or _optional_header(headers, "x-external-actor-id")
+        or _optional_header(headers, "x-openqilin-user-id")
+    )
+    if actor_external_id is None:
+        raise PrincipalResolutionError(
+            code="principal_missing_header",
+            message=(
+                "missing required header: x-openqilin-actor-external-id (or x-external-actor-id)"
+            ),
+        )
+
+    principal_role = _optional_header(headers, "x-openqilin-actor-role") or "owner"
+    trust_domain = "internal" if connector == "internal" else "external_verified"
+    principal_id = actor_external_id
+    return Principal(
+        principal_id=principal_id,
+        connector=connector,
+        principal_role=principal_role,
+        trust_domain=trust_domain,
+    )

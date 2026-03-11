@@ -37,7 +37,7 @@ def evaluate_with_fail_closed(
             policy_result=None,
         )
 
-    if result.decision == "allow":
+    if result.decision in {"allow", "allow_with_obligations"}:
         return PolicyFailClosedOutcome(
             allowed=True,
             error_code=None,

@@ -17,27 +17,53 @@ class InMemoryPolicyRuntimeClient:
 
     def __init__(self, policy_version: str = "m1-policy-shell-v1") -> None:
         self._policy_version = policy_version
+        self._policy_hash = "m1-policy-shell-hash-v1"
 
     def evaluate(self, payload: PolicyEvaluationInput) -> PolicyEvaluationResult:
         """Evaluate task against simulated policy rules."""
 
-        if payload.command == "policy_error":
+        if payload.action == "policy_error":
             raise PolicyRuntimeClientError("simulated policy runtime failure")
 
-        if payload.command == "policy_uncertain":
+        if payload.principal_role not in {
+            "owner",
+            "secretary",
+            "administrator",
+            "auditor",
+            "ceo",
+            "cwo",
+            "cso",
+            "project_manager",
+            "domain_lead",
+            "specialist",
+        }:
+            return PolicyEvaluationResult(
+                decision="deny",
+                reason_code="unknown_role",
+                reason_message="actor role not recognized by policy runtime",
+                policy_version=self._policy_version,
+                policy_hash=self._policy_hash,
+                rule_ids=("POL-004",),
+            )
+
+        if payload.action == "policy_uncertain":
             return PolicyEvaluationResult(
                 decision="uncertain",
                 reason_code="policy_uncertain",
                 reason_message="policy runtime returned uncertainty",
                 policy_version=self._policy_version,
+                policy_hash=self._policy_hash,
+                rule_ids=("POL-003",),
             )
 
-        if payload.command.startswith("deny_"):
+        if payload.action.startswith("deny_"):
             return PolicyEvaluationResult(
                 decision="deny",
                 reason_code="policy_denied",
                 reason_message="command denied by policy rule",
                 policy_version=self._policy_version,
+                policy_hash=self._policy_hash,
+                rule_ids=("POL-001",),
             )
 
         return PolicyEvaluationResult(
@@ -45,4 +71,6 @@ class InMemoryPolicyRuntimeClient:
             reason_code="policy_allowed",
             reason_message="command allowed by policy rule",
             policy_version=self._policy_version,
+            policy_hash=self._policy_hash,
+            rule_ids=("POL-001",),
         )

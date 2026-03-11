@@ -1,156 +1,134 @@
 from fastapi.testclient import TestClient
 
 from openqilin.apps.api_app import app
+from openqilin.testing.owner_command import (
+    build_owner_command_headers,
+    build_owner_command_request_dict,
+)
 
 
-def test_governed_ingress_generates_trace_id_when_header_missing() -> None:
+def test_governed_ingress_accepts_canonical_envelope() -> None:
     client = TestClient(app)
+    payload = build_owner_command_request_dict(
+        action="run_task",
+        args=["alpha"],
+        actor_id="owner_987",
+        idempotency_key="idem-abcdefgh",
+    )
 
     response = client.post(
         "/v1/owner/commands",
-        headers={
-            "X-OpenQilin-User-Id": "owner_987",
-            "X-OpenQilin-Connector": "discord",
-        },
-        json={
-            "command": "run_task",
-            "args": ["alpha"],
-            "idempotency_key": "idem-abcdefgh",
-        },
+        headers=build_owner_command_headers(payload),
+        json=payload,
     )
 
     body = response.json()
     assert response.status_code == 202
     assert body["status"] == "accepted"
-    assert body["task_id"]
-    assert body["replayed"] is False
-    assert body["dispatch_target"] == "sandbox"
-    assert body["dispatch_id"]
-    assert body["principal_id"] == "owner_987"
+    assert body["data"]["task_id"]
+    assert body["data"]["replayed"] is False
+    assert body["data"]["dispatch_target"] == "sandbox"
+    assert body["data"]["dispatch_id"]
+    assert body["data"]["principal_id"] == "owner_987"
     assert body["trace_id"]
     assert isinstance(body["trace_id"], str)
 
 
 def test_governed_ingress_replay_is_deterministic() -> None:
     client = TestClient(app)
-    headers = {
-        "X-OpenQilin-User-Id": "owner_integ_001",
-        "X-OpenQilin-Connector": "discord",
-        "X-OpenQilin-Trace-Id": "trace-integration-first",
-    }
-    payload = {
-        "command": "run_task",
-        "args": ["arg_1"],
-        "idempotency_key": "idem-integration-replay-12345",
-    }
+    payload = build_owner_command_request_dict(
+        action="run_task",
+        args=["arg_1"],
+        actor_id="owner_integ_001",
+        idempotency_key="idem-integration-replay-12345",
+        trace_id="trace-integration-first",
+    )
+    headers = build_owner_command_headers(payload)
 
     first = client.post("/v1/owner/commands", headers=headers, json=payload)
-    second = client.post(
-        "/v1/owner/commands",
-        headers={
-            "X-OpenQilin-User-Id": "owner_integ_001",
-            "X-OpenQilin-Connector": "discord",
-            "X-OpenQilin-Trace-Id": "trace-integration-second",
-        },
-        json=payload,
-    )
+    second = client.post("/v1/owner/commands", headers=headers, json=payload)
 
     first_body = first.json()
     second_body = second.json()
     assert first.status_code == 202
     assert second.status_code == 202
-    assert first_body["replayed"] is False
-    assert second_body["replayed"] is True
-    assert first_body["task_id"] == second_body["task_id"]
-    assert first_body["request_id"] == second_body["request_id"]
+    assert first_body["data"]["replayed"] is False
+    assert second_body["data"]["replayed"] is True
+    assert first_body["data"]["task_id"] == second_body["data"]["task_id"]
+    assert first_body["data"]["request_id"] == second_body["data"]["request_id"]
     assert first_body["trace_id"] == second_body["trace_id"]
-    assert first_body["dispatch_target"] == second_body["dispatch_target"]
-    assert first_body["dispatch_id"] == second_body["dispatch_id"]
+    assert first_body["data"]["dispatch_target"] == second_body["data"]["dispatch_target"]
+    assert first_body["data"]["dispatch_id"] == second_body["data"]["dispatch_id"]
 
 
-def test_governed_ingress_blocked_replay_is_deterministic() -> None:
+def test_governed_ingress_denied_replay_is_deterministic() -> None:
     client = TestClient(app)
-    payload = {
-        "command": "policy_uncertain",
-        "args": ["arg_1"],
-        "idempotency_key": "idem-integration-replay-blocked-12345",
-    }
+    payload = build_owner_command_request_dict(
+        action="policy_uncertain",
+        args=["arg_1"],
+        actor_id="owner_integ_replay_blocked",
+        idempotency_key="idem-integration-replay-blocked-12345",
+        trace_id="trace-integration-blocked-first",
+    )
+    headers = build_owner_command_headers(payload)
 
-    first = client.post(
-        "/v1/owner/commands",
-        headers={
-            "X-OpenQilin-User-Id": "owner_integ_replay_blocked",
-            "X-OpenQilin-Connector": "discord",
-            "X-OpenQilin-Trace-Id": "trace-integration-blocked-first",
-        },
-        json=payload,
-    )
-    second = client.post(
-        "/v1/owner/commands",
-        headers={
-            "X-OpenQilin-User-Id": "owner_integ_replay_blocked",
-            "X-OpenQilin-Connector": "discord",
-            "X-OpenQilin-Trace-Id": "trace-integration-blocked-second",
-        },
-        json=payload,
-    )
+    first = client.post("/v1/owner/commands", headers=headers, json=payload)
+    second = client.post("/v1/owner/commands", headers=headers, json=payload)
 
     first_body = first.json()
     second_body = second.json()
     assert first.status_code == 403
     assert second.status_code == 403
-    assert first_body["error_code"] == "policy_uncertain_fail_closed"
-    assert second_body["error_code"] == "policy_uncertain_fail_closed"
-    assert first_body["details"]["task_id"] == second_body["details"]["task_id"]
-    assert second_body["details"]["replayed"] == "true"
-    assert second_body["details"]["decision"] == first_body["details"]["decision"]
-    assert second_body["details"]["policy_version"] == first_body["details"]["policy_version"]
+    assert first_body["status"] == "denied"
+    assert second_body["status"] == "denied"
+    assert first_body["error"]["code"] == "policy_uncertain_fail_closed"
+    assert second_body["error"]["code"] == "policy_uncertain_fail_closed"
+    assert first_body["error"]["details"]["task_id"] == second_body["error"]["details"]["task_id"]
+    assert second_body["error"]["details"]["replayed"] == "true"
 
 
 def test_governed_ingress_fail_closed_on_policy_runtime_error() -> None:
     client = TestClient(app)
+    payload = build_owner_command_request_dict(
+        action="policy_error",
+        args=["alpha"],
+        actor_id="owner_policy_error_integration",
+        idempotency_key="idem-integration-policy-error-12345",
+    )
 
     response = client.post(
         "/v1/owner/commands",
-        headers={
-            "X-OpenQilin-User-Id": "owner_policy_error_integration",
-            "X-OpenQilin-Connector": "discord",
-        },
-        json={
-            "command": "policy_error",
-            "args": ["alpha"],
-            "idempotency_key": "idem-integration-policy-error-12345",
-        },
+        headers=build_owner_command_headers(payload),
+        json=payload,
     )
 
     body = response.json()
     assert response.status_code == 403
-    assert body["status"] == "blocked"
-    assert body["error_code"] == "policy_runtime_error_fail_closed"
-    assert body["details"]["source"] == "policy_runtime"
+    assert body["status"] == "denied"
+    assert body["error"]["code"] == "policy_runtime_error_fail_closed"
+    assert body["error"]["details"]["source"] == "policy_runtime"
 
 
 def test_governed_ingress_fail_closed_on_budget_runtime_error() -> None:
     client = TestClient(app)
+    payload = build_owner_command_request_dict(
+        action="budget_error",
+        args=["alpha"],
+        actor_id="owner_budget_error_integration",
+        idempotency_key="idem-integration-budget-error-12345",
+    )
 
     response = client.post(
         "/v1/owner/commands",
-        headers={
-            "X-OpenQilin-User-Id": "owner_budget_error_integration",
-            "X-OpenQilin-Connector": "discord",
-        },
-        json={
-            "command": "budget_error",
-            "args": ["alpha"],
-            "idempotency_key": "idem-integration-budget-error-12345",
-        },
+        headers=build_owner_command_headers(payload),
+        json=payload,
     )
 
     body = response.json()
     assert response.status_code == 403
-    assert body["status"] == "blocked"
-    assert body["error_code"] == "budget_runtime_error_fail_closed"
-    assert body["details"]["source"] == "budget_runtime"
+    assert body["status"] == "denied"
+    assert body["error"]["code"] == "budget_runtime_error_fail_closed"
+    assert body["error"]["details"]["source"] == "budget_runtime"
 
 
 def test_governed_ingress_fail_closed_on_dispatch_reject() -> None:
@@ -160,31 +138,30 @@ def test_governed_ingress_fail_closed_on_dispatch_reject() -> None:
     before_span_count = len(services.tracer.get_spans())
     before_metric_value = services.metric_recorder.get_counter_value(
         "owner_command_admission_outcomes_total",
-        labels={"outcome": "blocked", "source": "dispatch_stub"},
+        labels={"outcome": "denied", "source": "dispatch_stub"},
+    )
+    payload = build_owner_command_request_dict(
+        action="dispatch_reject",
+        args=["alpha"],
+        actor_id="owner_dispatch_reject_integration",
+        idempotency_key="idem-integration-dispatch-reject-12345",
     )
 
     response = client.post(
         "/v1/owner/commands",
-        headers={
-            "X-OpenQilin-User-Id": "owner_dispatch_reject_integration",
-            "X-OpenQilin-Connector": "discord",
-        },
-        json={
-            "command": "dispatch_reject",
-            "args": ["alpha"],
-            "idempotency_key": "idem-integration-dispatch-reject-12345",
-        },
+        headers=build_owner_command_headers(payload),
+        json=payload,
     )
 
     body = response.json()
     assert response.status_code == 403
-    assert body["status"] == "blocked"
-    assert body["error_code"] == "execution_dispatch_failed"
-    assert body["details"]["source"] == "dispatch_stub"
+    assert body["status"] == "denied"
+    assert body["error"]["code"] == "execution_dispatch_failed"
+    assert body["error"]["details"]["source"] == "dispatch_stub"
 
     after_metric_value = services.metric_recorder.get_counter_value(
         "owner_command_admission_outcomes_total",
-        labels={"outcome": "blocked", "source": "dispatch_stub"},
+        labels={"outcome": "denied", "source": "dispatch_stub"},
     )
     assert after_metric_value == before_metric_value + 1
 
@@ -192,9 +169,9 @@ def test_governed_ingress_fail_closed_on_dispatch_reject() -> None:
     assert [event.event_type for event in new_events] == [
         "policy.decision",
         "budget.decision",
-        "owner_command.blocked",
+        "owner_command.denied",
     ]
-    assert new_events[-1].task_id == body["details"]["task_id"]
+    assert new_events[-1].task_id == body["error"]["details"]["task_id"]
 
     new_spans = services.tracer.get_spans()[before_span_count:]
     assert len(new_spans) == 1

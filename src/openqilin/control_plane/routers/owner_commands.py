@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, Header, Request, status
@@ -19,14 +19,23 @@ from openqilin.control_plane.api.dependencies import (
     get_task_dispatch_service,
     get_tracer,
 )
+from openqilin.control_plane.identity.connector_security import (
+    ConnectorSecurityError,
+    validate_connector_auth,
+)
 from openqilin.control_plane.identity.principal_resolver import (
     PrincipalResolutionError,
     resolve_principal,
 )
 from openqilin.control_plane.schemas.owner_commands import (
-    OwnerCommandAcceptedResponse,
-    OwnerCommandRejectedResponse,
+    OwnerCommandAcceptedData,
+    OwnerCommandError,
     OwnerCommandRequest,
+    OwnerCommandResponse,
+)
+from openqilin.data_access.repositories.runtime_state import (
+    InMemoryRuntimeStateRepository,
+    TaskRecord,
 )
 from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
 from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
@@ -45,27 +54,114 @@ from openqilin.task_orchestrator.admission.service import (
 )
 from openqilin.task_orchestrator.dispatch.target_selector import select_dispatch_target
 from openqilin.task_orchestrator.services.task_service import TaskDispatchService
-from openqilin.data_access.repositories.runtime_state import (
-    InMemoryRuntimeStateRepository,
-    TaskRecord,
-)
 
 router = APIRouter(prefix="/v1/owner/commands", tags=["owner_commands"])
 
 
-def _blocked_response(
-    error_code: str,
-    message: str,
-    details: dict[str, str],
+def _parse_rule_ids(raw: str | None) -> list[str]:
+    if raw is None:
+        return []
+    return [value for value in (part.strip() for part in raw.split(",")) if value]
+
+
+def _build_error(
     *,
-    status_code: int = status.HTTP_400_BAD_REQUEST,
-) -> JSONResponse:
-    payload = OwnerCommandRejectedResponse(
-        error_code=error_code,
-        message=message,
-        details=details,
+    code: str,
+    error_class: str,
+    message: str,
+    retryable: bool,
+    source_component: str,
+    trace_id: str,
+    details: dict[str, Any],
+    policy_version: str | None = None,
+    policy_hash: str | None = None,
+    rule_ids: list[str] | None = None,
+) -> OwnerCommandError:
+    return OwnerCommandError.model_validate(
+        {
+            "code": code,
+            "class": error_class,
+            "message": message,
+            "retryable": retryable,
+            "source_component": source_component,
+            "trace_id": trace_id,
+            "policy_version": policy_version,
+            "policy_hash": policy_hash,
+            "rule_ids": rule_ids or [],
+            "details": details,
+        }
     )
-    return JSONResponse(status_code=status_code, content=payload.model_dump())
+
+
+def _error_response(
+    *,
+    status_code: int,
+    trace_id: str,
+    code: str,
+    error_class: str,
+    message: str,
+    retryable: bool,
+    source_component: str,
+    details: dict[str, Any],
+    policy_version: str | None = None,
+    policy_hash: str | None = None,
+    rule_ids: list[str] | None = None,
+) -> JSONResponse:
+    payload = OwnerCommandResponse(
+        status="error",
+        trace_id=trace_id,
+        policy_version=policy_version,
+        policy_hash=policy_hash,
+        rule_ids=rule_ids or [],
+        error=_build_error(
+            code=code,
+            error_class=error_class,
+            message=message,
+            retryable=retryable,
+            source_component=source_component,
+            trace_id=trace_id,
+            details=details,
+            policy_version=policy_version,
+            policy_hash=policy_hash,
+            rule_ids=rule_ids,
+        ),
+    )
+    return JSONResponse(status_code=status_code, content=payload.model_dump(by_alias=True))
+
+
+def _denied_response(
+    *,
+    status_code: int,
+    trace_id: str,
+    code: str,
+    error_class: str,
+    message: str,
+    source_component: str,
+    details: dict[str, Any],
+    policy_version: str | None,
+    policy_hash: str | None,
+    rule_ids: list[str],
+) -> JSONResponse:
+    payload = OwnerCommandResponse(
+        status="denied",
+        trace_id=trace_id,
+        policy_version=policy_version,
+        policy_hash=policy_hash,
+        rule_ids=rule_ids,
+        error=_build_error(
+            code=code,
+            error_class=error_class,
+            message=message,
+            retryable=False,
+            source_component=source_component,
+            trace_id=trace_id,
+            details=details,
+            policy_version=policy_version,
+            policy_hash=policy_hash,
+            rule_ids=rule_ids,
+        ),
+    )
+    return JSONResponse(status_code=status_code, content=payload.model_dump(by_alias=True))
 
 
 def _emit_outcome_observability(
@@ -165,33 +261,41 @@ def _emit_stage_decision_audit(
     )
 
 
-def _replayed_response(task: TaskRecord) -> OwnerCommandAcceptedResponse | JSONResponse:
+def _replayed_response(task: TaskRecord) -> OwnerCommandResponse | JSONResponse:
     """Reconstruct deterministic response from previously processed task state."""
+
+    outcome_details = dict(task.outcome_details or ())
+    policy_version = outcome_details.get("policy_version")
+    policy_hash = outcome_details.get("policy_hash")
+    rule_ids = _parse_rule_ids(outcome_details.get("rule_ids"))
 
     if task.status == "dispatched":
         dispatch_target = task.dispatch_target or select_dispatch_target(task)
         dispatch_id = task.dispatch_id or "dispatch-id-missing"
-        return OwnerCommandAcceptedResponse(
-            task_id=task.task_id,
-            replayed=True,
-            request_id=task.request_id,
+        return OwnerCommandResponse(
+            status="accepted",
             trace_id=task.trace_id,
-            principal_id=task.principal_id,
-            connector=task.connector,
-            command=task.command,
-            accepted_args=list(task.args),
-            dispatch_target=dispatch_target,
-            dispatch_id=dispatch_id,
+            policy_version=policy_version,
+            policy_hash=policy_hash,
+            rule_ids=rule_ids,
+            data=OwnerCommandAcceptedData(
+                task_id=task.task_id,
+                admission_state="dispatched",
+                replayed=True,
+                request_id=task.request_id,
+                principal_id=task.principal_id,
+                connector=task.connector,
+                command=task.command,
+                accepted_args=list(task.args),
+                dispatch_target=dispatch_target,
+                dispatch_id=dispatch_id,
+            ),
         )
 
     source = task.outcome_source or "governance"
     error_code = task.outcome_error_code or "governance_blocked"
-    message = task.outcome_message or "task replay resolved to prior blocked outcome"
-    details = (
-        dict(task.outcome_details)
-        if task.outcome_details is not None
-        else {"source": source, "task_id": task.task_id}
-    )
+    message = task.outcome_message or "task replay resolved to prior denied outcome"
+    details = dict(outcome_details) if outcome_details else {}
     details.setdefault("source", source)
     details.setdefault("task_id", task.task_id)
     details["replayed"] = "true"
@@ -199,22 +303,28 @@ def _replayed_response(task: TaskRecord) -> OwnerCommandAcceptedResponse | JSONR
         details.setdefault("dispatch_target", task.dispatch_target)
     if task.outcome_error_code is not None and "reason_code" not in details:
         details["reason_code"] = task.outcome_error_code
-    return _blocked_response(
-        error_code=error_code,
-        message=message,
-        details=details,
+    return _denied_response(
         status_code=status.HTTP_403_FORBIDDEN,
+        trace_id=task.trace_id,
+        code=error_code,
+        error_class="authorization_error",
+        message=message,
+        source_component=source,
+        details=details,
+        policy_version=policy_version,
+        policy_hash=policy_hash,
+        rule_ids=rule_ids,
     )
 
 
 @router.post(
     "",
-    response_model=OwnerCommandAcceptedResponse,
+    response_model=OwnerCommandResponse,
     status_code=status.HTTP_202_ACCEPTED,
     responses={
-        status.HTTP_400_BAD_REQUEST: {"model": OwnerCommandRejectedResponse},
-        status.HTTP_409_CONFLICT: {"model": OwnerCommandRejectedResponse},
-        status.HTTP_403_FORBIDDEN: {"model": OwnerCommandRejectedResponse},
+        status.HTTP_400_BAD_REQUEST: {"model": OwnerCommandResponse},
+        status.HTTP_403_FORBIDDEN: {"model": OwnerCommandResponse},
+        status.HTTP_409_CONFLICT: {"model": OwnerCommandResponse},
     },
 )
 def submit_owner_command(
@@ -229,9 +339,16 @@ def submit_owner_command(
     audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
     metric_recorder: InMemoryMetricRecorder = Depends(get_metric_recorder),
     x_openqilin_trace_id: Annotated[str | None, Header(alias="X-OpenQilin-Trace-Id")] = None,
-) -> OwnerCommandAcceptedResponse | JSONResponse:
+    x_external_channel: Annotated[str | None, Header(alias="X-External-Channel")] = None,
+    x_external_actor_id: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
+    x_idempotency_key: Annotated[str | None, Header(alias="X-Idempotency-Key")] = None,
+    x_openqilin_signature: Annotated[str | None, Header(alias="X-OpenQilin-Signature")] = None,
+) -> OwnerCommandResponse | JSONResponse:
     """Validate ingress identity and envelope before admission execution."""
-    trace_id = x_openqilin_trace_id.strip() if x_openqilin_trace_id else str(uuid4())
+    payload_trace_id = payload.trace_id.strip()
+    trace_id = payload_trace_id or (
+        x_openqilin_trace_id.strip() if x_openqilin_trace_id else str(uuid4())
+    )
     with tracer.start_span(
         trace_id=trace_id or "missing-trace-id",
         name=OWNER_COMMAND_INGRESS_SPAN,
@@ -245,12 +362,55 @@ def submit_owner_command(
         request_id: str | None = None
         principal_id: str | None = None
 
+        if x_external_channel is None or not x_external_channel.strip():
+            return _error_response(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                trace_id=trace_id,
+                code="connector_missing_header",
+                error_class="validation_error",
+                message="missing required header: X-External-Channel",
+                retryable=False,
+                source_component="api",
+                details={"source": "headers", "required_header": "X-External-Channel"},
+            )
+        if x_external_actor_id is None or not x_external_actor_id.strip():
+            return _error_response(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                trace_id=trace_id,
+                code="connector_missing_header",
+                error_class="validation_error",
+                message="missing required header: X-External-Actor-Id",
+                retryable=False,
+                source_component="api",
+                details={"source": "headers", "required_header": "X-External-Actor-Id"},
+            )
+        if x_idempotency_key is None or not x_idempotency_key.strip():
+            return _error_response(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                trace_id=trace_id,
+                code="idempotency_missing_header",
+                error_class="validation_error",
+                message="missing required header: X-Idempotency-Key",
+                retryable=False,
+                source_component="api",
+                details={"source": "headers", "required_header": "X-Idempotency-Key"},
+            )
+
         try:
-            principal = resolve_principal(request.headers)
-        except PrincipalResolutionError as error:
+            validate_connector_auth(
+                header_channel=x_external_channel,
+                header_actor_external_id=x_external_actor_id,
+                header_idempotency_key=x_idempotency_key,
+                header_signature=x_openqilin_signature,
+                payload_channel=payload.connector.channel,
+                payload_actor_external_id=payload.connector.actor_external_id,
+                payload_idempotency_key=payload.connector.idempotency_key,
+                payload_raw_payload_hash=payload.connector.raw_payload_hash,
+            )
+        except ConnectorSecurityError as error:
             span.set_status("error")
-            span.set_attribute("outcome", "blocked")
-            span.set_attribute("source", "headers")
+            span.set_attribute("outcome", "denied")
+            span.set_attribute("source", "connector_security")
             _emit_outcome_observability(
                 audit_writer=audit_writer,
                 metric_recorder=metric_recorder,
@@ -258,27 +418,69 @@ def submit_owner_command(
                 request_id=request_id,
                 task_id=task_id,
                 principal_id=principal_id,
-                source="headers",
-                outcome="blocked",
+                source="connector_security",
+                outcome="denied",
                 error_code=error.code,
                 message=error.message,
             )
-            return _blocked_response(
+            return _error_response(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                trace_id=trace_id,
+                code=error.code,
+                error_class="authorization_error",
+                message=error.message,
+                retryable=False,
+                source_component="api",
+                details={"source": "connector_security"},
+            )
+
+        principal_headers = {
+            "x-external-channel": x_external_channel,
+            "x-openqilin-actor-external-id": x_external_actor_id,
+            "x-openqilin-actor-role": payload.sender.actor_role,
+        }
+        try:
+            principal = resolve_principal(principal_headers)
+        except PrincipalResolutionError as error:
+            span.set_status("error")
+            span.set_attribute("outcome", "denied")
+            span.set_attribute("source", "identity")
+            _emit_outcome_observability(
+                audit_writer=audit_writer,
+                metric_recorder=metric_recorder,
+                trace_id=trace_id,
+                request_id=request_id,
+                task_id=task_id,
+                principal_id=principal_id,
+                source="identity",
+                outcome="denied",
                 error_code=error.code,
                 message=error.message,
-                details={"source": "headers"},
+            )
+            return _error_response(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                trace_id=trace_id,
+                code=error.code,
+                error_class="authorization_error",
+                message=error.message,
+                retryable=False,
+                source_component="api",
+                details={"source": "identity"},
             )
 
         principal_id = principal.principal_id
         span.set_attribute("principal_id", principal_id)
+        span.set_attribute("principal_role", principal.principal_role)
         span.set_attribute("connector", principal.connector)
         try:
             envelope = validate_owner_command_envelope(
-                payload=payload, principal=principal, trace_id=trace_id
+                payload=payload,
+                principal=principal,
+                trace_id_override=trace_id,
             )
         except EnvelopeValidationError as error:
             span.set_status("error")
-            span.set_attribute("outcome", "blocked")
+            span.set_attribute("outcome", "denied")
             span.set_attribute("source", "payload")
             _emit_outcome_observability(
                 audit_writer=audit_writer,
@@ -288,13 +490,18 @@ def submit_owner_command(
                 task_id=task_id,
                 principal_id=principal_id,
                 source="payload",
-                outcome="blocked",
+                outcome="denied",
                 error_code=error.code,
                 message=error.message,
             )
-            return _blocked_response(
-                error_code=error.code,
+            return _error_response(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                trace_id=trace_id,
+                code=error.code,
+                error_class="validation_error",
                 message=error.message,
+                retryable=False,
+                source_component="api",
                 details={"source": "payload"},
             )
 
@@ -304,7 +511,7 @@ def submit_owner_command(
             admission_result = admission_service.admit_owner_command(envelope)
         except AdmissionIdempotencyError as error:
             span.set_status("error")
-            span.set_attribute("outcome", "blocked")
+            span.set_attribute("outcome", "denied")
             span.set_attribute("source", "idempotency")
             _emit_outcome_observability(
                 audit_writer=audit_writer,
@@ -314,15 +521,19 @@ def submit_owner_command(
                 task_id=task_id,
                 principal_id=principal_id,
                 source="idempotency",
-                outcome="blocked",
+                outcome="denied",
                 error_code=error.code,
                 message=error.message,
             )
-            return _blocked_response(
-                error_code=error.code,
-                message=error.message,
-                details={"source": "idempotency"},
+            return _error_response(
                 status_code=status.HTTP_409_CONFLICT,
+                trace_id=trace_id,
+                code=error.code,
+                error_class="validation_error",
+                message=error.message,
+                retryable=False,
+                source_component="task_orchestrator",
+                details={"source": "idempotency"},
             )
 
         task_id = admission_result.task.task_id
@@ -332,9 +543,10 @@ def submit_owner_command(
         span.set_attribute("correlation.trace_id", trace_id)
         span.set_attribute("correlation.task_id", task_id)
         span.set_attribute("replayed", str(admission_result.replayed).lower())
+
         if admission_result.replayed and admission_result.task.status != "admitted":
             replay_outcome = (
-                "accepted" if admission_result.task.status == "dispatched" else "blocked"
+                "accepted" if admission_result.task.status == "dispatched" else "denied"
             )
             replay_source = admission_result.task.outcome_source or "governance"
             replay_message = (
@@ -370,6 +582,17 @@ def submit_owner_command(
             if policy_outcome.policy_result is not None
             else "policy-version-unknown"
         )
+        policy_hash = (
+            policy_outcome.policy_result.policy_hash
+            if policy_outcome.policy_result is not None
+            else "policy-hash-unknown"
+        )
+        rule_ids = (
+            list(policy_outcome.policy_result.rule_ids)
+            if policy_outcome.policy_result is not None
+            else []
+        )
+
         _emit_stage_decision_audit(
             audit_writer=audit_writer,
             trace_id=trace_id,
@@ -383,19 +606,24 @@ def submit_owner_command(
             message=policy_outcome.message,
             attributes={
                 "policy_version": policy_version,
+                "policy_hash": policy_hash,
+                "rule_ids": ",".join(rule_ids),
                 "replayed": str(admission_result.replayed).lower(),
             },
         )
+
         if not policy_outcome.allowed:
             details = {
                 "source": "policy_runtime",
                 "task_id": admission_result.task.task_id,
                 "replayed": str(admission_result.replayed).lower(),
+                "policy_version": policy_version,
+                "policy_hash": policy_hash,
+                "rule_ids": ",".join(rule_ids),
             }
             if policy_outcome.policy_result is not None:
                 details["decision"] = policy_outcome.policy_result.decision
                 details["reason_code"] = policy_outcome.policy_result.reason_code
-                details["policy_version"] = policy_outcome.policy_result.policy_version
 
             runtime_state_repo.update_task_status(
                 admission_result.task.task_id,
@@ -406,7 +634,7 @@ def submit_owner_command(
                 outcome_details=details,
             )
             span.set_status("error")
-            span.set_attribute("outcome", "blocked")
+            span.set_attribute("outcome", "denied")
             span.set_attribute("source", "policy_runtime")
             _emit_outcome_observability(
                 audit_writer=audit_writer,
@@ -416,16 +644,27 @@ def submit_owner_command(
                 task_id=task_id,
                 principal_id=principal_id,
                 source="policy_runtime",
-                outcome="blocked",
+                outcome="denied",
                 error_code=policy_outcome.error_code or "policy_blocked",
                 message=policy_outcome.message,
-                attributes={"decision": policy_decision, "policy_version": policy_version},
+                attributes={
+                    "decision": policy_decision,
+                    "policy_version": policy_version,
+                    "policy_hash": policy_hash,
+                    "rule_ids": ",".join(rule_ids),
+                },
             )
-            return _blocked_response(
-                error_code=policy_outcome.error_code or "policy_blocked",
-                message=policy_outcome.message,
-                details=details,
+            return _denied_response(
                 status_code=status.HTTP_403_FORBIDDEN,
+                trace_id=trace_id,
+                code=policy_outcome.error_code or "policy_blocked",
+                error_class="authorization_error",
+                message=policy_outcome.message,
+                source_component="policy_engine",
+                details=details,
+                policy_version=policy_version,
+                policy_hash=policy_hash,
+                rule_ids=rule_ids,
             )
 
         budget_outcome = budget_reservation_service.reserve_with_fail_closed(admission_result.task)
@@ -444,6 +683,7 @@ def submit_owner_command(
             if budget_outcome.reservation is not None
             else "budget-version-unknown"
         )
+
         _emit_stage_decision_audit(
             audit_writer=audit_writer,
             trace_id=trace_id,
@@ -457,14 +697,21 @@ def submit_owner_command(
             message=budget_outcome.message,
             attributes={
                 "budget_version": budget_version,
+                "policy_version": policy_version,
+                "policy_hash": policy_hash,
+                "rule_ids": ",".join(rule_ids),
                 "replayed": str(admission_result.replayed).lower(),
             },
         )
+
         if not budget_outcome.allowed:
             details = {
                 "source": "budget_runtime",
                 "task_id": admission_result.task.task_id,
                 "replayed": str(admission_result.replayed).lower(),
+                "policy_version": policy_version,
+                "policy_hash": policy_hash,
+                "rule_ids": ",".join(rule_ids),
             }
             if budget_outcome.reservation is not None:
                 details["decision"] = budget_outcome.reservation.decision
@@ -482,7 +729,7 @@ def submit_owner_command(
                 outcome_details=details,
             )
             span.set_status("error")
-            span.set_attribute("outcome", "blocked")
+            span.set_attribute("outcome", "denied")
             span.set_attribute("source", "budget_runtime")
             _emit_outcome_observability(
                 audit_writer=audit_writer,
@@ -492,16 +739,22 @@ def submit_owner_command(
                 task_id=task_id,
                 principal_id=principal_id,
                 source="budget_runtime",
-                outcome="blocked",
+                outcome="denied",
                 error_code=budget_outcome.error_code or "budget_blocked",
                 message=budget_outcome.message,
                 attributes={"decision": budget_decision, "budget_version": budget_version},
             )
-            return _blocked_response(
-                error_code=budget_outcome.error_code or "budget_blocked",
-                message=budget_outcome.message,
-                details=details,
+            return _denied_response(
                 status_code=status.HTTP_403_FORBIDDEN,
+                trace_id=trace_id,
+                code=budget_outcome.error_code or "budget_blocked",
+                error_class="budget_error",
+                message=budget_outcome.message,
+                source_component="budget_engine",
+                details=details,
+                policy_version=policy_version,
+                policy_hash=policy_hash,
+                rule_ids=rule_ids,
             )
 
         dispatch_outcome = task_dispatch_service.dispatch_admitted_task(admission_result.task)
@@ -511,12 +764,15 @@ def submit_owner_command(
                 "task_id": admission_result.task.task_id,
                 "replayed": str(dispatch_outcome.replayed).lower(),
                 "dispatch_target": dispatch_outcome.target,
+                "policy_version": policy_version,
+                "policy_hash": policy_hash,
+                "rule_ids": ",".join(rule_ids),
             }
             if dispatch_outcome.error_code is not None:
                 details["reason_code"] = dispatch_outcome.error_code
 
             span.set_status("error")
-            span.set_attribute("outcome", "blocked")
+            span.set_attribute("outcome", "denied")
             span.set_attribute("source", "dispatch_stub")
             span.set_attribute("dispatch_target", dispatch_outcome.target)
             _emit_outcome_observability(
@@ -527,16 +783,22 @@ def submit_owner_command(
                 task_id=task_id,
                 principal_id=principal_id,
                 source="dispatch_stub",
-                outcome="blocked",
+                outcome="denied",
                 error_code=dispatch_outcome.error_code or "execution_dispatch_failed",
                 message=dispatch_outcome.message,
                 attributes={"dispatch_target": dispatch_outcome.target},
             )
-            return _blocked_response(
-                error_code=dispatch_outcome.error_code or "execution_dispatch_failed",
-                message=dispatch_outcome.message,
-                details=details,
+            return _denied_response(
                 status_code=status.HTTP_403_FORBIDDEN,
+                trace_id=trace_id,
+                code=dispatch_outcome.error_code or "execution_dispatch_failed",
+                error_class="runtime_error",
+                message=dispatch_outcome.message,
+                source_component="sandbox",
+                details=details,
+                policy_version=policy_version,
+                policy_hash=policy_hash,
+                rule_ids=rule_ids,
             )
 
         response_task = (
@@ -564,16 +826,23 @@ def submit_owner_command(
             },
         )
 
-        return OwnerCommandAcceptedResponse(
-            task_id=response_task.task_id,
-            replayed=admission_result.replayed,
-            request_id=response_task.request_id,
+        return OwnerCommandResponse(
+            status="accepted",
             trace_id=response_task.trace_id,
-            principal_id=response_task.principal_id,
-            connector=response_task.connector,
-            command=response_task.command,
-            accepted_args=list(response_task.args),
-            dispatch_target=dispatch_outcome.target,
-            dispatch_id=dispatch_outcome.dispatch_id or "dispatch-id-missing",
+            policy_version=policy_version,
+            policy_hash=policy_hash,
+            rule_ids=rule_ids,
+            data=OwnerCommandAcceptedData(
+                task_id=response_task.task_id,
+                admission_state="dispatched",
+                replayed=admission_result.replayed,
+                request_id=response_task.request_id,
+                principal_id=response_task.principal_id,
+                connector=response_task.connector,
+                command=response_task.command,
+                accepted_args=list(response_task.args),
+                dispatch_target=dispatch_outcome.target,
+                dispatch_id=dispatch_outcome.dispatch_id or "dispatch-id-missing",
+            ),
         )
     raise RuntimeError("unreachable owner command control flow")

@@ -82,6 +82,11 @@ Checklist:
 - evidence: `uv run ruff check .`
 - evidence: `uv run ruff format --check .`
 - evidence: `uv run mypy .`
+- `M1 spec/design top-2 conformance remediation`: canonical owner command ingress/response envelope + connector signature validation + external identity mapping shell - `done`
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
+- evidence: `uv run ruff check .`
+- evidence: `uv run ruff format --check .`
+- evidence: `uv run mypy .`
 
 2) M2 execution targets prep - `todo`
 - sandbox adapter wiring plan

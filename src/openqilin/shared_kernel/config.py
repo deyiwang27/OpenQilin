@@ -10,3 +10,4 @@ class RuntimeSettings(BaseSettings):
 
     env: str = "local_dev"
     smoke_api_base_url: str = "http://127.0.0.1:8000"
+    connector_shared_secret: str = "dev-openqilin-secret"

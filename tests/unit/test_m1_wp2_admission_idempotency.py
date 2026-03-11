@@ -2,7 +2,6 @@ import pytest
 
 from openqilin.control_plane.idempotency.ingress_dedupe import InMemoryIngressDedupe
 from openqilin.control_plane.identity.principal_resolver import resolve_principal
-from openqilin.control_plane.schemas.owner_commands import OwnerCommandRequest
 from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
 from openqilin.task_orchestrator.admission.envelope_validator import (
     AdmissionEnvelope,
@@ -12,6 +11,7 @@ from openqilin.task_orchestrator.admission.idempotency import (
     AdmissionIdempotencyCoordinator,
     AdmissionIdempotencyError,
 )
+from openqilin.testing.owner_command import build_owner_command_request_model
 
 
 def _build_envelope(
@@ -19,21 +19,23 @@ def _build_envelope(
     idempotency_key: str,
     args: list[str],
     trace_id: str,
-    metadata: dict[str, str] | None = None,
+    content_tag: str = "default",
 ) -> AdmissionEnvelope:
-    payload = OwnerCommandRequest(
-        command="run_task",
+    payload = build_owner_command_request_model(
+        action="run_task",
         args=args,
-        metadata=metadata or {},
+        actor_id="owner_123",
         idempotency_key=idempotency_key,
+        trace_id=trace_id,
+        content=f"content-{content_tag}",
     )
     principal = resolve_principal(
         {
-            "x-openqilin-user-id": "owner_123",
-            "x-openqilin-connector": "discord",
+            "x-external-channel": "discord",
+            "x-openqilin-actor-external-id": "owner_123",
         }
     )
-    return validate_owner_command_envelope(payload=payload, principal=principal, trace_id=trace_id)
+    return validate_owner_command_envelope(payload=payload, principal=principal)
 
 
 def test_admission_idempotency_returns_replay_without_new_task() -> None:
@@ -88,13 +90,13 @@ def test_admission_idempotency_blocks_conflicting_metadata_with_same_key() -> No
         idempotency_key="idem-unit-metadata-conflict-12345",
         args=["alpha"],
         trace_id="trace-1",
-        metadata={"channel": "discord"},
+        content_tag="discord",
     )
     second_envelope = _build_envelope(
         idempotency_key="idem-unit-metadata-conflict-12345",
         args=["alpha"],
         trace_id="trace-2",
-        metadata={"channel": "telegram"},
+        content_tag="telegram",
     )
 
     _ = coordinator.resolve(first_envelope)

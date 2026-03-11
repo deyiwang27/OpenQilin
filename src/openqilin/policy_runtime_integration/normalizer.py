@@ -14,7 +14,11 @@ def normalize_policy_input(task: TaskRecord) -> PolicyEvaluationInput:
         request_id=task.request_id,
         trace_id=task.trace_id,
         principal_id=task.principal_id,
+        principal_role=task.principal_role,
+        trust_domain=task.trust_domain,
         connector=task.connector,
-        command=task.command,
+        action=task.command,
+        target=task.target,
         args=task.args,
+        project_id=task.project_id,
     )

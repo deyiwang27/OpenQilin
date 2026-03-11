@@ -1,102 +1,114 @@
 from fastapi.testclient import TestClient
 
 from openqilin.control_plane.api.app import create_control_plane_app
+from openqilin.testing.owner_command import (
+    build_owner_command_headers,
+    build_owner_command_request_dict,
+)
 
 
 def test_submit_owner_command_accepts_valid_payload() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
+    payload = build_owner_command_request_dict(
+        action="run_task",
+        args=["alpha", "beta"],
+        actor_id="owner_123",
+        idempotency_key="idem-12345678",
+        trace_id="trace-component-1",
+    )
 
     response = client.post(
         "/v1/owner/commands",
-        headers={
-            "X-OpenQilin-User-Id": "owner_123",
-            "X-OpenQilin-Connector": "discord",
-            "X-OpenQilin-Trace-Id": "trace-component-1",
-        },
-        json={
-            "command": "run_task",
-            "args": ["alpha", "beta"],
-            "idempotency_key": "idem-12345678",
-        },
+        headers=build_owner_command_headers(payload),
+        json=payload,
     )
 
     body = response.json()
     assert response.status_code == 202
     assert body["status"] == "accepted"
-    assert body["task_id"]
-    assert body["replayed"] is False
-    assert body["principal_id"] == "owner_123"
     assert body["trace_id"] == "trace-component-1"
-    assert body["command"] == "run_task"
-    assert body["accepted_args"] == ["alpha", "beta"]
-    assert body["dispatch_target"] == "sandbox"
-    assert body["dispatch_id"]
-    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(body["task_id"])
+    assert body["data"]["task_id"]
+    assert body["data"]["replayed"] is False
+    assert body["data"]["principal_id"] == "owner_123"
+    assert body["data"]["command"] == "run_task"
+    assert body["data"]["accepted_args"] == ["alpha", "beta"]
+    assert body["data"]["dispatch_target"] == "sandbox"
+    assert body["data"]["dispatch_id"]
+    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(body["data"]["task_id"])
     assert task is not None
     assert task.status == "dispatched"
 
 
-def test_submit_owner_command_blocks_missing_principal_header() -> None:
+def test_submit_owner_command_errors_on_missing_required_header() -> None:
     client = TestClient(create_control_plane_app())
-
-    response = client.post(
-        "/v1/owner/commands",
-        headers={
-            "X-OpenQilin-Connector": "discord",
-            "X-OpenQilin-Trace-Id": "trace-component-2",
-        },
-        json={
-            "command": "run_task",
-            "args": ["alpha"],
-            "idempotency_key": "idem-12345678",
-        },
+    payload = build_owner_command_request_dict(
+        action="run_task",
+        args=["alpha"],
+        actor_id="owner_123",
+        idempotency_key="idem-missing-header-12345",
+        trace_id="trace-component-2",
     )
+    headers = build_owner_command_headers(payload)
+    headers.pop("X-External-Channel")
+
+    response = client.post("/v1/owner/commands", headers=headers, json=payload)
 
     body = response.json()
     assert response.status_code == 400
-    assert body["status"] == "blocked"
-    assert body["error_code"] == "principal_missing_header"
-    assert body["details"]["source"] == "headers"
+    assert body["status"] == "error"
+    assert body["error"]["code"] == "connector_missing_header"
+    assert body["error"]["class"] == "validation_error"
 
 
-def test_submit_owner_command_blocks_blank_command() -> None:
+def test_submit_owner_command_errors_on_invalid_signature() -> None:
     client = TestClient(create_control_plane_app())
-
-    response = client.post(
-        "/v1/owner/commands",
-        headers={
-            "X-OpenQilin-User-Id": "owner_123",
-            "X-OpenQilin-Connector": "discord",
-            "X-OpenQilin-Trace-Id": "trace-component-3",
-        },
-        json={
-            "command": "   ",
-            "args": ["alpha"],
-            "idempotency_key": "idem-12345678",
-        },
+    payload = build_owner_command_request_dict(
+        action="run_task",
+        args=["alpha"],
+        actor_id="owner_123",
+        idempotency_key="idem-invalid-signature-12345",
     )
+    headers = build_owner_command_headers(payload)
+    headers["X-OpenQilin-Signature"] = "sha256=deadbeef"
+
+    response = client.post("/v1/owner/commands", headers=headers, json=payload)
 
     body = response.json()
     assert response.status_code == 400
-    assert body["status"] == "blocked"
-    assert body["error_code"] == "envelope_invalid_command"
-    assert body["details"]["source"] == "payload"
+    assert body["status"] == "error"
+    assert body["error"]["code"] == "connector_signature_invalid"
+
+
+def test_submit_owner_command_errors_on_sender_mismatch() -> None:
+    client = TestClient(create_control_plane_app())
+    payload = build_owner_command_request_dict(
+        action="run_task",
+        args=["alpha"],
+        actor_id="owner_payload_actor",
+        idempotency_key="idem-sender-mismatch-12345",
+    )
+    headers = build_owner_command_headers(payload)
+    headers["X-External-Actor-Id"] = "owner_header_actor"
+
+    response = client.post("/v1/owner/commands", headers=headers, json=payload)
+
+    body = response.json()
+    assert response.status_code == 400
+    assert body["status"] == "error"
+    assert body["error"]["code"] == "connector_actor_mismatch"
 
 
 def test_submit_owner_command_replay_returns_same_task() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
-
-    headers = {
-        "X-OpenQilin-User-Id": "owner_999",
-        "X-OpenQilin-Connector": "discord",
-    }
-    payload = {
-        "command": "run_task",
-        "args": ["alpha", "beta"],
-        "idempotency_key": "idem-replay-component-12345",
-    }
+    payload = build_owner_command_request_dict(
+        action="run_task",
+        args=["alpha", "beta"],
+        actor_id="owner_999",
+        idempotency_key="idem-replay-component-12345",
+    )
+    headers = build_owner_command_headers(payload)
 
     first = client.post("/v1/owner/commands", headers=headers, json=payload)
     second = client.post("/v1/owner/commands", headers=headers, json=payload)
@@ -105,12 +117,12 @@ def test_submit_owner_command_replay_returns_same_task() -> None:
     second_body = second.json()
     assert first.status_code == 202
     assert second.status_code == 202
-    assert first_body["replayed"] is False
-    assert second_body["replayed"] is True
-    assert first_body["task_id"] == second_body["task_id"]
-    assert first_body["request_id"] == second_body["request_id"]
-    assert first_body["dispatch_target"] == second_body["dispatch_target"]
-    assert first_body["dispatch_id"] == second_body["dispatch_id"]
+    assert first_body["data"]["replayed"] is False
+    assert second_body["data"]["replayed"] is True
+    assert first_body["data"]["task_id"] == second_body["data"]["task_id"]
+    assert first_body["data"]["request_id"] == second_body["data"]["request_id"]
+    assert first_body["data"]["dispatch_target"] == second_body["data"]["dispatch_target"]
+    assert first_body["data"]["dispatch_id"] == second_body["data"]["dispatch_id"]
     events = app.state.runtime_services.audit_writer.get_events()
     assert [event.event_type for event in events] == [
         "policy.decision",
@@ -120,313 +132,193 @@ def test_submit_owner_command_replay_returns_same_task() -> None:
     ]
 
 
-def test_submit_owner_command_replay_returns_prior_block_without_re_evaluation() -> None:
+def test_submit_owner_command_replay_returns_prior_denied_without_re_evaluation() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
-    headers = {
-        "X-OpenQilin-User-Id": "owner_replay_block",
-        "X-OpenQilin-Connector": "discord",
-        "X-OpenQilin-Trace-Id": "trace-replay-block-first",
-    }
-    payload = {
-        "command": "policy_uncertain",
-        "args": ["alpha"],
-        "idempotency_key": "idem-replay-block-component-12345",
-    }
+    payload = build_owner_command_request_dict(
+        action="policy_uncertain",
+        args=["alpha"],
+        actor_id="owner_replay_block",
+        idempotency_key="idem-replay-block-component-12345",
+    )
+    headers = build_owner_command_headers(payload)
 
     first = client.post("/v1/owner/commands", headers=headers, json=payload)
-    second = client.post(
-        "/v1/owner/commands",
-        headers={
-            "X-OpenQilin-User-Id": "owner_replay_block",
-            "X-OpenQilin-Connector": "discord",
-            "X-OpenQilin-Trace-Id": "trace-replay-block-second",
-        },
-        json=payload,
-    )
+    second = client.post("/v1/owner/commands", headers=headers, json=payload)
 
     first_body = first.json()
     second_body = second.json()
     assert first.status_code == 403
     assert second.status_code == 403
-    assert first_body["error_code"] == "policy_uncertain_fail_closed"
-    assert second_body["error_code"] == "policy_uncertain_fail_closed"
-    assert first_body["details"]["task_id"] == second_body["details"]["task_id"]
-    assert second_body["details"]["replayed"] == "true"
-    assert second_body["details"]["decision"] == first_body["details"]["decision"]
-    assert second_body["details"]["policy_version"] == first_body["details"]["policy_version"]
+    assert first_body["status"] == "denied"
+    assert second_body["status"] == "denied"
+    assert first_body["error"]["code"] == "policy_uncertain_fail_closed"
+    assert second_body["error"]["code"] == "policy_uncertain_fail_closed"
+    assert first_body["error"]["details"]["task_id"] == second_body["error"]["details"]["task_id"]
+    assert second_body["error"]["details"]["replayed"] == "true"
 
     events = app.state.runtime_services.audit_writer.get_events()
     assert [event.event_type for event in events] == [
         "policy.decision",
-        "owner_command.blocked",
+        "owner_command.denied",
         "owner_command.replayed",
     ]
 
 
 def test_submit_owner_command_blocks_idempotency_key_conflict() -> None:
     client = TestClient(create_control_plane_app())
-    headers = {
-        "X-OpenQilin-User-Id": "owner_456",
-        "X-OpenQilin-Connector": "discord",
-    }
+    payload_first = build_owner_command_request_dict(
+        action="run_task",
+        args=["alpha"],
+        actor_id="owner_456",
+        idempotency_key="idem-conflict-component-12345",
+    )
+    payload_second = build_owner_command_request_dict(
+        action="run_task",
+        args=["beta"],
+        actor_id="owner_456",
+        idempotency_key="idem-conflict-component-12345",
+    )
 
     first = client.post(
         "/v1/owner/commands",
-        headers=headers,
-        json={
-            "command": "run_task",
-            "args": ["alpha"],
-            "idempotency_key": "idem-conflict-component-12345",
-        },
+        headers=build_owner_command_headers(payload_first),
+        json=payload_first,
     )
     second = client.post(
         "/v1/owner/commands",
-        headers=headers,
-        json={
-            "command": "run_task",
-            "args": ["beta"],
-            "idempotency_key": "idem-conflict-component-12345",
-        },
+        headers=build_owner_command_headers(payload_second),
+        json=payload_second,
     )
 
     assert first.status_code == 202
     second_body = second.json()
     assert second.status_code == 409
-    assert second_body["status"] == "blocked"
-    assert second_body["error_code"] == "idempotency_key_reused_with_different_payload"
-    assert second_body["details"]["source"] == "idempotency"
+    assert second_body["status"] == "error"
+    assert second_body["error"]["code"] == "idempotency_key_reused_with_different_payload"
 
 
-def test_submit_owner_command_blocks_idempotency_key_conflict_on_metadata_change() -> None:
-    client = TestClient(create_control_plane_app())
-    headers = {
-        "X-OpenQilin-User-Id": "owner_460",
-        "X-OpenQilin-Connector": "discord",
-    }
-
-    first = client.post(
-        "/v1/owner/commands",
-        headers=headers,
-        json={
-            "command": "run_task",
-            "args": ["alpha"],
-            "metadata": {"channel": "discord"},
-            "idempotency_key": "idem-conflict-metadata-component-12345",
-        },
-    )
-    second = client.post(
-        "/v1/owner/commands",
-        headers=headers,
-        json={
-            "command": "run_task",
-            "args": ["alpha"],
-            "metadata": {"channel": "telegram"},
-            "idempotency_key": "idem-conflict-metadata-component-12345",
-        },
-    )
-
-    assert first.status_code == 202
-    second_body = second.json()
-    assert second.status_code == 409
-    assert second_body["status"] == "blocked"
-    assert second_body["error_code"] == "idempotency_key_reused_with_different_payload"
-    assert second_body["details"]["source"] == "idempotency"
-
-
-def test_submit_owner_command_blocks_policy_deny() -> None:
+def test_submit_owner_command_denies_policy_deny() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
+    payload = build_owner_command_request_dict(
+        action="deny_delete_project",
+        args=["project_1"],
+        actor_id="owner_policy_deny",
+        idempotency_key="idem-policy-deny-component-12345",
+    )
 
     response = client.post(
         "/v1/owner/commands",
-        headers={
-            "X-OpenQilin-User-Id": "owner_policy_deny",
-            "X-OpenQilin-Connector": "discord",
-        },
-        json={
-            "command": "deny_delete_project",
-            "args": ["project_1"],
-            "idempotency_key": "idem-policy-deny-component-12345",
-        },
+        headers=build_owner_command_headers(payload),
+        json=payload,
     )
 
     body = response.json()
     assert response.status_code == 403
-    assert body["status"] == "blocked"
-    assert body["error_code"] == "policy_denied"
-    assert body["details"]["source"] == "policy_runtime"
-    assert body["details"]["decision"] == "deny"
-    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(body["details"]["task_id"])
+    assert body["status"] == "denied"
+    assert body["error"]["code"] == "policy_denied"
+    assert body["error"]["class"] == "authorization_error"
+    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(
+        body["error"]["details"]["task_id"]
+    )
     assert task is not None
     assert task.status == "blocked_policy"
 
 
-def test_submit_owner_command_blocks_policy_uncertain_fail_closed() -> None:
-    client = TestClient(create_control_plane_app())
-
-    response = client.post(
-        "/v1/owner/commands",
-        headers={
-            "X-OpenQilin-User-Id": "owner_policy_uncertain",
-            "X-OpenQilin-Connector": "discord",
-        },
-        json={
-            "command": "policy_uncertain",
-            "args": ["project_1"],
-            "idempotency_key": "idem-policy-uncertain-component-12345",
-        },
-    )
-
-    body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "blocked"
-    assert body["error_code"] == "policy_uncertain_fail_closed"
-    assert body["details"]["source"] == "policy_runtime"
-    assert body["details"]["decision"] == "uncertain"
-
-
-def test_submit_owner_command_blocks_budget_deny() -> None:
+def test_submit_owner_command_denies_budget_deny() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
+    payload = build_owner_command_request_dict(
+        action="budget_deny_project",
+        args=["project_1"],
+        actor_id="owner_budget_deny",
+        idempotency_key="idem-budget-deny-component-12345",
+    )
 
     response = client.post(
         "/v1/owner/commands",
-        headers={
-            "X-OpenQilin-User-Id": "owner_budget_deny",
-            "X-OpenQilin-Connector": "discord",
-        },
-        json={
-            "command": "budget_deny_project",
-            "args": ["project_1"],
-            "idempotency_key": "idem-budget-deny-component-12345",
-        },
+        headers=build_owner_command_headers(payload),
+        json=payload,
     )
 
     body = response.json()
     assert response.status_code == 403
-    assert body["status"] == "blocked"
-    assert body["error_code"] == "budget_denied"
-    assert body["details"]["source"] == "budget_runtime"
-    assert body["details"]["decision"] == "deny"
-    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(body["details"]["task_id"])
+    assert body["status"] == "denied"
+    assert body["error"]["code"] == "budget_denied"
+    assert body["error"]["class"] == "budget_error"
+    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(
+        body["error"]["details"]["task_id"]
+    )
     assert task is not None
     assert task.status == "blocked_budget"
 
 
-def test_submit_owner_command_blocks_budget_uncertain_fail_closed() -> None:
-    client = TestClient(create_control_plane_app())
-
-    response = client.post(
-        "/v1/owner/commands",
-        headers={
-            "X-OpenQilin-User-Id": "owner_budget_uncertain",
-            "X-OpenQilin-Connector": "discord",
-        },
-        json={
-            "command": "budget_uncertain",
-            "args": ["project_1"],
-            "idempotency_key": "idem-budget-uncertain-component-12345",
-        },
-    )
-
-    body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "blocked"
-    assert body["error_code"] == "budget_uncertain_fail_closed"
-    assert body["details"]["source"] == "budget_runtime"
-    assert body["details"]["decision"] == "uncertain"
-
-
-def test_submit_owner_command_blocks_budget_runtime_error_fail_closed() -> None:
-    client = TestClient(create_control_plane_app())
-
-    response = client.post(
-        "/v1/owner/commands",
-        headers={
-            "X-OpenQilin-User-Id": "owner_budget_error",
-            "X-OpenQilin-Connector": "discord",
-        },
-        json={
-            "command": "budget_error",
-            "args": ["project_1"],
-            "idempotency_key": "idem-budget-error-component-12345",
-        },
-    )
-
-    body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "blocked"
-    assert body["error_code"] == "budget_runtime_error_fail_closed"
-    assert body["details"]["source"] == "budget_runtime"
-
-
-def test_submit_owner_command_blocks_dispatch_reject() -> None:
+def test_submit_owner_command_denies_dispatch_reject() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
+    payload = build_owner_command_request_dict(
+        action="dispatch_reject",
+        args=["project_1"],
+        actor_id="owner_dispatch_reject",
+        idempotency_key="idem-dispatch-reject-component-12345",
+    )
 
     response = client.post(
         "/v1/owner/commands",
-        headers={
-            "X-OpenQilin-User-Id": "owner_dispatch_reject",
-            "X-OpenQilin-Connector": "discord",
-        },
-        json={
-            "command": "dispatch_reject",
-            "args": ["project_1"],
-            "idempotency_key": "idem-dispatch-reject-component-12345",
-        },
+        headers=build_owner_command_headers(payload),
+        json=payload,
     )
 
     body = response.json()
     assert response.status_code == 403
-    assert body["status"] == "blocked"
-    assert body["error_code"] == "execution_dispatch_failed"
-    assert body["details"]["source"] == "dispatch_stub"
-    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(body["details"]["task_id"])
+    assert body["status"] == "denied"
+    assert body["error"]["code"] == "execution_dispatch_failed"
+    assert body["error"]["class"] == "runtime_error"
+    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(
+        body["error"]["details"]["task_id"]
+    )
     assert task is not None
     assert task.status == "blocked_dispatch"
 
 
 def test_submit_owner_command_accepts_llm_target_stub() -> None:
     client = TestClient(create_control_plane_app())
+    payload = build_owner_command_request_dict(
+        action="llm_summarize",
+        args=["project_1"],
+        actor_id="owner_llm_target",
+        idempotency_key="idem-llm-target-component-12345",
+    )
 
     response = client.post(
         "/v1/owner/commands",
-        headers={
-            "X-OpenQilin-User-Id": "owner_llm_target",
-            "X-OpenQilin-Connector": "discord",
-        },
-        json={
-            "command": "llm_summarize",
-            "args": ["project_1"],
-            "idempotency_key": "idem-llm-target-component-12345",
-        },
+        headers=build_owner_command_headers(payload),
+        json=payload,
     )
 
     body = response.json()
     assert response.status_code == 202
     assert body["status"] == "accepted"
-    assert body["dispatch_target"] == "llm"
-    assert body["dispatch_id"]
+    assert body["data"]["dispatch_target"] == "llm"
+    assert body["data"]["dispatch_id"]
 
 
 def test_submit_owner_command_emits_observability_on_accept() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
+    payload = build_owner_command_request_dict(
+        action="run_task",
+        args=["alpha"],
+        actor_id="owner_obs_accept",
+        idempotency_key="idem-observability-accept-component-12345",
+        trace_id="trace-observability-accept-component",
+    )
 
     response = client.post(
         "/v1/owner/commands",
-        headers={
-            "X-OpenQilin-User-Id": "owner_obs_accept",
-            "X-OpenQilin-Connector": "discord",
-            "X-OpenQilin-Trace-Id": "trace-observability-accept-component",
-        },
-        json={
-            "command": "run_task",
-            "args": ["alpha"],
-            "idempotency_key": "idem-observability-accept-component-12345",
-        },
+        headers=build_owner_command_headers(payload),
+        json=payload,
     )
 
     body = response.json()
@@ -447,8 +339,8 @@ def test_submit_owner_command_emits_observability_on_accept() -> None:
     accepted_event = audit_events[-1]
     assert accepted_event.outcome == "accepted"
     assert accepted_event.trace_id == body["trace_id"]
-    assert accepted_event.request_id == body["request_id"]
-    assert accepted_event.task_id == body["task_id"]
+    assert accepted_event.request_id == body["data"]["request_id"]
+    assert accepted_event.task_id == body["data"]["task_id"]
 
     spans = services.tracer.get_spans()
     assert len(spans) == 1
@@ -456,25 +348,24 @@ def test_submit_owner_command_emits_observability_on_accept() -> None:
     assert spans[0].trace_id == body["trace_id"]
     assert spans[0].name == "owner_command.ingress"
     assert span_attrs["outcome"] == "accepted"
-    assert span_attrs["correlation.task_id"] == body["task_id"]
+    assert span_attrs["correlation.task_id"] == body["data"]["task_id"]
 
 
-def test_submit_owner_command_emits_observability_on_policy_block() -> None:
+def test_submit_owner_command_emits_observability_on_policy_deny() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
+    payload = build_owner_command_request_dict(
+        action="deny_delete_project",
+        args=["alpha"],
+        actor_id="owner_obs_policy_block",
+        idempotency_key="idem-observability-policy-block-component-12345",
+        trace_id="trace-observability-policy-block-component",
+    )
 
     response = client.post(
         "/v1/owner/commands",
-        headers={
-            "X-OpenQilin-User-Id": "owner_obs_policy_block",
-            "X-OpenQilin-Connector": "discord",
-            "X-OpenQilin-Trace-Id": "trace-observability-policy-block-component",
-        },
-        json={
-            "command": "deny_delete_project",
-            "args": ["alpha"],
-            "idempotency_key": "idem-observability-policy-block-component-12345",
-        },
+        headers=build_owner_command_headers(payload),
+        json=payload,
     )
 
     body = response.json()
@@ -482,26 +373,26 @@ def test_submit_owner_command_emits_observability_on_policy_block() -> None:
     services = app.state.runtime_services
     metric_value = services.metric_recorder.get_counter_value(
         "owner_command_admission_outcomes_total",
-        labels={"outcome": "blocked", "source": "policy_runtime"},
+        labels={"outcome": "denied", "source": "policy_runtime"},
     )
     assert metric_value == 1
 
     audit_events = services.audit_writer.get_events()
     assert [event.event_type for event in audit_events] == [
         "policy.decision",
-        "owner_command.blocked",
+        "owner_command.denied",
     ]
-    blocked_event = audit_events[-1]
-    blocked_task = services.runtime_state_repo.get_task_by_id(body["details"]["task_id"])
-    assert blocked_task is not None
-    assert blocked_event.outcome == "blocked"
-    assert blocked_event.source == "policy_runtime"
-    assert blocked_event.trace_id == blocked_task.trace_id
-    assert blocked_event.task_id == blocked_task.task_id
+    denied_event = audit_events[-1]
+    denied_task = services.runtime_state_repo.get_task_by_id(body["error"]["details"]["task_id"])
+    assert denied_task is not None
+    assert denied_event.outcome == "denied"
+    assert denied_event.source == "policy_runtime"
+    assert denied_event.trace_id == denied_task.trace_id
+    assert denied_event.task_id == denied_task.task_id
 
     spans = services.tracer.get_spans()
     assert len(spans) == 1
     span_attrs = dict(spans[0].attributes)
     assert spans[0].status == "error"
-    assert span_attrs["outcome"] == "blocked"
+    assert span_attrs["outcome"] == "denied"
     assert span_attrs["source"] == "policy_runtime"

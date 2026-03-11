@@ -18,10 +18,14 @@ class TaskRecord:
     request_id: str
     trace_id: str
     principal_id: str
+    principal_role: str
+    trust_domain: str
     connector: str
     command: str
+    target: str
     args: tuple[str, ...]
     metadata: tuple[tuple[str, str], ...]
+    project_id: str | None
     idempotency_key: str
     status: str
     created_at: datetime
@@ -48,10 +52,14 @@ class InMemoryRuntimeStateRepository:
             request_id=envelope.request_id,
             trace_id=envelope.trace_id,
             principal_id=envelope.principal_id,
+            principal_role=envelope.principal_role,
+            trust_domain=envelope.trust_domain,
             connector=envelope.connector,
             command=envelope.command,
+            target=envelope.target,
             args=envelope.args,
             metadata=envelope.metadata,
+            project_id=envelope.project_id,
             idempotency_key=envelope.idempotency_key,
             status="admitted",
             created_at=datetime.now(tz=UTC),
