@@ -12,7 +12,10 @@ from openqilin.budget_runtime.reservation_service import BudgetReservationServic
 from openqilin.control_plane.idempotency.ingress_dedupe import InMemoryIngressDedupe
 from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
 from openqilin.policy_runtime_integration.client import InMemoryPolicyRuntimeClient
+from openqilin.task_orchestrator.dispatch.sandbox_dispatch import SandboxDispatchStub
 from openqilin.task_orchestrator.admission.service import AdmissionService
+from openqilin.task_orchestrator.services.lifecycle_service import TaskLifecycleService
+from openqilin.task_orchestrator.services.task_service import TaskDispatchService
 
 
 @dataclass(slots=True)
@@ -25,6 +28,8 @@ class RuntimeServices:
     policy_runtime_client: InMemoryPolicyRuntimeClient
     budget_runtime_client: InMemoryBudgetRuntimeClient
     budget_reservation_service: BudgetReservationService
+    lifecycle_service: TaskLifecycleService
+    task_dispatch_service: TaskDispatchService
 
 
 def build_runtime_services() -> RuntimeServices:
@@ -39,6 +44,11 @@ def build_runtime_services() -> RuntimeServices:
     policy_runtime_client = InMemoryPolicyRuntimeClient()
     budget_runtime_client = InMemoryBudgetRuntimeClient()
     budget_reservation_service = BudgetReservationService(client=budget_runtime_client)
+    lifecycle_service = TaskLifecycleService(runtime_state_repo=runtime_state_repo)
+    task_dispatch_service = TaskDispatchService(
+        lifecycle_service=lifecycle_service,
+        sandbox_dispatch_stub=SandboxDispatchStub(),
+    )
     return RuntimeServices(
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
@@ -46,6 +56,8 @@ def build_runtime_services() -> RuntimeServices:
         policy_runtime_client=policy_runtime_client,
         budget_runtime_client=budget_runtime_client,
         budget_reservation_service=budget_reservation_service,
+        lifecycle_service=lifecycle_service,
+        task_dispatch_service=task_dispatch_service,
     )
 
 
@@ -81,3 +93,9 @@ def get_runtime_state_repository(request: Request) -> InMemoryRuntimeStateReposi
     """Provide runtime-state repository for task status updates."""
 
     return get_runtime_services(request).runtime_state_repo
+
+
+def get_task_dispatch_service(request: Request) -> TaskDispatchService:
+    """Provide task-dispatch service for controlled dispatch stub flow."""
+
+    return get_runtime_services(request).task_dispatch_service

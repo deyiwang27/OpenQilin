@@ -24,6 +24,8 @@ def test_governed_ingress_generates_trace_id_when_header_missing() -> None:
     assert body["status"] == "accepted"
     assert body["task_id"]
     assert body["replayed"] is False
+    assert body["dispatch_target"] == "sandbox"
+    assert body["dispatch_id"]
     assert body["principal_id"] == "owner_987"
     assert body["trace_id"]
     assert isinstance(body["trace_id"], str)
@@ -62,6 +64,8 @@ def test_governed_ingress_replay_is_deterministic() -> None:
     assert first_body["task_id"] == second_body["task_id"]
     assert first_body["request_id"] == second_body["request_id"]
     assert first_body["trace_id"] == second_body["trace_id"]
+    assert first_body["dispatch_target"] == second_body["dispatch_target"]
+    assert first_body["dispatch_id"] == second_body["dispatch_id"]
 
 
 def test_governed_ingress_fail_closed_on_policy_runtime_error() -> None:
@@ -108,3 +112,26 @@ def test_governed_ingress_fail_closed_on_budget_runtime_error() -> None:
     assert body["status"] == "blocked"
     assert body["error_code"] == "budget_runtime_error_fail_closed"
     assert body["details"]["source"] == "budget_runtime"
+
+
+def test_governed_ingress_fail_closed_on_dispatch_reject() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers={
+            "X-OpenQilin-User-Id": "owner_dispatch_reject_integration",
+            "X-OpenQilin-Connector": "discord",
+        },
+        json={
+            "command": "dispatch_reject",
+            "args": ["alpha"],
+            "idempotency_key": "idem-integration-dispatch-reject-12345",
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 403
+    assert body["status"] == "blocked"
+    assert body["error_code"] == "execution_dispatch_failed"
+    assert body["details"]["source"] == "dispatch_stub"

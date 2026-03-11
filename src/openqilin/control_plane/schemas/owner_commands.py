@@ -30,6 +30,8 @@ class OwnerCommandAcceptedResponse(BaseModel):
     connector: str
     command: str
     accepted_args: list[str]
+    dispatch_target: str
+    dispatch_id: str
 
 
 class OwnerCommandRejectedResponse(BaseModel):

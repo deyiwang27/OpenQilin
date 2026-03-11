@@ -14,6 +14,7 @@ from openqilin.control_plane.api.dependencies import (
     get_budget_reservation_service,
     get_policy_runtime_client,
     get_runtime_state_repository,
+    get_task_dispatch_service,
 )
 from openqilin.control_plane.identity.principal_resolver import (
     PrincipalResolutionError,
@@ -35,6 +36,7 @@ from openqilin.task_orchestrator.admission.service import (
     AdmissionIdempotencyError,
     AdmissionService,
 )
+from openqilin.task_orchestrator.services.task_service import TaskDispatchService
 from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
 
 router = APIRouter(prefix="/v1/owner/commands", tags=["owner_commands"])
@@ -72,6 +74,7 @@ def submit_owner_command(
     policy_runtime_client: InMemoryPolicyRuntimeClient = Depends(get_policy_runtime_client),
     budget_reservation_service: BudgetReservationService = Depends(get_budget_reservation_service),
     runtime_state_repo: InMemoryRuntimeStateRepository = Depends(get_runtime_state_repository),
+    task_dispatch_service: TaskDispatchService = Depends(get_task_dispatch_service),
     x_openqilin_trace_id: Annotated[str | None, Header(alias="X-OpenQilin-Trace-Id")] = None,
 ) -> OwnerCommandAcceptedResponse | JSONResponse:
     """Validate ingress identity and envelope before admission execution."""
@@ -150,8 +153,27 @@ def submit_owner_command(
             status_code=status.HTTP_403_FORBIDDEN,
         )
 
-    updated_task = runtime_state_repo.update_task_status(admission_result.task.task_id, "accepted")
-    response_task = updated_task or admission_result.task
+    dispatch_outcome = task_dispatch_service.dispatch_admitted_task(admission_result.task)
+    if not dispatch_outcome.accepted:
+        details = {
+            "source": "dispatch_stub",
+            "task_id": admission_result.task.task_id,
+            "replayed": str(dispatch_outcome.replayed).lower(),
+            "dispatch_target": dispatch_outcome.target,
+        }
+        if dispatch_outcome.error_code is not None:
+            details["reason_code"] = dispatch_outcome.error_code
+
+        return _blocked_response(
+            error_code=dispatch_outcome.error_code or "execution_dispatch_failed",
+            message=dispatch_outcome.message,
+            details=details,
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
+
+    response_task = (
+        runtime_state_repo.get_task_by_id(admission_result.task.task_id) or admission_result.task
+    )
 
     return OwnerCommandAcceptedResponse(
         task_id=response_task.task_id,
@@ -162,4 +184,6 @@ def submit_owner_command(
         connector=response_task.connector,
         command=response_task.command,
         accepted_args=list(response_task.args),
+        dispatch_target=dispatch_outcome.target,
+        dispatch_id=dispatch_outcome.dispatch_id or "dispatch-id-missing",
     )

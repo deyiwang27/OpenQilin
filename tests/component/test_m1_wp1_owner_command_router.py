@@ -30,9 +30,11 @@ def test_submit_owner_command_accepts_valid_payload() -> None:
     assert body["trace_id"] == "trace-component-1"
     assert body["command"] == "run_task"
     assert body["accepted_args"] == ["alpha", "beta"]
+    assert body["dispatch_target"] == "sandbox"
+    assert body["dispatch_id"]
     task = app.state.runtime_services.runtime_state_repo.get_task_by_id(body["task_id"])
     assert task is not None
-    assert task.status == "accepted"
+    assert task.status == "dispatched"
 
 
 def test_submit_owner_command_blocks_missing_principal_header() -> None:
@@ -106,6 +108,8 @@ def test_submit_owner_command_replay_returns_same_task() -> None:
     assert second_body["replayed"] is True
     assert first_body["task_id"] == second_body["task_id"]
     assert first_body["request_id"] == second_body["request_id"]
+    assert first_body["dispatch_target"] == second_body["dispatch_target"]
+    assert first_body["dispatch_id"] == second_body["dispatch_id"]
 
 
 def test_submit_owner_command_blocks_idempotency_key_conflict() -> None:
@@ -303,3 +307,53 @@ def test_submit_owner_command_blocks_budget_runtime_error_fail_closed() -> None:
     assert body["status"] == "blocked"
     assert body["error_code"] == "budget_runtime_error_fail_closed"
     assert body["details"]["source"] == "budget_runtime"
+
+
+def test_submit_owner_command_blocks_dispatch_reject() -> None:
+    app = create_control_plane_app()
+    client = TestClient(app)
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers={
+            "X-OpenQilin-User-Id": "owner_dispatch_reject",
+            "X-OpenQilin-Connector": "discord",
+        },
+        json={
+            "command": "dispatch_reject",
+            "args": ["project_1"],
+            "idempotency_key": "idem-dispatch-reject-component-12345",
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 403
+    assert body["status"] == "blocked"
+    assert body["error_code"] == "execution_dispatch_failed"
+    assert body["details"]["source"] == "dispatch_stub"
+    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(body["details"]["task_id"])
+    assert task is not None
+    assert task.status == "blocked_dispatch"
+
+
+def test_submit_owner_command_accepts_llm_target_stub() -> None:
+    client = TestClient(create_control_plane_app())
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers={
+            "X-OpenQilin-User-Id": "owner_llm_target",
+            "X-OpenQilin-Connector": "discord",
+        },
+        json={
+            "command": "llm_summarize",
+            "args": ["project_1"],
+            "idempotency_key": "idem-llm-target-component-12345",
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 202
+    assert body["status"] == "accepted"
+    assert body["dispatch_target"] == "llm"
+    assert body["dispatch_id"]
