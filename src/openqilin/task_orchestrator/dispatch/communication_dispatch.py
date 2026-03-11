@@ -5,8 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
-from uuid import uuid4
 
+from openqilin.communication_gateway.delivery.publisher import (
+    DeliveryPublisher,
+    InMemoryDeliveryPublisher,
+    PublishRequest,
+)
+from openqilin.data_access.repositories.communication import CommunicationMessageRecord
 from openqilin.communication_gateway.transport.route_resolver import (
     RouteResolutionError,
     resolve_acp_route,
@@ -48,6 +53,7 @@ class CommunicationDispatchReceipt:
     error_code: str | None
     message: str
     route_key: str | None
+    retryable: bool = False
 
 
 class CommunicationDispatchAdapter(Protocol):
@@ -60,8 +66,13 @@ class CommunicationDispatchAdapter(Protocol):
 class InMemoryCommunicationDispatchAdapter:
     """Deterministic ACP baseline adapter with A2A/ordering contract checks."""
 
-    def __init__(self, ordering_validator: InMemoryOrderingValidator | None = None) -> None:
+    def __init__(
+        self,
+        ordering_validator: InMemoryOrderingValidator | None = None,
+        publisher: DeliveryPublisher | None = None,
+    ) -> None:
         self._ordering_validator = ordering_validator or InMemoryOrderingValidator()
+        self._publisher = publisher or InMemoryDeliveryPublisher()
 
     def dispatch(self, payload: CommunicationDispatchRequest) -> CommunicationDispatchReceipt:
         """Validate A2A baseline contract and resolve ACP route before accept."""
@@ -90,21 +101,48 @@ class InMemoryCommunicationDispatchAdapter:
                 error_code=error.code,
                 message=error.message,
                 route_key=None,
+                retryable=False,
             )
-
-        if payload.command == "msg_dispatch_reject":
-            return CommunicationDispatchReceipt(
-                accepted=False,
-                dispatch_id=None,
-                error_code="acp_contract_rejected",
-                message="ACP contract rejected communication payload",
+        publish_receipt = self._publisher.publish(
+            PublishRequest(
+                task_id=payload.task_id,
+                trace_id=payload.trace_id,
+                message_id=envelope.message_id,
+                external_message_id=envelope.external_message_id,
+                connector=envelope.connector,
+                command=envelope.command,
+                target=envelope.target,
+                args=envelope.args,
                 route_key=route.route_key,
+                endpoint=route.endpoint,
             )
-
-        return CommunicationDispatchReceipt(
-            accepted=True,
-            dispatch_id=f"acp-{uuid4()}",
-            error_code=None,
-            message=f"ACP contract accepted via {route.route_key}",
-            route_key=route.route_key,
         )
+        if publish_receipt.accepted:
+            return CommunicationDispatchReceipt(
+                accepted=True,
+                dispatch_id=publish_receipt.dispatch_id,
+                error_code=None,
+                message=publish_receipt.message,
+                route_key=publish_receipt.route_key,
+                retryable=False,
+            )
+        return CommunicationDispatchReceipt(
+            accepted=False,
+            dispatch_id=None,
+            error_code=publish_receipt.error_code,
+            message=publish_receipt.message,
+            route_key=publish_receipt.route_key,
+            retryable=publish_receipt.retryable,
+        )
+
+    def list_message_records(
+        self,
+        *,
+        task_id: str | None = None,
+    ) -> tuple[CommunicationMessageRecord, ...]:
+        """List persisted communication message records for diagnostics/tests."""
+
+        publisher = self._publisher
+        if isinstance(publisher, InMemoryDeliveryPublisher):
+            return publisher.list_message_records(task_id=task_id)
+        return ()

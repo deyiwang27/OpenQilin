@@ -920,6 +920,7 @@ def submit_owner_command(
             }
             if dispatch_outcome.error_code is not None:
                 details["reason_code"] = dispatch_outcome.error_code
+            details["retryable"] = str(dispatch_outcome.retryable).lower()
 
             span.set_status("error")
             span.set_attribute("outcome", "denied")

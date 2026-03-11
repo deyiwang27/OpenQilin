@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from uuid import uuid4
 
 from openqilin.data_access.repositories.runtime_state import TaskRecord
+from openqilin.data_access.repositories.communication import CommunicationMessageRecord
 from openqilin.llm_gateway.schemas.responses import LlmGatewayResponse
 from openqilin.llm_gateway.service import build_llm_gateway_service
 from openqilin.task_orchestrator.dispatch.llm_dispatch import (
@@ -60,6 +61,7 @@ class TaskDispatchOutcome:
     message: str
     replayed: bool
     source: str
+    retryable: bool = False
     llm_metadata: TaskDispatchLlmMetadata | None = None
 
 
@@ -101,6 +103,7 @@ class TaskDispatchService:
                 message=existing.message,
                 replayed=True,
                 source=existing.source,
+                retryable=existing.retryable,
                 llm_metadata=existing.llm_metadata,
             )
 
@@ -131,6 +134,7 @@ class TaskDispatchService:
                     message="sandbox adapter execution failed",
                     replayed=False,
                     source="dispatch_sandbox_adapter",
+                    retryable=False,
                     llm_metadata=None,
                 )
                 self._task_outcomes[task.task_id] = outcome
@@ -151,6 +155,7 @@ class TaskDispatchService:
                     message=receipt.message,
                     replayed=False,
                     source="dispatch_sandbox_adapter",
+                    retryable=False,
                     llm_metadata=None,
                 )
             else:
@@ -169,6 +174,7 @@ class TaskDispatchService:
                     message=receipt.message,
                     replayed=False,
                     source="dispatch_sandbox_adapter",
+                    retryable=False,
                     llm_metadata=None,
                 )
         elif target == "llm":
@@ -203,6 +209,7 @@ class TaskDispatchService:
                     message="llm gateway dispatch failed",
                     replayed=False,
                     source="dispatch_llm_gateway",
+                    retryable=False,
                     llm_metadata=None,
                 )
                 self._task_outcomes[task.task_id] = outcome
@@ -223,6 +230,7 @@ class TaskDispatchService:
                     message=llm_receipt.message,
                     replayed=False,
                     source="dispatch_llm_gateway",
+                    retryable=False,
                     llm_metadata=_extract_llm_metadata(llm_receipt.gateway_response),
                 )
             else:
@@ -241,6 +249,11 @@ class TaskDispatchService:
                     message=llm_receipt.message,
                     replayed=False,
                     source="dispatch_llm_gateway",
+                    retryable=bool(
+                        llm_receipt.gateway_response.retryable
+                        if llm_receipt.gateway_response is not None
+                        else False
+                    ),
                     llm_metadata=_extract_llm_metadata(llm_receipt.gateway_response),
                 )
         elif target == "communication":
@@ -276,6 +289,7 @@ class TaskDispatchService:
                     message="communication adapter execution failed",
                     replayed=False,
                     source="dispatch_communication_gateway",
+                    retryable=False,
                     llm_metadata=None,
                 )
                 self._task_outcomes[task.task_id] = outcome
@@ -296,6 +310,7 @@ class TaskDispatchService:
                     message=communication_receipt.message,
                     replayed=False,
                     source="dispatch_communication_gateway",
+                    retryable=False,
                     llm_metadata=None,
                 )
             else:
@@ -314,6 +329,7 @@ class TaskDispatchService:
                     message=communication_receipt.message,
                     replayed=False,
                     source="dispatch_communication_gateway",
+                    retryable=communication_receipt.retryable,
                     llm_metadata=None,
                 )
         else:
@@ -334,11 +350,24 @@ class TaskDispatchService:
                 message=message,
                 replayed=False,
                 source=f"dispatch_{target}",
+                retryable=False,
                 llm_metadata=None,
             )
 
         self._task_outcomes[task.task_id] = outcome
         return outcome
+
+    def list_communication_message_records(
+        self,
+        *,
+        task_id: str | None = None,
+    ) -> tuple[CommunicationMessageRecord, ...]:
+        """Expose communication message ledger records for diagnostics/tests."""
+
+        adapter = self._communication_dispatch_adapter
+        if isinstance(adapter, InMemoryCommunicationDispatchAdapter):
+            return adapter.list_message_records(task_id=task_id)
+        return ()
 
 
 def build_task_dispatch_service(lifecycle_service: TaskLifecycleService) -> TaskDispatchService:
