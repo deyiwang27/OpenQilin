@@ -184,3 +184,74 @@ def test_submit_owner_command_blocks_policy_uncertain_fail_closed() -> None:
     assert body["error_code"] == "policy_uncertain_fail_closed"
     assert body["details"]["source"] == "policy_runtime"
     assert body["details"]["decision"] == "uncertain"
+
+
+def test_submit_owner_command_blocks_budget_deny() -> None:
+    client = TestClient(create_control_plane_app())
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers={
+            "X-OpenQilin-User-Id": "owner_budget_deny",
+            "X-OpenQilin-Connector": "discord",
+        },
+        json={
+            "command": "budget_deny_project",
+            "args": ["project_1"],
+            "idempotency_key": "idem-budget-deny-component-12345",
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 403
+    assert body["status"] == "blocked"
+    assert body["error_code"] == "budget_denied"
+    assert body["details"]["source"] == "budget_runtime"
+    assert body["details"]["decision"] == "deny"
+
+
+def test_submit_owner_command_blocks_budget_uncertain_fail_closed() -> None:
+    client = TestClient(create_control_plane_app())
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers={
+            "X-OpenQilin-User-Id": "owner_budget_uncertain",
+            "X-OpenQilin-Connector": "discord",
+        },
+        json={
+            "command": "budget_uncertain",
+            "args": ["project_1"],
+            "idempotency_key": "idem-budget-uncertain-component-12345",
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 403
+    assert body["status"] == "blocked"
+    assert body["error_code"] == "budget_uncertain_fail_closed"
+    assert body["details"]["source"] == "budget_runtime"
+    assert body["details"]["decision"] == "uncertain"
+
+
+def test_submit_owner_command_blocks_budget_runtime_error_fail_closed() -> None:
+    client = TestClient(create_control_plane_app())
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers={
+            "X-OpenQilin-User-Id": "owner_budget_error",
+            "X-OpenQilin-Connector": "discord",
+        },
+        json={
+            "command": "budget_error",
+            "args": ["project_1"],
+            "idempotency_key": "idem-budget-error-component-12345",
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 403
+    assert body["status"] == "blocked"
+    assert body["error_code"] == "budget_runtime_error_fail_closed"
+    assert body["details"]["source"] == "budget_runtime"

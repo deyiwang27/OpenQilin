@@ -85,3 +85,26 @@ def test_governed_ingress_fail_closed_on_policy_runtime_error() -> None:
     assert body["status"] == "blocked"
     assert body["error_code"] == "policy_runtime_error_fail_closed"
     assert body["details"]["source"] == "policy_runtime"
+
+
+def test_governed_ingress_fail_closed_on_budget_runtime_error() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers={
+            "X-OpenQilin-User-Id": "owner_budget_error_integration",
+            "X-OpenQilin-Connector": "discord",
+        },
+        json={
+            "command": "budget_error",
+            "args": ["alpha"],
+            "idempotency_key": "idem-integration-budget-error-12345",
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 403
+    assert body["status"] == "blocked"
+    assert body["error_code"] == "budget_runtime_error_fail_closed"
+    assert body["details"]["source"] == "budget_runtime"

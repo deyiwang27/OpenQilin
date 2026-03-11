@@ -8,8 +8,10 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, Header, Request, status
 from fastapi.responses import JSONResponse
 
+from openqilin.budget_runtime.reservation_service import BudgetReservationService
 from openqilin.control_plane.api.dependencies import (
     get_admission_service,
+    get_budget_reservation_service,
     get_policy_runtime_client,
 )
 from openqilin.control_plane.identity.principal_resolver import (
@@ -66,6 +68,7 @@ def submit_owner_command(
     request: Request,
     admission_service: AdmissionService = Depends(get_admission_service),
     policy_runtime_client: InMemoryPolicyRuntimeClient = Depends(get_policy_runtime_client),
+    budget_reservation_service: BudgetReservationService = Depends(get_budget_reservation_service),
     x_openqilin_trace_id: Annotated[str | None, Header(alias="X-OpenQilin-Trace-Id")] = None,
 ) -> OwnerCommandAcceptedResponse | JSONResponse:
     """Validate ingress identity and envelope before admission execution."""
@@ -117,6 +120,27 @@ def submit_owner_command(
         return _blocked_response(
             error_code=policy_outcome.error_code or "policy_blocked",
             message=policy_outcome.message,
+            details=details,
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
+
+    budget_outcome = budget_reservation_service.reserve_with_fail_closed(admission_result.task)
+    if not budget_outcome.allowed:
+        details = {
+            "source": "budget_runtime",
+            "task_id": admission_result.task.task_id,
+            "replayed": str(admission_result.replayed).lower(),
+        }
+        if budget_outcome.reservation is not None:
+            details["decision"] = budget_outcome.reservation.decision
+            details["reason_code"] = budget_outcome.reservation.reason_code
+            details["budget_version"] = budget_outcome.reservation.budget_version
+            if budget_outcome.reservation.remaining_units is not None:
+                details["remaining_units"] = str(budget_outcome.reservation.remaining_units)
+
+        return _blocked_response(
+            error_code=budget_outcome.error_code or "budget_blocked",
+            message=budget_outcome.message,
             details=details,
             status_code=status.HTTP_403_FORBIDDEN,
         )
