@@ -9,6 +9,7 @@ from fastapi import Request
 
 from openqilin.budget_runtime.client import InMemoryBudgetRuntimeClient
 from openqilin.budget_runtime.reservation_service import BudgetReservationService
+from openqilin.communication_gateway.callbacks.outcome_notifier import CommunicationOutcomeNotifier
 from openqilin.control_plane.idempotency.ingress_dedupe import InMemoryIngressDedupe
 from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
 from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
@@ -20,6 +21,9 @@ from openqilin.retrieval_runtime.service import (
     build_retrieval_query_service,
 )
 from openqilin.task_orchestrator.admission.service import AdmissionService
+from openqilin.task_orchestrator.callbacks.delivery_events import (
+    InMemoryDeliveryEventCallbackProcessor,
+)
 from openqilin.task_orchestrator.services.lifecycle_service import TaskLifecycleService
 from openqilin.task_orchestrator.services.task_service import (
     TaskDispatchService,
@@ -43,6 +47,8 @@ class RuntimeServices:
     tracer: InMemoryTracer
     audit_writer: InMemoryAuditWriter
     metric_recorder: InMemoryMetricRecorder
+    delivery_event_callback_processor: InMemoryDeliveryEventCallbackProcessor
+    communication_outcome_notifier: CommunicationOutcomeNotifier
 
 
 def build_runtime_services() -> RuntimeServices:
@@ -62,6 +68,14 @@ def build_runtime_services() -> RuntimeServices:
     tracer = InMemoryTracer()
     audit_writer = InMemoryAuditWriter()
     metric_recorder = InMemoryMetricRecorder()
+    delivery_event_callback_processor = InMemoryDeliveryEventCallbackProcessor(
+        runtime_state_repo=runtime_state_repo,
+        audit_writer=audit_writer,
+        metric_recorder=metric_recorder,
+    )
+    communication_outcome_notifier = CommunicationOutcomeNotifier(
+        callback_processor=delivery_event_callback_processor
+    )
     task_dispatch_service = build_task_dispatch_service(
         lifecycle_service=lifecycle_service,
         audit_writer=audit_writer,
@@ -80,6 +94,8 @@ def build_runtime_services() -> RuntimeServices:
         tracer=tracer,
         audit_writer=audit_writer,
         metric_recorder=metric_recorder,
+        delivery_event_callback_processor=delivery_event_callback_processor,
+        communication_outcome_notifier=communication_outcome_notifier,
     )
 
 
@@ -145,3 +161,9 @@ def get_metric_recorder(request: Request) -> InMemoryMetricRecorder:
     """Provide metric recorder for governed-path counters."""
 
     return get_runtime_services(request).metric_recorder
+
+
+def get_communication_outcome_notifier(request: Request) -> CommunicationOutcomeNotifier:
+    """Provide communication outcome notifier for callback-driven lifecycle updates."""
+
+    return get_runtime_services(request).communication_outcome_notifier
