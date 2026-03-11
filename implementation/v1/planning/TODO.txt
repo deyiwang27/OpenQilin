@@ -143,7 +143,7 @@ Checklist:
 - evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
 - evidence: `uv run ruff check .`
 - evidence: `uv run mypy .`
-- issue closeout: `#16` evidence sync + close pending final commit push - `in_progress`
+- issue closeout: `#16` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/16#issuecomment-4042744335`) and issue closed - `done`
 - `M3-WP4` dead-letter flow + alert/audit emission (`issue #17`) - `todo`
 - `M3-WP5` orchestrator callback integration + M3 exit evidence pack (`issue #18`) - `todo`
 
