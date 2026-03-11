@@ -48,12 +48,37 @@ class CommunicationMessageRecord:
     updated_at: datetime
 
 
+@dataclass(frozen=True, slots=True)
+class CommunicationDeadLetterRecord:
+    """Persisted dead-letter entry for exhausted communication deliveries."""
+
+    dead_letter_id: str
+    task_id: str
+    trace_id: str
+    principal_id: str
+    idempotency_key: str
+    message_id: str
+    external_message_id: str
+    connector: str
+    command: str
+    target: str
+    route_key: str
+    endpoint: str
+    error_code: str
+    error_message: str
+    attempts: int
+    ledger_id: str | None
+    created_at: datetime
+
+
 class InMemoryCommunicationRepository:
     """In-memory repository storing communication message lifecycle records."""
 
     def __init__(self) -> None:
         self._records_by_ledger_id: dict[str, CommunicationMessageRecord] = {}
         self._ledger_ids_by_task_id: dict[str, list[str]] = defaultdict(list)
+        self._dead_letters_by_id: dict[str, CommunicationDeadLetterRecord] = {}
+        self._dead_letter_ids_by_task_id: dict[str, list[str]] = defaultdict(list)
 
     def create_record(
         self,
@@ -164,3 +189,67 @@ class InMemoryCommunicationRepository:
         """List all persisted communication message records."""
 
         return tuple(self._records_by_ledger_id.values())
+
+    def create_dead_letter_record(
+        self,
+        *,
+        task_id: str,
+        trace_id: str,
+        principal_id: str,
+        idempotency_key: str,
+        message_id: str,
+        external_message_id: str,
+        connector: str,
+        command: str,
+        target: str,
+        route_key: str,
+        endpoint: str,
+        error_code: str,
+        error_message: str,
+        attempts: int,
+        ledger_id: str | None,
+    ) -> CommunicationDeadLetterRecord:
+        """Persist terminal dead-letter entry for exhausted delivery."""
+
+        record = CommunicationDeadLetterRecord(
+            dead_letter_id=str(uuid4()),
+            task_id=task_id,
+            trace_id=trace_id,
+            principal_id=principal_id,
+            idempotency_key=idempotency_key,
+            message_id=message_id,
+            external_message_id=external_message_id,
+            connector=connector,
+            command=command,
+            target=target,
+            route_key=route_key,
+            endpoint=endpoint,
+            error_code=error_code,
+            error_message=error_message,
+            attempts=attempts,
+            ledger_id=ledger_id,
+            created_at=datetime.now(tz=UTC),
+        )
+        self._dead_letters_by_id[record.dead_letter_id] = record
+        self._dead_letter_ids_by_task_id[task_id].append(record.dead_letter_id)
+        return record
+
+    def get_dead_letter(self, dead_letter_id: str) -> CommunicationDeadLetterRecord | None:
+        """Load one dead-letter record by id."""
+
+        return self._dead_letters_by_id.get(dead_letter_id)
+
+    def list_dead_letters_for_task(self, task_id: str) -> tuple[CommunicationDeadLetterRecord, ...]:
+        """List dead-letter records for task."""
+
+        dead_letter_ids = self._dead_letter_ids_by_task_id.get(task_id, [])
+        return tuple(
+            self._dead_letters_by_id[dead_letter_id]
+            for dead_letter_id in dead_letter_ids
+            if dead_letter_id in self._dead_letters_by_id
+        )
+
+    def list_dead_letters(self) -> tuple[CommunicationDeadLetterRecord, ...]:
+        """List all dead-letter records."""
+
+        return tuple(self._dead_letters_by_id.values())

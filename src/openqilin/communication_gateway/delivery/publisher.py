@@ -6,6 +6,10 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from openqilin.communication_gateway.delivery.ack_handler import MessageAckHandler
+from openqilin.communication_gateway.delivery.dlq_writer import (
+    DeadLetterWriteRequest,
+    InMemoryDeadLetterWriter,
+)
 from openqilin.communication_gateway.delivery.retry_scheduler import (
     DeterministicRetryScheduler,
     RetryScheduler,
@@ -21,7 +25,10 @@ from openqilin.communication_gateway.transport.acp_client import (
     AcpSendRequest,
     InMemoryAcpClient,
 )
-from openqilin.data_access.repositories.communication import CommunicationMessageRecord
+from openqilin.data_access.repositories.communication import (
+    CommunicationDeadLetterRecord,
+    CommunicationMessageRecord,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,6 +61,7 @@ class PublishReceipt:
     retryable: bool
     route_key: str
     ledger_id: str | None
+    dead_letter_id: str | None = None
 
 
 class DeliveryPublisher(Protocol):
@@ -74,12 +82,14 @@ class InMemoryDeliveryPublisher:
         ack_handler: MessageAckHandler | None = None,
         retry_scheduler: RetryScheduler | None = None,
         idempotency_store: InMemoryCommunicationIdempotencyStore | None = None,
+        dead_letter_writer: InMemoryDeadLetterWriter | None = None,
     ) -> None:
         self._ledger = message_ledger or InMemoryMessageLedger()
         self._acp_client = acp_client or InMemoryAcpClient()
         self._ack_handler = ack_handler or MessageAckHandler(self._ledger)
         self._retry_scheduler = retry_scheduler or DeterministicRetryScheduler()
         self._idempotency_store = idempotency_store or InMemoryCommunicationIdempotencyStore()
+        self._dead_letter_writer = dead_letter_writer or InMemoryDeadLetterWriter()
 
     def publish(self, payload: PublishRequest) -> PublishReceipt:
         """Execute send + ack/nack pipeline and persist deterministic transitions."""
@@ -237,6 +247,35 @@ class InMemoryDeliveryPublisher:
                     route_key=terminal_receipt.route_key,
                     ledger_id=terminal_receipt.ledger_id,
                 )
+                dead_letter = self._dead_letter_writer.write_dead_letter(
+                    DeadLetterWriteRequest(
+                        task_id=payload.task_id,
+                        trace_id=payload.trace_id,
+                        principal_id=payload.principal_id,
+                        idempotency_key=payload.idempotency_key,
+                        message_id=payload.message_id,
+                        external_message_id=payload.external_message_id,
+                        connector=payload.connector,
+                        command=payload.command,
+                        target=payload.target,
+                        route_key=payload.route_key,
+                        endpoint=payload.endpoint,
+                        error_code=terminal_receipt.error_code or "communication_retry_exhausted",
+                        error_message=terminal_receipt.message,
+                        attempts=attempt,
+                        ledger_id=terminal_receipt.ledger_id,
+                    )
+                )
+                terminal_receipt = PublishReceipt(
+                    accepted=False,
+                    dispatch_id=None,
+                    error_code=terminal_receipt.error_code,
+                    message=f"{terminal_receipt.message}; dead_letter_id={dead_letter.dead_letter_id}",
+                    retryable=False,
+                    route_key=terminal_receipt.route_key,
+                    ledger_id=terminal_receipt.ledger_id,
+                    dead_letter_id=dead_letter.dead_letter_id,
+                )
             self._idempotency_store.complete(
                 key=delivery_key,
                 result=_receipt_result_payload(
@@ -267,6 +306,11 @@ class InMemoryDeliveryPublisher:
 
         return self._idempotency_store.list_records()
 
+    def list_dead_letters(self) -> tuple[CommunicationDeadLetterRecord, ...]:
+        """List communication dead-letter records for diagnostics/tests."""
+
+        return self._dead_letter_writer.list_dead_letters()
+
 
 def _receipt_result_payload(
     *,
@@ -281,6 +325,7 @@ def _receipt_result_payload(
         "retryable": str(receipt.retryable).lower(),
         "route_key": receipt.route_key,
         "ledger_id": receipt.ledger_id or "",
+        "dead_letter_id": receipt.dead_letter_id or "",
         "attempts": attempts,
     }
 
@@ -299,4 +344,5 @@ def _cached_result_to_receipt(
         retryable=mapped.get("retryable") == "true",
         route_key=mapped.get("route_key", fallback_route_key),
         ledger_id=mapped.get("ledger_id") or None,
+        dead_letter_id=mapped.get("dead_letter_id") or None,
     )

@@ -58,11 +58,15 @@ def build_runtime_services() -> RuntimeServices:
     budget_runtime_client = InMemoryBudgetRuntimeClient()
     budget_reservation_service = BudgetReservationService(client=budget_runtime_client)
     lifecycle_service = TaskLifecycleService(runtime_state_repo=runtime_state_repo)
-    task_dispatch_service = build_task_dispatch_service(lifecycle_service=lifecycle_service)
     retrieval_query_service = build_retrieval_query_service()
     tracer = InMemoryTracer()
     audit_writer = InMemoryAuditWriter()
     metric_recorder = InMemoryMetricRecorder()
+    task_dispatch_service = build_task_dispatch_service(
+        lifecycle_service=lifecycle_service,
+        audit_writer=audit_writer,
+        metric_recorder=metric_recorder,
+    )
     return RuntimeServices(
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,

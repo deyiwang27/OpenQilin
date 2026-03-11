@@ -5,11 +5,20 @@ from __future__ import annotations
 from dataclasses import dataclass
 from uuid import uuid4
 
-from openqilin.data_access.repositories.runtime_state import TaskRecord
-from openqilin.data_access.repositories.communication import CommunicationMessageRecord
+from openqilin.communication_gateway.delivery.dlq_writer import InMemoryDeadLetterWriter
+from openqilin.communication_gateway.delivery.publisher import InMemoryDeliveryPublisher
 from openqilin.communication_gateway.storage.idempotency_store import CommunicationIdempotencyRecord
+from openqilin.communication_gateway.storage.message_ledger import InMemoryMessageLedger
+from openqilin.data_access.repositories.communication import (
+    CommunicationDeadLetterRecord,
+    CommunicationMessageRecord,
+    InMemoryCommunicationRepository,
+)
+from openqilin.data_access.repositories.runtime_state import TaskRecord
 from openqilin.llm_gateway.schemas.responses import LlmGatewayResponse
 from openqilin.llm_gateway.service import build_llm_gateway_service
+from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
+from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
 from openqilin.task_orchestrator.dispatch.llm_dispatch import (
     LlmDispatchAdapter,
     LlmDispatchRequest,
@@ -63,6 +72,7 @@ class TaskDispatchOutcome:
     replayed: bool
     source: str
     retryable: bool = False
+    dead_letter_id: str | None = None
     llm_metadata: TaskDispatchLlmMetadata | None = None
 
 
@@ -105,6 +115,7 @@ class TaskDispatchService:
                 replayed=True,
                 source=existing.source,
                 retryable=existing.retryable,
+                dead_letter_id=existing.dead_letter_id,
                 llm_metadata=existing.llm_metadata,
             )
 
@@ -136,6 +147,7 @@ class TaskDispatchService:
                     replayed=False,
                     source="dispatch_sandbox_adapter",
                     retryable=False,
+                    dead_letter_id=None,
                     llm_metadata=None,
                 )
                 self._task_outcomes[task.task_id] = outcome
@@ -157,6 +169,7 @@ class TaskDispatchService:
                     replayed=False,
                     source="dispatch_sandbox_adapter",
                     retryable=False,
+                    dead_letter_id=None,
                     llm_metadata=None,
                 )
             else:
@@ -176,6 +189,7 @@ class TaskDispatchService:
                     replayed=False,
                     source="dispatch_sandbox_adapter",
                     retryable=False,
+                    dead_letter_id=None,
                     llm_metadata=None,
                 )
         elif target == "llm":
@@ -211,6 +225,7 @@ class TaskDispatchService:
                     replayed=False,
                     source="dispatch_llm_gateway",
                     retryable=False,
+                    dead_letter_id=None,
                     llm_metadata=None,
                 )
                 self._task_outcomes[task.task_id] = outcome
@@ -232,6 +247,7 @@ class TaskDispatchService:
                     replayed=False,
                     source="dispatch_llm_gateway",
                     retryable=False,
+                    dead_letter_id=None,
                     llm_metadata=_extract_llm_metadata(llm_receipt.gateway_response),
                 )
             else:
@@ -255,6 +271,7 @@ class TaskDispatchService:
                         if llm_receipt.gateway_response is not None
                         else False
                     ),
+                    dead_letter_id=None,
                     llm_metadata=_extract_llm_metadata(llm_receipt.gateway_response),
                 )
         elif target == "communication":
@@ -291,6 +308,7 @@ class TaskDispatchService:
                     replayed=False,
                     source="dispatch_communication_gateway",
                     retryable=False,
+                    dead_letter_id=None,
                     llm_metadata=None,
                 )
                 self._task_outcomes[task.task_id] = outcome
@@ -312,6 +330,7 @@ class TaskDispatchService:
                     replayed=False,
                     source="dispatch_communication_gateway",
                     retryable=False,
+                    dead_letter_id=communication_receipt.dead_letter_id,
                     llm_metadata=None,
                 )
             else:
@@ -331,6 +350,7 @@ class TaskDispatchService:
                     replayed=False,
                     source="dispatch_communication_gateway",
                     retryable=communication_receipt.retryable,
+                    dead_letter_id=communication_receipt.dead_letter_id,
                     llm_metadata=None,
                 )
         else:
@@ -352,6 +372,7 @@ class TaskDispatchService:
                 replayed=False,
                 source=f"dispatch_{target}",
                 retryable=False,
+                dead_letter_id=None,
                 llm_metadata=None,
             )
 
@@ -380,17 +401,43 @@ class TaskDispatchService:
             return adapter.list_idempotency_records()
         return ()
 
+    def list_communication_dead_letters(self) -> tuple[CommunicationDeadLetterRecord, ...]:
+        """Expose communication dead-letter records for diagnostics/tests."""
 
-def build_task_dispatch_service(lifecycle_service: TaskLifecycleService) -> TaskDispatchService:
+        adapter = self._communication_dispatch_adapter
+        if isinstance(adapter, InMemoryCommunicationDispatchAdapter):
+            return adapter.list_dead_letters()
+        return ()
+
+
+def build_task_dispatch_service(
+    lifecycle_service: TaskLifecycleService,
+    *,
+    audit_writer: InMemoryAuditWriter | None = None,
+    metric_recorder: InMemoryMetricRecorder | None = None,
+) -> TaskDispatchService:
     """Build task-dispatch service with default sandbox and llm adapters."""
 
+    communication_repository = InMemoryCommunicationRepository()
+    message_ledger = InMemoryMessageLedger(repository=communication_repository)
+    dead_letter_writer = InMemoryDeadLetterWriter(
+        repository=communication_repository,
+        audit_writer=audit_writer,
+        metric_recorder=metric_recorder,
+    )
+    communication_publisher = InMemoryDeliveryPublisher(
+        message_ledger=message_ledger,
+        dead_letter_writer=dead_letter_writer,
+    )
     return TaskDispatchService(
         lifecycle_service=lifecycle_service,
         sandbox_execution_adapter=InMemorySandboxExecutionAdapter(),
         llm_dispatch_adapter=LlmGatewayDispatchAdapter(
             llm_gateway_service=build_llm_gateway_service(),
         ),
-        communication_dispatch_adapter=InMemoryCommunicationDispatchAdapter(),
+        communication_dispatch_adapter=InMemoryCommunicationDispatchAdapter(
+            publisher=communication_publisher,
+        ),
     )
 
 

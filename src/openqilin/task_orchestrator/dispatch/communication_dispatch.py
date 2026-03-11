@@ -12,7 +12,10 @@ from openqilin.communication_gateway.delivery.publisher import (
     PublishRequest,
 )
 from openqilin.communication_gateway.storage.idempotency_store import CommunicationIdempotencyRecord
-from openqilin.data_access.repositories.communication import CommunicationMessageRecord
+from openqilin.data_access.repositories.communication import (
+    CommunicationDeadLetterRecord,
+    CommunicationMessageRecord,
+)
 from openqilin.communication_gateway.transport.route_resolver import (
     RouteResolutionError,
     resolve_acp_route,
@@ -55,6 +58,7 @@ class CommunicationDispatchReceipt:
     message: str
     route_key: str | None
     retryable: bool = False
+    dead_letter_id: str | None = None
 
 
 class CommunicationDispatchAdapter(Protocol):
@@ -129,6 +133,7 @@ class InMemoryCommunicationDispatchAdapter:
                 message=publish_receipt.message,
                 route_key=publish_receipt.route_key,
                 retryable=False,
+                dead_letter_id=publish_receipt.dead_letter_id,
             )
         return CommunicationDispatchReceipt(
             accepted=False,
@@ -137,6 +142,7 @@ class InMemoryCommunicationDispatchAdapter:
             message=publish_receipt.message,
             route_key=publish_receipt.route_key,
             retryable=publish_receipt.retryable,
+            dead_letter_id=publish_receipt.dead_letter_id,
         )
 
     def list_message_records(
@@ -157,4 +163,12 @@ class InMemoryCommunicationDispatchAdapter:
         publisher = self._publisher
         if isinstance(publisher, InMemoryDeliveryPublisher):
             return publisher.list_idempotency_records()
+        return ()
+
+    def list_dead_letters(self) -> tuple[CommunicationDeadLetterRecord, ...]:
+        """List communication dead-letter records for diagnostics/tests."""
+
+        publisher = self._publisher
+        if isinstance(publisher, InMemoryDeliveryPublisher):
+            return publisher.list_dead_letters()
         return ()

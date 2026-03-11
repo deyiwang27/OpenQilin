@@ -83,6 +83,7 @@ def test_publisher_retries_retryable_nack_then_accepts() -> None:
     assert len(idempotency_records) == 1
     assert idempotency_records[0].status == "completed"
     assert idempotency_records[0].attempt_count == 2
+    assert publisher.list_dead_letters() == ()
 
 
 def test_publisher_suppresses_duplicate_delivery_without_resending() -> None:
@@ -111,6 +112,7 @@ def test_publisher_returns_retry_exhausted_after_max_attempts() -> None:
     assert receipt.accepted is False
     assert receipt.error_code == "communication_retry_exhausted"
     assert receipt.retryable is False
+    assert receipt.dead_letter_id is not None
     records = publisher.list_message_records(task_id="task-wp3-001")
     assert len(records) == 3
     assert [record.attempt for record in records] == [1, 2, 3]
@@ -118,6 +120,10 @@ def test_publisher_returns_retry_exhausted_after_max_attempts() -> None:
     idempotency_records = publisher.list_idempotency_records()
     assert len(idempotency_records) == 1
     assert idempotency_records[0].attempt_count == 3
+    dead_letters = publisher.list_dead_letters()
+    assert len(dead_letters) == 1
+    assert dead_letters[0].dead_letter_id == receipt.dead_letter_id
+    assert dead_letters[0].error_code == "communication_retry_exhausted"
 
 
 def test_publisher_rejects_idempotency_conflict_for_changed_payload() -> None:
