@@ -22,6 +22,8 @@ class OwnerCommandAcceptedResponse(BaseModel):
     """Response returned when ingress validation passes."""
 
     status: Literal["accepted"] = "accepted"
+    task_id: str
+    replayed: bool
     request_id: str
     trace_id: str
     principal_id: str

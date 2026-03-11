@@ -23,6 +23,8 @@ def test_submit_owner_command_accepts_valid_payload() -> None:
     body = response.json()
     assert response.status_code == 202
     assert body["status"] == "accepted"
+    assert body["task_id"]
+    assert body["replayed"] is False
     assert body["principal_id"] == "owner_123"
     assert body["trace_id"] == "trace-component-1"
     assert body["command"] == "run_task"
@@ -74,3 +76,63 @@ def test_submit_owner_command_blocks_blank_command() -> None:
     assert body["status"] == "blocked"
     assert body["error_code"] == "envelope_invalid_command"
     assert body["details"]["source"] == "payload"
+
+
+def test_submit_owner_command_replay_returns_same_task() -> None:
+    client = TestClient(create_control_plane_app())
+
+    headers = {
+        "X-OpenQilin-User-Id": "owner_999",
+        "X-OpenQilin-Connector": "discord",
+    }
+    payload = {
+        "command": "run_task",
+        "args": ["alpha", "beta"],
+        "idempotency_key": "idem-replay-component-12345",
+    }
+
+    first = client.post("/v1/owner/commands", headers=headers, json=payload)
+    second = client.post("/v1/owner/commands", headers=headers, json=payload)
+
+    first_body = first.json()
+    second_body = second.json()
+    assert first.status_code == 202
+    assert second.status_code == 202
+    assert first_body["replayed"] is False
+    assert second_body["replayed"] is True
+    assert first_body["task_id"] == second_body["task_id"]
+    assert first_body["request_id"] == second_body["request_id"]
+
+
+def test_submit_owner_command_blocks_idempotency_key_conflict() -> None:
+    client = TestClient(create_control_plane_app())
+    headers = {
+        "X-OpenQilin-User-Id": "owner_456",
+        "X-OpenQilin-Connector": "discord",
+    }
+
+    first = client.post(
+        "/v1/owner/commands",
+        headers=headers,
+        json={
+            "command": "run_task",
+            "args": ["alpha"],
+            "idempotency_key": "idem-conflict-component-12345",
+        },
+    )
+    second = client.post(
+        "/v1/owner/commands",
+        headers=headers,
+        json={
+            "command": "run_task",
+            "args": ["beta"],
+            "idempotency_key": "idem-conflict-component-12345",
+        },
+    )
+
+    assert first.status_code == 202
+    second_body = second.json()
+    assert second.status_code == 409
+    assert second_body["status"] == "blocked"
+    assert second_body["error_code"] == "idempotency_key_reused_with_different_payload"
+    assert second_body["details"]["source"] == "idempotency"
