@@ -71,7 +71,11 @@ Rules:
 - required outputs: `decision`, `rule_ids`, `obligations`, `policy_version`, `policy_hash`
 
 ### 6.2 Budget Engine
-- synchronous reservation call before costed dispatch
+- synchronous reservation call before costed or quota-governed dispatch
+- post-execution reconciliation using actual usage/cost metadata
+- dual budget dimensions are enforced:
+  - currency usage (USD)
+  - quota usage (request/token units)
 - hard breach or unavailability blocks dispatch
 
 ### 6.3 Execution Sandbox
@@ -80,7 +84,8 @@ Rules:
 
 ### 6.4 LLM Gateway
 - all governed model requests route through `llm_gateway`
-- orchestrator passes `model_class`, `routing_profile`, `budget_context`, and `policy_context`
+- orchestrator passes `model_class`, `routing_profile`, `budget_context` (currency + quota), and `policy_context`
+- free-tier LLM paths (`cost=0`) still require quota budget enforcement through `budget_context`
 
 ### 6.5 Communication Gateway
 - publish command/event/escalation envelopes with mandatory `idempotency_key`
@@ -97,6 +102,7 @@ Rules:
 | --- | --- |
 | policy deny/error | transition to `blocked` |
 | budget failure/hard breach | transition to `blocked` |
+| budget reconciliation mismatch/missing usage | transition to `blocked` (fail-closed) |
 | sandbox dispatch reject | transition to `blocked` or `failed` by target semantics |
 | communication dead-letter | attach delivery failure and escalate if required |
 | duplicate submission | no duplicate side effects |

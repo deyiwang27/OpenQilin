@@ -28,6 +28,8 @@ src/openqilin/llm_gateway/
 - `LiteLLMAdapter.complete(request)`
 - `RequestGuard.validate(governed_request)`
 - `UsageRecorder.record(response_metadata)`
+- `CostEstimator.estimate(request, usage)` with explicit `cost_source`
+- `BudgetUsageNormalizer.normalize(usage, cost)` for currency + quota attribution
 
 ## 4. Routing Rules
 - local and CI default to `dev_gemini_free`
@@ -45,3 +47,5 @@ src/openqilin/llm_gateway/
 - Gemini free-tier default wiring
 - fallback behavior
 - usage and cost metadata persistence
+- free-tier path enforcement where `cost=0` but quota usage is non-zero
+- reservation/reconciliation compatibility with budget runtime dual-budget model

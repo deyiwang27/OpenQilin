@@ -72,8 +72,14 @@ Deterministic obligation order:
 If any required obligation cannot be satisfied, transition to `blocked` (fail-closed).
 
 ## 8. Budget and Concurrency Controls
-- All costed tasks must reserve budget prior to dispatch.
+- All costed or quota-governed tasks must reserve budget prior to dispatch.
 - Concurrent dispatches must honor atomic reservation semantics.
+- Budget reservation/reconciliation must include dual dimensions:
+  - currency deltas (USD)
+  - quota deltas (request/token units)
+- Project allocation policy may be `absolute`, `ratio`, or `hybrid`; orchestrator must enforce the effective allocated budget returned by Budget Engine.
+- For hybrid allocation, effective budget is derived from ratio/floor/cap policy and must be treated as authoritative for the active budget window.
+- Free-tier model requests (`cost=0`) are still budget-governed through quota limits.
 - Hard threshold behavior:
   - block new execution
   - emit governance enforcement metadata for auditor path
@@ -137,7 +143,7 @@ Minimum task status output:
 | Rule ID | Statement | Severity | Enforced By |
 | --- | --- | --- | --- |
 | ORCH-001 | Task MUST pass Policy Engine before dispatch. | critical | Task Orchestrator |
-| ORCH-002 | Task MUST reserve budget before dispatch. | critical | Task Orchestrator |
+| ORCH-002 | Task MUST reserve dual-dimension budget (currency + quota) before dispatch. | critical | Task Orchestrator |
 | ORCH-003 | Policy or budget evaluation errors MUST fail closed and block dispatch. | critical | Task Orchestrator |
 | ORCH-004 | Orchestrator MUST execute required obligations for `allow_with_obligations` decisions before dispatch. | high | Task Orchestrator |
 | ORCH-005 | Governance enforcement actions MUST NOT be overridden by orchestrator logic. | critical | Task Orchestrator |
@@ -149,6 +155,7 @@ Minimum task status output:
 - Policy Engine deny transitions task to `blocked`.
 - Policy Engine unavailability transitions task to `blocked` (fail-closed).
 - Budget reservation failure prevents dispatch.
+- Free-tier model dispatch with zero currency cost still enforces quota limits before dispatch.
 - `allow_with_obligations` path enforces required obligations in deterministic order.
 - Hard budget breach emits enforcement metadata for auditor/owner/ceo escalation flow.
 - Duplicate task requests do not duplicate side effects.
