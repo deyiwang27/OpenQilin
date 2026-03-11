@@ -15,9 +15,9 @@ Status legend:
 - `done`
 
 Current focus:
-- Milestone: `M1 First Executable Slice`
-- Primary issue: `#4` (Governed Path Kickoff)
-- Active branch: `feat/4-m1-governed-path-kickoff`
+- Milestone: `M2 Execution Targets`
+- Primary issue: `#6` (Execution Targets Kickoff)
+- Active branch: `feat/6-m2-execution-targets-kickoff`
 
 Checklist:
 0) Repo structure and documentation consistency review (post-migration) - `done`
@@ -36,7 +36,7 @@ Checklist:
 - baseline CLI tooling verified (`git`, `gh`, `uv`, `docker`, `docker compose`)
 - compose profiles/services resolve from `compose.yml`
 
-1) M1 governed path kickoff (`issue #4`) - `in_progress`
+1) M1 governed path kickoff (`issue #4`) - `done`
 - M1 implementation workplan decomposition and tracker sync (execution plan/progress/TODO alignment) - `done`
 - `M1-WP1`: owner command contract + ingress validation (`control_plane` + `task_orchestrator/admission`) - `done`
 - evidence: `uv run pytest tests/unit/test_m1_wp1_ingress_primitives.py tests/component/test_m1_wp1_owner_command_router.py tests/integration/test_m1_wp1_governed_ingress_path.py`
@@ -92,12 +92,16 @@ Checklist:
 - evidence: `uv run ruff check .`
 - evidence: `uv run ruff format --check .`
 - evidence: `uv run mypy .`
+- milestone closeout: merged to `main`; issue `#4` closed - `done`
 
-2) M2 execution targets prep - `todo`
-- sandbox adapter wiring plan
-- LiteLLM runtime integration plan
-- retrieval-backed query baseline plan
-- PostgreSQL `pgvector` enablement plan (image/extension bootstrap + migration contract)
+2) M2 execution targets kickoff (`issue #6`) - `in_progress`
+- decomposition + dependency wiring with child WPs (`#7`..`#11`) - `done`
+- labels applied (`milestone:M2`, `type:*`, `area:*`, `risk:execution-core`) - `done`
+- `M2-WP1` sandbox adapter wiring (`issue #7`) - `todo`
+- `M2-WP2` LiteLLM runtime integration (`issue #8`) - `todo`
+- `M2-WP3` retrieval-backed query baseline (`issue #9`) - `todo`
+- `M2-WP4` PostgreSQL `pgvector` enablement + migration contract (`issue #10`) - `todo`
+- `M2-WP5` M2 evidence pack + milestone exit validation (`issue #11`) - `todo`
 
 3) M3 reliability prep - `todo`
 - A2A/ACP validation contract test inventory

@@ -67,8 +67,42 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 - Trace and audit artifacts are emitted for both accepted and blocked outcomes.
 - Admin CLI commands (`migrate`, `bootstrap`, `smoke`, `diagnostics`) run with non-placeholder behavior.
 
-## 5. Tracking Interfaces
-### 5.1 Issue Contract Fields
+## 5. M2 Kickoff Workplan (Issue `#6`)
+### 5.1 Objective and Boundary
+- Replace M1 execution stubs with real adapter boundaries while preserving governed-path contracts and fail-closed behavior.
+- Deliver incremental runtime integration in small work packages with independent evidence.
+- Keep M3 reliability scope out of this kickoff slice (no retries/dead-letter semantics yet).
+
+### 5.2 Ordered Work Packages
+1. `M2-WP1` Sandbox adapter wiring (`issue #7`)
+- Target modules: `task_orchestrator/dispatch/*`, `task_orchestrator/services/*`.
+- Deliverables: accepted-path dispatch routed to sandbox adapter boundary with deterministic lifecycle/error mapping.
+
+2. `M2-WP2` LiteLLM gateway integration (`issue #8`)
+- Target modules: `llm_gateway/*`, execution integration boundaries.
+- Deliverables: controlled model-call path through LiteLLM and normalized usage/cost metadata.
+
+3. `M2-WP3` Retrieval-backed query baseline (`issue #9`)
+- Target modules: retrieval runtime boundary modules and execution integration points.
+- Deliverables: deterministic retrieval path integration with fail-closed tests for retrieval/runtime uncertainty.
+
+4. `M2-WP4` PostgreSQL `pgvector` enablement + migration contract (`issue #10`)
+- Target modules: `compose.yml`, `migrations/*`, `data_access/*`, env/bootstrap docs.
+- Deliverables: extension-available bootstrap contract and deterministic migration path evidence.
+
+5. `M2-WP5` M2 evidence pack and milestone exit validation (`issue #11`)
+- Target slices: `tests/unit`, `tests/component`, `tests/integration`, `tests/contract`, `tests/conformance`.
+- Deliverables: acceptance-criteria evidence mapping and milestone closeout links.
+
+### 5.3 M2 Exit Evidence Checklist
+- Accepted governed path executes through sandbox adapter boundary.
+- LiteLLM gateway path runs through defined integration boundary with usage/cost metadata captured.
+- Retrieval-backed baseline path is validated by deterministic integration tests.
+- `pgvector` bootstrap+migration contract is validated and documented.
+- Full quality gates pass for merged M2 scope (`ruff`, `mypy`, `pytest` suites).
+
+## 6. Tracking Interfaces
+### 6.1 Issue Contract Fields
 Each implementation issue must contain:
 - `Milestone`: one of `M0`..`M4`
 - `Goal`: outcome statement tied to milestone intent
@@ -78,20 +112,20 @@ Each implementation issue must contain:
 - `Evidence Links`: PRs, test runs, traces, audit logs, or screenshots
 - `Definition of Done`: close condition beyond "code merged"
 
-### 5.2 Label Taxonomy
+### 6.2 Label Taxonomy
 Required label groups:
 - `milestone:*` (example: `milestone:M1`)
 - `type:*` (example: `type:feature`, `type:infra`, `type:test`)
 - `area:*` (example: `area:control_plane`, `area:task_orchestrator`)
 - `risk:*` (example: `risk:governance-core`)
 
-## 6. Cadence and Update Rules
+## 7. Cadence and Update Rules
 - PR-linked updates: every implementation PR references issue IDs and updates issue acceptance checklist status.
 - Weekly summary: update `ImplementationProgress-v1.md` once per week with milestone percentages, active features, blockers, and evidence links.
 - Milestone close rule: milestone can close only when exit evidence is attached and all required feature issues are closed.
 - Governance check rule: run consistency/governance checks per `implementation/v1/workflow/RepositoryConsistencyAndGovernanceCheck-v1.md` (PR-level light checks; deep checks on milestone close and major structure/policy changes).
 
-## 7. Related Documents
+## 8. Related Documents
 - `implementation/v1/workflow/AIAssistedDeliveryWorkflow-v1.md`
 - `implementation/v1/planning/ImplementationBacklogSeed-v1.md`
 - `implementation/v1/planning/ImplementationMilestones-v1.md`
