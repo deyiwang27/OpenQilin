@@ -69,6 +69,28 @@ def test_migrate_command_exits_non_zero_on_migration_failure(monkeypatch, tmp_pa
     assert "[FAIL] migrate: migration failed: migration error" in result.stdout
 
 
+def test_apply_migrations_sets_resolved_database_url(monkeypatch, tmp_path: Path) -> None:
+    alembic_ini = tmp_path / "alembic.ini"
+    alembic_ini.write_text("[alembic]\nscript_location = migrations\n", encoding="utf-8")
+
+    captured: dict[str, str] = {}
+
+    def fake_resolve_database_url(*, override=None, alembic_ini_path=None) -> str:
+        return "postgresql+psycopg://resolved-db"
+
+    def fake_upgrade(config, revision) -> None:
+        captured["revision"] = revision
+        captured["sqlalchemy_url"] = config.get_main_option("sqlalchemy.url")
+
+    monkeypatch.setattr(admin_cli, "resolve_database_url", fake_resolve_database_url)
+    monkeypatch.setattr(admin_cli.command, "upgrade", fake_upgrade)
+
+    admin_cli.apply_migrations(alembic_ini)
+
+    assert captured["revision"] == "head"
+    assert captured["sqlalchemy_url"] == "postgresql+psycopg://resolved-db"
+
+
 def test_bootstrap_command_runs_without_migration_when_flag_enabled() -> None:
     result = RUNNER.invoke(admin_cli.app, ["bootstrap", "--skip-migrate", "--smoke-in-process"])
 

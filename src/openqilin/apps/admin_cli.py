@@ -56,6 +56,8 @@ def apply_migrations(alembic_ini_path: Path) -> None:
     if not alembic_ini_path.exists():
         raise FileNotFoundError(f"alembic config not found: {alembic_ini_path}")
     config = Config(str(alembic_ini_path))
+    database_url = resolve_database_url(alembic_ini_path=alembic_ini_path)
+    config.set_main_option("sqlalchemy.url", database_url)
     command.upgrade(config, "head")
 
 

@@ -139,7 +139,9 @@ services:
     volumes:
       - .:/workspace
     entrypoint: ["sh", "/workspace/ops/scripts/admin-entrypoint.sh"]
-    command: ["bootstrap"]
+    command: ["bootstrap", "--smoke-in-process"]
+    environment:
+      OPENQILIN_DATABASE_URL: postgresql+psycopg://openqilin:openqilin@postgres:5432/openqilin
     depends_on:
       postgres:
         condition: service_healthy

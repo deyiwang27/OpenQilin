@@ -22,9 +22,10 @@ def resolve_database_url(
     if override is not None and override.strip():
         return override.strip()
 
-    env_value = os.getenv("OPENQILIN_DATABASE_URL")
-    if env_value is not None and env_value.strip():
-        return env_value.strip()
+    for env_name in ("OPENQILIN_DATABASE_URL", "POSTGRES_DSN"):
+        env_value = os.getenv(env_name)
+        if env_value is not None and env_value.strip():
+            return env_value.strip()
 
     ini_path = alembic_ini_path or Path("alembic.ini")
     if ini_path.exists():
