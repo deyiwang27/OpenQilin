@@ -15,6 +15,10 @@ from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
 from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
 from openqilin.observability.tracing.tracer import InMemoryTracer
 from openqilin.policy_runtime_integration.client import InMemoryPolicyRuntimeClient
+from openqilin.retrieval_runtime.service import (
+    RetrievalQueryService,
+    build_retrieval_query_service,
+)
 from openqilin.task_orchestrator.admission.service import AdmissionService
 from openqilin.task_orchestrator.services.lifecycle_service import TaskLifecycleService
 from openqilin.task_orchestrator.services.task_service import (
@@ -35,6 +39,7 @@ class RuntimeServices:
     budget_reservation_service: BudgetReservationService
     lifecycle_service: TaskLifecycleService
     task_dispatch_service: TaskDispatchService
+    retrieval_query_service: RetrievalQueryService
     tracer: InMemoryTracer
     audit_writer: InMemoryAuditWriter
     metric_recorder: InMemoryMetricRecorder
@@ -54,6 +59,7 @@ def build_runtime_services() -> RuntimeServices:
     budget_reservation_service = BudgetReservationService(client=budget_runtime_client)
     lifecycle_service = TaskLifecycleService(runtime_state_repo=runtime_state_repo)
     task_dispatch_service = build_task_dispatch_service(lifecycle_service=lifecycle_service)
+    retrieval_query_service = build_retrieval_query_service()
     tracer = InMemoryTracer()
     audit_writer = InMemoryAuditWriter()
     metric_recorder = InMemoryMetricRecorder()
@@ -66,6 +72,7 @@ def build_runtime_services() -> RuntimeServices:
         budget_reservation_service=budget_reservation_service,
         lifecycle_service=lifecycle_service,
         task_dispatch_service=task_dispatch_service,
+        retrieval_query_service=retrieval_query_service,
         tracer=tracer,
         audit_writer=audit_writer,
         metric_recorder=metric_recorder,
@@ -110,6 +117,12 @@ def get_task_dispatch_service(request: Request) -> TaskDispatchService:
     """Provide task-dispatch service for governed execution dispatch."""
 
     return get_runtime_services(request).task_dispatch_service
+
+
+def get_retrieval_query_service(request: Request) -> RetrievalQueryService:
+    """Provide retrieval query service for query contract endpoints."""
+
+    return get_runtime_services(request).retrieval_query_service
 
 
 def get_tracer(request: Request) -> InMemoryTracer:
