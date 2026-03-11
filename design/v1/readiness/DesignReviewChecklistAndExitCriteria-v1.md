@@ -108,7 +108,7 @@ All criteria are mandatory for design-stage exit:
   - `design/v1/readiness/DesignReviewRecord-v1.md`
 - Implementation backlog seeds linked to design sections:
   - `design/v1/planning/ImplementationBacklogSeed-v1.md`
-  - `design/TODO.txt` as the authoritative live tracker
+  - `design/TODO.txt` as the design-stage historical tracker
 - Conformance test coverage outline mapped to key rule families (`RT`, `POL`, `BUD`, `A2A`, `ACP`, `OBS`, `MET`, `LOG`, `SCHEMA`, `MEM`, `STR`).
 
 ## 6. Kickoff Decision Record
@@ -122,4 +122,4 @@ Current design-stage decision (2026-03-10):
 - rationale:
   - design backlog is closed
   - implementation-planning hosting and topology decisions are explicit
-  - live tracker authority is explicit
+  - design-stage tracking authority and implementation-tracking boundary are explicit

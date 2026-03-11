@@ -33,7 +33,7 @@ Fixture rules:
 Recommended branch workflow:
 - follow `design/v1/foundation/GitHubOperationsManagementGuide-v1.md` as canonical branch policy
 - short-lived branches only, created from latest `main`
-- PR into protected `main` using squash merge
+- PR into protected `main` (or documented procedural equivalent) using squash merge
 - no direct commits to `main` for implementation code
 
 Mandatory PR checks:

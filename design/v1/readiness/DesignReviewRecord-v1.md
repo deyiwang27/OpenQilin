@@ -17,7 +17,7 @@
 - governance-core path is documented end to end
 - Gemini free-tier initial testing posture is defined through routing profiles and gateway design
 - module hosting decisions are explicit, including `budget_runtime` inside `orchestrator_worker`
-- live tracker authority is explicit: `design/TODO.txt` is authoritative, backlog seed is stable reference
+- design-stage tracker authority is explicit: `design/TODO.txt` is historical closeout for design, while implementation tracking moved to GitHub Issues/PRs/Project
 - implementation handoff now includes repo layout, container topology, module-level design, quality gates, milestones, and release posture
 
 ## Residual Risks

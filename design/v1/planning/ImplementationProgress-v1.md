@@ -17,14 +17,14 @@ Status values:
 - `completed`
 
 ## 3. Current Sprint/Week Focus
-- Week of `2026-03-11`: close M0 baseline blockers (`uv.lock`, compose baseline, CI skeleton, migration tooling scaffold).
+- Week of `2026-03-11`: finalize M0 baseline and policy consistency pass after full-repo audit.
 - Week of `2026-03-11`: start M1 governed-path implementation on issue `#4`.
 
 ## 4. Milestone Ledger
 | Milestone | Status | Completion % | Active Features | Blockers | Evidence Links | Last Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| `M0 Foundation Scaffold` | `in_progress` | `90%` | `uv project + lock`, `compose baseline`, `CI workflow`, `migration scaffold`, `test scaffold` | `branch protection/repo settings still pending in GitHub` | `branch: feat/4-m1-governed-path-kickoff`, `Issue: https://github.com/deyiwang27/OpenQilin/issues/4` | `2026-03-11` |
-| `M1 First Executable Slice` | `in_progress` | `5%` | `issue definition and workflow hardening`, `implementation branch active` | `depends on M0 formal closeout` | `Issue: https://github.com/deyiwang27/OpenQilin/issues/4` | `2026-03-11` |
+| `M0 Foundation Scaffold` | `completed` | `100%` | `uv project + lock`, `compose baseline`, `CI workflow`, `migration scaffold`, `test scaffold`, `env template` | `N/A` | `branch: feat/4-m1-governed-path-kickoff`, `Issue: https://github.com/deyiwang27/OpenQilin/issues/4` | `2026-03-11` |
+| `M1 First Executable Slice` | `in_progress` | `10%` | `issue definition and workflow hardening`, `implementation branch active` | `N/A` | `Issue: https://github.com/deyiwang27/OpenQilin/issues/4` | `2026-03-11` |
 | `M2 Execution Targets` | `not_started` | `0%` | `N/A` | `depends on M1 exit` | `N/A` | `2026-03-11` |
 | `M3 Communication Reliability` | `not_started` | `0%` | `N/A` | `depends on M1 + M2 stability` | `N/A` | `2026-03-11` |
 | `M4 Hardening and Release Readiness` | `not_started` | `0%` | `N/A` | `depends on M2 + M3 end-to-end evidence` | `N/A` | `2026-03-11` |
@@ -38,6 +38,9 @@ Status values:
 - `2026-03-11`: Alembic baseline wiring added (`alembic.ini`, `migrations/env.py`, template, versions dir).
 - `2026-03-11`: test scaffold expanded so all required CI test slices execute without empty-suite failure.
 - `2026-03-11`: `.env.example` added for local configuration bootstrap.
+- `2026-03-11`: full repo consistency audit pass completed; policy conflicts and status drift corrected.
+- `2026-03-11`: GitHub protection-policy fallback documented for repositories without branch-protection feature support.
+- `2026-03-11`: second full-repo review pass completed; tracker-authority wording aligned and baseline validation checks (`ruff`, `mypy`, `pytest`) re-confirmed.
 
 ## 6. Sample Progress Update Entry
 Use this shape when recording weekly or PR-linked evidence:

@@ -10,7 +10,8 @@ Current status:
 - Core v1 technical design is complete.
 - Implementation-planning design is complete.
 - Design-stage repository consistency review is closed.
-- `design/TODO.txt` is the authoritative live tracker; `design/v1/planning/ImplementationBacklogSeed-v1.md` is the stable planning reference.
+- `design/TODO.txt` is a design-stage historical closeout record (not an implementation live tracker).
+- Implementation tracking authority moved to GitHub Issues/PRs/Project with `design/v1/planning/ImplementationProgress-v1.md` as the in-repo mirror.
 
 Completed summary:
 - Core runtime design:

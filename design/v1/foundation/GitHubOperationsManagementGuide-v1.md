@@ -110,7 +110,7 @@ gh release create v0.1.0 --generate-notes
 ```
 
 ## 9. Governance Checklist for GitHub Settings
-Repository administrators should enforce:
+Repository administrators should enforce (when repository plan supports these features):
 - branch protection on `main`
 - block direct pushes to `main`
 - required status checks
@@ -118,6 +118,12 @@ Repository administrators should enforce:
 - up-to-date branch requirement before merge
 - squash merge enabled
 - branch auto-delete after merge
+
+Fallback for repositories where branch protection is unavailable:
+- enforce issue-linked PR-only merges operationally
+- enforce squash merge and branch delete manually at merge time
+- treat CI green + reviewer approval as hard gate before merge
+- record governance exception in issue/PR evidence when protection controls are not technically available
 
 ## 10. Related Documents
 - `design/v1/foundation/AIAssistedDeliveryWorkflow-v1.md`
