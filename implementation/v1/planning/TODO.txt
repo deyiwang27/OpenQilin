@@ -127,8 +127,13 @@ Checklist:
 3) M3 reliability prep - `in_progress`
 - kickoff issue created: `#13` (`milestone:M3`, `type:feature`, `area:task_orchestrator`, `risk:execution-core`) - `done`
 - implementation branch created and pushed: `feat/13-m3-communication-reliability-kickoff` - `done`
-- A2A/ACP validation contract test inventory
-- retry/dead-letter behavior test inventory
+- decomposition + dependency wiring with child WPs (`#14`..`#18`) - `done`
+- labels applied for M3 children (`milestone:M3`, `type:*`, `area:communication|area:task_orchestrator`, `risk:execution-core`) - `done`
+- `M3-WP1` A2A envelope validation + ACP contract baseline (`issue #14`) - `todo`
+- `M3-WP2` ACP send/ack/nack delivery pipeline (`issue #15`) - `todo`
+- `M3-WP3` retry scheduler + duplicate-safe idempotency (`issue #16`) - `todo`
+- `M3-WP4` dead-letter flow + alert/audit emission (`issue #17`) - `todo`
+- `M3-WP5` orchestrator callback integration + M3 exit evidence pack (`issue #18`) - `todo`
 
 4) M4 hardening prep - `todo`
 - release-gate checklist draft

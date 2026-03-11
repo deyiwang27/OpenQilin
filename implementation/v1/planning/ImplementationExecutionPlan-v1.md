@@ -101,8 +101,42 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 - `pgvector` bootstrap+migration contract is validated and documented.
 - Full quality gates pass for merged M2 scope (`ruff`, `mypy`, `pytest` suites).
 
-## 6. Tracking Interfaces
-### 6.1 Issue Contract Fields
+## 6. M3 Kickoff Workplan (Issue `#13`)
+### 6.1 Objective and Boundary
+- Harden communication lifecycle reliability with deterministic delivery semantics and duplicate-safe processing.
+- Deliver M3 in independently verifiable work packages with explicit contract/conformance evidence.
+- Keep M4 hardening/release scope out of this slice (no release-gate packaging yet).
+
+### 6.2 Ordered Work Packages
+1. `M3-WP1` A2A envelope validation + ACP message-contract baseline (`issue #14`)
+- Target modules: `communication_gateway/validators/*`, `communication_gateway/transport/route_resolver.py`.
+- Deliverables: canonical envelope validation, ordering checks, and explicit deny reasons for malformed/out-of-policy inputs.
+
+2. `M3-WP2` ACP send/ack/nack delivery pipeline (`issue #15`)
+- Target modules: `communication_gateway/transport/acp_client.py`, `communication_gateway/delivery/publisher.py`, `communication_gateway/delivery/ack_handler.py`, `communication_gateway/storage/message_ledger.py`.
+- Deliverables: deterministic send lifecycle with persisted state transitions for ack/nack outcomes.
+
+3. `M3-WP3` Retry scheduler + duplicate-safe idempotency (`issue #16`)
+- Target modules: `communication_gateway/delivery/retry_scheduler.py`, `communication_gateway/storage/idempotency_store.py`, `data_access/cache/idempotency_store.py`.
+- Deliverables: deterministic retry policy enforcement and duplicate-delivery suppression without duplicate side effects.
+
+4. `M3-WP4` Dead-letter flow + alert/audit emission (`issue #17`)
+- Target modules: `communication_gateway/delivery/dlq_writer.py`, `data_access/repositories/communication.py`, observability integration points.
+- Deliverables: retry-exhausted deterministic dead-letter routing with required audit and reliability signal emission.
+
+5. `M3-WP5` Orchestrator callback integration + M3 evidence pack (`issue #18`)
+- Target modules: `task_orchestrator/callbacks/*`, `communication_gateway/callbacks/outcome_notifier.py`, `implementation/v1/planning/M3EvidencePack-v1.md`.
+- Deliverables: callback-driven lifecycle integration and milestone closeout evidence mapping for M3 acceptance criteria.
+
+### 6.3 M3 Exit Evidence Checklist
+- A2A envelope validation rejects malformed/invalid traffic deterministically with explicit reason codes.
+- ACP send/ack/nack lifecycle is persisted and duplicate-safe under retry/replay conditions.
+- Retry policy and dead-letter routing produce deterministic, auditable outcomes.
+- Orchestrator callback handling preserves at-least-once semantics without duplicate side effects.
+- Full quality gates pass for merged M3 scope (`ruff`, `mypy`, `pytest` suites including contract/conformance slices).
+
+## 7. Tracking Interfaces
+### 7.1 Issue Contract Fields
 Each implementation issue must contain:
 - `Milestone`: one of `M0`..`M4`
 - `Goal`: outcome statement tied to milestone intent
@@ -112,20 +146,20 @@ Each implementation issue must contain:
 - `Evidence Links`: PRs, test runs, traces, audit logs, or screenshots
 - `Definition of Done`: close condition beyond "code merged"
 
-### 6.2 Label Taxonomy
+### 7.2 Label Taxonomy
 Required label groups:
 - `milestone:*` (example: `milestone:M1`)
 - `type:*` (example: `type:feature`, `type:infra`, `type:test`)
 - `area:*` (example: `area:control_plane`, `area:task_orchestrator`)
 - `risk:*` (example: `risk:governance-core`)
 
-## 7. Cadence and Update Rules
+## 8. Cadence and Update Rules
 - PR-linked updates: every implementation PR references issue IDs and updates issue acceptance checklist status.
 - Weekly summary: update `ImplementationProgress-v1.md` once per week with milestone percentages, active features, blockers, and evidence links.
 - Milestone close rule: milestone can close only when exit evidence is attached and all required feature issues are closed.
 - Governance check rule: run consistency/governance checks per `implementation/v1/workflow/RepositoryConsistencyAndGovernanceCheck-v1.md` (PR-level light checks; deep checks on milestone close and major structure/policy changes).
 
-## 8. Related Documents
+## 9. Related Documents
 - `implementation/v1/workflow/AIAssistedDeliveryWorkflow-v1.md`
 - `implementation/v1/planning/ImplementationBacklogSeed-v1.md`
 - `implementation/v1/planning/ImplementationMilestones-v1.md`
