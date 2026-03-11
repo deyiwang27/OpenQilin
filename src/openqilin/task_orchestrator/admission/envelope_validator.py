@@ -28,6 +28,7 @@ class AdmissionEnvelope:
     connector: str
     command: str
     args: tuple[str, ...]
+    metadata: tuple[tuple[str, str], ...]
     idempotency_key: str
 
 
@@ -66,5 +67,6 @@ def validate_owner_command_envelope(
         connector=principal.connector,
         command=normalized_command,
         args=normalized_args,
+        metadata=tuple(sorted(payload.metadata.items())),
         idempotency_key=payload.idempotency_key,
     )

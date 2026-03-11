@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from uuid import uuid4
 
@@ -20,6 +20,7 @@ class TaskRecord:
     connector: str
     command: str
     args: tuple[str, ...]
+    metadata: tuple[tuple[str, str], ...]
     idempotency_key: str
     status: str
     created_at: datetime
@@ -43,6 +44,7 @@ class InMemoryRuntimeStateRepository:
             connector=envelope.connector,
             command=envelope.command,
             args=envelope.args,
+            metadata=envelope.metadata,
             idempotency_key=envelope.idempotency_key,
             status="admitted",
             created_at=datetime.now(tz=UTC),
@@ -67,3 +69,13 @@ class InMemoryRuntimeStateRepository:
         if task_id is None:
             return None
         return self._task_by_id.get(task_id)
+
+    def update_task_status(self, task_id: str, status: str) -> TaskRecord | None:
+        """Update persisted task status for downstream decision consistency."""
+
+        task = self._task_by_id.get(task_id)
+        if task is None:
+            return None
+        updated = replace(task, status=status)
+        self._task_by_id[task_id] = updated
+        return updated

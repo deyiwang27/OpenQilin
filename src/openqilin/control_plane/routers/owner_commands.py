@@ -13,6 +13,7 @@ from openqilin.control_plane.api.dependencies import (
     get_admission_service,
     get_budget_reservation_service,
     get_policy_runtime_client,
+    get_runtime_state_repository,
 )
 from openqilin.control_plane.identity.principal_resolver import (
     PrincipalResolutionError,
@@ -34,6 +35,7 @@ from openqilin.task_orchestrator.admission.service import (
     AdmissionIdempotencyError,
     AdmissionService,
 )
+from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
 
 router = APIRouter(prefix="/v1/owner/commands", tags=["owner_commands"])
 
@@ -69,6 +71,7 @@ def submit_owner_command(
     admission_service: AdmissionService = Depends(get_admission_service),
     policy_runtime_client: InMemoryPolicyRuntimeClient = Depends(get_policy_runtime_client),
     budget_reservation_service: BudgetReservationService = Depends(get_budget_reservation_service),
+    runtime_state_repo: InMemoryRuntimeStateRepository = Depends(get_runtime_state_repository),
     x_openqilin_trace_id: Annotated[str | None, Header(alias="X-OpenQilin-Trace-Id")] = None,
 ) -> OwnerCommandAcceptedResponse | JSONResponse:
     """Validate ingress identity and envelope before admission execution."""
@@ -117,6 +120,7 @@ def submit_owner_command(
             details["reason_code"] = policy_outcome.policy_result.reason_code
             details["policy_version"] = policy_outcome.policy_result.policy_version
 
+        runtime_state_repo.update_task_status(admission_result.task.task_id, "blocked_policy")
         return _blocked_response(
             error_code=policy_outcome.error_code or "policy_blocked",
             message=policy_outcome.message,
@@ -138,6 +142,7 @@ def submit_owner_command(
             if budget_outcome.reservation.remaining_units is not None:
                 details["remaining_units"] = str(budget_outcome.reservation.remaining_units)
 
+        runtime_state_repo.update_task_status(admission_result.task.task_id, "blocked_budget")
         return _blocked_response(
             error_code=budget_outcome.error_code or "budget_blocked",
             message=budget_outcome.message,
@@ -145,13 +150,16 @@ def submit_owner_command(
             status_code=status.HTTP_403_FORBIDDEN,
         )
 
+    updated_task = runtime_state_repo.update_task_status(admission_result.task.task_id, "accepted")
+    response_task = updated_task or admission_result.task
+
     return OwnerCommandAcceptedResponse(
-        task_id=admission_result.task.task_id,
+        task_id=response_task.task_id,
         replayed=admission_result.replayed,
-        request_id=admission_result.task.request_id,
-        trace_id=admission_result.task.trace_id,
-        principal_id=admission_result.task.principal_id,
-        connector=admission_result.task.connector,
-        command=admission_result.task.command,
-        accepted_args=list(admission_result.task.args),
+        request_id=response_task.request_id,
+        trace_id=response_task.trace_id,
+        principal_id=response_task.principal_id,
+        connector=response_task.connector,
+        command=response_task.command,
+        accepted_args=list(response_task.args),
     )

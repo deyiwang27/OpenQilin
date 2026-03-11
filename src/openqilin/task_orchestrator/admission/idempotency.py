@@ -38,6 +38,7 @@ def _payload_hash(envelope: AdmissionEnvelope) -> str:
             "connector": envelope.connector,
             "command": envelope.command,
             "args": list(envelope.args),
+            "metadata": list(envelope.metadata),
             "idempotency_key": envelope.idempotency_key,
         },
         sort_keys=True,

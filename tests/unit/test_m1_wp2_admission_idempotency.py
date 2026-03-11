@@ -19,10 +19,12 @@ def _build_envelope(
     idempotency_key: str,
     args: list[str],
     trace_id: str,
+    metadata: dict[str, str] | None = None,
 ) -> AdmissionEnvelope:
     payload = OwnerCommandRequest(
         command="run_task",
         args=args,
+        metadata=metadata or {},
         idempotency_key=idempotency_key,
     )
     principal = resolve_principal(
@@ -68,6 +70,31 @@ def test_admission_idempotency_blocks_conflicting_payload_with_same_key() -> Non
         idempotency_key="idem-unit-conflict-12345",
         args=["beta"],
         trace_id="trace-2",
+    )
+
+    _ = coordinator.resolve(first_envelope)
+    with pytest.raises(AdmissionIdempotencyError) as exc:
+        coordinator.resolve(second_envelope)
+
+    assert exc.value.code == "idempotency_key_reused_with_different_payload"
+
+
+def test_admission_idempotency_blocks_conflicting_metadata_with_same_key() -> None:
+    coordinator = AdmissionIdempotencyCoordinator(
+        dedupe_store=InMemoryIngressDedupe(),
+        runtime_state_repo=InMemoryRuntimeStateRepository(),
+    )
+    first_envelope = _build_envelope(
+        idempotency_key="idem-unit-metadata-conflict-12345",
+        args=["alpha"],
+        trace_id="trace-1",
+        metadata={"channel": "discord"},
+    )
+    second_envelope = _build_envelope(
+        idempotency_key="idem-unit-metadata-conflict-12345",
+        args=["alpha"],
+        trace_id="trace-2",
+        metadata={"channel": "telegram"},
     )
 
     _ = coordinator.resolve(first_envelope)

@@ -4,7 +4,8 @@ from openqilin.control_plane.api.app import create_control_plane_app
 
 
 def test_submit_owner_command_accepts_valid_payload() -> None:
-    client = TestClient(create_control_plane_app())
+    app = create_control_plane_app()
+    client = TestClient(app)
 
     response = client.post(
         "/v1/owner/commands",
@@ -29,6 +30,9 @@ def test_submit_owner_command_accepts_valid_payload() -> None:
     assert body["trace_id"] == "trace-component-1"
     assert body["command"] == "run_task"
     assert body["accepted_args"] == ["alpha", "beta"]
+    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(body["task_id"])
+    assert task is not None
+    assert task.status == "accepted"
 
 
 def test_submit_owner_command_blocks_missing_principal_header() -> None:
@@ -138,8 +142,45 @@ def test_submit_owner_command_blocks_idempotency_key_conflict() -> None:
     assert second_body["details"]["source"] == "idempotency"
 
 
-def test_submit_owner_command_blocks_policy_deny() -> None:
+def test_submit_owner_command_blocks_idempotency_key_conflict_on_metadata_change() -> None:
     client = TestClient(create_control_plane_app())
+    headers = {
+        "X-OpenQilin-User-Id": "owner_460",
+        "X-OpenQilin-Connector": "discord",
+    }
+
+    first = client.post(
+        "/v1/owner/commands",
+        headers=headers,
+        json={
+            "command": "run_task",
+            "args": ["alpha"],
+            "metadata": {"channel": "discord"},
+            "idempotency_key": "idem-conflict-metadata-component-12345",
+        },
+    )
+    second = client.post(
+        "/v1/owner/commands",
+        headers=headers,
+        json={
+            "command": "run_task",
+            "args": ["alpha"],
+            "metadata": {"channel": "telegram"},
+            "idempotency_key": "idem-conflict-metadata-component-12345",
+        },
+    )
+
+    assert first.status_code == 202
+    second_body = second.json()
+    assert second.status_code == 409
+    assert second_body["status"] == "blocked"
+    assert second_body["error_code"] == "idempotency_key_reused_with_different_payload"
+    assert second_body["details"]["source"] == "idempotency"
+
+
+def test_submit_owner_command_blocks_policy_deny() -> None:
+    app = create_control_plane_app()
+    client = TestClient(app)
 
     response = client.post(
         "/v1/owner/commands",
@@ -160,6 +201,9 @@ def test_submit_owner_command_blocks_policy_deny() -> None:
     assert body["error_code"] == "policy_denied"
     assert body["details"]["source"] == "policy_runtime"
     assert body["details"]["decision"] == "deny"
+    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(body["details"]["task_id"])
+    assert task is not None
+    assert task.status == "blocked_policy"
 
 
 def test_submit_owner_command_blocks_policy_uncertain_fail_closed() -> None:
@@ -187,7 +231,8 @@ def test_submit_owner_command_blocks_policy_uncertain_fail_closed() -> None:
 
 
 def test_submit_owner_command_blocks_budget_deny() -> None:
-    client = TestClient(create_control_plane_app())
+    app = create_control_plane_app()
+    client = TestClient(app)
 
     response = client.post(
         "/v1/owner/commands",
@@ -208,6 +253,9 @@ def test_submit_owner_command_blocks_budget_deny() -> None:
     assert body["error_code"] == "budget_denied"
     assert body["details"]["source"] == "budget_runtime"
     assert body["details"]["decision"] == "deny"
+    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(body["details"]["task_id"])
+    assert task is not None
+    assert task.status == "blocked_budget"
 
 
 def test_submit_owner_command_blocks_budget_uncertain_fail_closed() -> None:
