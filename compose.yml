@@ -1,0 +1,152 @@
+name: openqilin
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    profiles: ["core", "full"]
+    environment:
+      POSTGRES_DB: openqilin
+      POSTGRES_USER: openqilin
+      POSTGRES_PASSWORD: openqilin
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openqilin -d openqilin"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    profiles: ["core", "full"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  opa:
+    image: openpolicyagent/opa:0.69.0-static
+    profiles: ["core", "full"]
+    command: ["run", "--server", "--addr=0.0.0.0:8181"]
+    ports:
+      - "8181:8181"
+    healthcheck:
+      test: ["CMD", "/opa", "version"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  litellm:
+    image: python:3.12-slim
+    profiles: ["core", "full"]
+    command: ["python", "-m", "http.server", "4000"]
+    ports:
+      - "4000:4000"
+
+  otel_collector:
+    image: otel/opentelemetry-collector-contrib:0.102.0
+    profiles: ["obs", "full"]
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./ops/docker/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+
+  prometheus:
+    image: prom/prometheus:v2.53.2
+    profiles: ["obs", "full"]
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    volumes:
+      - ./ops/docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+  tempo:
+    image: grafana/tempo:2.5.0
+    profiles: ["obs", "full"]
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    volumes:
+      - ./ops/docker/tempo.yaml:/etc/tempo/tempo.yaml:ro
+    ports:
+      - "3200:3200"
+
+  loki:
+    image: grafana/loki:3.1.1
+    profiles: ["obs", "full"]
+    command: ["-config.file=/etc/loki/loki.yaml"]
+    volumes:
+      - ./ops/docker/loki.yaml:/etc/loki/loki.yaml:ro
+    ports:
+      - "3100:3100"
+
+  grafana:
+    image: grafana/grafana:11.1.4
+    profiles: ["obs", "full"]
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - tempo
+      - loki
+
+  api_app:
+    image: python:3.12-slim
+    profiles: ["full"]
+    command: ["sh", "-lc", "echo 'api_app placeholder container'; sleep infinity"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      opa:
+        condition: service_healthy
+
+  orchestrator_worker:
+    image: python:3.12-slim
+    profiles: ["full"]
+    command: ["sh", "-lc", "echo 'orchestrator_worker placeholder container'; sleep infinity"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      opa:
+        condition: service_healthy
+
+  communication_worker:
+    image: python:3.12-slim
+    profiles: ["full"]
+    command: ["sh", "-lc", "echo 'communication_worker placeholder container'; sleep infinity"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  admin:
+    image: python:3.12-slim
+    profiles: ["full"]
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    entrypoint: ["sh", "/workspace/ops/scripts/admin-entrypoint.sh"]
+    command: ["bootstrap"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      opa:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

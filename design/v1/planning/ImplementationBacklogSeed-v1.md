@@ -5,7 +5,9 @@
 - Organize work in dependency order for governance-core first delivery.
 
 ## 2. Tracking Rule
-- `design/TODO.txt` is the authoritative live tracker for open and completed design-stage work.
+- `design/TODO.txt` is the design-stage historical tracker and is not reused as implementation live tracking.
+- GitHub Issues/PRs/Project are the authoritative implementation execution tracker.
+- `design/v1/planning/ImplementationProgress-v1.md` is the in-repo milestone/status mirror.
 - This document is the stable workstream reference and should be updated only when backlog structure materially changes.
 
 ## 3. Workstreams

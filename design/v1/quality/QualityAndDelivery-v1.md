@@ -31,9 +31,10 @@ Fixture rules:
 
 ## 3. CI Workflow
 Recommended branch workflow:
-- short-lived feature branches
-- PR into protected default branch
-- no direct commits to protected branch for implementation code
+- follow `design/v1/foundation/GitHubOperationsManagementGuide-v1.md` as canonical branch policy
+- short-lived branches only, created from latest `main`
+- PR into protected `main` using squash merge
+- no direct commits to `main` for implementation code
 
 Mandatory PR checks:
 - locked dependency sync with `uv`

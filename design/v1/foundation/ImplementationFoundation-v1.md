@@ -98,6 +98,9 @@ Configuration precedence:
 2. environment-specific local config files not committed with secrets
 3. checked-in non-secret defaults
 
+Baseline local template:
+- `.env.example` provides non-secret defaults and required variable names for local bring-up.
+
 Key config domains:
 - runtime: `OPENQILIN_ENV`, logging, trace sampling
 - identity/connectors: Discord IDs/tokens and allowlists
@@ -115,13 +118,14 @@ Rules:
 Expected first-run flow:
 1. install prerequisites
 2. run `uv sync`
-3. provide local env vars/secrets
+3. copy `.env.example` to a local env file and provide local env vars/secrets
 4. start the long-running local stack with `docker compose --profile full up -d`
 5. run the one-shot readiness gate with `docker compose run --rm admin bootstrap`
 6. use the running stack for local development and tests
 
 Authoritative rule:
 - the exact local full-stack bring-up contract is defined in `design/v1/architecture/ContainerizationAndLocalInfraTopology-v1.md`
+- baseline compose entrypoint is repository root `compose.yml`
 - bootstrap, migration, seed, and smoke behavior must converge on the `admin bootstrap` one-shot command in implementation
 
 Migration rules:

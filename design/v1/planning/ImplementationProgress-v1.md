@@ -17,20 +17,27 @@ Status values:
 - `completed`
 
 ## 3. Current Sprint/Week Focus
-- Week of `2026-03-10`: start implementation tracking setup and initial `M0` closeout evidence capture.
+- Week of `2026-03-11`: close M0 baseline blockers (`uv.lock`, compose baseline, CI skeleton, migration tooling scaffold).
+- Week of `2026-03-11`: start M1 governed-path implementation on issue `#4`.
 
 ## 4. Milestone Ledger
 | Milestone | Status | Completion % | Active Features | Blockers | Evidence Links | Last Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| `M0 Foundation Scaffold` | `in_progress` | `70%` | `uv project baseline`, `base package scaffold`, `initial planning docs` | `Docker Compose baseline not yet committed`, `CI skeleton not yet committed` | `scaffold baseline (branch: implementation-v1)` | `2026-03-10` |
-| `M1 First Executable Slice` | `not_started` | `0%` | `N/A` | `depends on M0 exit` | `N/A` | `2026-03-10` |
-| `M2 Execution Targets` | `not_started` | `0%` | `N/A` | `depends on M1 exit` | `N/A` | `2026-03-10` |
-| `M3 Communication Reliability` | `not_started` | `0%` | `N/A` | `depends on M1 + M2 stability` | `N/A` | `2026-03-10` |
-| `M4 Hardening and Release Readiness` | `not_started` | `0%` | `N/A` | `depends on M2 + M3 end-to-end evidence` | `N/A` | `2026-03-10` |
+| `M0 Foundation Scaffold` | `in_progress` | `90%` | `uv project + lock`, `compose baseline`, `CI workflow`, `migration scaffold`, `test scaffold` | `branch protection/repo settings still pending in GitHub` | `branch: feat/4-m1-governed-path-kickoff`, `Issue: https://github.com/deyiwang27/OpenQilin/issues/4` | `2026-03-11` |
+| `M1 First Executable Slice` | `in_progress` | `5%` | `issue definition and workflow hardening`, `implementation branch active` | `depends on M0 formal closeout` | `Issue: https://github.com/deyiwang27/OpenQilin/issues/4` | `2026-03-11` |
+| `M2 Execution Targets` | `not_started` | `0%` | `N/A` | `depends on M1 exit` | `N/A` | `2026-03-11` |
+| `M3 Communication Reliability` | `not_started` | `0%` | `N/A` | `depends on M1 + M2 stability` | `N/A` | `2026-03-11` |
+| `M4 Hardening and Release Readiness` | `not_started` | `0%` | `N/A` | `depends on M2 + M3 end-to-end evidence` | `N/A` | `2026-03-11` |
 
 ## 5. Recently Completed
-- `2026-03-10`: implementation source tree and module placeholders created on `implementation-v1`.
+- `2026-03-10`: implementation source tree and module placeholders created.
 - `2026-03-10`: v1 implementation execution and progress documentation model established.
+- `2026-03-11`: `uv.lock` generated and committed baseline dependency lock established.
+- `2026-03-11`: Docker Compose baseline created with `core`, `obs`, and `full` profiles (`compose.yml`).
+- `2026-03-11`: CI skeleton added (`.github/workflows/ci.yml`) with lint/type/test gates.
+- `2026-03-11`: Alembic baseline wiring added (`alembic.ini`, `migrations/env.py`, template, versions dir).
+- `2026-03-11`: test scaffold expanded so all required CI test slices execute without empty-suite failure.
+- `2026-03-11`: `.env.example` added for local configuration bootstrap.
 
 ## 6. Sample Progress Update Entry
 Use this shape when recording weekly or PR-linked evidence:

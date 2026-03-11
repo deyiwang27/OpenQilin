@@ -29,8 +29,10 @@ uv run python -m openqilin.apps.communication_worker
 ```
 
 ## 4. Branch and PR Rules
-- work on short-lived branches
+- follow `design/v1/foundation/GitHubOperationsManagementGuide-v1.md` as the canonical branch/issue/PR operations policy
+- work on short-lived branches from latest `main` using `<type>/<issue-id>-<short-slug>`
 - keep PR scope narrow to one coherent change set
+- every PR links at least one issue
 - code changes that touch contracts or migrations must update design/spec references in the same PR
 - PRs should include the exact local verification commands run
 
@@ -56,7 +58,7 @@ Before serious implementation work, you still need to:
 ## 8. Documentation Hygiene
 - `spec/` remains authoritative for contracts
 - `design/` remains authoritative for implementation-facing design decisions
-- `design/TODO.txt` is the live tracker for design-stage work
+- `design/TODO.txt` is the historical tracker for design-stage work
 - `design/v1/architecture/ContainerizationAndLocalInfraTopology-v1.md` is the authoritative local bring-up contract
 - GitHub execution operations are governed by `design/v1/foundation/GitHubOperationsManagementGuide-v1.md`
 - day-to-day human+Codex execution loop is governed by `design/v1/foundation/AIAssistedDeliveryWorkflow-v1.md`
