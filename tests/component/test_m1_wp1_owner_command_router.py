@@ -153,6 +153,8 @@ def test_submit_owner_command_replay_returns_prior_block_without_re_evaluation()
     assert second_body["error_code"] == "policy_uncertain_fail_closed"
     assert first_body["details"]["task_id"] == second_body["details"]["task_id"]
     assert second_body["details"]["replayed"] == "true"
+    assert second_body["details"]["decision"] == first_body["details"]["decision"]
+    assert second_body["details"]["policy_version"] == first_body["details"]["policy_version"]
 
     events = app.state.runtime_services.audit_writer.get_events()
     assert [event.event_type for event in events] == [

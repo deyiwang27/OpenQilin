@@ -103,6 +103,8 @@ def test_governed_ingress_blocked_replay_is_deterministic() -> None:
     assert second_body["error_code"] == "policy_uncertain_fail_closed"
     assert first_body["details"]["task_id"] == second_body["details"]["task_id"]
     assert second_body["details"]["replayed"] == "true"
+    assert second_body["details"]["decision"] == first_body["details"]["decision"]
+    assert second_body["details"]["policy_version"] == first_body["details"]["policy_version"]
 
 
 def test_governed_ingress_fail_closed_on_policy_runtime_error() -> None:

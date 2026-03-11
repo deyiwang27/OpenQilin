@@ -35,6 +35,23 @@ def test_smoke_command_uses_live_probe_by_default(monkeypatch) -> None:
     assert "[OK] smoke_owner_command_ingress_live: ok" in result.stdout
 
 
+def test_smoke_command_uses_default_base_url_when_flag_missing(monkeypatch) -> None:
+    called: dict[str, str] = {}
+
+    def fake_live_smoke(
+        *, api_base_url: str, timeout_seconds: float = 5.0
+    ) -> admin_cli.CheckResult:
+        called["url"] = api_base_url
+        return admin_cli.CheckResult("smoke_owner_command_ingress_live", True, "ok")
+
+    monkeypatch.setattr(admin_cli, "run_smoke_check", fake_live_smoke)
+    result = RUNNER.invoke(admin_cli.app, ["smoke"])
+
+    assert result.exit_code == 0
+    assert called["url"] == admin_cli.DEFAULT_API_BASE_URL
+    assert "[OK] smoke_owner_command_ingress_live: ok" in result.stdout
+
+
 def test_migrate_command_exits_non_zero_on_migration_failure(monkeypatch, tmp_path: Path) -> None:
     alembic_ini = tmp_path / "alembic.ini"
     alembic_ini.write_text("[alembic]\nscript_location = migrations\n", encoding="utf-8")

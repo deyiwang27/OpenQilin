@@ -187,14 +187,17 @@ def _replayed_response(task: TaskRecord) -> OwnerCommandAcceptedResponse | JSONR
     source = task.outcome_source or "governance"
     error_code = task.outcome_error_code or "governance_blocked"
     message = task.outcome_message or "task replay resolved to prior blocked outcome"
-    details = {
-        "source": source,
-        "task_id": task.task_id,
-        "replayed": "true",
-    }
+    details = (
+        dict(task.outcome_details)
+        if task.outcome_details is not None
+        else {"source": source, "task_id": task.task_id}
+    )
+    details.setdefault("source", source)
+    details.setdefault("task_id", task.task_id)
+    details["replayed"] = "true"
     if task.dispatch_target is not None:
-        details["dispatch_target"] = task.dispatch_target
-    if task.outcome_error_code is not None:
+        details.setdefault("dispatch_target", task.dispatch_target)
+    if task.outcome_error_code is not None and "reason_code" not in details:
         details["reason_code"] = task.outcome_error_code
     return _blocked_response(
         error_code=error_code,
@@ -400,6 +403,7 @@ def submit_owner_command(
                 outcome_source="policy_runtime",
                 outcome_error_code=policy_outcome.error_code or "policy_blocked",
                 outcome_message=policy_outcome.message,
+                outcome_details=details,
             )
             span.set_status("error")
             span.set_attribute("outcome", "blocked")
@@ -475,6 +479,7 @@ def submit_owner_command(
                 outcome_source="budget_runtime",
                 outcome_error_code=budget_outcome.error_code or "budget_blocked",
                 outcome_message=budget_outcome.message,
+                outcome_details=details,
             )
             span.set_status("error")
             span.set_attribute("outcome", "blocked")

@@ -9,3 +9,4 @@ class RuntimeSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="OPENQILIN_", extra="ignore")
 
     env: str = "local_dev"
+    smoke_api_base_url: str = "http://127.0.0.1:8000"

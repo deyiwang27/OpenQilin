@@ -25,7 +25,7 @@ from openqilin.shared_kernel.config import RuntimeSettings
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_ALEMBIC_INI = PROJECT_ROOT / "alembic.ini"
 OWNER_COMMAND_ROUTE = "/v1/owner/commands"
-DEFAULT_API_BASE_URL = "http://127.0.0.1:8000"
+DEFAULT_API_BASE_URL = RuntimeSettings().smoke_api_base_url
 
 app = typer.Typer(help="OpenQilin administrative CLI.")
 
@@ -263,7 +263,10 @@ def bootstrap(
     smoke_api_base_url: str = typer.Option(
         DEFAULT_API_BASE_URL,
         "--smoke-api-base-url",
-        help="Base URL for live smoke probe (used unless --smoke-in-process is set).",
+        help=(
+            "Base URL for live smoke probe (used unless --smoke-in-process is set). "
+            "Default comes from OPENQILIN_SMOKE_API_BASE_URL."
+        ),
     ),
     smoke_in_process: bool = typer.Option(
         False,
@@ -288,7 +291,7 @@ def smoke(
     api_base_url: str = typer.Option(
         DEFAULT_API_BASE_URL,
         "--api-base-url",
-        help="Base URL for live smoke probe.",
+        help="Base URL for live smoke probe. Default comes from OPENQILIN_SMOKE_API_BASE_URL.",
     ),
     in_process: bool = typer.Option(
         False,

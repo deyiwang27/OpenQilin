@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
+from typing import Mapping
 from uuid import uuid4
 
 from openqilin.task_orchestrator.admission.envelope_validator import AdmissionEnvelope
@@ -27,6 +28,7 @@ class TaskRecord:
     outcome_source: str | None = None
     outcome_error_code: str | None = None
     outcome_message: str | None = None
+    outcome_details: tuple[tuple[str, str], ...] | None = None
     dispatch_target: str | None = None
     dispatch_id: str | None = None
 
@@ -83,6 +85,7 @@ class InMemoryRuntimeStateRepository:
         outcome_source: str | None = None,
         outcome_error_code: str | None = None,
         outcome_message: str | None = None,
+        outcome_details: Mapping[str, object] | None = None,
         dispatch_target: str | None = None,
         dispatch_id: str | None = None,
     ) -> TaskRecord | None:
@@ -101,6 +104,11 @@ class InMemoryRuntimeStateRepository:
             outcome_message=outcome_message
             if outcome_message is not None
             else task.outcome_message,
+            outcome_details=(
+                tuple(sorted((str(key), str(value)) for key, value in outcome_details.items()))
+                if outcome_details is not None
+                else task.outcome_details
+            ),
             dispatch_target=dispatch_target
             if dispatch_target is not None
             else task.dispatch_target,
