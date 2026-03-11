@@ -30,6 +30,12 @@ Checklist:
 - trigger policy defined (PR-level and deep-level)
 - enforcement wired into PR template and workflow/quality/GitHub policy docs
 
+0.2) Host/application prerequisite verification - `done`
+- Docker and Docker Compose installed; Docker daemon reachable
+- `uv` toolchain active and project environment synced with Python `3.12`
+- baseline CLI tooling verified (`git`, `gh`, `uv`, `docker`, `docker compose`)
+- compose profiles/services resolve from `compose.yml`
+
 1) M1 governed path kickoff (`issue #4`) - `in_progress`
 - ingress envelope validation shell
 - task admission shell
@@ -44,6 +50,7 @@ Checklist:
 - sandbox adapter wiring plan
 - LiteLLM runtime integration plan
 - retrieval-backed query baseline plan
+- PostgreSQL `pgvector` enablement plan (image/extension bootstrap + migration contract)
 
 3) M3 reliability prep - `todo`
 - A2A/ACP validation contract test inventory

@@ -46,6 +46,7 @@ Status values:
 - `2026-03-11`: latest full-repo audit confirms reference/link consistency after structure migration; known scaffold gap recorded (`admin_cli` commands still placeholder).
 - `2026-03-11`: overall repo review pass completed (conflict/redundancy/structure/readiness); baseline checks re-confirmed (`ruff`, `mypy`, `pytest`) while Docker-dependent validation is intentionally deferred.
 - `2026-03-11`: repository consistency/governance check process formalized at `implementation/v1/workflow/RepositoryConsistencyAndGovernanceCheck-v1.md` and wired into workflow/quality/PR enforcement.
+- `2026-03-11`: host prerequisite verification completed: Docker daemon reachable, Compose profiles/services resolve, `uv sync --all-groups --python 3.12` completed, and CLI toolchain (`git`, `gh`, `uv`, `docker`) validated.
 
 ## 6. Sample Progress Update Entry
 Use this shape when recording weekly or PR-linked evidence:
