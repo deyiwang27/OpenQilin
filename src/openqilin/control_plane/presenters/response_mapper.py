@@ -1,0 +1,1 @@
+"""Response mapping placeholder."""

@@ -1,0 +1,1 @@
+"""Budget reservation service placeholder."""

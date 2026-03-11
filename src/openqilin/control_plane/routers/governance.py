@@ -1,0 +1,1 @@
+"""Governance router placeholder."""

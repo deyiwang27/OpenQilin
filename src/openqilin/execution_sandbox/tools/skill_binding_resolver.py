@@ -1,0 +1,1 @@
+"""Skill binding resolver placeholder."""

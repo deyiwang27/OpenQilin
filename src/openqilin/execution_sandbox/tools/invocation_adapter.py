@@ -1,0 +1,1 @@
+"""Tool invocation adapter placeholder."""

@@ -1,0 +1,1 @@
+"""State transition service placeholder."""

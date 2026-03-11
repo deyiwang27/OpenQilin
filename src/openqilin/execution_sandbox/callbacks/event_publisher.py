@@ -1,0 +1,1 @@
+"""Sandbox event publisher placeholder."""

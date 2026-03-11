@@ -1,0 +1,1 @@
+"""Immutable audit sink placeholder."""

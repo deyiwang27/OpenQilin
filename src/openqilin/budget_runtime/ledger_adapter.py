@@ -1,0 +1,1 @@
+"""Budget ledger adapter placeholder."""

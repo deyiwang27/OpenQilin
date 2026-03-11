@@ -1,0 +1,1 @@
+"""Outbound transport adapters."""

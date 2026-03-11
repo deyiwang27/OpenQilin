@@ -1,0 +1,1 @@
+"""LLM response schema placeholder."""

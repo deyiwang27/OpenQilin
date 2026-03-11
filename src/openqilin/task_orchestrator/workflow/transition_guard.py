@@ -1,0 +1,1 @@
+"""Workflow transition guard placeholder."""

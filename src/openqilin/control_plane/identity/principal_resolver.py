@@ -1,0 +1,1 @@
+"""Principal resolution placeholder."""
