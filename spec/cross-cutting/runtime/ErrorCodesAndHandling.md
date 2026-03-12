@@ -13,7 +13,7 @@
 
 ## 3. Canonical Error Envelope
 Required fields in every error response:
-- `code`: stable machine-readable code (for example `POLICY_VALIDATION_ERROR`).
+- `code`: stable machine-readable code in lower snake-case (for example `policy_validation_error`).
 - `class`: one of Section 2 classes.
 - `message`: operator-readable concise reason.
 - `retryable`: boolean.
@@ -25,11 +25,11 @@ Required fields in every error response:
 - `details` (optional structured diagnostics with no secrets).
 
 ## 4. Canonical Code Families
-- Policy and authority: `UNKNOWN_ROLE`, `UNAUTHORIZED_ACTION`, `POLICY_LOAD_ERROR`, `POLICY_VALIDATION_ERROR`, `EVAL_INTERNAL_ERROR`.
-- Budget: `BUDGET_SOFT_THRESHOLD`, `BUDGET_HARD_THRESHOLD`, `BUDGET_QUOTA_SOFT_THRESHOLD`, `BUDGET_QUOTA_HARD_THRESHOLD`, `BUDGET_RESERVATION_FAILED`, `BUDGET_RECONCILIATION_FAILED`.
-- Runtime and execution: `EXECUTION_DISPATCH_FAILED`, `EXECUTION_TIMEOUT`, `DEPENDENCY_UNAVAILABLE`.
-- Safety and governance: `SAFETY_CONTAINMENT_ACTIVE`, `PROJECT_PAUSED_GOVERNANCE`.
-- Protocol and transport: `A2A_SCHEMA_INVALID`, `ACP_ACK_TIMEOUT`, `ACP_RETRY_EXHAUSTED`, `ACP_NACK_NON_RETRYABLE`.
+- Policy and authority: `unknown_role`, `unauthorized_action`, `policy_load_error`, `policy_validation_error`, `eval_internal_error`.
+- Budget: `budget_soft_threshold`, `budget_hard_threshold`, `budget_quota_soft_threshold`, `budget_quota_hard_threshold`, `budget_reservation_failed`, `budget_reconciliation_failed`.
+- Runtime and execution: `execution_dispatch_failed`, `execution_timeout`, `dependency_unavailable`.
+- Safety and governance: `safety_containment_active`, `project_paused_governance`.
+- Protocol and transport: `a2a_schema_invalid`, `acp_ack_timeout`, `acp_retry_exhausted`, `acp_nack_non_retryable`.
 
 ## 5. Handling Model
 - Fail-closed posture for policy, safety, and governance-related failures.

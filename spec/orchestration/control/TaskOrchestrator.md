@@ -97,10 +97,12 @@ If any required obligation cannot be satisfied, transition to `blocked` (fail-cl
 Communication reliability profile lock (A2A + ACP):
 - Orchestrator must enforce OpenQilin reliability profile v1 for message dispatch:
   - `ack_deadline_ms`: `30000`
-  - `max_attempts`: `5`
+  - `max_attempts`: `3`
   - retry trigger: ack timeout or retryable nack
   - retry backoff: bounded exponential with jitter (`500ms`, `1s`, `2s`, `4s`, `8s`, cap `10s`)
   - dead-letter trigger: non-retryable nack or retry exhaustion
+- Delivery callbacks may rewrite communication lifecycle outcomes (`dispatched` or `blocked`) as delivery evidence arrives.
+- Immutable terminal states for callback handling are `completed`, `failed`, and `cancelled`.
 - Command/event dispatch without `idempotency_key` is invalid and must fail closed.
 
 ## 10. Escalation Integration

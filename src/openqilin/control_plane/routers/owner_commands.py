@@ -920,6 +920,9 @@ def submit_owner_command(
             }
             if dispatch_outcome.error_code is not None:
                 details["reason_code"] = dispatch_outcome.error_code
+            details["retryable"] = str(dispatch_outcome.retryable).lower()
+            if dispatch_outcome.dead_letter_id is not None:
+                details["dead_letter_id"] = dispatch_outcome.dead_letter_id
 
             span.set_status("error")
             span.set_attribute("outcome", "denied")
@@ -943,9 +946,12 @@ def submit_owner_command(
                 rule_ids=rule_ids,
                 attributes={"dispatch_target": dispatch_outcome.target},
             )
-            source_component = (
-                "llm_gateway" if dispatch_source == "dispatch_llm_gateway" else "sandbox"
-            )
+            if dispatch_source == "dispatch_llm_gateway":
+                source_component = "llm_gateway"
+            elif dispatch_source.startswith("dispatch_communication"):
+                source_component = "communication_gateway"
+            else:
+                source_component = "sandbox"
             return _denied_response(
                 status_code=status.HTTP_403_FORBIDDEN,
                 trace_id=trace_id,

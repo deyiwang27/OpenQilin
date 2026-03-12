@@ -43,6 +43,9 @@ jobs:
       - name: Mypy
         run: uv run mypy .
 
+      - name: Spec integrity checks
+        run: uv run python ops/scripts/check_spec_integrity.py
+
       - name: Unit and component tests
         run: uv run pytest tests/unit tests/component
 

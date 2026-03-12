@@ -14,7 +14,7 @@
   - `trace_id`
   - `idempotency_key`
   - policy and authority metadata
-- Reliability profile v1 is active (`ack_deadline_ms=30000`, `max_attempts=5`).
+- Reliability profile v1 is active (`ack_deadline_ms=30000`, `max_attempts=3`).
 
 ## Sequence
 ```mermaid

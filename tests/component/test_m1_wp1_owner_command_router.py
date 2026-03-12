@@ -340,6 +340,58 @@ def test_submit_owner_command_denies_llm_gateway_runtime_failure() -> None:
     assert task.status == "blocked"
 
 
+def test_submit_owner_command_accepts_communication_target() -> None:
+    client = TestClient(create_control_plane_app())
+    payload = build_owner_command_request_dict(
+        action="msg_notify",
+        args=["agent_42"],
+        actor_id="owner_communication_target",
+        idempotency_key="idem-communication-target-component-12345",
+        target="communication",
+    )
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers=build_owner_command_headers(payload),
+        json=payload,
+    )
+
+    body = response.json()
+    assert response.status_code == 202
+    assert body["status"] == "accepted"
+    assert body["data"]["dispatch_target"] == "communication"
+    assert body["data"]["dispatch_id"]
+
+
+def test_submit_owner_command_denies_communication_contract_violation() -> None:
+    app = create_control_plane_app()
+    client = TestClient(app)
+    payload = build_owner_command_request_dict(
+        action="msg_notify",
+        args=[],
+        actor_id="owner_communication_denied",
+        idempotency_key="idem-communication-denied-component-12345",
+        target="communication",
+    )
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers=build_owner_command_headers(payload),
+        json=payload,
+    )
+
+    body = response.json()
+    assert response.status_code == 403
+    assert body["status"] == "denied"
+    assert body["error"]["code"] == "a2a_missing_recipient_args"
+    assert body["error"]["source_component"] == "communication_gateway"
+    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(
+        body["error"]["details"]["task_id"]
+    )
+    assert task is not None
+    assert task.status == "blocked"
+
+
 def test_submit_owner_command_emits_observability_on_accept() -> None:
     app = create_control_plane_app()
     client = TestClient(app)

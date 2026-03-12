@@ -17,13 +17,19 @@ from openqilin.task_orchestrator.services.task_service import TaskDispatchServic
 from openqilin.testing.owner_command import build_owner_command_request_model
 
 
-def _build_task(command: str) -> tuple[TaskRecord, InMemoryRuntimeStateRepository]:
+def _build_task(
+    command: str,
+    *,
+    args: list[str] | None = None,
+    target: str = "sandbox",
+) -> tuple[TaskRecord, InMemoryRuntimeStateRepository]:
     payload = build_owner_command_request_model(
         action=command,
-        args=["alpha"],
+        args=["alpha"] if args is None else args,
         actor_id="owner_dispatch_001",
         idempotency_key=f"idem-{command}-12345678",
         trace_id="trace-dispatch-test",
+        target=target,
     )
     principal = resolve_principal(
         {
@@ -169,6 +175,56 @@ def test_dispatch_service_uses_runtime_llm_dispatch_settings() -> None:
     assert outcome.target == "llm"
     assert outcome.llm_metadata is not None
     assert outcome.llm_metadata.routing_profile == "prod_controlled"
+
+
+def test_dispatch_service_accepts_communication_target() -> None:
+    task, repository = _build_task("msg_notify", target="communication")
+    lifecycle = TaskLifecycleService(runtime_state_repo=repository)
+    service = TaskDispatchService(
+        lifecycle_service=lifecycle,
+        sandbox_execution_adapter=InMemorySandboxExecutionAdapter(),
+        llm_dispatch_adapter=LlmGatewayDispatchAdapter(
+            llm_gateway_service=build_llm_gateway_service()
+        ),
+    )
+
+    outcome = service.dispatch_admitted_task(task)
+
+    assert outcome.accepted is True
+    assert outcome.target == "communication"
+    assert outcome.dispatch_id
+    assert outcome.source == "dispatch_communication_gateway"
+    updated = repository.get_task_by_id(task.task_id)
+    assert updated is not None
+    assert updated.status == "dispatched"
+    assert updated.outcome_source == "dispatch_communication"
+
+
+def test_dispatch_service_blocks_on_communication_contract_violation() -> None:
+    task, repository = _build_task(
+        "msg_notify",
+        args=[],
+        target="communication",
+    )
+    lifecycle = TaskLifecycleService(runtime_state_repo=repository)
+    service = TaskDispatchService(
+        lifecycle_service=lifecycle,
+        sandbox_execution_adapter=InMemorySandboxExecutionAdapter(),
+        llm_dispatch_adapter=LlmGatewayDispatchAdapter(
+            llm_gateway_service=build_llm_gateway_service()
+        ),
+    )
+
+    outcome = service.dispatch_admitted_task(task)
+
+    assert outcome.accepted is False
+    assert outcome.target == "communication"
+    assert outcome.error_code == "a2a_missing_recipient_args"
+    assert outcome.source == "dispatch_communication_gateway"
+    updated = repository.get_task_by_id(task.task_id)
+    assert updated is not None
+    assert updated.status == "blocked"
+    assert updated.outcome_source == "dispatch_communication_gateway"
 
 
 class _RaisingSandboxAdapter:

@@ -15,9 +15,9 @@ Status legend:
 - `done`
 
 Current focus:
-- Milestone: `M2 Execution Targets`
-- Primary issue: `#6` (Execution Targets Kickoff)
-- Active branch: `feat/6-m2-execution-targets-kickoff`
+- Milestone: `M3 Communication Reliability`
+- Primary issue: `#13` (Communication Reliability Kickoff)
+- Active branch: `feat/13-m3-communication-reliability-kickoff`
 
 Checklist:
 0) Repo structure and documentation consistency review (post-migration) - `done`
@@ -94,7 +94,7 @@ Checklist:
 - evidence: `uv run mypy .`
 - milestone closeout: merged to `main`; issue `#4` closed - `done`
 
-2) M2 execution targets kickoff (`issue #6`) - `in_progress`
+2) M2 execution targets kickoff (`issue #6`) - `done`
 - decomposition + dependency wiring with child WPs (`#7`..`#11`) - `done`
 - labels applied (`milestone:M2`, `type:*`, `area:*`, `risk:execution-core`) - `done`
 - `M2-WP1` sandbox adapter wiring (`issue #7`) - `done`
@@ -122,10 +122,47 @@ Checklist:
 - evidence: `uv run ruff check .`
 - evidence: `uv run mypy .`
 - evidence doc: `implementation/v1/planning/M2EvidencePack-v1.md`
+- milestone closeout: merged to `main` via `PR #12`; issue `#6` closed - `done`
 
-3) M3 reliability prep - `todo`
-- A2A/ACP validation contract test inventory
-- retry/dead-letter behavior test inventory
+3) M3 reliability prep - `in_progress`
+- kickoff issue created: `#13` (`milestone:M3`, `type:feature`, `area:task_orchestrator`, `risk:execution-core`) - `done`
+- implementation branch created and pushed: `feat/13-m3-communication-reliability-kickoff` - `done`
+- decomposition + dependency wiring with child WPs (`#14`..`#18`) - `done`
+- labels applied for M3 children (`milestone:M3`, `type:*`, `area:communication|area:task_orchestrator`, `risk:execution-core`) - `done`
+- `M3-WP1` A2A envelope validation + ACP contract baseline (`issue #14`) - `done`
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
+- evidence: `uv run ruff check .`
+- evidence: `uv run mypy .`
+- issue closeout: `#14` closed with implementation evidence - `done`
+- `M3-WP2` ACP send/ack/nack delivery pipeline (`issue #15`) - `done`
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
+- evidence: `uv run ruff check .`
+- evidence: `uv run mypy .`
+- issue closeout: `#15` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/15#issuecomment-4042681776`) and issue closed - `done`
+- `M3-WP3` retry scheduler + duplicate-safe idempotency (`issue #16`) - `done`
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
+- evidence: `uv run ruff check .`
+- evidence: `uv run mypy .`
+- issue closeout: `#16` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/16#issuecomment-4042744335`) and issue closed - `done`
+- `M3-WP4` dead-letter flow + alert/audit emission (`issue #17`) - `done`
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
+- evidence: `uv run ruff check .`
+- evidence: `uv run mypy .`
+- issue closeout: `#17` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/17#issuecomment-4042798885`) and issue closed - `done`
+- `M3-WP5` orchestrator callback integration + M3 exit evidence pack (`issue #18`) - `done`
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` (`134 passed`)
+- evidence: `uv run ruff check .`
+- evidence: `uv run mypy .`
+- evidence doc: `implementation/v1/planning/M3EvidencePack-v1.md`
+- issue closeout: `#18` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/18#issuecomment-4042874734`) and issue closed - `done`
+- `M3 post-review remediation`: reliability profile docs align to `max_attempts=3`, callback terminal immutability guard enforced (`completed|failed|cancelled`), error-code spec casing aligned to lower snake-case, CI spec-integrity check added - `done`
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` (`135 passed`)
+- evidence: `uv run ruff check .`
+- evidence: `uv run mypy .`
+- evidence: `uv run python ops/scripts/check_spec_integrity.py`
+- commit: `c34e3fb`
+- milestone closeout PR for `#13` - `in_progress`
+- PR: `https://github.com/deyiwang27/OpenQilin/pull/19`
 
 4) M4 hardening prep - `todo`
 - release-gate checklist draft

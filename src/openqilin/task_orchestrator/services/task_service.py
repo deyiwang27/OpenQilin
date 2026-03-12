@@ -5,13 +5,29 @@ from __future__ import annotations
 from dataclasses import dataclass
 from uuid import uuid4
 
+from openqilin.communication_gateway.delivery.dlq_writer import InMemoryDeadLetterWriter
+from openqilin.communication_gateway.delivery.publisher import InMemoryDeliveryPublisher
+from openqilin.communication_gateway.storage.idempotency_store import CommunicationIdempotencyRecord
+from openqilin.communication_gateway.storage.message_ledger import InMemoryMessageLedger
+from openqilin.data_access.repositories.communication import (
+    CommunicationDeadLetterRecord,
+    CommunicationMessageRecord,
+    InMemoryCommunicationRepository,
+)
 from openqilin.data_access.repositories.runtime_state import TaskRecord
 from openqilin.llm_gateway.schemas.responses import LlmGatewayResponse
 from openqilin.llm_gateway.service import build_llm_gateway_service
+from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
+from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
 from openqilin.task_orchestrator.dispatch.llm_dispatch import (
     LlmDispatchAdapter,
     LlmDispatchRequest,
     LlmGatewayDispatchAdapter,
+)
+from openqilin.task_orchestrator.dispatch.communication_dispatch import (
+    CommunicationDispatchAdapter,
+    CommunicationDispatchRequest,
+    InMemoryCommunicationDispatchAdapter,
 )
 from openqilin.task_orchestrator.dispatch.sandbox_dispatch import (
     InMemorySandboxExecutionAdapter,
@@ -55,6 +71,8 @@ class TaskDispatchOutcome:
     message: str
     replayed: bool
     source: str
+    retryable: bool = False
+    dead_letter_id: str | None = None
     llm_metadata: TaskDispatchLlmMetadata | None = None
 
 
@@ -66,10 +84,14 @@ class TaskDispatchService:
         lifecycle_service: TaskLifecycleService,
         sandbox_execution_adapter: SandboxExecutionAdapter,
         llm_dispatch_adapter: LlmDispatchAdapter,
+        communication_dispatch_adapter: CommunicationDispatchAdapter | None = None,
     ) -> None:
         self._lifecycle_service = lifecycle_service
         self._sandbox_execution_adapter = sandbox_execution_adapter
         self._llm_dispatch_adapter = llm_dispatch_adapter
+        self._communication_dispatch_adapter = (
+            communication_dispatch_adapter or InMemoryCommunicationDispatchAdapter()
+        )
         self._task_outcomes: dict[str, TaskDispatchOutcome] = {}
 
     def dispatch_admitted_task(
@@ -92,6 +114,8 @@ class TaskDispatchService:
                 message=existing.message,
                 replayed=True,
                 source=existing.source,
+                retryable=existing.retryable,
+                dead_letter_id=existing.dead_letter_id,
                 llm_metadata=existing.llm_metadata,
             )
 
@@ -122,6 +146,8 @@ class TaskDispatchService:
                     message="sandbox adapter execution failed",
                     replayed=False,
                     source="dispatch_sandbox_adapter",
+                    retryable=False,
+                    dead_letter_id=None,
                     llm_metadata=None,
                 )
                 self._task_outcomes[task.task_id] = outcome
@@ -142,6 +168,8 @@ class TaskDispatchService:
                     message=receipt.message,
                     replayed=False,
                     source="dispatch_sandbox_adapter",
+                    retryable=False,
+                    dead_letter_id=None,
                     llm_metadata=None,
                 )
             else:
@@ -160,6 +188,8 @@ class TaskDispatchService:
                     message=receipt.message,
                     replayed=False,
                     source="dispatch_sandbox_adapter",
+                    retryable=False,
+                    dead_letter_id=None,
                     llm_metadata=None,
                 )
         elif target == "llm":
@@ -194,6 +224,8 @@ class TaskDispatchService:
                     message="llm gateway dispatch failed",
                     replayed=False,
                     source="dispatch_llm_gateway",
+                    retryable=False,
+                    dead_letter_id=None,
                     llm_metadata=None,
                 )
                 self._task_outcomes[task.task_id] = outcome
@@ -214,6 +246,8 @@ class TaskDispatchService:
                     message=llm_receipt.message,
                     replayed=False,
                     source="dispatch_llm_gateway",
+                    retryable=False,
+                    dead_letter_id=None,
                     llm_metadata=_extract_llm_metadata(llm_receipt.gateway_response),
                 )
             else:
@@ -232,10 +266,95 @@ class TaskDispatchService:
                     message=llm_receipt.message,
                     replayed=False,
                     source="dispatch_llm_gateway",
+                    retryable=bool(
+                        llm_receipt.gateway_response.retryable
+                        if llm_receipt.gateway_response is not None
+                        else False
+                    ),
+                    dead_letter_id=None,
                     llm_metadata=_extract_llm_metadata(llm_receipt.gateway_response),
                 )
+        elif target == "communication":
+            try:
+                communication_receipt = self._communication_dispatch_adapter.dispatch(
+                    CommunicationDispatchRequest(
+                        task_id=task.task_id,
+                        trace_id=task.trace_id,
+                        principal_id=task.principal_id,
+                        connector=task.connector,
+                        command=task.command,
+                        target=task.target,
+                        args=task.args,
+                        idempotency_key=task.idempotency_key,
+                        project_id=task.project_id,
+                        created_at=task.created_at,
+                        metadata=task.metadata,
+                    )
+                )
+            except Exception:
+                self._lifecycle_service.mark_blocked_dispatch(
+                    task.task_id,
+                    error_code="communication_dispatch_adapter_error",
+                    message="communication adapter execution failed",
+                    dispatch_target=target,
+                    outcome_source="dispatch_communication_gateway",
+                )
+                outcome = TaskDispatchOutcome(
+                    accepted=False,
+                    target=target,
+                    dispatch_id=None,
+                    error_code="communication_dispatch_adapter_error",
+                    message="communication adapter execution failed",
+                    replayed=False,
+                    source="dispatch_communication_gateway",
+                    retryable=False,
+                    dead_letter_id=None,
+                    llm_metadata=None,
+                )
+                self._task_outcomes[task.task_id] = outcome
+                return outcome
+            if communication_receipt.accepted:
+                dispatch_id = communication_receipt.dispatch_id or f"communication-{uuid4()}"
+                self._lifecycle_service.mark_dispatched(
+                    task.task_id,
+                    dispatch_target=target,
+                    dispatch_id=dispatch_id,
+                    message=communication_receipt.message,
+                )
+                outcome = TaskDispatchOutcome(
+                    accepted=True,
+                    target=target,
+                    dispatch_id=dispatch_id,
+                    error_code=None,
+                    message=communication_receipt.message,
+                    replayed=False,
+                    source="dispatch_communication_gateway",
+                    retryable=False,
+                    dead_letter_id=communication_receipt.dead_letter_id,
+                    llm_metadata=None,
+                )
+            else:
+                self._lifecycle_service.mark_blocked_dispatch(
+                    task.task_id,
+                    error_code=communication_receipt.error_code or "communication_dispatch_failed",
+                    message=communication_receipt.message,
+                    dispatch_target=target,
+                    outcome_source="dispatch_communication_gateway",
+                )
+                outcome = TaskDispatchOutcome(
+                    accepted=False,
+                    target=target,
+                    dispatch_id=None,
+                    error_code=communication_receipt.error_code or "communication_dispatch_failed",
+                    message=communication_receipt.message,
+                    replayed=False,
+                    source="dispatch_communication_gateway",
+                    retryable=communication_receipt.retryable,
+                    dead_letter_id=communication_receipt.dead_letter_id,
+                    llm_metadata=None,
+                )
         else:
-            # Communication target remains controlled stub in M2-WP2 scope.
+            # Fallback is retained for forward-compatible targets not yet modeled.
             dispatch_id = f"{target}-{uuid4()}"
             message = f"{target} dispatch stub accepted"
             self._lifecycle_service.mark_dispatched(
@@ -252,21 +371,72 @@ class TaskDispatchService:
                 message=message,
                 replayed=False,
                 source=f"dispatch_{target}",
+                retryable=False,
+                dead_letter_id=None,
                 llm_metadata=None,
             )
 
         self._task_outcomes[task.task_id] = outcome
         return outcome
 
+    def list_communication_message_records(
+        self,
+        *,
+        task_id: str | None = None,
+    ) -> tuple[CommunicationMessageRecord, ...]:
+        """Expose communication message ledger records for diagnostics/tests."""
 
-def build_task_dispatch_service(lifecycle_service: TaskLifecycleService) -> TaskDispatchService:
+        adapter = self._communication_dispatch_adapter
+        if isinstance(adapter, InMemoryCommunicationDispatchAdapter):
+            return adapter.list_message_records(task_id=task_id)
+        return ()
+
+    def list_communication_idempotency_records(
+        self,
+    ) -> tuple[CommunicationIdempotencyRecord, ...]:
+        """Expose communication idempotency records for diagnostics/tests."""
+
+        adapter = self._communication_dispatch_adapter
+        if isinstance(adapter, InMemoryCommunicationDispatchAdapter):
+            return adapter.list_idempotency_records()
+        return ()
+
+    def list_communication_dead_letters(self) -> tuple[CommunicationDeadLetterRecord, ...]:
+        """Expose communication dead-letter records for diagnostics/tests."""
+
+        adapter = self._communication_dispatch_adapter
+        if isinstance(adapter, InMemoryCommunicationDispatchAdapter):
+            return adapter.list_dead_letters()
+        return ()
+
+
+def build_task_dispatch_service(
+    lifecycle_service: TaskLifecycleService,
+    *,
+    audit_writer: InMemoryAuditWriter | None = None,
+    metric_recorder: InMemoryMetricRecorder | None = None,
+) -> TaskDispatchService:
     """Build task-dispatch service with default sandbox and llm adapters."""
 
+    communication_repository = InMemoryCommunicationRepository()
+    message_ledger = InMemoryMessageLedger(repository=communication_repository)
+    dead_letter_writer = InMemoryDeadLetterWriter(
+        repository=communication_repository,
+        audit_writer=audit_writer,
+        metric_recorder=metric_recorder,
+    )
+    communication_publisher = InMemoryDeliveryPublisher(
+        message_ledger=message_ledger,
+        dead_letter_writer=dead_letter_writer,
+    )
     return TaskDispatchService(
         lifecycle_service=lifecycle_service,
         sandbox_execution_adapter=InMemorySandboxExecutionAdapter(),
         llm_dispatch_adapter=LlmGatewayDispatchAdapter(
             llm_gateway_service=build_llm_gateway_service(),
+        ),
+        communication_dispatch_adapter=InMemoryCommunicationDispatchAdapter(
+            publisher=communication_publisher,
         ),
     )
 
