@@ -10,8 +10,17 @@ from fastapi import Request
 from openqilin.budget_runtime.client import InMemoryBudgetRuntimeClient
 from openqilin.budget_runtime.reservation_service import BudgetReservationService
 from openqilin.communication_gateway.callbacks.outcome_notifier import CommunicationOutcomeNotifier
+from openqilin.control_plane.api.startup_recovery import (
+    StartupRecoveryReport,
+    payload_hash_for_task,
+)
 from openqilin.control_plane.idempotency.ingress_dedupe import InMemoryIngressDedupe
+from openqilin.data_access.cache.idempotency_store import InMemoryIdempotencyCacheStore
+from openqilin.data_access.repositories.agent_registry import (
+    InMemoryAgentRegistryRepository,
+)
 from openqilin.data_access.repositories.artifacts import InMemoryProjectArtifactRepository
+from openqilin.data_access.repositories.communication import InMemoryCommunicationRepository
 from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
 from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
 from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
@@ -22,6 +31,7 @@ from openqilin.retrieval_runtime.service import (
     RetrievalQueryService,
     build_retrieval_query_service,
 )
+from openqilin.shared_kernel.config import RuntimeSettings
 from openqilin.task_orchestrator.admission.service import AdmissionService
 from openqilin.task_orchestrator.callbacks.delivery_events import (
     InMemoryDeliveryEventCallbackProcessor,
@@ -39,6 +49,9 @@ class RuntimeServices:
 
     ingress_dedupe: InMemoryIngressDedupe
     runtime_state_repo: InMemoryRuntimeStateRepository
+    communication_repo: InMemoryCommunicationRepository
+    idempotency_cache_store: InMemoryIdempotencyCacheStore
+    agent_registry_repo: InMemoryAgentRegistryRepository
     project_artifact_repo: InMemoryProjectArtifactRepository
     governance_repo: InMemoryGovernanceRepository
     admission_service: AdmissionService
@@ -53,14 +66,33 @@ class RuntimeServices:
     metric_recorder: InMemoryMetricRecorder
     delivery_event_callback_processor: InMemoryDeliveryEventCallbackProcessor
     communication_outcome_notifier: CommunicationOutcomeNotifier
+    startup_recovery_report: StartupRecoveryReport
 
 
 def build_runtime_services() -> RuntimeServices:
     """Build a fresh runtime service container."""
 
+    settings = RuntimeSettings()
+    runtime_snapshot_path = (
+        settings.runtime_state_snapshot_path if settings.runtime_persistence_enabled else None
+    )
+    communication_snapshot_path = (
+        settings.communication_snapshot_path if settings.runtime_persistence_enabled else None
+    )
+    idempotency_snapshot_path = (
+        settings.idempotency_snapshot_path if settings.runtime_persistence_enabled else None
+    )
+    agent_registry_snapshot_path = (
+        settings.agent_registry_snapshot_path if settings.runtime_persistence_enabled else None
+    )
     ingress_dedupe = InMemoryIngressDedupe()
-    runtime_state_repo = InMemoryRuntimeStateRepository()
-    project_artifact_repo = InMemoryProjectArtifactRepository()
+    runtime_state_repo = InMemoryRuntimeStateRepository(snapshot_path=runtime_snapshot_path)
+    communication_repo = InMemoryCommunicationRepository(snapshot_path=communication_snapshot_path)
+    idempotency_cache_store = InMemoryIdempotencyCacheStore(snapshot_path=idempotency_snapshot_path)
+    agent_registry_repo = InMemoryAgentRegistryRepository(
+        snapshot_path=agent_registry_snapshot_path
+    )
+    project_artifact_repo = InMemoryProjectArtifactRepository(system_root=settings.system_root_path)
     governance_repo = InMemoryGovernanceRepository(artifact_repository=project_artifact_repo)
     admission_service = AdmissionService(
         dedupe_store=ingress_dedupe,
@@ -86,10 +118,47 @@ def build_runtime_services() -> RuntimeServices:
         lifecycle_service=lifecycle_service,
         audit_writer=audit_writer,
         metric_recorder=metric_recorder,
+        communication_repository=communication_repo,
+        idempotency_cache_store=idempotency_cache_store,
+    )
+    reconstructed_ingress_claims = 0
+    for task in runtime_state_repo.list_tasks():
+        status, _ = ingress_dedupe.claim(
+            principal_id=task.principal_id,
+            idempotency_key=task.idempotency_key,
+            payload_hash=payload_hash_for_task(task),
+        )
+        ingress_dedupe.bind_task_id(
+            principal_id=task.principal_id,
+            idempotency_key=task.idempotency_key,
+            task_id=task.task_id,
+        )
+        if status == "new":
+            reconstructed_ingress_claims += 1
+    institutional_agents = agent_registry_repo.bootstrap_institutional_agents()
+    startup_recovery_report = StartupRecoveryReport(
+        restored_task_count=len(runtime_state_repo.list_tasks()),
+        restored_terminal_task_count=sum(
+            1
+            for task in runtime_state_repo.list_tasks()
+            if task.status in {"blocked", "dispatched", "completed", "failed", "cancelled"}
+        ),
+        reconstructed_ingress_claims=reconstructed_ingress_claims,
+        restored_communication_records=len(
+            task_dispatch_service.list_communication_message_records()
+        ),
+        restored_dead_letter_count=len(task_dispatch_service.list_communication_dead_letters()),
+        restored_communication_idempotency_count=len(
+            task_dispatch_service.list_communication_idempotency_records()
+        ),
+        institutional_agent_count=len(institutional_agents),
     )
     return RuntimeServices(
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
+        communication_repo=communication_repo,
+        idempotency_cache_store=idempotency_cache_store,
+        agent_registry_repo=agent_registry_repo,
         project_artifact_repo=project_artifact_repo,
         governance_repo=governance_repo,
         admission_service=admission_service,
@@ -104,6 +173,7 @@ def build_runtime_services() -> RuntimeServices:
         metric_recorder=metric_recorder,
         delivery_event_callback_processor=delivery_event_callback_processor,
         communication_outcome_notifier=communication_outcome_notifier,
+        startup_recovery_report=startup_recovery_report,
     )
 
 

@@ -7,8 +7,12 @@ from uuid import uuid4
 
 from openqilin.communication_gateway.delivery.dlq_writer import InMemoryDeadLetterWriter
 from openqilin.communication_gateway.delivery.publisher import InMemoryDeliveryPublisher
-from openqilin.communication_gateway.storage.idempotency_store import CommunicationIdempotencyRecord
+from openqilin.communication_gateway.storage.idempotency_store import (
+    CommunicationIdempotencyRecord,
+    InMemoryCommunicationIdempotencyStore,
+)
 from openqilin.communication_gateway.storage.message_ledger import InMemoryMessageLedger
+from openqilin.data_access.cache.idempotency_store import InMemoryIdempotencyCacheStore
 from openqilin.data_access.repositories.communication import (
     CommunicationDeadLetterRecord,
     CommunicationMessageRecord,
@@ -415,10 +419,12 @@ def build_task_dispatch_service(
     *,
     audit_writer: InMemoryAuditWriter | None = None,
     metric_recorder: InMemoryMetricRecorder | None = None,
+    communication_repository: InMemoryCommunicationRepository | None = None,
+    idempotency_cache_store: InMemoryIdempotencyCacheStore | None = None,
 ) -> TaskDispatchService:
     """Build task-dispatch service with default sandbox and llm adapters."""
 
-    communication_repository = InMemoryCommunicationRepository()
+    communication_repository = communication_repository or InMemoryCommunicationRepository()
     message_ledger = InMemoryMessageLedger(repository=communication_repository)
     dead_letter_writer = InMemoryDeadLetterWriter(
         repository=communication_repository,
@@ -428,6 +434,9 @@ def build_task_dispatch_service(
     communication_publisher = InMemoryDeliveryPublisher(
         message_ledger=message_ledger,
         dead_letter_writer=dead_letter_writer,
+        idempotency_store=InMemoryCommunicationIdempotencyStore(
+            cache_store=idempotency_cache_store
+        ),
     )
     return TaskDispatchService(
         lifecycle_service=lifecycle_service,

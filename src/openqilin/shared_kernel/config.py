@@ -12,6 +12,7 @@ class RuntimeSettings(BaseSettings):
 
     env: str = "local_dev"
     system_root: str = "~/.openqilin"
+    runtime_persistence_enabled: bool = False
     smoke_api_base_url: str = "http://127.0.0.1:8000"
     connector_shared_secret: str = "dev-openqilin-secret"
     llm_default_routing_profile: str = "dev_gemini_free"
@@ -26,3 +27,27 @@ class RuntimeSettings(BaseSettings):
         """Resolved filesystem root for OpenQilin runtime-generated artifacts."""
 
         return Path(self.system_root).expanduser().resolve()
+
+    @property
+    def runtime_state_snapshot_path(self) -> Path:
+        """Snapshot path for task runtime-state persistence."""
+
+        return self.system_root_path / "runtime" / "runtime_state.json"
+
+    @property
+    def communication_snapshot_path(self) -> Path:
+        """Snapshot path for communication message/dead-letter persistence."""
+
+        return self.system_root_path / "runtime" / "communication.json"
+
+    @property
+    def idempotency_snapshot_path(self) -> Path:
+        """Snapshot path for idempotency cache persistence."""
+
+        return self.system_root_path / "runtime" / "idempotency_cache.json"
+
+    @property
+    def agent_registry_snapshot_path(self) -> Path:
+        """Snapshot path for institutional-agent registry persistence."""
+
+        return self.system_root_path / "runtime" / "agent_registry.json"

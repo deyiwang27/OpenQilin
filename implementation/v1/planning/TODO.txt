@@ -15,15 +15,15 @@ Status legend:
 - `done`
 
 Current context:
-- Active branch: `feat/35-m6-documentation-access-governance-kickoff`
-- Current scope: MVP v0.1 post-M4 roadmap (`M6`..`M7`)
+- Active branch: `feat/41-m7-persistence-adapter-acceptance-kickoff`
+- Current scope: MVP v0.1 closeout roadmap (`M7`)
 - Baseline roadmap: `implementation/v1/mvp/MvpArchitectureRoadmap-v1.md`
 
 Milestone summary:
 - `M0`..`M4`: `done` (see `implementation/v1/planning/ImplementationProgress-v1.md` and evidence packs)
 - `M5`: `done`
 - `M6`: `done`
-- `M7`: `todo`
+- `M7`: `in_progress`
 
 Checklist:
 1) `M5 MVP Proposal and Governance Activation` (`issue #29`) - `done`
@@ -43,8 +43,9 @@ Checklist:
 - M6 remediation batch (specialist spoof hardening, six baseline activation docs, role/stage write authorization) - `done`
 - milestone closeout PR + parent issue close for `#35` - `done` (`PR #40`)
 
-3) `M7 MVP Persistence, Adapter, and Acceptance` - `todo`
-- `M7-WP1` persistent runtime-state adapters + startup recovery hardening - `todo`
+3) `M7 MVP Persistence, Adapter, and Acceptance` (`issue #41`) - `in_progress`
+- kickoff/decomposition complete with child work packages (`#42`..`#47`) - `done`
+- `M7-WP1` persistent runtime-state adapters + startup recovery hardening - `done` (`issue #42`)
 - `M7-WP2` Discord ingress context + identity/channel mapping baseline (`guild_id`/`channel_id`/`channel_type`; allowlist states `pending|verified|revoked`) - `todo`
 - `M7-WP3` Discord chat-governance enforcement (`direct|leadership_council|governance|executive|project`) + lifecycle membership resolver + specialist access constraints + pending-role profile flags (`secretary`, `cso`, `domain_leader`) - `todo`
 - `M7-WP4` Docker `full` profile runtime cutover (`api_app`/workers placeholder replacement) - `todo`

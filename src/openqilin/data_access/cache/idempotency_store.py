@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
-from typing import Literal, Mapping
+from pathlib import Path
+from typing import Literal, Mapping, cast
+
+from openqilin.shared_kernel.config import RuntimeSettings
 
 CacheIdempotencyStatus = Literal["in_progress", "completed"]
 CacheClaimStatus = Literal["new", "replay", "conflict", "in_progress"]
@@ -24,11 +28,23 @@ class CacheIdempotencyRecord:
     updated_at: datetime
 
 
+class IdempotencyCacheStoreError(ValueError):
+    """Raised when idempotency snapshot persistence cannot be completed."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
+        self.message = message
+
+
 class InMemoryIdempotencyCacheStore:
     """Deterministic in-memory idempotency cache used by runtime modules."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, snapshot_path: Path | None = None) -> None:
         self._records: dict[tuple[str, str], CacheIdempotencyRecord] = {}
+        self._snapshot_path = snapshot_path
+        if self._snapshot_path is not None:
+            self._load_snapshot()
 
     def claim(
         self,
@@ -54,6 +70,7 @@ class InMemoryIdempotencyCacheStore:
                 updated_at=now,
             )
             self._records[record_key] = created
+            self._flush_snapshot()
             return "new", created
 
         if existing.payload_hash != payload_hash:
@@ -74,6 +91,7 @@ class InMemoryIdempotencyCacheStore:
             updated_at=datetime.now(tz=UTC),
         )
         self._records[(namespace, key)] = updated
+        self._flush_snapshot()
         return updated
 
     def complete(
@@ -95,6 +113,7 @@ class InMemoryIdempotencyCacheStore:
             updated_at=datetime.now(tz=UTC),
         )
         self._records[(namespace, key)] = updated
+        self._flush_snapshot()
         return updated
 
     def get(self, *, namespace: str, key: str) -> CacheIdempotencyRecord | None:
@@ -106,3 +125,90 @@ class InMemoryIdempotencyCacheStore:
         """List all idempotency records for namespace."""
 
         return tuple(record for (ns, _), record in self._records.items() if ns == namespace)
+
+    def _load_snapshot(self) -> None:
+        path = self._resolved_snapshot_path()
+        if not path.exists():
+            return
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError) as error:
+            raise IdempotencyCacheStoreError(
+                code="idempotency_snapshot_load_failed",
+                message=f"failed to load idempotency snapshot: {path}",
+            ) from error
+        records = payload.get("records", [])
+        if not isinstance(records, list):
+            raise IdempotencyCacheStoreError(
+                code="idempotency_snapshot_invalid",
+                message="idempotency snapshot payload must include list records",
+            )
+        for raw in records:
+            record = _record_from_dict(raw)
+            self._records[(record.namespace, record.key)] = record
+
+    def _flush_snapshot(self) -> None:
+        if self._snapshot_path is None:
+            return
+        path = self._resolved_snapshot_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "records": [_record_to_dict(record) for record in self._records.values()],
+        }
+        try:
+            path.write_text(json.dumps(payload, sort_keys=True, indent=2), encoding="utf-8")
+        except OSError as error:
+            raise IdempotencyCacheStoreError(
+                code="idempotency_snapshot_write_failed",
+                message=f"failed to write idempotency snapshot: {path}",
+            ) from error
+
+    def _resolved_snapshot_path(self) -> Path:
+        if self._snapshot_path is not None:
+            return self._snapshot_path
+        return RuntimeSettings().idempotency_snapshot_path
+
+
+def _record_to_dict(record: CacheIdempotencyRecord) -> dict[str, object]:
+    return {
+        "namespace": record.namespace,
+        "key": record.key,
+        "payload_hash": record.payload_hash,
+        "status": record.status,
+        "attempt_count": record.attempt_count,
+        "result": [list(item) for item in (record.result or ())],
+        "created_at": record.created_at.isoformat(),
+        "updated_at": record.updated_at.isoformat(),
+    }
+
+
+def _record_from_dict(raw: object) -> CacheIdempotencyRecord:
+    if not isinstance(raw, dict):
+        raise IdempotencyCacheStoreError(
+            code="idempotency_snapshot_invalid_record",
+            message="idempotency snapshot record must be an object",
+        )
+    result = raw.get("result", [])
+    parsed_result = tuple(
+        (str(item[0]), str(item[1])) for item in result if isinstance(item, list) and len(item) == 2
+    )
+    return CacheIdempotencyRecord(
+        namespace=str(raw["namespace"]),
+        key=str(raw["key"]),
+        payload_hash=str(raw["payload_hash"]),
+        status=_parse_cache_status(str(raw["status"])),
+        attempt_count=int(raw["attempt_count"]),
+        result=parsed_result or None,
+        created_at=datetime.fromisoformat(str(raw["created_at"])).astimezone(UTC),
+        updated_at=datetime.fromisoformat(str(raw["updated_at"])).astimezone(UTC),
+    )
+
+
+def _parse_cache_status(value: str) -> CacheIdempotencyStatus:
+    normalized = value.strip().lower()
+    if normalized in {"in_progress", "completed"}:
+        return cast(CacheIdempotencyStatus, normalized)
+    raise IdempotencyCacheStoreError(
+        code="idempotency_snapshot_invalid_status",
+        message=f"invalid idempotency status in snapshot: {value}",
+    )
