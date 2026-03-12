@@ -41,7 +41,7 @@
   - workforce lifecycle actions
 
 ## 6. Escalation and Routing
-- Secretary may request participation from `ceo`, `cwo`, `cso`, `project_manager`, `domain_lead`, or `specialist` roles.
+- Secretary may request participation from `ceo`, `cwo`, `cso`, `project_manager`, `domain_leader`, or `specialist` roles.
 - Secretary must escalate when:
   - the request requires decision, command, or execution authority
   - policy/budget exceptions are needed

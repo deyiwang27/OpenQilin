@@ -11,7 +11,7 @@ escalation:
   operational_coordination_failures:
     path:
       - specialist
-      - domain_lead
+      - domain_leader
       - project_manager
       - cwo
       - ceo

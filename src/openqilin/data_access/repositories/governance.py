@@ -414,7 +414,7 @@ class InMemoryGovernanceRepository:
         actor_role: str,
         trace_id: str,
     ) -> WorkforceBindingRecord:
-        """Persist one workforce template binding for PM or domain lead declaration."""
+        """Persist one workforce template binding for Project Manager or Domain Leader."""
 
         project = self._projects_by_id.get(project_id)
         if project is None:
@@ -429,27 +429,27 @@ class InMemoryGovernanceRepository:
             )
 
         normalized_role = role.strip().lower()
-        if normalized_role not in {"pm", "domain_lead"}:
+        if normalized_role not in {"project_manager", "domain_leader"}:
             raise GovernanceRepositoryError(
                 code="governance_workforce_role_invalid",
                 message=f"unsupported workforce role: {normalized_role}",
             )
-        if normalized_role == "pm":
+        if normalized_role == "project_manager":
             existing_pm = next(
                 (
                     binding
                     for binding in project.workforce_bindings
-                    if binding.role == "pm" and binding.binding_status == "active"
+                    if binding.role == "project_manager" and binding.binding_status == "active"
                 ),
                 None,
             )
             if existing_pm is not None:
                 raise GovernanceRepositoryError(
-                    code="governance_pm_binding_exists",
+                    code="governance_project_manager_binding_exists",
                     message="project manager binding already exists for project",
                 )
 
-        binding_status = "active" if normalized_role == "pm" else "declared_disabled"
+        binding_status = "active" if normalized_role == "project_manager" else "declared_disabled"
         binding = WorkforceBindingRecord(
             binding_id=str(uuid4()),
             project_id=project_id,

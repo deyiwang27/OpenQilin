@@ -24,7 +24,7 @@ MVP v1 governance posture:
 - Proposal discussion path is `owner <-> ceo <-> cwo` with optional joint discussion channel.
 - owner may communicate with selected non-specialist agents by policy scope.
 - owner direct interaction with `specialist` is prohibited; specialist communication routes through `project_manager`.
-- `domain_lead` may be declared in schema but remains disabled in first MVP runtime activation.
+- `domain_leader` may be declared in schema but remains disabled in first MVP runtime activation.
 - first MVP operational role set is `ceo`, `cwo`, `auditor`, `administrator`, `project_manager`, `specialist`.
 
 ## 3. Message Types

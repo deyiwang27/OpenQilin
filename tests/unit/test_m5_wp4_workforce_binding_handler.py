@@ -26,14 +26,14 @@ def _seed_active_project(repository: InMemoryGovernanceRepository) -> None:
         budget_currency_total=100.0,
         budget_quota_total=1000.0,
         metric_plan={"delivery": "ok"},
-        workforce_plan={"pm": "1"},
+        workforce_plan={"project_manager": "1"},
         actor_id="cwo_1",
         actor_role="cwo",
         trace_id="trace-m5-wp4-init",
     )
 
 
-def test_bind_workforce_template_creates_active_pm_binding() -> None:
+def test_bind_workforce_template_creates_active_project_manager_binding() -> None:
     repository = InMemoryGovernanceRepository()
     _seed_active_project(repository)
 
@@ -42,19 +42,19 @@ def test_bind_workforce_template_creates_active_pm_binding() -> None:
         project_id="project_m5_wp4",
         actor_id="cwo_1",
         actor_role="cwo",
-        trace_id="trace-m5-wp4-bind-pm",
-        role="pm",
-        template_id="pm_template_v1",
+        trace_id="trace-m5-wp4-bind-project-manager",
+        role="project_manager",
+        template_id="project_manager_template_v1",
         llm_routing_profile="dev_gemini_free",
-        system_prompt="You are PM.",
+        system_prompt="You are Project Manager.",
     )
 
-    assert outcome.role == "pm"
+    assert outcome.role == "project_manager"
     assert outcome.binding_status == "active"
     assert len(outcome.system_prompt_hash) == 64
 
 
-def test_bind_workforce_template_keeps_domain_lead_declared_disabled() -> None:
+def test_bind_workforce_template_keeps_domain_leader_declared_disabled() -> None:
     repository = InMemoryGovernanceRepository()
     _seed_active_project(repository)
 
@@ -64,13 +64,13 @@ def test_bind_workforce_template_keeps_domain_lead_declared_disabled() -> None:
         actor_id="cwo_1",
         actor_role="cwo",
         trace_id="trace-m5-wp4-bind-dl",
-        role="domain_lead",
-        template_id="dl_template_v1",
+        role="domain_leader",
+        template_id="domain_leader_template_v1",
         llm_routing_profile="dev_gemini_free",
-        system_prompt="You are DL.",
+        system_prompt="You are Domain Leader.",
     )
 
-    assert outcome.role == "domain_lead"
+    assert outcome.role == "domain_leader"
     assert outcome.binding_status == "declared_disabled"
 
 
@@ -85,10 +85,10 @@ def test_bind_workforce_template_rejects_non_cwo_role() -> None:
             actor_id="owner_1",
             actor_role="owner",
             trace_id="trace-m5-wp4-bind-denied",
-            role="pm",
-            template_id="pm_template_v1",
+            role="project_manager",
+            template_id="project_manager_template_v1",
             llm_routing_profile="dev_gemini_free",
-            system_prompt="You are PM.",
+            system_prompt="You are Project Manager.",
         )
 
     assert exc.value.code == "governance_role_forbidden"

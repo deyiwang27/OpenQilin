@@ -41,7 +41,7 @@ def test_initialize_project_accepts_cwo_and_activates_project() -> None:
             "budget_currency_total": 250.0,
             "budget_quota_total": 10000.0,
             "metric_plan": {"completion": "all_wp_passed"},
-            "workforce_plan": {"pm": "1", "specialist": "2"},
+            "workforce_plan": {"project_manager": "1", "specialist": "2"},
         },
     )
 

@@ -63,16 +63,16 @@
 ### 3.10 Proposal and Workforce Governance
 - implement proposal discussion/approval path (`owner`, `ceo`, `cwo`)
 - implement CWO project initialization (scope/objective/budget/metrics)
-- implement template-based workforce creation (`pm` active, `domain_lead` declared-disabled)
+- implement template-based workforce creation (`project_manager` active, `domain_leader` declared-disabled)
 
 ### 3.11 Project Documentation Governance
 - store runtime-generated project docs under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`
 - enforce allowed document types and per-type document caps
 - persist DB pointer/hash metadata and fail closed on mismatch
 
-### 3.12 PM/Specialist Operating Constraints
-- codify PM mandatory operations template (milestones/tasks/assignment/reporting)
-- enforce specialist touchability (`pm`-only, domain-lead path disabled for first MVP)
+### 3.12 Project Manager/Specialist Operating Constraints
+- codify Project Manager mandatory operations template (milestones/tasks/assignment/reporting)
+- enforce specialist touchability (`project_manager`-only, Domain Leader path disabled for first MVP)
 - enforce owner non-direct-specialist interaction contract
 
 ## 4. Suggested Delivery Order
@@ -81,8 +81,8 @@
 3. implement CWO project initialization and workforce templating contracts
 4. implement canonical system-root project file storage and DB pointer/hash synchronization
 5. enforce approved document types + per-type caps (fail-closed)
-6. enforce specialist touchability (`pm`-only direct path) and owner non-direct-specialist policy
-7. implement PM mandatory-operations template enforcement
+6. enforce specialist touchability (`project_manager`-only direct path) and owner non-direct-specialist policy
+7. implement Project Manager mandatory-operations template enforcement
 8. persist governance/runtime state adapters and startup recovery
 9. harden append-only audit persistence behavior and integrity checks
 10. implement Discord adapter with role/channel constraints

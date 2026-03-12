@@ -5,7 +5,7 @@ This RFC investigates how to manage detailed project and task status when canoni
 
 Primary scenario:
 - Owner discusses with `ceo`, `cwo`, `cso` to initiate a project.
-- `cwo` creates `project_manager` and `domain_lead` agents.
+- `cwo` creates `project_manager` and `domain_leader` agents.
 - `project_manager` decomposes milestones/tasks and maintains planning notes.
 - Specialist agents execute tasks with task-level requirements and updates.
 
@@ -120,7 +120,7 @@ Each artifact version should include:
 - Parse and persist structured extracts into `project_objective`, `project_risk`, `project_metric`.
 - Approval gate transitions project to `approved` / `active`.
 
-2. Planning (`project_manager` + `domain_lead`)
+2. Planning (`project_manager` + `domain_leader`)
 - Create `milestone` tree and `task` rows.
 - Attach `milestone_plan` and `task_brief` artifacts.
 - Task requirements persisted in `task_requirement` (structured constraints and acceptance criteria).

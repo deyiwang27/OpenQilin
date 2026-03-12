@@ -89,7 +89,7 @@ Scope:
   - DB-authoritative lifecycle/control fields
   - file-backed rich-text docs under canonical system root
 - document type policy and per-type document caps
-- specialist touchability governance (`pm`-only direct command path)
+- specialist touchability governance (`project_manager`-only direct command path)
 
 Exit:
 - project docs are stored outside repo tree with pointer/hash synchronization

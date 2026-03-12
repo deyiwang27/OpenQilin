@@ -32,7 +32,7 @@ def _seed_active_project() -> TestClient:
         budget_currency_total=100.0,
         budget_quota_total=1000.0,
         metric_plan={"delivery": "ok"},
-        workforce_plan={"pm": "1"},
+        workforce_plan={"project_manager": "1"},
         actor_id="cwo_1",
         actor_role="cwo",
         trace_id="trace-m5-wp4-seed-init",
@@ -40,30 +40,30 @@ def _seed_active_project() -> TestClient:
     return TestClient(app)
 
 
-def test_bind_pm_template_as_cwo_returns_active_binding() -> None:
+def test_bind_project_manager_template_as_cwo_returns_active_binding() -> None:
     client = _seed_active_project()
 
     response = client.post(
         "/v1/governance/projects/project_m5_wp4/workforce/bind",
         headers=_headers(actor_id="cwo_1", actor_role="cwo"),
         json={
-            "trace_id": "trace-m5-wp4-bind-pm",
-            "role": "pm",
-            "template_id": "pm_template_v1",
+            "trace_id": "trace-m5-wp4-bind-project-manager",
+            "role": "project_manager",
+            "template_id": "project_manager_template_v1",
             "llm_routing_profile": "dev_gemini_free",
-            "system_prompt": "You are PM.",
+            "system_prompt": "You are Project Manager.",
         },
     )
 
     body = response.json()
     assert response.status_code == 200
     assert body["status"] == "ok"
-    assert body["data"]["role"] == "pm"
+    assert body["data"]["role"] == "project_manager"
     assert body["data"]["binding_status"] == "active"
     assert len(body["data"]["system_prompt_hash"]) == 64
 
 
-def test_bind_domain_lead_template_stays_declared_disabled() -> None:
+def test_bind_domain_leader_template_stays_declared_disabled() -> None:
     client = _seed_active_project()
 
     response = client.post(
@@ -71,17 +71,17 @@ def test_bind_domain_lead_template_stays_declared_disabled() -> None:
         headers=_headers(actor_id="cwo_1", actor_role="cwo"),
         json={
             "trace_id": "trace-m5-wp4-bind-dl",
-            "role": "domain_lead",
-            "template_id": "dl_template_v1",
+            "role": "domain_leader",
+            "template_id": "domain_leader_template_v1",
             "llm_routing_profile": "dev_gemini_free",
-            "system_prompt": "You are DL.",
+            "system_prompt": "You are Domain Leader.",
         },
     )
 
     body = response.json()
     assert response.status_code == 200
     assert body["status"] == "ok"
-    assert body["data"]["role"] == "domain_lead"
+    assert body["data"]["role"] == "domain_leader"
     assert body["data"]["binding_status"] == "declared_disabled"
 
 
@@ -93,10 +93,10 @@ def test_bind_workforce_template_rejects_non_cwo_role() -> None:
         headers=_headers(actor_id="owner_1", actor_role="owner"),
         json={
             "trace_id": "trace-m5-wp4-bind-denied",
-            "role": "pm",
-            "template_id": "pm_template_v1",
+            "role": "project_manager",
+            "template_id": "project_manager_template_v1",
             "llm_routing_profile": "dev_gemini_free",
-            "system_prompt": "You are PM.",
+            "system_prompt": "You are Project Manager.",
         },
     )
 

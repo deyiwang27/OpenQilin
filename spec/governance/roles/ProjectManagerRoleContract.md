@@ -14,7 +14,7 @@
 - Decompose project goals into milestones and tasks.
 - Coordinate specialist execution and delivery sequencing.
 - Manage project-level risk, schedule, and resource posture within scope.
-- Execute mandatory project-management operations defined by PM system-prompt template:
+- Execute mandatory project-management operations defined by Project Manager system-prompt template:
   - milestone planning
   - task decomposition
   - task assignment
@@ -46,10 +46,10 @@
 ## 6. Escalation and Routing
 - Escalate project resource or structural constraints to `cwo`.
 - Escalate strategic conflicts to `ceo` through defined review gates.
-- Route deep technical review to `domain_lead`.
+- Route deep technical review to `domain_leader`.
 - Specialist interaction authority:
-  - PM is the only active role allowed to directly command/touch specialists in first MVP.
-  - `domain_lead` touchability path is reserved but disabled until activated by policy.
+  - Project Manager is the only active role allowed to directly command/touch specialists in first MVP.
+  - `domain_leader` touchability path is reserved but disabled until activated by policy.
 
 ## 7. Runtime Interfaces
 - `spec/orchestration/control/TaskOrchestrator.md`

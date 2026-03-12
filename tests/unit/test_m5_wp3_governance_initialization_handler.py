@@ -36,7 +36,7 @@ def test_initialize_project_by_cwo_promotes_project_to_active() -> None:
         budget_currency_total=120.0,
         budget_quota_total=5000.0,
         metric_plan={"delivery": "mvp_acceptance_pass"},
-        workforce_plan={"pm": "1", "specialist": "2"},
+        workforce_plan={"project_manager": "1", "specialist": "2"},
     )
 
     assert outcome.project.status == "active"

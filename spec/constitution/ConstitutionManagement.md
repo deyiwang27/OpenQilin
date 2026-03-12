@@ -40,7 +40,7 @@
 - cwo
 - cso
 - project_manager
-- domain_lead
+- domain_leader
 - specialist
 
 Unknown roles MUST be treated as unauthorized.

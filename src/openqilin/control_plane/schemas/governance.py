@@ -92,7 +92,7 @@ class WorkforceTemplateBindingRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     trace_id: str = Field(min_length=1, max_length=128)
-    role: Literal["pm", "domain_lead"]
+    role: Literal["project_manager", "domain_leader"]
     template_id: str = Field(min_length=1, max_length=128)
     llm_routing_profile: str = Field(min_length=1, max_length=128)
     system_prompt: str = Field(min_length=1, max_length=20000)

@@ -34,7 +34,7 @@ class InMemoryPolicyRuntimeClient:
             "cwo",
             "cso",
             "project_manager",
-            "domain_lead",
+            "domain_leader",
             "specialist",
         }:
             return PolicyEvaluationResult(

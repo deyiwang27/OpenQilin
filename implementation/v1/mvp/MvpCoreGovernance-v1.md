@@ -19,8 +19,8 @@ The MVP must prove a governance-first multi-agent runtime that can:
 
 Included:
 - Institutional agents: `ceo`, `cwo`, `auditor`, `administrator`
-- Project roles: `pm` plus up to 2 `specialist` agents per project
-- `domain_lead` role declared in schema but disabled in first MVP runtime
+- Project roles: `project_manager` plus up to 2 `specialist` agents per project
+- `domain_leader` role declared in schema but disabled in first MVP runtime
 - Hybrid runtime: in-memory workers plus PostgreSQL authoritative state
 - Dual budget control: currency (`usd`) and quota (`units`)
 - Discord as owner-facing command adapter
@@ -51,12 +51,22 @@ Core runtime components:
 
 ## 4. Role and Authority Model
 
+Canonical role naming:
+- Administrator -> `administrator`
+- Auditor -> `auditor`
+- CEO -> `ceo`
+- CWO -> `cwo`
+- CSO -> `cso`
+- Project Manager -> `project_manager`
+- Domain Leader -> `domain_leader`
+- Specialist -> `specialist`
+
 `ceo`:
 - Approves project objectives and lifecycle transitions
 - Cannot bypass `auditor` hard-budget pause without explicit owner action
 
 `cwo`:
-- Creates project workforce (`pm`, `specialist`, and `domain_lead` declaration when needed)
+- Creates project workforce (`project_manager`, `specialist`, and `domain_leader` declaration when needed)
 - Cannot change governance policy or budget engine rules
 - Attaches template + llm profile + system prompt package when initializing workforce
 
@@ -69,15 +79,15 @@ Core runtime components:
 - Enforces lifecycle integrity and operational controls
 - Maintains runtime availability and audit-path integrity
 
-`pm`:
+`project_manager`:
 - Coordinates project execution under approved budget
 - Delegates scoped execution tasks to specialists
-- Must execute mandatory operations from PM template (milestones, decomposition, assignment, reporting)
+- Must execute mandatory operations from Project Manager template (milestones, decomposition, assignment, reporting)
 
 `specialist`:
 - Executes bounded delivery tasks only
 - Cannot create agents or modify governance controls
-- Is touchable only by `pm` in first MVP (domain-lead path reserved but disabled)
+- Is touchable only by `project_manager` in first MVP (Domain Leader path reserved but disabled)
 
 ## 5. Budget Governance
 
@@ -107,7 +117,7 @@ Project lifecycle constraints:
 - `archived` allowed only from `completed|terminated`
 
 Project completion governance chain:
-- PM submits completion report to `cwo`.
+- Project Manager submits completion report to `cwo`.
 - `cwo` and `ceo` co-approve completion decision.
 - owner is notified after completion decision is recorded.
 
@@ -131,7 +141,7 @@ Owner commands do not mutate runtime state directly. They always execute through
 Owner interaction constraints:
 - Proposal discussion path is `owner`, `ceo`, and `cwo`.
 - owner may communicate with selected non-specialist agents under policy scope.
-- owner cannot directly command `specialist`; specialist communication routes through `pm`.
+- owner cannot directly command `specialist`; specialist communication routes through `project_manager`.
 
 ## 8. Governance Boundaries
 

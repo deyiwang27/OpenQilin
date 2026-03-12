@@ -8,7 +8,7 @@
 - `display_name`: `Specialist`
 - `role_layer`: `specialist`
 - `reports_to`: `project_manager`
-- `informs`: `project_manager`, `domain_lead`
+- `informs`: `project_manager`, `domain_leader`
 
 ## 3. Primary Duties
 - Execute assigned tasks within scope, constraints, and accepted methods.
@@ -39,11 +39,11 @@
 
 ## 6. Escalation and Routing
 - Escalate blockers to `project_manager`.
-- Request technical clarification from `domain_lead`.
+- Request technical clarification from `domain_leader`.
 - Governance/safety concerns must escalate via defined policy channels.
 - Interaction policy:
   - Specialists are "touchable" by `project_manager` only in first MVP.
-  - `domain_lead` interaction path is declared but disabled for first MVP activation.
+  - `domain_leader` interaction path is declared but disabled for first MVP activation.
 
 ## 7. Runtime Interfaces
 - `spec/orchestration/control/TaskOrchestrator.md`

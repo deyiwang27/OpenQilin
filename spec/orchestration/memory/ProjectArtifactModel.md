@@ -26,12 +26,12 @@
 | --- | --- | --- | --- |
 | `project_proposal` | `owner`, `ceo`, `cwo` | project | proposal discussion baseline prior to approval |
 | `project_charter` | `owner`, `ceo`, `cwo` | project | approved scope, objectives, pathways, risks, success metrics |
-| `workforce_plan` | `cwo` | project | PM/DL template selection, llm profile binding, staffing rationale |
+| `workforce_plan` | `cwo` | project | Project Manager/Domain Leader template selection, llm profile binding, staffing rationale |
 | `project_strategy` | `project_manager` | project | plan updates, execution strategy |
-| `project_risk_register` | `cwo`, `project_manager`, `domain_lead` | project | risk tracking and mitigations |
+| `project_risk_register` | `cwo`, `project_manager`, `domain_leader` | project | risk tracking and mitigations |
 | `project_metric_plan` | `ceo`, `project_manager` | project | KPI/metric definitions and targets |
-| `milestone_plan` | `project_manager`, `domain_lead` | milestone | milestone-specific deliverables and sequencing |
-| `task_brief` | `project_manager`, `domain_lead` | task | requirements, acceptance criteria, dependencies |
+| `milestone_plan` | `project_manager`, `domain_leader` | milestone | milestone-specific deliverables and sequencing |
+| `task_brief` | `project_manager`, `domain_leader` | task | requirements, acceptance criteria, dependencies |
 | `task_execution_notes` | `specialist` | task | execution notes, findings, blockers |
 | `task_handover_report` | `specialist` | task | completion summary and handoff context |
 | `project_retrospective` | `project_manager`, `ceo` | project | closure review and lessons learned |

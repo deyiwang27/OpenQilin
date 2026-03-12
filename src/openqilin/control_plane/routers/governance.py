@@ -111,7 +111,7 @@ def _map_handler_error(
         "governance_project_not_active",
         "governance_project_already_initialized",
         "governance_approval_role_conflict",
-        "governance_pm_binding_exists",
+        "governance_project_manager_binding_exists",
         "governance_workforce_role_invalid",
         "governance_project_invalid_budget",
     }:
@@ -328,7 +328,7 @@ def bind_workforce_template(
     ] = None,
     actor_role_header: Annotated[str | None, Header(alias="X-OpenQilin-Actor-Role")] = None,
 ) -> JSONResponse:
-    """Bind workforce template package for PM or declared-disabled domain lead."""
+    """Bind workforce template package for Project Manager or declared-disabled Domain Leader."""
 
     resolved = _resolve_principal(
         external_channel_header=external_channel_header,
