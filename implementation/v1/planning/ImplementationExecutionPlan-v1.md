@@ -179,6 +179,9 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
   - proposal/approval workflow owned by `owner` + `ceo` + `cwo`
   - CWO-initialized project charter/workforce setup
   - PM-led execution with specialist touchability constraints
+  - runnable Docker `full` profile runtime with non-placeholder app/worker services
+  - governance/executive runtime validated through Gemini Flash free-tier provider path with quota accounting
+  - Discord-originated owner command flows validated through the same governed ingress path
 - Keep delivery incremental and evidence-driven across `M5`..`M7`.
 - Preserve fail-closed behavior while adding persistent governance/project contracts.
 
@@ -219,23 +222,35 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 - Deliverables: mandatory PM operations (milestones, decomposition, assignment, reporting) contract-tested.
 
 9. `M7-WP1` Persistent runtime-state adapters + recovery
-- Target modules: runtime-state/communication repositories, service bootstrap dependencies.
-- Deliverables: restart/rehydration preserving idempotency and governance invariants.
+- Target modules: runtime-state/communication repositories, service bootstrap dependencies, governance/agent registry repositories.
+- Deliverables: restart/rehydration preserving idempotency and governance invariants, including institutional-agent bootstrap from persistent state.
 
 10. `M7-WP2` Discord adapter boundary with role/channel constraints
 - Target modules: Discord adapter package + ingress mapping path.
-- Deliverables: canonical envelope mapping, connector verification, specialist-access restrictions in adapter path.
+- Deliverables: canonical envelope mapping, connector verification, specialist-access restrictions in adapter path, and real Discord round-trip validation evidence.
 
-11. `M7-WP3` MVP acceptance matrix and closeout evidence
+11. `M7-WP3` Docker `full` profile runtime cutover
+- Target modules: `compose.yml`, runtime container entrypoints, healthchecks/startup sequencing, operator runbooks.
+- Deliverables: `api_app`, `orchestrator_worker`, and `communication_worker` run real application entrypoints in Docker `full` profile (no placeholder commands).
+
+12. `M7-WP4` Gemini Flash free-tier provider-path activation + quota telemetry validation
+- Target modules: `llm_gateway/providers`, runtime settings/env wiring, budget/quota observability surfaces, acceptance tests.
+- Deliverables: governed `llm_*` dispatch executes through configured Gemini Flash free-tier provider path with deterministic quota-usage evidence and fail-closed behavior on provider/runtime uncertainty.
+
+13. `M7-WP5` MVP acceptance matrix and closeout evidence
 - Target modules: `tests/contract`, `tests/conformance`, MVP evidence docs.
-- Deliverables: end-to-end acceptance across proposal, activation, PM-managed execution, completion approval, and owner notification.
+- Deliverables: end-to-end acceptance across proposal, activation, PM-managed execution, completion approval, owner notification, and full project lifecycle progression evidence.
 
 ### 8.3 MVP Exit Evidence Checklist
 - Proposal lifecycle and approval gates are enforced with canonical state transitions.
 - CWO initialization produces governed project charter/workforce evidence.
 - Project docs persist under canonical system root with type/cap/pointer-hash policy enforcement.
 - Specialist touchability restrictions are enforced (`pm`-only in first MVP).
-- Recovery and Discord adapter paths preserve governance and idempotency invariants.
+- Recovery path preserves governance/idempotency invariants and restores institutional agents.
+- Docker `full` profile runtime is runnable with non-placeholder app/worker services.
+- Gemini Flash free-tier provider path is validated with quota accounting evidence.
+- Discord round-trip owner command path is validated with governed access constraints.
+- Full project lifecycle scenario is validated end-to-end with completion governance chain evidence.
 - MVP evidence pack maps all exit criteria to deterministic test/ops evidence.
 
 ## 9. Tracking Interfaces

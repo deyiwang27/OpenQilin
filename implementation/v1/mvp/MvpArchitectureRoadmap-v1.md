@@ -35,8 +35,12 @@ Still missing or placeholder-heavy for MVP v0.1:
 - MVP control-plane surfaces:
   - owner discussion/governance routers are placeholders
   - project creation and project/agent/budget status contracts are not yet exposed as stable MVP API set
+- Docker runtime surface:
+  - `compose` `full` profile still runs placeholder containers for `api_app`, `orchestrator_worker`, and `communication_worker`
 - Discord adapter:
   - transport assumptions exist, but adapter boundary that maps Discord payloads to canonical owner envelope is not yet a first-class runtime service
+- External provider activation:
+  - Gemini routing profile exists, but provider path is still in-memory deterministic adapter for local/test and not yet validated as real free-tier runtime path
 - Project proposal and approval governance flow:
   - explicit proposal revision/approval lifecycle contracts are not yet implemented end-to-end
 - Project rich-text documentation policy:
@@ -91,16 +95,21 @@ Exit criteria:
 
 ## M7 - Persistence/Recovery + Discord Acceptance Closeout
 Objective:
-- complete runtime persistence/recovery hardening and Discord-governed acceptance evidence
+- complete runtime persistence/recovery hardening, Docker runtime cutover, real Gemini free-tier validation, and Discord-governed acceptance evidence
 
 Work packages:
 1. `M7-WP1`: persistent runtime-state adapters + startup recovery orchestration
 2. `M7-WP2`: Discord adapter service mapping inbound payloads to owner envelope with role/channel constraints
-3. `M7-WP3`: MVP acceptance matrix + evidence pack + closeout checklist (including PM reporting and completion approval path)
+3. `M7-WP3`: Docker `full` profile runtime cutover (replace `api_app`/worker placeholder containers with real runtime entrypoints)
+4. `M7-WP4`: Gemini Flash free-tier provider-path activation + quota accounting validation
+5. `M7-WP5`: MVP acceptance matrix + evidence pack + closeout checklist (including PM reporting, completion approval path, and full lifecycle E2E)
 
 Exit criteria:
-- restart/recovery preserves governance and idempotency invariants
-- Discord-to-governed-ingress path is executable with specialist-access constraints
+- restart/recovery preserves governance and idempotency invariants and restores institutional-agent state
+- Docker `full` profile executes real runtime services (no placeholder app/worker containers)
+- Gemini free-tier provider path is validated through governed dispatch with quota telemetry evidence
+- Discord-to-governed-ingress path is executable end-to-end with specialist-access constraints
+- full project lifecycle (`proposed -> approved -> active -> paused -> completed -> terminated -> archived`) is validated via governed acceptance scenarios
 - MVP v0.1 evidence pack is complete and traceable
 
 ## 6. Design Decisions Locked for MVP v0.1

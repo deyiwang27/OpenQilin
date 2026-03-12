@@ -98,13 +98,18 @@ Exit:
 
 ### M7 MVP Persistence, Adapter, and Acceptance Closeout
 Scope:
-- persistent runtime-state adapters + startup recovery hardening
-- Discord adapter boundary with role/channel constraints
+- persistent runtime-state adapters + startup recovery hardening (including institutional-agent bootstrap)
+- Docker `full` profile runtime cutover for `api_app`, `orchestrator_worker`, and `communication_worker` (placeholder removal)
+- Gemini Flash free-tier provider-path activation and quota-usage telemetry validation
+- Discord adapter boundary with role/channel constraints and real round-trip verification
 - MVP acceptance matrix and evidence-pack closeout
 
 Exit:
-- restart/recovery preserves governance and idempotency invariants
-- Discord-originated owner flows are validated with specialist-access constraints
+- restart/recovery preserves governance and idempotency invariants and rehydrates institutional agents from persistent state
+- Docker `full` profile starts real `api_app`, `orchestrator_worker`, and `communication_worker` runtime entrypoints
+- Gemini Flash free-tier dispatch path is validated end-to-end with quota accounting evidence
+- Discord-originated owner flows are validated end-to-end with specialist-access constraints
+- full project lifecycle (`proposed -> approved -> active -> paused -> completed -> terminated -> archived`) is validated via governed end-to-end acceptance scenario
 - MVP v0.1 evidence pack and closeout checklist are complete
 
 ## 4. First Executable Slice Detail
@@ -120,4 +125,4 @@ Recommended implementation order inside `M1`:
 - Do not start communication reliability hardening before M1 governed path is stable.
 - Do not start release hardening before M2 and M3 produce runnable end-to-end evidence.
 - Do not start M6 recovery hardening before M5 domain persistence contracts are merged.
-- Do not close MVP milestone (M7) before Discord adapter and end-to-end acceptance evidence are both complete.
+- Do not close MVP milestone (M7) before Docker full-profile runtime cutover, Gemini free-tier provider-path validation, Discord round-trip validation, and end-to-end acceptance evidence are all complete.
