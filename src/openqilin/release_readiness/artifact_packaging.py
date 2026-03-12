@@ -69,19 +69,19 @@ def build_release_artifact_index_items() -> tuple[ReleaseArtifactItem, ...]:
         ReleaseArtifactItem(
             artifact_id="rollback_drill_contract",
             description="Rollback drill modes and evidence output contract.",
-            source_path="implementation/v1/planning/M4WP2MigrationRollbackDrill-v1.md",
+            source_path="implementation/v1/quality/ReleaseVersioningAndRollback-v1.md",
             evidence_ref="M4-WP2",
         ),
         ReleaseArtifactItem(
             artifact_id="release_gate_matrix_contract",
             description="Deterministic CI/release-candidate gate matrix contract.",
-            source_path="implementation/v1/planning/M4WP3ReleaseGateHardening-v1.md",
+            source_path="src/openqilin/release_readiness/gate_matrix.py",
             evidence_ref="M4-WP3",
         ),
         ReleaseArtifactItem(
             artifact_id="observability_alert_contract",
             description="Release-readiness dashboard and alert threshold baseline.",
-            source_path="implementation/v1/planning/M4WP1ObservabilityBaseline-v1.md",
+            source_path="src/openqilin/observability/alerts/release_readiness.py",
             evidence_ref="M4-WP1",
         ),
         ReleaseArtifactItem(

@@ -23,14 +23,15 @@ WP closeout issue: `#26` (`M4-WP5: M4 evidence pack and milestone closeout valid
 ## 3. Evidence Map by M4 Exit Checklist
 ### 3.1 Release-readiness dashboards and alerts are defined, runbook-linked, and validated
 - Docs:
-  - `implementation/v1/planning/M4WP1ObservabilityBaseline-v1.md`
+  - `implementation/v1/planning/ReleaseArtifactIndex-v1.md`
   - `implementation/v1/quality/QualityAndDelivery-v1.md`
+- Runtime/scripts:
+  - `src/openqilin/observability/alerts/release_readiness.py`
 - Tests:
   - `tests/unit/test_m4_wp1_observability_release_readiness.py`
 
 ### 3.2 Migration and rollback drills are repeatable with recorded evidence
 - Docs:
-  - `implementation/v1/planning/M4WP2MigrationRollbackDrill-v1.md`
   - `implementation/v1/quality/ReleaseVersioningAndRollback-v1.md`
 - Runtime/scripts:
   - `src/openqilin/apps/admin_cli.py` (`rollback-drill` command)
@@ -41,7 +42,7 @@ WP closeout issue: `#26` (`M4-WP5: M4 evidence pack and milestone closeout valid
 
 ### 3.3 `full` profile smoke and conformance gates are deterministic promotion blockers
 - Docs:
-  - `implementation/v1/planning/M4WP3ReleaseGateHardening-v1.md`
+  - `implementation/v1/quality/QualityAndDelivery-v1.md`
 - Runtime/scripts:
   - `src/openqilin/release_readiness/gate_matrix.py`
   - `ops/scripts/run_release_gate_matrix.py`
@@ -55,7 +56,7 @@ WP closeout issue: `#26` (`M4-WP5: M4 evidence pack and milestone closeout valid
 
 ### 3.4 Release artifact and promotion checklist package is complete and operator-usable
 - Docs:
-  - `implementation/v1/planning/M4WP4ReleaseArtifactPackaging-v1.md`
+  - `implementation/v1/planning/M4EvidencePack-v1.md`
   - `implementation/v1/planning/ReleaseArtifactIndex-v1.md`
   - `implementation/v1/quality/ReleasePromotionChecklist-v1.md`
 - Runtime/scripts:

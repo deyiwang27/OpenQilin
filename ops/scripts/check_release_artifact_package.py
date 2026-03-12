@@ -36,10 +36,10 @@ def main() -> int:
 
     promotion_checklist = repo_root / "implementation/v1/quality/ReleasePromotionChecklist-v1.md"
     artifact_index = repo_root / "implementation/v1/planning/ReleaseArtifactIndex-v1.md"
-    wp4_doc = repo_root / "implementation/v1/planning/M4WP4ReleaseArtifactPackaging-v1.md"
-    for path in (promotion_checklist, artifact_index, wp4_doc):
+    m4_evidence_pack = repo_root / "implementation/v1/planning/M4EvidencePack-v1.md"
+    for path in (promotion_checklist, artifact_index, m4_evidence_pack):
         if not path.exists():
-            failures.append(f"required WP4 document missing: {path.relative_to(repo_root)}")
+            failures.append(f"required M4 document missing: {path.relative_to(repo_root)}")
 
     if promotion_checklist.exists():
         checklist_text = _load_text(promotion_checklist)
@@ -61,7 +61,7 @@ def main() -> int:
         for snippet in (
             "compose.yml",
             "implementation/v1/quality/ReleasePromotionChecklist-v1.md",
-            "implementation/v1/planning/M4WP3ReleaseGateHardening-v1.md",
+            "src/openqilin/release_readiness/gate_matrix.py",
         ):
             if snippet not in artifact_text:
                 failures.append(
