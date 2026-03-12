@@ -15,29 +15,30 @@ Status legend:
 - `done`
 
 Current context:
-- Active branch: `feat/29-m5-governance-activation-kickoff`
-- Current scope: MVP v0.1 post-M4 roadmap (`M5`..`M7`)
+- Active branch: `feat/35-m6-documentation-access-governance-kickoff`
+- Current scope: MVP v0.1 post-M4 roadmap (`M6`..`M7`)
 - Baseline roadmap: `implementation/v1/mvp/MvpArchitectureRoadmap-v1.md`
 
 Milestone summary:
 - `M0`..`M4`: `done` (see `implementation/v1/planning/ImplementationProgress-v1.md` and evidence packs)
-- `M5`: `in_progress`
-- `M6`: `todo`
+- `M5`: `done`
+- `M6`: `in_progress`
 - `M7`: `todo`
 
 Checklist:
-1) `M5 MVP Proposal and Governance Activation` (`issue #29`) - `in_progress`
+1) `M5 MVP Proposal and Governance Activation` (`issue #29`) - `done`
 - `M5-WP1` project lifecycle guard lock - `done` (`issue #30`)
 - `M5-WP2` proposal discussion + triad approval APIs (`owner`, `ceo`, `cwo`) - `done` (`issue #31`)
 - `M5-WP3` CWO initialization flow (scope/objective/budget/metrics) - `done` (`issue #32`)
 - `M5-WP4` workforce template binding (`project_manager` active, `domain_leader` declared-disabled) - `done` (`issue #33`)
-- milestone closeout PR + parent issue close for `#29` - `todo`
+- milestone closeout PR + parent issue close for `#29` - `done` (`PR #34`, merge `b997c46`)
 
-2) `M6 MVP Documentation and Access Governance` - `todo`
-- `M6-WP1` canonical project file root (`${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`) + DB pointer/hash model - `todo`
-- `M6-WP2` project document policy (approved types + per-type caps + fail-closed over-cap) - `todo`
-- `M6-WP3` specialist touchability enforcement (`project_manager`-only direct path) - `todo`
-- `M6-WP4` Project Manager mandatory-operations template enforcement - `todo`
+2) `M6 MVP Documentation and Access Governance` (`issue #35`) - `in_progress`
+- kickoff/decomposition complete with child work packages (`#36`..`#39`) - `done`
+- `M6-WP1` canonical project file root (`${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`) + DB pointer/hash model - `todo` (`issue #36`)
+- `M6-WP2` project document policy (approved types + per-type caps + fail-closed over-cap) - `todo` (`issue #37`)
+- `M6-WP3` specialist touchability enforcement (`project_manager`-only direct path) - `todo` (`issue #38`)
+- `M6-WP4` Project Manager mandatory-operations template enforcement - `todo` (`issue #39`)
 
 3) `M7 MVP Persistence, Adapter, and Acceptance` - `todo`
 - `M7-WP1` persistent runtime-state adapters + startup recovery hardening - `todo`
@@ -48,7 +49,6 @@ Checklist:
 - `M7-WP6` MVP acceptance matrix + evidence pack closeout - `todo`
 
 Carryover follow-ups:
-- replace placeholder compose services (`api_app`, `orchestrator_worker`, `communication_worker`) with runnable entrypoints and extend smoke-gate conformance coverage - `todo`
 - enforce non-default connector shared secret in non-local environments at runtime validation layer - `todo`
 
 Update routine:
