@@ -152,7 +152,7 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 
 3. `M4-WP3` Full-profile smoke + conformance gate hardening (`issue #24`)
 - Target modules: `compose.yml`, CI/release gate workflows, smoke/conformance suites.
-- Deliverables: stable release-gate command matrix and deterministic pass/fail criteria for promotion.
+- Deliverables: stable release-gate command matrix and deterministic pass/fail criteria for promotion (`release_readiness/gate_matrix.py`, `ops/scripts/run_release_gate_matrix.py`, CI `check_release_gate_matrix.py` gate, smoke/conformance conformance coverage).
 
 4. `M4-WP4` Release artifact + promotion checklist packaging (`issue #25`)
 - Target modules: release docs/checklists/evidence index artifacts.

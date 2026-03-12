@@ -22,6 +22,8 @@ Local execution:
 uv run pytest tests/unit tests/component
 uv run pytest tests/contract tests/integration
 uv run pytest tests/conformance
+uv run python ops/scripts/run_release_gate_matrix.py --scope ci
+uv run python ops/scripts/run_release_gate_matrix.py --scope release-candidate --dry-run
 ```
 
 Fixture rules:
@@ -45,6 +47,7 @@ Mandatory PR checks:
 - component tests
 - contract tests
 - spec/conformance integrity checks
+- release-gate matrix checks (`ops/scripts/check_release_gate_matrix.py`)
 
 Additional checks when relevant:
 - integration tests for runtime-flow changes
@@ -77,6 +80,7 @@ Manual promotion gates:
 - migration plan available
 - config/secret readiness confirmed
 - rollback path documented
+- release-candidate matrix gate run includes smoke + conformance checks (`ops/scripts/run_release_gate_matrix.py --scope release-candidate`)
 
 ## 6. Artifact Policy
 - build definitions must be reproducible from the repo

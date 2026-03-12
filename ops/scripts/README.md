@@ -7,3 +7,5 @@ Current baseline scripts:
 - `check_spec_integrity.py`: validates reliability-profile doc constants and canonical error-code casing to catch spec drift in CI.
 - `run_migration_rollback_drill.py`: executes migration validation + rollback drill and writes evidence JSON.
 - `check_migration_rollback_readiness.py`: enforces rollback-drill policy/gate integrity in CI.
+- `run_release_gate_matrix.py`: executes deterministic CI/release-candidate gate command matrix.
+- `check_release_gate_matrix.py`: validates matrix/workflow/compose/doc alignment for release-gate hardening.
