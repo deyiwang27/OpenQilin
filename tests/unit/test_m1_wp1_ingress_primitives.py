@@ -53,6 +53,7 @@ def test_validate_owner_command_envelope_success() -> None:
     assert envelope.command == "run_task"
     assert envelope.target == "sandbox"
     assert envelope.args == ("alpha", "beta")
+    assert dict(envelope.metadata)["recipient_types"] == "runtime"
 
 
 def test_validate_owner_command_envelope_rejects_blank_args() -> None:

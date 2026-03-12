@@ -27,15 +27,17 @@ def build_owner_command_request_dict(
     connector_channel: str = "discord",
     target: str = "sandbox",
     content: str = "owner command",
+    recipients: list[dict[str, str]] | None = None,
 ) -> dict[str, Any]:
     args = args or []
     idempotency_key = idempotency_key or f"idem-test-{uuid4()}"
     trace_id = trace_id or f"trace-test-{uuid4()}"
+    normalized_recipients = recipients or [{"recipient_id": "sandbox", "recipient_type": "runtime"}]
     core_payload: dict[str, Any] = {
         "message_id": f"msg-test-{uuid4()}",
         "trace_id": trace_id,
         "sender": {"actor_id": actor_id, "actor_role": actor_role},
-        "recipients": [{"recipient_id": "sandbox", "recipient_type": "runtime"}],
+        "recipients": normalized_recipients,
         "message_type": "command",
         "priority": "normal",
         "timestamp": datetime.now(tz=UTC).isoformat(),

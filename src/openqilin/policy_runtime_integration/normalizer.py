@@ -9,6 +9,14 @@ from openqilin.policy_runtime_integration.models import PolicyEvaluationInput
 def normalize_policy_input(task: TaskRecord) -> PolicyEvaluationInput:
     """Normalize admitted task into policy-runtime input shape."""
 
+    metadata = dict(task.metadata)
+    recipient_types_raw = metadata.get("recipient_types", "")
+    recipient_types = tuple(
+        token
+        for token in (value.strip().lower() for value in recipient_types_raw.split(","))
+        if token
+    )
+
     return PolicyEvaluationInput(
         task_id=task.task_id,
         request_id=task.request_id,
@@ -19,6 +27,7 @@ def normalize_policy_input(task: TaskRecord) -> PolicyEvaluationInput:
         connector=task.connector,
         action=task.command,
         target=task.target,
+        recipient_types=recipient_types,
         args=task.args,
         project_id=task.project_id,
     )

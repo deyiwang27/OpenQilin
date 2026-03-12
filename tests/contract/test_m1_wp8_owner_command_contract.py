@@ -94,3 +94,33 @@ def test_owner_command_denied_response_contract() -> None:
     assert isinstance(error["message"], str) and error["message"]
     assert error["details"]["source"] == "policy_runtime"
     assert isinstance(error["details"]["task_id"], str) and error["details"]["task_id"]
+
+
+def test_owner_command_specialist_touchability_denied_response_contract() -> None:
+    client = TestClient(create_control_plane_app())
+    payload = build_owner_command_request_dict(
+        action="msg_notify",
+        args=["deliver update"],
+        actor_id="owner_contract_specialist_block",
+        idempotency_key="idem-contract-specialist-block-12345",
+        trace_id="trace-contract-specialist-block",
+        target="communication",
+        recipients=[{"recipient_id": "specialist_1", "recipient_type": "specialist"}],
+    )
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers=build_owner_command_headers(payload),
+        json=payload,
+    )
+
+    body = response.json()
+    assert response.status_code == 403
+    assert body["status"] == "denied"
+
+    error = body["error"]
+    assert error["code"] == "governance_specialist_direct_command_denied"
+    assert error["class"] == "authorization_error"
+    assert error["source_component"] == "policy_engine"
+    assert error["details"]["source"] == "policy_runtime"
+    assert isinstance(error["details"]["task_id"], str) and error["details"]["task_id"]

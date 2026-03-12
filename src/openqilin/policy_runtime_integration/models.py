@@ -21,6 +21,7 @@ class PolicyEvaluationInput:
     connector: str
     action: str
     target: str
+    recipient_types: tuple[str, ...]
     args: tuple[str, ...]
     project_id: str | None
 
