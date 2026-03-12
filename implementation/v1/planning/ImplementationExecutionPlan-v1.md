@@ -165,9 +165,10 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 ### 7.3 M4 Exit Evidence Checklist
 - Release-readiness dashboards/alerts are defined, linked to runbooks, and validated.
 - Migration/rollback drills are repeatable with recorded evidence.
-- `full` profile smoke + conformance gates are deterministic promotion blockers.
+- `full` profile admin-bootstrap smoke + conformance gates are deterministic promotion blockers.
 - Release artifact/promotion checklist package is complete and operator-usable.
 - Full quality/release gates pass for merged M4 scope.
+- Residual scope boundary is documented: `api_app`/worker placeholder containers are excluded from M4 promotion evidence and tracked as post-M4 hardening work.
 
 ## 8. Tracking Interfaces
 ### 8.1 Issue Contract Fields

@@ -35,6 +35,11 @@ Work package issue: `#24`
 - Release-candidate scope includes all promotion-required commands plus:
   - `docker compose --profile full run --rm admin bootstrap --smoke-in-process`
 
+## 3.1 Scope Boundary Note
+- The M4 smoke gate validates the admin bootstrap/runtime integration path only.
+- Compose services `api_app`, `orchestrator_worker`, and `communication_worker` remain placeholder containers in M4 and are out of scope for M4 promotion evidence.
+- Post-M4 hardening should replace these placeholders with real entrypoints and extend smoke-gate assertions accordingly.
+
 ## 4. Validation Commands
 - `uv run ruff check src/openqilin/release_readiness ops/scripts/check_release_gate_matrix.py ops/scripts/run_release_gate_matrix.py tests/unit/test_m4_wp3_release_gate_matrix.py tests/conformance/test_m4_wp3_release_gate_hardening_conformance.py`
 - `uv run mypy .`

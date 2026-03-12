@@ -72,6 +72,7 @@ Release blocked when:
 - restore/recovery evidence is missing
 - unresolved high-priority implementation blockers remain
 - unresolved high-risk governance drift or unaddressed folder-fit/duplication conflicts remain
+- non-local environments use default connector signing secret (`OPENQILIN_CONNECTOR_SHARED_SECRET=dev-openqilin-secret`)
 
 ## 5. Delivery Posture
 Initial v1 posture:
@@ -82,8 +83,10 @@ Manual promotion gates:
 - passing CI
 - migration plan available
 - config/secret readiness confirmed
+- connector signing secret override is confirmed for non-local environments (`OPENQILIN_CONNECTOR_SHARED_SECRET` must not remain default)
 - rollback path documented
 - release-candidate matrix gate run includes smoke + conformance checks (`ops/scripts/run_release_gate_matrix.py --scope release-candidate`)
+- smoke evidence scope is explicitly recorded (M4 validates `admin bootstrap --smoke-in-process`; api/worker placeholder containers are out of current promotion scope)
 - promotion checklist completed and artifact index references verified (`implementation/v1/quality/ReleasePromotionChecklist-v1.md`, `implementation/v1/planning/ReleaseArtifactIndex-v1.md`)
 
 ## 6. Artifact Policy

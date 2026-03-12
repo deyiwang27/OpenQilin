@@ -148,6 +148,7 @@ Status values:
 - `2026-03-12`: `M4-WP5` delivered in code/docs: M4 evidence pack published (`implementation/v1/planning/M4EvidencePack-v1.md`) with explicit exit-criteria mapping, validation command set, and milestone closeout workflow linkage.
 - `2026-03-12`: `M4-WP5` validation completed on branch `feat/21-m4-hardening-release-kickoff` (`uv run ruff check implementation/v1/planning/M4EvidencePack-v1.md implementation/v1/planning/ReleaseArtifactIndex-v1.md tests/conformance/test_m4_wp5_evidence_pack_conformance.py`, `uv run mypy .`, `uv run pytest tests/conformance/test_m4_wp5_evidence_pack_conformance.py` => `2 passed`, `uv run python ops/scripts/check_migration_rollback_readiness.py`, `uv run python ops/scripts/check_release_gate_matrix.py`, `uv run python ops/scripts/check_release_artifact_package.py`, `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` => `158 passed`).
 - `2026-03-12`: `M4-WP5` issue evidence synchronized on issues `#26` and `#21`, and issue `#26` closed after push (`714ed4d`).
+- `2026-03-12`: M4 documentation alignment update completed: release smoke-gate scope boundary vs placeholder compose services is now explicit across milestone/plan/quality/evidence docs, and non-local connector shared-secret override is now documented as a release blocker.
 
 ## 6. Sample Progress Update Entry
 Use this shape when recording weekly or PR-linked evidence:

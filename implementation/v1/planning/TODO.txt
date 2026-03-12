@@ -221,6 +221,8 @@ Checklist:
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/25#issuecomment-4044265685`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044442744`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/26#issuecomment-4044441059`
+- post-M4 follow-up: replace placeholder compose services (`api_app`, `orchestrator_worker`, `communication_worker`) with runnable entrypoints and extend smoke-gate conformance coverage - `todo`
+- post-M4 follow-up: enforce non-default connector shared secret in non-local environments at runtime validation layer - `todo`
 
 Update routine:
 - On issue start: add/update item here with branch + issue id.

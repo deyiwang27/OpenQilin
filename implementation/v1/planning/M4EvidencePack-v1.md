@@ -49,6 +49,9 @@ WP closeout issue: `#26` (`M4-WP5: M4 evidence pack and milestone closeout valid
 - Tests:
   - `tests/unit/test_m4_wp3_release_gate_matrix.py`
   - `tests/conformance/test_m4_wp3_release_gate_hardening_conformance.py`
+- Scope boundary:
+  - The M4 release-candidate smoke contract validates `admin bootstrap --smoke-in-process` under `compose --profile full`.
+  - `api_app`, `orchestrator_worker`, and `communication_worker` compose services are placeholder containers in M4 and are excluded from M4 promotion evidence.
 
 ### 3.4 Release artifact and promotion checklist package is complete and operator-usable
 - Docs:
@@ -79,7 +82,8 @@ WP closeout issue: `#26` (`M4-WP5: M4 evidence pack and milestone closeout valid
 
 2. Final validation results are posted on parent issue `#21`.
 - WP-level evidence already synchronized for `#22`..`#25` and parent updates.
-- WP5 action: post final validation summary on `#21` and reference this evidence pack.
+- Completed: final validation summary posted on `#21` and references this evidence pack (`https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044442744`).
+- Completed: WP5 implementation evidence posted on `#26` (`https://github.com/deyiwang27/OpenQilin/issues/26#issuecomment-4044441059`).
 
 3. Milestone closeout PR references and closure steps are documented.
 - Closeout sequence for M4:
@@ -95,5 +99,5 @@ WP closeout issue: `#26` (`M4-WP5: M4 evidence pack and milestone closeout valid
 - `M4-WP2` issue + evidence: https://github.com/deyiwang27/OpenQilin/issues/23, https://github.com/deyiwang27/OpenQilin/issues/23#issuecomment-4043581589
 - `M4-WP3` issue + evidence: https://github.com/deyiwang27/OpenQilin/issues/24, https://github.com/deyiwang27/OpenQilin/issues/24#issuecomment-4043616599
 - `M4-WP4` issue + evidence: https://github.com/deyiwang27/OpenQilin/issues/25, https://github.com/deyiwang27/OpenQilin/issues/25#issuecomment-4044250483, https://github.com/deyiwang27/OpenQilin/issues/25#issuecomment-4044265685
-- Parent progress updates: https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043167927, https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043618833, https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044266430
-- `M4-WP5` issue: https://github.com/deyiwang27/OpenQilin/issues/26
+- Parent progress updates: https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043167927, https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043618833, https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044266430, https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044442744
+- `M4-WP5` issue + evidence: https://github.com/deyiwang27/OpenQilin/issues/26, https://github.com/deyiwang27/OpenQilin/issues/26#issuecomment-4044441059

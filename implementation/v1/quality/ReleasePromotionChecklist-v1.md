@@ -8,6 +8,7 @@
 - release version tag candidate (for example `0.1.0-rc1`)
 - target git commit hash
 - CI run URL with passing required checks
+- non-local secret readiness proof (`OPENQILIN_CONNECTOR_SHARED_SECRET` override confirmation)
 - rollback drill evidence reference from `M4-WP2`
 - release-gate matrix evidence reference from `M4-WP3`
 
@@ -22,7 +23,7 @@
 ### D2_release_candidate_gate_matrix
 - Owner Role: `auditor`
 - Decision: Do release-candidate gate matrix outputs confirm smoke + conformance readiness?
-- Pass Criteria: `ops/scripts/run_release_gate_matrix.py --scope release-candidate` completes with no failed step.
+- Pass Criteria: `ops/scripts/run_release_gate_matrix.py --scope release-candidate` completes with no failed step and evidence records current smoke scope (`admin bootstrap --smoke-in-process`).
 - Fail Action: Mark release candidate non-promotable and return to engineering remediation.
 - Rollback Hook: If deployment started, roll back application to last compatible release build.
 
