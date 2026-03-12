@@ -16,8 +16,8 @@ Status legend:
 
 Current focus:
 - Milestone: `M4 Hardening and Release Readiness`
-- Primary issue: `TBD`
-- Active branch: `main`
+- Primary issue: `#21` (M4 Hardening and Release Readiness Kickoff)
+- Active branch: `feat/21-m4-hardening-release-kickoff`
 
 Checklist:
 0) Repo structure and documentation consistency review (post-migration) - `done`
@@ -165,9 +165,17 @@ Checklist:
 - PR: `https://github.com/deyiwang27/OpenQilin/pull/19`
 - milestone closeout: PR `#19` merged to `main` (`1f933150a9d7ed01e3ba69358669693c68e4b23a`) and issue `#13` closed - `done`
 
-4) M4 hardening prep - `todo`
-- release-gate checklist draft
-- rollback validation checklist draft
+4) M4 hardening and release readiness (`issue #21`) - `in_progress`
+- kickoff issue created with labels (`milestone:M4`, `type:feature`, `area:operations`, `risk:release-readiness`) - `done`
+- implementation branch created and pushed: `feat/21-m4-hardening-release-kickoff` - `done`
+- decomposition + dependency wiring with child WPs (`#22`..`#26`) - `done`
+- labels applied for M4 children (`milestone:M4`, `type:*`, `area:*`, `risk:release-readiness`) - `done`
+- `M4-WP1` observability dashboards + release alert thresholds (`issue #22`) - `todo`
+- `M4-WP2` migration validation + rollback drill automation (`issue #23`) - `todo`
+- `M4-WP3` full-profile smoke + conformance gate hardening (`issue #24`) - `todo`
+- `M4-WP4` release artifact + promotion checklist packaging (`issue #25`) - `todo`
+- `M4-WP5` M4 evidence pack + milestone closeout validation (`issue #26`) - `todo`
+- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043167927`
 
 Update routine:
 - On issue start: add/update item here with branch + issue id.
