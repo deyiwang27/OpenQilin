@@ -14,6 +14,7 @@ from openqilin.control_plane.api.dependencies import (
 from openqilin.control_plane.handlers.governance_handler import (
     GovernanceHandlerError,
     approve_project_proposal,
+    initialize_project_by_cwo,
 )
 from openqilin.control_plane.identity.principal_resolver import (
     PrincipalResolutionError,
@@ -22,6 +23,7 @@ from openqilin.control_plane.identity.principal_resolver import (
 from openqilin.control_plane.schemas.governance import (
     GovernanceApiError,
     GovernanceApiResponse,
+    ProjectInitializationRequest,
     ProposalApprovalRequest,
 )
 from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
@@ -101,7 +103,13 @@ def _map_handler_error(
             ),
             "denied",
         )
-    if error.code in {"governance_project_not_proposed", "governance_approval_role_conflict"}:
+    if error.code in {
+        "governance_project_not_proposed",
+        "governance_project_not_approved",
+        "governance_project_already_initialized",
+        "governance_approval_role_conflict",
+        "governance_project_invalid_budget",
+    }:
         return (
             status.HTTP_409_CONFLICT,
             GovernanceApiError(
@@ -203,5 +211,97 @@ def approve_proposal(
             "status": outcome.project.status,
             "approval_recorded": outcome.approval_recorded,
             "approval_roles": list(outcome.approval_roles),
+        },
+    )
+
+
+@router.post(
+    "/v1/governance/projects/{project_id}/initialize",
+    response_model=GovernanceApiResponse,
+)
+def initialize_project(
+    project_id: str,
+    payload: ProjectInitializationRequest,
+    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
+    audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
+    external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
+    external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
+    actor_external_id_header: Annotated[
+        str | None, Header(alias="X-OpenQilin-Actor-External-Id")
+    ] = None,
+    actor_role_header: Annotated[str | None, Header(alias="X-OpenQilin-Actor-Role")] = None,
+) -> JSONResponse:
+    """Run CWO initialization workflow and activate approved project."""
+
+    resolved = _resolve_principal(
+        external_channel_header=external_channel_header,
+        external_actor_id_header=external_actor_id_header,
+        actor_external_id_header=actor_external_id_header,
+        actor_role_header=actor_role_header,
+    )
+    if isinstance(resolved, GovernanceApiError):
+        return _governance_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            trace_id=payload.trace_id,
+            status_value="error",
+            error=resolved,
+        )
+    principal_id, principal_role = resolved
+
+    try:
+        outcome = initialize_project_by_cwo(
+            repository=governance_repository,
+            project_id=project_id,
+            actor_id=principal_id,
+            actor_role=principal_role,
+            trace_id=payload.trace_id,
+            objective=payload.objective,
+            budget_currency_total=payload.budget_currency_total,
+            budget_quota_total=payload.budget_quota_total,
+            metric_plan=payload.metric_plan,
+            workforce_plan=payload.workforce_plan,
+        )
+    except GovernanceHandlerError as error:
+        status_code, response_error, status_value = _map_handler_error(error)
+        return _governance_response(
+            status_code=status_code,
+            trace_id=payload.trace_id,
+            status_value=status_value,
+            error=response_error,
+        )
+
+    audit_writer.write_event(
+        event_type="project.initialized",
+        outcome="ok",
+        trace_id=payload.trace_id,
+        request_id=None,
+        task_id=None,
+        principal_id=principal_id,
+        principal_role=principal_role,
+        source="governance",
+        reason_code=None,
+        message="cwo project initialization completed",
+        payload={
+            "project_id": project_id,
+            "status": outcome.project.status,
+            "budget_currency_total": payload.budget_currency_total,
+            "budget_quota_total": payload.budget_quota_total,
+        },
+    )
+    initialization = outcome.project.initialization
+    return _governance_response(
+        status_code=status.HTTP_200_OK,
+        trace_id=payload.trace_id,
+        status_value="ok",
+        data={
+            "project_id": project_id,
+            "status": outcome.project.status,
+            "objective": outcome.project.objective,
+            "budget_currency_total": initialization.budget_currency_total
+            if initialization
+            else None,
+            "budget_quota_total": initialization.budget_quota_total if initialization else None,
+            "metric_plan": dict(initialization.metric_plan) if initialization else {},
+            "workforce_plan": dict(initialization.workforce_plan) if initialization else {},
         },
     )

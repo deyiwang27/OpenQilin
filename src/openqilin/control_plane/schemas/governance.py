@@ -73,6 +73,19 @@ class ProposalApprovalRequest(BaseModel):
     trace_id: str = Field(min_length=1, max_length=128)
 
 
+class ProjectInitializationRequest(BaseModel):
+    """CWO project initialization payload."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str = Field(min_length=1, max_length=128)
+    objective: str = Field(min_length=1, max_length=4000)
+    budget_currency_total: float = Field(ge=0)
+    budget_quota_total: float = Field(ge=0)
+    metric_plan: dict[str, str] = Field(default_factory=dict)
+    workforce_plan: dict[str, str] = Field(default_factory=dict)
+
+
 class GovernanceApiError(BaseModel):
     """Canonical governance API error payload."""
 

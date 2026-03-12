@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Mapping
 
 from openqilin.data_access.repositories.governance import (
     GovernanceRepositoryError,
@@ -31,6 +32,13 @@ class ProposalApprovalOutcome:
     project: ProjectRecord
     approval_recorded: bool
     approval_roles: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ProjectInitializationOutcome:
+    """Outcome returned by CWO project initialization workflow."""
+
+    project: ProjectRecord
 
 
 def submit_proposal_message(
@@ -107,3 +115,41 @@ def latest_approval_for_role(
         if approval.actor_role == role:
             return approval
     return None
+
+
+def initialize_project_by_cwo(
+    *,
+    repository: InMemoryGovernanceRepository,
+    project_id: str,
+    actor_id: str,
+    actor_role: str,
+    trace_id: str,
+    objective: str,
+    budget_currency_total: float,
+    budget_quota_total: float,
+    metric_plan: Mapping[str, object] | None,
+    workforce_plan: Mapping[str, object] | None,
+) -> ProjectInitializationOutcome:
+    """Run CWO-only project initialization contract and activate project."""
+
+    normalized_role = actor_role.strip().lower()
+    if normalized_role != "cwo":
+        raise GovernanceHandlerError(
+            code="governance_role_forbidden",
+            message="project initialization is limited to cwo",
+        )
+    try:
+        project = repository.initialize_project(
+            project_id=project_id,
+            objective=objective,
+            budget_currency_total=budget_currency_total,
+            budget_quota_total=budget_quota_total,
+            metric_plan=metric_plan,
+            workforce_plan=workforce_plan,
+            actor_id=actor_id,
+            actor_role=normalized_role,
+            trace_id=trace_id,
+        )
+    except GovernanceRepositoryError as error:
+        raise GovernanceHandlerError(code=error.code, message=error.message) from error
+    return ProjectInitializationOutcome(project=project)

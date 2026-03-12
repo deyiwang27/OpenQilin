@@ -64,6 +64,21 @@ class ProposalApprovalRecord:
 
 
 @dataclass(frozen=True, slots=True)
+class ProjectInitializationSnapshot:
+    """Persisted CWO initialization charter for one project."""
+
+    objective: str
+    budget_currency_total: float
+    budget_quota_total: float
+    metric_plan: tuple[tuple[str, str], ...]
+    workforce_plan: tuple[tuple[str, str], ...]
+    actor_id: str
+    actor_role: str
+    trace_id: str
+    initialized_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
 class ProjectRecord:
     """Persisted governance project state."""
 
@@ -77,6 +92,7 @@ class ProjectRecord:
     transitions: tuple[ProjectStatusTransitionRecord, ...] = ()
     proposal_messages: tuple[ProposalMessageRecord, ...] = ()
     proposal_approvals: tuple[ProposalApprovalRecord, ...] = ()
+    initialization: ProjectInitializationSnapshot | None = None
 
 
 class InMemoryGovernanceRepository:
@@ -292,3 +308,78 @@ class InMemoryGovernanceRepository:
     def _has_triad_approvals(project: ProjectRecord) -> bool:
         roles = {approval.actor_role for approval in project.proposal_approvals}
         return {"owner", "ceo", "cwo"}.issubset(roles)
+
+    def initialize_project(
+        self,
+        *,
+        project_id: str,
+        objective: str,
+        budget_currency_total: float,
+        budget_quota_total: float,
+        metric_plan: Mapping[str, object] | None,
+        workforce_plan: Mapping[str, object] | None,
+        actor_id: str,
+        actor_role: str,
+        trace_id: str,
+    ) -> ProjectRecord:
+        """Persist CWO initialization charter and promote approved project to active."""
+
+        project = self._projects_by_id.get(project_id)
+        if project is None:
+            raise GovernanceRepositoryError(
+                code="governance_project_missing",
+                message=f"project not found: {project_id}",
+            )
+        if project.status != "approved":
+            raise GovernanceRepositoryError(
+                code="governance_project_not_approved",
+                message="project initialization requires approved status",
+            )
+        if project.initialization is not None:
+            raise GovernanceRepositoryError(
+                code="governance_project_already_initialized",
+                message="project has already been initialized",
+            )
+        if budget_currency_total < 0 or budget_quota_total < 0:
+            raise GovernanceRepositoryError(
+                code="governance_project_invalid_budget",
+                message="project budget totals must be non-negative",
+            )
+
+        snapshot = ProjectInitializationSnapshot(
+            objective=objective.strip(),
+            budget_currency_total=float(budget_currency_total),
+            budget_quota_total=float(budget_quota_total),
+            metric_plan=(
+                tuple(sorted((str(key), str(value)) for key, value in metric_plan.items()))
+                if metric_plan is not None
+                else ()
+            ),
+            workforce_plan=(
+                tuple(sorted((str(key), str(value)) for key, value in workforce_plan.items()))
+                if workforce_plan is not None
+                else ()
+            ),
+            actor_id=actor_id.strip(),
+            actor_role=actor_role.strip(),
+            trace_id=trace_id.strip(),
+            initialized_at=datetime.now(tz=UTC),
+        )
+        updated = replace(
+            project,
+            objective=snapshot.objective,
+            updated_at=snapshot.initialized_at,
+            initialization=snapshot,
+        )
+        self._projects_by_id[project_id] = updated
+        return self.transition_project_status(
+            project_id=project_id,
+            next_status="active",
+            reason_code="cwo_project_initialization",
+            actor_role=actor_role,
+            trace_id=trace_id,
+            metadata={
+                "budget_currency_total": snapshot.budget_currency_total,
+                "budget_quota_total": snapshot.budget_quota_total,
+            },
+        )
