@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 from typing import Mapping
 
@@ -39,6 +40,18 @@ class ProjectInitializationOutcome:
     """Outcome returned by CWO project initialization workflow."""
 
     project: ProjectRecord
+
+
+@dataclass(frozen=True, slots=True)
+class WorkforceBindingOutcome:
+    """Outcome returned by CWO workforce template binding operation."""
+
+    project: ProjectRecord
+    role: str
+    binding_status: str
+    template_id: str
+    llm_routing_profile: str
+    system_prompt_hash: str
 
 
 def submit_proposal_message(
@@ -153,3 +166,54 @@ def initialize_project_by_cwo(
     except GovernanceRepositoryError as error:
         raise GovernanceHandlerError(code=error.code, message=error.message) from error
     return ProjectInitializationOutcome(project=project)
+
+
+def bind_workforce_template_by_cwo(
+    *,
+    repository: InMemoryGovernanceRepository,
+    project_id: str,
+    actor_id: str,
+    actor_role: str,
+    trace_id: str,
+    role: str,
+    template_id: str,
+    llm_routing_profile: str,
+    system_prompt: str,
+) -> WorkforceBindingOutcome:
+    """Bind workforce template package under CWO-only governance contract."""
+
+    normalized_actor_role = actor_role.strip().lower()
+    if normalized_actor_role != "cwo":
+        raise GovernanceHandlerError(
+            code="governance_role_forbidden",
+            message="workforce template binding is limited to cwo",
+        )
+    system_prompt_hash = hashlib.sha256(system_prompt.encode("utf-8")).hexdigest()
+    try:
+        binding = repository.bind_workforce_template(
+            project_id=project_id,
+            role=role,
+            template_id=template_id,
+            llm_routing_profile=llm_routing_profile,
+            system_prompt_hash=system_prompt_hash,
+            actor_id=actor_id,
+            actor_role=normalized_actor_role,
+            trace_id=trace_id,
+        )
+    except GovernanceRepositoryError as error:
+        raise GovernanceHandlerError(code=error.code, message=error.message) from error
+
+    project = repository.get_project(project_id)
+    if project is None:
+        raise GovernanceHandlerError(
+            code="governance_project_missing",
+            message=f"project not found: {project_id}",
+        )
+    return WorkforceBindingOutcome(
+        project=project,
+        role=binding.role,
+        binding_status=binding.binding_status,
+        template_id=binding.template_id,
+        llm_routing_profile=binding.llm_routing_profile,
+        system_prompt_hash=binding.system_prompt_hash,
+    )

@@ -86,6 +86,18 @@ class ProjectInitializationRequest(BaseModel):
     workforce_plan: dict[str, str] = Field(default_factory=dict)
 
 
+class WorkforceTemplateBindingRequest(BaseModel):
+    """CWO workforce template binding payload."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str = Field(min_length=1, max_length=128)
+    role: Literal["pm", "domain_lead"]
+    template_id: str = Field(min_length=1, max_length=128)
+    llm_routing_profile: str = Field(min_length=1, max_length=128)
+    system_prompt: str = Field(min_length=1, max_length=20000)
+
+
 class GovernanceApiError(BaseModel):
     """Canonical governance API error payload."""
 

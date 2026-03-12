@@ -14,6 +14,7 @@ from openqilin.control_plane.api.dependencies import (
 from openqilin.control_plane.handlers.governance_handler import (
     GovernanceHandlerError,
     approve_project_proposal,
+    bind_workforce_template_by_cwo,
     initialize_project_by_cwo,
 )
 from openqilin.control_plane.identity.principal_resolver import (
@@ -25,6 +26,7 @@ from openqilin.control_plane.schemas.governance import (
     GovernanceApiResponse,
     ProjectInitializationRequest,
     ProposalApprovalRequest,
+    WorkforceTemplateBindingRequest,
 )
 from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
 from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
@@ -106,8 +108,11 @@ def _map_handler_error(
     if error.code in {
         "governance_project_not_proposed",
         "governance_project_not_approved",
+        "governance_project_not_active",
         "governance_project_already_initialized",
         "governance_approval_role_conflict",
+        "governance_pm_binding_exists",
+        "governance_workforce_role_invalid",
         "governance_project_invalid_budget",
     }:
         return (
@@ -303,5 +308,94 @@ def initialize_project(
             "budget_quota_total": initialization.budget_quota_total if initialization else None,
             "metric_plan": dict(initialization.metric_plan) if initialization else {},
             "workforce_plan": dict(initialization.workforce_plan) if initialization else {},
+        },
+    )
+
+
+@router.post(
+    "/v1/governance/projects/{project_id}/workforce/bind",
+    response_model=GovernanceApiResponse,
+)
+def bind_workforce_template(
+    project_id: str,
+    payload: WorkforceTemplateBindingRequest,
+    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
+    audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
+    external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
+    external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
+    actor_external_id_header: Annotated[
+        str | None, Header(alias="X-OpenQilin-Actor-External-Id")
+    ] = None,
+    actor_role_header: Annotated[str | None, Header(alias="X-OpenQilin-Actor-Role")] = None,
+) -> JSONResponse:
+    """Bind workforce template package for PM or declared-disabled domain lead."""
+
+    resolved = _resolve_principal(
+        external_channel_header=external_channel_header,
+        external_actor_id_header=external_actor_id_header,
+        actor_external_id_header=actor_external_id_header,
+        actor_role_header=actor_role_header,
+    )
+    if isinstance(resolved, GovernanceApiError):
+        return _governance_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            trace_id=payload.trace_id,
+            status_value="error",
+            error=resolved,
+        )
+    principal_id, principal_role = resolved
+
+    try:
+        outcome = bind_workforce_template_by_cwo(
+            repository=governance_repository,
+            project_id=project_id,
+            actor_id=principal_id,
+            actor_role=principal_role,
+            trace_id=payload.trace_id,
+            role=payload.role,
+            template_id=payload.template_id,
+            llm_routing_profile=payload.llm_routing_profile,
+            system_prompt=payload.system_prompt,
+        )
+    except GovernanceHandlerError as error:
+        status_code, response_error, status_value = _map_handler_error(error)
+        return _governance_response(
+            status_code=status_code,
+            trace_id=payload.trace_id,
+            status_value=status_value,
+            error=response_error,
+        )
+
+    audit_writer.write_event(
+        event_type="workforce.binding",
+        outcome="ok",
+        trace_id=payload.trace_id,
+        request_id=None,
+        task_id=None,
+        principal_id=principal_id,
+        principal_role=principal_role,
+        source="governance",
+        reason_code=None,
+        message="workforce template binding recorded",
+        payload={
+            "project_id": project_id,
+            "role": outcome.role,
+            "binding_status": outcome.binding_status,
+            "template_id": outcome.template_id,
+            "llm_routing_profile": outcome.llm_routing_profile,
+        },
+    )
+    return _governance_response(
+        status_code=status.HTTP_200_OK,
+        trace_id=payload.trace_id,
+        status_value="ok",
+        data={
+            "project_id": project_id,
+            "status": outcome.project.status,
+            "role": outcome.role,
+            "binding_status": outcome.binding_status,
+            "template_id": outcome.template_id,
+            "llm_routing_profile": outcome.llm_routing_profile,
+            "system_prompt_hash": outcome.system_prompt_hash,
         },
     )

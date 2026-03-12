@@ -79,6 +79,23 @@ class ProjectInitializationSnapshot:
 
 
 @dataclass(frozen=True, slots=True)
+class WorkforceBindingRecord:
+    """Persisted workforce template binding under project governance control."""
+
+    binding_id: str
+    project_id: str
+    role: str
+    template_id: str
+    llm_routing_profile: str
+    system_prompt_hash: str
+    binding_status: str
+    actor_id: str
+    actor_role: str
+    trace_id: str
+    created_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
 class ProjectRecord:
     """Persisted governance project state."""
 
@@ -93,6 +110,7 @@ class ProjectRecord:
     proposal_messages: tuple[ProposalMessageRecord, ...] = ()
     proposal_approvals: tuple[ProposalApprovalRecord, ...] = ()
     initialization: ProjectInitializationSnapshot | None = None
+    workforce_bindings: tuple[WorkforceBindingRecord, ...] = ()
 
 
 class InMemoryGovernanceRepository:
@@ -383,3 +401,72 @@ class InMemoryGovernanceRepository:
                 "budget_quota_total": snapshot.budget_quota_total,
             },
         )
+
+    def bind_workforce_template(
+        self,
+        *,
+        project_id: str,
+        role: str,
+        template_id: str,
+        llm_routing_profile: str,
+        system_prompt_hash: str,
+        actor_id: str,
+        actor_role: str,
+        trace_id: str,
+    ) -> WorkforceBindingRecord:
+        """Persist one workforce template binding for PM or domain lead declaration."""
+
+        project = self._projects_by_id.get(project_id)
+        if project is None:
+            raise GovernanceRepositoryError(
+                code="governance_project_missing",
+                message=f"project not found: {project_id}",
+            )
+        if project.status != "active":
+            raise GovernanceRepositoryError(
+                code="governance_project_not_active",
+                message="workforce template binding requires active project status",
+            )
+
+        normalized_role = role.strip().lower()
+        if normalized_role not in {"pm", "domain_lead"}:
+            raise GovernanceRepositoryError(
+                code="governance_workforce_role_invalid",
+                message=f"unsupported workforce role: {normalized_role}",
+            )
+        if normalized_role == "pm":
+            existing_pm = next(
+                (
+                    binding
+                    for binding in project.workforce_bindings
+                    if binding.role == "pm" and binding.binding_status == "active"
+                ),
+                None,
+            )
+            if existing_pm is not None:
+                raise GovernanceRepositoryError(
+                    code="governance_pm_binding_exists",
+                    message="project manager binding already exists for project",
+                )
+
+        binding_status = "active" if normalized_role == "pm" else "declared_disabled"
+        binding = WorkforceBindingRecord(
+            binding_id=str(uuid4()),
+            project_id=project_id,
+            role=normalized_role,
+            template_id=template_id.strip(),
+            llm_routing_profile=llm_routing_profile.strip(),
+            system_prompt_hash=system_prompt_hash.strip(),
+            binding_status=binding_status,
+            actor_id=actor_id.strip(),
+            actor_role=actor_role.strip(),
+            trace_id=trace_id.strip(),
+            created_at=datetime.now(tz=UTC),
+        )
+        updated = replace(
+            project,
+            updated_at=binding.created_at,
+            workforce_bindings=project.workforce_bindings + (binding,),
+        )
+        self._projects_by_id[project_id] = updated
+        return binding

@@ -235,7 +235,11 @@ Checklist:
 - evidence: `uv run ruff check src/openqilin/control_plane/handlers/governance_handler.py src/openqilin/control_plane/routers/governance.py src/openqilin/control_plane/schemas/governance.py src/openqilin/data_access/repositories/governance.py tests/unit/test_m5_wp3_governance_initialization_handler.py tests/component/test_m5_wp3_governance_initialization_router.py`
 - evidence: `uv run mypy src/openqilin/control_plane/handlers/governance_handler.py src/openqilin/control_plane/routers/governance.py src/openqilin/control_plane/schemas/governance.py src/openqilin/data_access/repositories/governance.py`
 - evidence: `uv run pytest tests/unit/test_m5_wp1_project_lifecycle.py tests/unit/test_m5_wp2_governance_handler.py tests/component/test_m5_wp2_governance_routers.py tests/unit/test_m5_wp3_governance_initialization_handler.py tests/component/test_m5_wp3_governance_initialization_router.py` (`40 passed`)
-- `M5-WP4`: workforce template binding (`pm` active, `domain_lead` declared-disabled) - `todo`
+- `M5-WP4`: workforce template binding (`pm` active, `domain_lead` declared-disabled) - `done`
+- issue: `#33`
+- evidence: `uv run ruff check src/openqilin/control_plane/handlers/governance_handler.py src/openqilin/control_plane/routers/governance.py src/openqilin/control_plane/schemas/governance.py src/openqilin/data_access/repositories/governance.py tests/unit/test_m5_wp4_workforce_binding_handler.py tests/component/test_m5_wp4_workforce_binding_router.py`
+- evidence: `uv run mypy src/openqilin/control_plane/handlers/governance_handler.py src/openqilin/control_plane/routers/governance.py src/openqilin/control_plane/schemas/governance.py src/openqilin/data_access/repositories/governance.py`
+- evidence: `uv run pytest tests/unit/test_m5_wp1_project_lifecycle.py tests/unit/test_m5_wp2_governance_handler.py tests/component/test_m5_wp2_governance_routers.py tests/unit/test_m5_wp3_governance_initialization_handler.py tests/component/test_m5_wp3_governance_initialization_router.py tests/unit/test_m5_wp4_workforce_binding_handler.py tests/component/test_m5_wp4_workforce_binding_router.py` (`46 passed`)
 - `M6-WP1`: canonical project file root under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/` + DB pointer/hash model - `todo`
 - `M6-WP2`: project document policy (approved types + per-type caps + fail-closed over-cap) - `todo`
 - `M6-WP3`: specialist touchability enforcement (`pm`-only direct path) - `todo`
