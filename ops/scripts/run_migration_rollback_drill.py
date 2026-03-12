@@ -32,6 +32,11 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Downgrade revision target when --rollback-mode=downgrade.",
     )
     parser.add_argument(
+        "--allow-downgrade-destructive",
+        action="store_true",
+        help="Explicitly allow destructive downgrade mode (disposable databases only).",
+    )
+    parser.add_argument(
         "--restore-reference",
         default=None,
         help="Backup/snapshot reference required for --rollback-mode=restore.",
@@ -82,6 +87,7 @@ def main() -> int:
         rollback_mode=rollback_mode,
         rollback_revision=args.rollback_revision,
         restore_reference=args.restore_reference,
+        allow_downgrade_destructive=args.allow_downgrade_destructive,
     )
     payload = build_migration_drill_evidence_payload(
         release_version=args.release_version,

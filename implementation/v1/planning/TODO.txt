@@ -191,6 +191,10 @@ Checklist:
 - evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` (`150 passed`)
 - evidence doc: `implementation/v1/planning/M4WP3ReleaseGateHardening-v1.md`
 - issue closeout: `#24` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/24#issuecomment-4043616599`) and issue closed - `done`
+- `M4 post-review top-3 remediation` (downgrade destructive-guard enforcement, alert source-owner attribution preservation, structured gate-check parsing for CI/compose) - `done`
+- evidence: `uv run pytest tests/unit/test_m4_wp1_observability_release_readiness.py tests/unit/test_m4_wp2_migration_rollback_drill.py tests/conformance/test_m4_wp3_release_gate_hardening_conformance.py` (`12 passed`)
+- evidence: `uv run python ops/scripts/check_release_gate_matrix.py` (`passed`)
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` (`151 passed`)
 - `M4-WP4` release artifact + promotion checklist packaging (`issue #25`) - `todo`
 - `M4-WP5` M4 evidence pack + milestone closeout validation (`issue #26`) - `todo`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043167927`

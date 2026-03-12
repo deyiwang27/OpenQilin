@@ -15,4 +15,4 @@ Current contract baseline:
 
 Migration validation + rollback drill commands:
 - `uv run python -m openqilin.apps.admin_cli rollback-drill --rollback-mode restore --restore-reference <backup-id>`
-- `uv run python -m openqilin.apps.admin_cli rollback-drill --rollback-mode downgrade --rollback-revision -1` (disposable DB only)
+- `uv run python -m openqilin.apps.admin_cli rollback-drill --rollback-mode downgrade --allow-downgrade-destructive --rollback-revision -1` (disposable DB only; blocked by default without explicit allow flag)

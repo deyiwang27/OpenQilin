@@ -13,13 +13,14 @@ Work package issue: `#23`
 - `src/openqilin/apps/admin_cli.py`
   - added `rollback-drill` command with two modes:
     - `restore`: forward migration validation plus required `--restore-reference` evidence
-    - `downgrade`: downgrade/upgrade round-trip drill for disposable environments
+    - `downgrade`: downgrade/upgrade round-trip drill for disposable environments (guarded by explicit `--allow-downgrade-destructive`)
   - added migration contract checks for:
     - `pgvector` extension availability
     - `knowledge_embedding` table availability
   - added deterministic JSON evidence payload/write helpers.
 - `ops/scripts/run_migration_rollback_drill.py`
   - script entrypoint for rollout operators and automation wrappers.
+  - mirrors downgrade safety guard via `--allow-downgrade-destructive`.
 - `ops/scripts/check_migration_rollback_readiness.py`
   - CI integrity checks for migration files, rollback policy snippets, and gate wiring.
 - `.github/workflows/ci.yml`

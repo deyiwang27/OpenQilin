@@ -81,9 +81,7 @@ class InMemoryAlertEmitter:
         next_owner_role = (
             "ceo" if owner_resolution_fallback else definition.route.primary_escalation_role
         )
-        source_owner_role = (
-            "unknown" if owner_resolution_fallback else definition.route.source_owner_role
-        )
+        source_owner_role = "unknown" if owner_resolution_fallback else normalized_source_owner
         event = AlertEvent(
             event_id=str(uuid4()),
             trace_id=request.trace_id,
@@ -122,6 +120,7 @@ class InMemoryAlertEmitter:
                 "alert_type": event.alert_type,
                 "severity": event.severity,
                 "source_owner_role": event.source_owner_role,
+                "catalog_source_owner_role": definition.route.source_owner_role,
                 "next_owner_role": event.next_owner_role,
                 "timestamp": event.timestamp,
                 "runbook_ref": event.runbook_ref,

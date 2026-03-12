@@ -54,6 +54,7 @@ uv run python -m openqilin.apps.admin_cli rollback-drill \
 # Disposable-environment drill: verify downgrade/upgrade round-trip deterministically
 uv run python -m openqilin.apps.admin_cli rollback-drill \
   --rollback-mode downgrade \
+  --allow-downgrade-destructive \
   --rollback-revision -1 \
   --release-version 0.1.0-rc1 \
   --operator release_manager

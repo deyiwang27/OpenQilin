@@ -46,24 +46,25 @@ def test_alert_emitter_records_metric_and_audit_for_direct_route() -> None:
     result = emitter.emit(
         AlertEmissionRequest(
             trace_id="trace-m4-wp1-alert-001",
-            alert_type="collector_ingest_failure",
+            alert_type="orchestration_deadlock",
             severity="critical",
             source_owner_role="administrator",
             rule_ids=("MET-001", "MET-004"),
-            message="otel collector ingest failure exceeded threshold",
+            message="orchestrator progress stalled for over ten minutes",
             observed_value=3,
         )
     )
 
     assert result.owner_resolution_fallback is False
-    assert result.event.next_owner_role == "owner"
+    assert result.event.source_owner_role == "administrator"
+    assert result.event.next_owner_role == "cwo"
     assert (
         metric_recorder.get_counter_value(
             "governance_alerts_total",
             labels={
-                "alert_type": "collector_ingest_failure",
+                "alert_type": "orchestration_deadlock",
                 "severity": "critical",
-                "next_owner_role": "owner",
+                "next_owner_role": "cwo",
             },
         )
         == 1
@@ -74,8 +75,10 @@ def test_alert_emitter_records_metric_and_audit_for_direct_route() -> None:
     assert events[0].outcome == "alert_emitted"
     assert events[0].trace_id == "trace-m4-wp1-alert-001"
     payload = dict(events[0].payload)
-    assert payload["alert_type"] == "collector_ingest_failure"
-    assert payload["next_owner_role"] == "owner"
+    assert payload["alert_type"] == "orchestration_deadlock"
+    assert payload["source_owner_role"] == "administrator"
+    assert payload["catalog_source_owner_role"] == "project_manager"
+    assert payload["next_owner_role"] == "cwo"
 
 
 def test_alert_emitter_falls_back_to_ceo_for_ambiguous_owner() -> None:

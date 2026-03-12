@@ -49,6 +49,7 @@ Status values:
 - Week of `2026-03-12`: complete `M4-WP1` by implementing release-readiness dashboard/alert contracts, alert ownership fallback routing, and observability contract tests.
 - Week of `2026-03-12`: complete `M4-WP2` by implementing migration validation + rollback drill automation, CI rollback-readiness gate checks, and deterministic evidence-output contracts.
 - Week of `2026-03-12`: complete `M4-WP3` by codifying deterministic CI/release-candidate gate matrix commands, hardening full-profile smoke/conformance gating contracts, and adding matrix integrity checks.
+- Week of `2026-03-12`: complete M4 top-3 post-review remediation by enforcing downgrade destructive-guard controls, preserving alert source-owner attribution, and hardening gate-check parsers for CI/compose structure alignment.
 
 ## 4. Milestone Ledger
 | Milestone | Status | Completion % | Active Features | Blockers | Evidence Links | Last Updated |
@@ -137,6 +138,8 @@ Status values:
 - `2026-03-12`: `M4-WP3` delivered in code: deterministic release-gate matrix contract added (`release_readiness/gate_matrix.py`) with CI and release-candidate scopes, matrix runner/check scripts added (`ops/scripts/run_release_gate_matrix.py`, `ops/scripts/check_release_gate_matrix.py`), CI workflow now enforces matrix integrity checks, and conformance coverage was added for workflow alignment plus full-profile admin smoke/conformance gate presence.
 - `2026-03-12`: `M4-WP3` validation completed on branch `feat/21-m4-hardening-release-kickoff` (`uv run ruff check src/openqilin/release_readiness ops/scripts/check_release_gate_matrix.py ops/scripts/run_release_gate_matrix.py tests/unit/test_m4_wp3_release_gate_matrix.py tests/conformance/test_m4_wp3_release_gate_hardening_conformance.py`, `uv run mypy .`, `uv run pytest tests/unit/test_m4_wp3_release_gate_matrix.py tests/conformance/test_m4_wp3_release_gate_hardening_conformance.py`, `uv run python ops/scripts/check_release_gate_matrix.py`, `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` => `150 passed`).
 - `2026-03-12`: `M4-WP3` issue evidence synchronized on issues `#24` and `#21`, and issue `#24` closed after push (`208dcf5`).
+- `2026-03-12`: M4 top-3 review remediation batch completed: downgrade drill mode now requires explicit destructive-allow flag before any `alembic downgrade`, release-alert emission now preserves caller source-owner attribution in event/audit payloads, and release-gate integrity checks now parse CI `run:` commands and `compose` `admin` service block structurally (instead of substring-only matching).
+- `2026-03-12`: M4 remediation validation completed (`uv run pytest tests/unit/test_m4_wp1_observability_release_readiness.py tests/unit/test_m4_wp2_migration_rollback_drill.py tests/conformance/test_m4_wp3_release_gate_hardening_conformance.py` => `12 passed`, `uv run python ops/scripts/check_release_gate_matrix.py` => `passed`, `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` => `151 passed`).
 
 ## 6. Sample Progress Update Entry
 Use this shape when recording weekly or PR-linked evidence:

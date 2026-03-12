@@ -129,6 +129,7 @@ def run_migration_rollback_drill(
     rollback_mode: RollbackMode,
     rollback_revision: str,
     restore_reference: str | None,
+    allow_downgrade_destructive: bool = False,
 ) -> tuple[list[CheckResult], str]:
     """Run migration validation plus rollback drill checks."""
 
@@ -179,6 +180,16 @@ def run_migration_rollback_drill(
                 "rollback_restore_plan",
                 True,
                 f"restore-from-backup reference recorded: {reference}",
+            )
+        )
+        return results, resolved_database_url
+
+    if not allow_downgrade_destructive:
+        results.append(
+            CheckResult(
+                "rollback_downgrade_guard",
+                False,
+                "downgrade mode is blocked by default; pass --allow-downgrade-destructive only for disposable databases",
             )
         )
         return results, resolved_database_url
@@ -572,6 +583,11 @@ def rollback_drill(
         "--rollback-revision",
         help="Revision target used only when --rollback-mode downgrade.",
     ),
+    allow_downgrade_destructive: bool = typer.Option(
+        False,
+        "--allow-downgrade-destructive",
+        help="Explicitly allow destructive downgrade drill mode (disposable databases only).",
+    ),
     restore_reference: str | None = typer.Option(
         None,
         "--restore-reference",
@@ -616,6 +632,7 @@ def rollback_drill(
         rollback_mode=rollback_mode,
         rollback_revision=rollback_revision,
         restore_reference=restore_reference,
+        allow_downgrade_destructive=allow_downgrade_destructive,
     )
     if not resolved_database_url:
         resolved_database_url = resolve_database_url(
