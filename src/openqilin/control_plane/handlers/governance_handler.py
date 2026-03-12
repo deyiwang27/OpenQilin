@@ -1,1 +1,109 @@
-"""Governance handler placeholder."""
+"""Governance handler primitives for proposal discussion and approval flow."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from openqilin.data_access.repositories.governance import (
+    GovernanceRepositoryError,
+    InMemoryGovernanceRepository,
+    ProjectRecord,
+    ProposalApprovalRecord,
+    ProposalMessageRecord,
+)
+
+_TRIAD_ROLES = frozenset({"owner", "ceo", "cwo"})
+
+
+class GovernanceHandlerError(ValueError):
+    """Raised when governance handler validation or repository calls fail."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
+        self.message = message
+
+
+@dataclass(frozen=True, slots=True)
+class ProposalApprovalOutcome:
+    """Outcome returned by proposal approval command handling."""
+
+    project: ProjectRecord
+    approval_recorded: bool
+    approval_roles: tuple[str, ...]
+
+
+def submit_proposal_message(
+    *,
+    repository: InMemoryGovernanceRepository,
+    project_id: str,
+    actor_id: str,
+    actor_role: str,
+    content: str,
+    trace_id: str,
+) -> ProposalMessageRecord:
+    """Validate and persist proposal-stage discussion message."""
+
+    normalized_role = actor_role.strip().lower()
+    if normalized_role not in _TRIAD_ROLES:
+        raise GovernanceHandlerError(
+            code="governance_role_forbidden",
+            message="proposal discussions are limited to owner, ceo, and cwo",
+        )
+    try:
+        return repository.add_proposal_message(
+            project_id=project_id,
+            actor_id=actor_id,
+            actor_role=normalized_role,
+            content=content,
+            trace_id=trace_id,
+        )
+    except GovernanceRepositoryError as error:
+        raise GovernanceHandlerError(code=error.code, message=error.message) from error
+
+
+def approve_project_proposal(
+    *,
+    repository: InMemoryGovernanceRepository,
+    project_id: str,
+    actor_id: str,
+    actor_role: str,
+    trace_id: str,
+) -> ProposalApprovalOutcome:
+    """Validate and persist triad approvals; auto-promote project when complete."""
+
+    normalized_role = actor_role.strip().lower()
+    if normalized_role not in _TRIAD_ROLES:
+        raise GovernanceHandlerError(
+            code="governance_approval_role_forbidden",
+            message="proposal approval is limited to owner, ceo, and cwo",
+        )
+    try:
+        project, approval_recorded = repository.record_proposal_approval(
+            project_id=project_id,
+            actor_id=actor_id,
+            actor_role=normalized_role,
+            trace_id=trace_id,
+        )
+    except GovernanceRepositoryError as error:
+        raise GovernanceHandlerError(code=error.code, message=error.message) from error
+
+    approval_roles = tuple(sorted({approval.actor_role for approval in project.proposal_approvals}))
+    return ProposalApprovalOutcome(
+        project=project,
+        approval_recorded=approval_recorded,
+        approval_roles=approval_roles,
+    )
+
+
+def latest_approval_for_role(
+    project: ProjectRecord,
+    *,
+    role: str,
+) -> ProposalApprovalRecord | None:
+    """Fetch latest approval for one role from persisted proposal approvals."""
+
+    for approval in reversed(project.proposal_approvals):
+        if approval.actor_role == role:
+            return approval
+    return None

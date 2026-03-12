@@ -11,6 +11,7 @@ from openqilin.budget_runtime.client import InMemoryBudgetRuntimeClient
 from openqilin.budget_runtime.reservation_service import BudgetReservationService
 from openqilin.communication_gateway.callbacks.outcome_notifier import CommunicationOutcomeNotifier
 from openqilin.control_plane.idempotency.ingress_dedupe import InMemoryIngressDedupe
+from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
 from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
 from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
 from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
@@ -37,6 +38,7 @@ class RuntimeServices:
 
     ingress_dedupe: InMemoryIngressDedupe
     runtime_state_repo: InMemoryRuntimeStateRepository
+    governance_repo: InMemoryGovernanceRepository
     admission_service: AdmissionService
     policy_runtime_client: InMemoryPolicyRuntimeClient
     budget_runtime_client: InMemoryBudgetRuntimeClient
@@ -56,6 +58,7 @@ def build_runtime_services() -> RuntimeServices:
 
     ingress_dedupe = InMemoryIngressDedupe()
     runtime_state_repo = InMemoryRuntimeStateRepository()
+    governance_repo = InMemoryGovernanceRepository()
     admission_service = AdmissionService(
         dedupe_store=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
@@ -84,6 +87,7 @@ def build_runtime_services() -> RuntimeServices:
     return RuntimeServices(
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
+        governance_repo=governance_repo,
         admission_service=admission_service,
         policy_runtime_client=policy_runtime_client,
         budget_runtime_client=budget_runtime_client,
@@ -131,6 +135,12 @@ def get_runtime_state_repository(request: Request) -> InMemoryRuntimeStateReposi
     """Provide runtime-state repository for task status updates."""
 
     return get_runtime_services(request).runtime_state_repo
+
+
+def get_governance_repository(request: Request) -> InMemoryGovernanceRepository:
+    """Provide governance repository for project lifecycle and proposal contracts."""
+
+    return get_runtime_services(request).governance_repo
 
 
 def get_task_dispatch_service(request: Request) -> TaskDispatchService:

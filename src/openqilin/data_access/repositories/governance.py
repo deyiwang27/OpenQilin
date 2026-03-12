@@ -39,6 +39,31 @@ class ProjectStatusTransitionRecord:
 
 
 @dataclass(frozen=True, slots=True)
+class ProposalMessageRecord:
+    """Persisted proposal discussion message in proposed stage."""
+
+    message_id: str
+    project_id: str
+    actor_id: str
+    actor_role: str
+    content: str
+    trace_id: str
+    timestamp: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class ProposalApprovalRecord:
+    """Persisted proposal approval decision by triad role."""
+
+    approval_id: str
+    project_id: str
+    actor_id: str
+    actor_role: str
+    trace_id: str
+    timestamp: datetime
+
+
+@dataclass(frozen=True, slots=True)
 class ProjectRecord:
     """Persisted governance project state."""
 
@@ -50,6 +75,8 @@ class ProjectRecord:
     updated_at: datetime
     metadata: tuple[tuple[str, str], ...]
     transitions: tuple[ProjectStatusTransitionRecord, ...] = ()
+    proposal_messages: tuple[ProposalMessageRecord, ...] = ()
+    proposal_approvals: tuple[ProposalApprovalRecord, ...] = ()
 
 
 class InMemoryGovernanceRepository:
@@ -158,3 +185,110 @@ class InMemoryGovernanceRepository:
         )
         self._projects_by_id[project_id] = updated
         return updated
+
+    def add_proposal_message(
+        self,
+        *,
+        project_id: str,
+        actor_id: str,
+        actor_role: str,
+        content: str,
+        trace_id: str,
+    ) -> ProposalMessageRecord:
+        """Persist one proposal-stage discussion message."""
+
+        project = self._projects_by_id.get(project_id)
+        if project is None:
+            raise GovernanceRepositoryError(
+                code="governance_project_missing",
+                message=f"project not found: {project_id}",
+            )
+        if project.status != "proposed":
+            raise GovernanceRepositoryError(
+                code="governance_project_not_proposed",
+                message="proposal discussions are only allowed while project status is proposed",
+            )
+        message = ProposalMessageRecord(
+            message_id=str(uuid4()),
+            project_id=project_id,
+            actor_id=actor_id.strip(),
+            actor_role=actor_role.strip(),
+            content=content.strip(),
+            trace_id=trace_id.strip(),
+            timestamp=datetime.now(tz=UTC),
+        )
+        updated = replace(
+            project,
+            updated_at=message.timestamp,
+            proposal_messages=project.proposal_messages + (message,),
+        )
+        self._projects_by_id[project_id] = updated
+        return message
+
+    def record_proposal_approval(
+        self,
+        *,
+        project_id: str,
+        actor_id: str,
+        actor_role: str,
+        trace_id: str,
+    ) -> tuple[ProjectRecord, bool]:
+        """Persist one proposal approval and auto-promote when triad is complete."""
+
+        normalized_role = actor_role.strip()
+        project = self._projects_by_id.get(project_id)
+        if project is None:
+            raise GovernanceRepositoryError(
+                code="governance_project_missing",
+                message=f"project not found: {project_id}",
+            )
+        if project.status != "proposed":
+            raise GovernanceRepositoryError(
+                code="governance_project_not_proposed",
+                message="proposal approvals are only allowed while project status is proposed",
+            )
+        existing = next(
+            (
+                approval
+                for approval in project.proposal_approvals
+                if approval.actor_role == normalized_role
+            ),
+            None,
+        )
+        if existing is not None and existing.actor_id == actor_id.strip():
+            return project, False
+        if existing is not None and existing.actor_id != actor_id.strip():
+            raise GovernanceRepositoryError(
+                code="governance_approval_role_conflict",
+                message=f"proposal role already approved by another actor: {normalized_role}",
+            )
+
+        approval = ProposalApprovalRecord(
+            approval_id=str(uuid4()),
+            project_id=project_id,
+            actor_id=actor_id.strip(),
+            actor_role=normalized_role,
+            trace_id=trace_id.strip(),
+            timestamp=datetime.now(tz=UTC),
+        )
+        updated = replace(
+            project,
+            updated_at=approval.timestamp,
+            proposal_approvals=project.proposal_approvals + (approval,),
+        )
+        self._projects_by_id[project_id] = updated
+        if self._has_triad_approvals(updated):
+            promoted = self.transition_project_status(
+                project_id=project_id,
+                next_status="approved",
+                reason_code="proposal_triad_approved",
+                actor_role=normalized_role,
+                trace_id=trace_id,
+            )
+            return promoted, True
+        return updated, True
+
+    @staticmethod
+    def _has_triad_approvals(project: ProjectRecord) -> bool:
+        roles = {approval.actor_role for approval in project.proposal_approvals}
+        return {"owner", "ceo", "cwo"}.issubset(roles)

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any, Literal
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from openqilin.control_plane.governance.project_lifecycle import (
@@ -52,3 +54,43 @@ class GovernanceTransitionResponse(BaseModel):
     status: str
     data: ProjectLifecycleTransitionData | None = None
     error: dict[str, str] | None = None
+
+
+class ProposalDiscussionRequest(BaseModel):
+    """Proposal discussion message payload."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str = Field(min_length=1, max_length=128)
+    content: str = Field(min_length=1, max_length=4000)
+
+
+class ProposalApprovalRequest(BaseModel):
+    """Proposal approval payload."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str = Field(min_length=1, max_length=128)
+
+
+class GovernanceApiError(BaseModel):
+    """Canonical governance API error payload."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    code: str
+    message: str
+    retryable: bool
+    source_component: str
+    details: dict[str, Any] = Field(default_factory=dict)
+
+
+class GovernanceApiResponse(BaseModel):
+    """Canonical governance API response envelope."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    status: Literal["ok", "denied", "error"]
+    data: dict[str, Any] | None = None
+    error: GovernanceApiError | None = None
