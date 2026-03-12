@@ -20,8 +20,8 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 | `M2 Execution Targets` | replace stubs with real execution adapters | real sandbox dispatch, LiteLLM-backed `llm_gateway`, basic retrieval-backed query path | governed dispatch reaches sandbox or Gemini-backed path; usage/cost metadata and retrieval path are validated |
 | `M3 Communication Reliability` | harden delivery lifecycle | A2A validation, ACP send/ack/nack, retries, dead-letter flow, orchestrator callback integration | deterministic at-least-once behavior, duplicate safety, and dead-letter alert/audit evidence |
 | `M4 Hardening and Release Readiness` | complete release hardening gates | dashboards/alerts, migration and rollback validation, conformance+smoke suites, release artifact prep | `full` profile passes smoke and conformance gates and release candidate is promotable |
-| `M5 MVP Proposal and Governance Activation` | implement proposal-to-activation governance contracts | project lifecycle lock, proposal/approval APIs, CWO initialization flow, workforce templating with declared-disabled `domain_lead` | proposal/approval/activation workflow is enforced with deterministic lifecycle guards and audit evidence |
-| `M6 MVP Documentation and Access Governance` | implement hybrid project-doc governance and role-touchability controls | canonical system-root project docs, file type/cap policy, DB pointer/hash integrity, PM-only specialist touchability policy | project-document writes are policy-governed and specialist access constraints are enforced fail-closed |
+| `M5 MVP Proposal and Governance Activation` | implement proposal-to-activation governance contracts | project lifecycle lock, proposal/approval APIs, CWO initialization flow, workforce templating with declared-disabled `domain_leader` | proposal/approval/activation workflow is enforced with deterministic lifecycle guards and audit evidence |
+| `M6 MVP Documentation and Access Governance` | implement hybrid project-doc governance and role-touchability controls | canonical system-root project docs, file type/cap policy, DB pointer/hash integrity, Project Manager-only specialist touchability policy | project-document writes are policy-governed and specialist access constraints are enforced fail-closed |
 | `M7 MVP Persistence, Adapter, and Acceptance` | close MVP with recovery hardening and constrained Discord adapter | persistent runtime recovery path, Discord adapter with role/channel constraints, MVP acceptance matrix and evidence pack | restart invariants and Discord-governed ingress constraints pass end-to-end acceptance evidence |
 
 ## 4. M1 Implementation Workplan (Kickoff on Issue `#4`)
@@ -178,7 +178,7 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 - Convert post-M4 foundations into a governance-first MVP runtime aligned to the finalized operating model:
   - proposal/approval workflow owned by `owner` + `ceo` + `cwo`
   - CWO-initialized project charter/workforce setup
-  - PM-led execution with specialist touchability constraints
+  - Project Manager-led execution with specialist touchability constraints
   - runnable Docker `full` profile runtime with non-placeholder app/worker services
   - governance/executive runtime validated through Gemini Flash free-tier provider path with quota accounting
   - Discord-originated owner command flows validated through the same governed ingress path
@@ -201,9 +201,9 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 - Target modules: governance services + repositories, project artifact contracts.
 - Deliverables: governed initialization for scope/objective/budget/metrics and workforce-plan records.
 
-4. `M5-WP4` Workforce templating contract (`pm` + `domain_lead` declared-disabled)
+4. `M5-WP4` Workforce templating contract (`project_manager` + `domain_leader` declared-disabled)
 - Target modules: agent registry contracts, template/prompt metadata, policy guard rules.
-- Deliverables: CWO binds template + llm profile + system prompt package; `domain_lead` schema-declared but runtime-disabled.
+- Deliverables: CWO binds template + llm profile + system prompt package; `domain_leader` schema-declared but runtime-disabled.
 
 5. `M6-WP1` Canonical project file root and pointer/hash model
 - Target modules: `data_access/repositories/artifacts.py`, storage policy services, environment config.
@@ -217,35 +217,39 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 - Target modules: owner command/policy integration + communication access checks.
 - Deliverables: owner direct specialist command blocked; specialist path routed through `project_manager`.
 
-8. `M6-WP4` PM mandatory-operations template enforcement
-- Target modules: PM template registry + orchestrator planning contracts.
-- Deliverables: mandatory PM operations (milestones, decomposition, assignment, reporting) contract-tested.
+8. `M6-WP4` Project Manager mandatory-operations template enforcement
+- Target modules: Project Manager template registry + orchestrator planning contracts.
+- Deliverables: mandatory Project Manager operations (milestones, decomposition, assignment, reporting) contract-tested.
 
 9. `M7-WP1` Persistent runtime-state adapters + recovery
 - Target modules: runtime-state/communication repositories, service bootstrap dependencies, governance/agent registry repositories.
 - Deliverables: restart/rehydration preserving idempotency and governance invariants, including institutional-agent bootstrap from persistent state.
 
-10. `M7-WP2` Discord adapter boundary with role/channel constraints
-- Target modules: Discord adapter package + ingress mapping path.
-- Deliverables: canonical envelope mapping, connector verification, specialist-access restrictions in adapter path, and real Discord round-trip validation evidence.
+10. `M7-WP2` Discord ingress context + identity/channel mapping
+- Target modules: Discord adapter package, owner-command ingress schemas, connector identity repositories.
+- Deliverables: canonical Discord communication context (`guild_id`, `channel_id`, `channel_type`) mapped into owner envelope contracts, connector verification, identity/channel mapping store with `pending|verified|revoked` states, and allowlist lookup primitives.
 
-11. `M7-WP3` Docker `full` profile runtime cutover
+11. `M7-WP3` Discord chat-governance enforcement + policy/runtime integration
+- Target modules: Discord adapter authorization path, policy input normalizer/rule evaluation, task/audit persistence contracts.
+- Deliverables: fixed chat-class validator (`direct`, `leadership_council`, `governance`, `executive`, `project`), lifecycle-aware project membership resolver, specialist access constraints, pending-role activation flags (`secretary`, `cso`, `domain_leader`), and traceable context persistence for replay-safe decisions.
+
+12. `M7-WP4` Docker `full` profile runtime cutover
 - Target modules: `compose.yml`, runtime container entrypoints, healthchecks/startup sequencing, operator runbooks.
 - Deliverables: `api_app`, `orchestrator_worker`, and `communication_worker` run real application entrypoints in Docker `full` profile (no placeholder commands).
 
-12. `M7-WP4` Gemini Flash free-tier provider-path activation + quota telemetry validation
+13. `M7-WP5` Gemini Flash free-tier provider-path activation + quota telemetry validation
 - Target modules: `llm_gateway/providers`, runtime settings/env wiring, budget/quota observability surfaces, acceptance tests.
 - Deliverables: governed `llm_*` dispatch executes through configured Gemini Flash free-tier provider path with deterministic quota-usage evidence and fail-closed behavior on provider/runtime uncertainty.
 
-13. `M7-WP5` MVP acceptance matrix and closeout evidence
+14. `M7-WP6` MVP acceptance matrix and closeout evidence
 - Target modules: `tests/contract`, `tests/conformance`, MVP evidence docs.
-- Deliverables: end-to-end acceptance across proposal, activation, PM-managed execution, completion approval, owner notification, and full project lifecycle progression evidence.
+- Deliverables: end-to-end acceptance across proposal, activation, Project Manager-managed execution, completion approval, owner notification, full project lifecycle progression evidence, and Discord round-trip validation against governed chat classes.
 
 ### 8.3 MVP Exit Evidence Checklist
 - Proposal lifecycle and approval gates are enforced with canonical state transitions.
 - CWO initialization produces governed project charter/workforce evidence.
 - Project docs persist under canonical system root with type/cap/pointer-hash policy enforcement.
-- Specialist touchability restrictions are enforced (`pm`-only in first MVP).
+- Specialist touchability restrictions are enforced (`project_manager`-only in first MVP).
 - Recovery path preserves governance/idempotency invariants and restores institutional agents.
 - Docker `full` profile runtime is runnable with non-placeholder app/worker services.
 - Gemini Flash free-tier provider path is validated with quota accounting evidence.

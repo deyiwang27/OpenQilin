@@ -45,7 +45,7 @@ Still missing or placeholder-heavy for MVP v0.1:
   - explicit proposal revision/approval lifecycle contracts are not yet implemented end-to-end
 - Project rich-text documentation policy:
   - canonical system root + file type/cap enforcement is not implemented yet
-- PM template and workforce bootstrapping contracts:
+- Project Manager template and workforce bootstrapping contracts:
   - CWO-driven template/llm/system-prompt binding path is not implemented as governed runtime flow
 
 ## 4. Target MVP Runtime Shape
@@ -71,7 +71,7 @@ Work packages:
 1. `M5-WP1`: lock project lifecycle model (`proposed -> approved -> active -> paused -> completed -> terminated -> archived`) in runtime contracts
 2. `M5-WP2`: implement proposal discussion/approval APIs (`owner`, `ceo`, `cwo`)
 3. `M5-WP3`: implement CWO project initialization contract (scope/objective/budget/metrics persistence)
-4. `M5-WP4`: implement CWO workforce creation from templates (`pm` + `domain_lead` declared, `domain_lead` disabled)
+4. `M5-WP4`: implement CWO workforce creation from templates (`project_manager` + `domain_leader` declared, `domain_leader` disabled)
 
 Exit criteria:
 - proposal revisions remain in `proposed` until explicit approval
@@ -86,7 +86,7 @@ Work packages:
 1. `M6-WP1`: implement canonical project file root under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`
 2. `M6-WP2`: enforce approved doc types and per-type document caps
 3. `M6-WP3`: enforce DB pointer/hash synchronization and fail-closed integrity policy
-4. `M6-WP4`: enforce specialist touchability policy (PM-only in first MVP)
+4. `M6-WP4`: enforce specialist touchability policy (Project Manager-only in first MVP)
 
 Exit criteria:
 - project docs persist outside repo tree with governed policy constraints
@@ -99,16 +99,18 @@ Objective:
 
 Work packages:
 1. `M7-WP1`: persistent runtime-state adapters + startup recovery orchestration
-2. `M7-WP2`: Discord adapter service mapping inbound payloads to owner envelope with role/channel constraints
-3. `M7-WP3`: Docker `full` profile runtime cutover (replace `api_app`/worker placeholder containers with real runtime entrypoints)
-4. `M7-WP4`: Gemini Flash free-tier provider-path activation + quota accounting validation
-5. `M7-WP5`: MVP acceptance matrix + evidence pack + closeout checklist (including PM reporting, completion approval path, and full lifecycle E2E)
+2. `M7-WP2`: Discord ingress context + identity/channel mapping baseline (`guild_id`/`channel_id`/`channel_type`, connector verification, allowlist state model)
+3. `M7-WP3`: Discord chat-governance enforcement (`direct`/`leadership_council`/`governance`/`executive`/`project`) + lifecycle-driven project-channel membership + specialist-access constraints
+4. `M7-WP4`: Docker `full` profile runtime cutover (replace `api_app`/worker placeholder containers with real runtime entrypoints)
+5. `M7-WP5`: Gemini Flash free-tier provider-path activation + quota accounting validation
+6. `M7-WP6`: MVP acceptance matrix + evidence pack + closeout checklist (including Project Manager reporting, completion approval path, and full lifecycle E2E)
 
 Exit criteria:
 - restart/recovery preserves governance and idempotency invariants and restores institutional-agent state
 - Docker `full` profile executes real runtime services (no placeholder app/worker containers)
 - Gemini free-tier provider path is validated through governed dispatch with quota telemetry evidence
 - Discord-to-governed-ingress path is executable end-to-end with specialist-access constraints
+- Discord adapter enforces fixed chat classes (`direct`, `leadership_council`, `governance`, `executive`, `project`) and lifecycle-driven project-channel membership constraints, including deferred/pending `secretary` participation profile handling
 - full project lifecycle (`proposed -> approved -> active -> paused -> completed -> terminated -> archived`) is validated via governed acceptance scenarios
 - MVP v0.1 evidence pack is complete and traceable
 
@@ -121,4 +123,4 @@ Exit criteria:
 - Ratio-based budget planning allowed upstream only; runtime enforces absolute caps
 - Project lifecycle lock: `proposed -> approved -> active -> paused -> completed -> terminated -> archived`
 - No standalone `rejected` project state in first MVP
-- `domain_lead` role declared but runtime-disabled for first MVP
+- `domain_leader` role declared but runtime-disabled for first MVP

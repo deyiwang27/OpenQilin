@@ -20,7 +20,7 @@
 | cwo | - | Y | - | - | - | - | Y |
 | cso | Y | - | - | - | Y | - | - |
 | project_manager | Y | Y | - | - | - | - | Y |
-| domain_lead | - | - | - | Y | Y | - | - |
+| domain_leader | - | - | - | Y | Y | - | - |
 | specialist | - | - | Y | - | - | - | - |
 
 Notes:

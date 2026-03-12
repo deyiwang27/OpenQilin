@@ -13,8 +13,18 @@ It is intentionally aligned with current runtime semantics and naming.
 - Budget soft-threshold default: `0.90`
 - Budget hard-threshold default: `1.00`
 - Communication retry `max_attempts`: `3`
-- Project workforce cap: `1 pm + up to 2 specialist`
+- Project workforce cap: `1 project_manager + up to 2 specialist`
 - Canonical project file root: `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`
+
+Canonical role naming:
+- Administrator -> `administrator`
+- Auditor -> `auditor`
+- CEO -> `ceo`
+- CWO -> `cwo`
+- CSO -> `cso`
+- Project Manager -> `project_manager`
+- Domain Leader -> `domain_leader`
+- Specialist -> `specialist`
 
 Budget thresholds are configurable per environment, but these are the MVP defaults.
 
@@ -24,7 +34,7 @@ Budget thresholds are configurable per environment, but these are the MVP defaul
 
 Columns:
 - `id` (uuid, pk)
-- `role` (text: `ceo|cwo|auditor|administrator|pm|specialist|domain_lead`)
+- `role` (text: `ceo|cwo|auditor|administrator|project_manager|specialist|domain_leader`)
 - `autonomy_level` (int)
 - `authority_flags` (jsonb)
 - `lifecycle_state` (text: `created|active|paused|retired`)
@@ -33,7 +43,7 @@ Columns:
 - `updated_at` (timestamp)
 
 MVP activation note:
-- `domain_lead` role is schema-declared for forward compatibility but runtime-disabled in first MVP.
+- `domain_leader` role is schema-declared for forward compatibility but runtime-disabled in first MVP.
 
 ## 3.2 `projects`
 
@@ -172,7 +182,7 @@ Project state contracts:
 - `terminated` allowed only from `active|paused`
 - `archived` allowed only from `completed|terminated`
 - project completion requires:
-  - PM completion report persisted
+  - Project Manager completion report persisted
   - `cwo` + `ceo` approval evidence persisted
   - owner notification event emitted
 
@@ -228,6 +238,21 @@ Adapter behavior:
 - does not bypass policy, budget, or authority middleware
 - enforces specialist-touchability restriction for owner-originated commands
 
+Discord chat governance contract:
+- Chat classes are fixed: `direct`, `leadership_council`, `governance`, `executive`, `project`.
+- Owner direct-message allowlist in MVP: `administrator`, `auditor`, `ceo`, `cwo`.
+- Free-style owner group creation outside contract classes is denied.
+- Project-channel (`<project_name>`) membership is state-driven in MVP:
+  - `proposed`: `owner`, `ceo`, `cwo`
+  - `approved|active|paused`: `owner`, `ceo`, `cwo`, `project_manager`
+  - `completed|terminated`: read-only
+  - `archived`: locked
+
+System-level target profile (documented, deferred in MVP):
+- Add `secretary` to owner direct-message allowlist and all chat classes (`leadership_council`, `governance`, `executive`, `project`) as pending activation.
+- Add `cso` to `leadership_council`, `executive`, and `project` proposed-stage membership.
+- Add `domain_leader` to `project` active-stage membership after role activation policy allows it.
+
 ## 10. Recovery Contract
 
 Startup recovery sequence:
@@ -242,4 +267,4 @@ Startup recovery sequence:
 - Portfolio-level optimization and cross-project rebalancing
 - Auto-discovery of all provider free-tier quota contracts
 - Autonomous governance model mutation by project agents
-- Runtime activation of `domain_lead` command path (declared but disabled)
+- Runtime activation of `domain_leader` command path (declared but disabled)

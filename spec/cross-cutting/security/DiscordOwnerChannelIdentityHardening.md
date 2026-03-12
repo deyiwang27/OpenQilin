@@ -8,9 +8,14 @@
 - Supported channel: Discord.
 - Supported interaction modes:
   - owner direct messages to allowed roles
-  - owner participation in authorized group/project/executive channels
+  - owner participation in contract-defined chat classes:
+    - `leadership_council`
+    - `governance`
+    - `executive`
+    - `project` (`<project_name>`)
 - Unsupported in v1:
   - WhatsApp and other external channels in production path
+  - owner-created free-style group chats outside the defined classes
 
 ## 3. Identity Mapping Model
 - External identity tuple:
@@ -26,10 +31,16 @@
 ## 4. Channel Trust and Access Controls
 - Allowlist controls:
   - approved guild ids
-  - approved channel ids per interaction class
+  - approved channel ids per interaction class (`direct`, `leadership_council`, `governance`, `executive`, `project`)
 - Role/scope controls:
   - channel message processing must pass policy authorization
   - cross-project or out-of-scope channel access is denied
+  - project-channel membership is lifecycle-state-driven:
+    - system target: `proposed` (`owner`, `ceo`, `cwo`, `cso`, `secretary` pending), `approved|active|paused` (+`project_manager`, `domain_leader`, `secretary` pending)
+    - MVP active profile: `proposed` (`owner`, `ceo`, `cwo`), `approved|active|paused` (+`project_manager`)
+  - owner direct-message target `secretary` is system-defined but pending/inactive in first MVP
+  - `leadership_council`, `governance`, and `executive` system-target memberships include `secretary` as pending/inactive in first MVP
+  - `completed|terminated` project channels are read-only; `archived` channels are locked
 - High-impact command controls:
   - explicit policy decision required before orchestration dispatch
   - immutable decision audit event required
@@ -56,7 +67,7 @@
 - `IAM-001`: actions require authenticated and attributable principal.
 - `OIM-001`: owner-issued commands require policy authorization before execution.
 - `OIM-002`: critical interaction events require immutable audit records.
-- `OIM-003`: owner channel access must respect role and scope constraints.
+- `OIM-003`: owner channel access must respect fixed chat-class membership and project-scope constraints.
 - `OIM-004`: alert severity and routing follow constitutional policies.
 
 ## 9. Conformance Tests

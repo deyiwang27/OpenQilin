@@ -64,7 +64,7 @@ roles:
     advisory: deny
     oversight: deny
     workforce: allow
-  domain_lead:
+  domain_leader:
     decision: deny
     command: deny
     execution: deny

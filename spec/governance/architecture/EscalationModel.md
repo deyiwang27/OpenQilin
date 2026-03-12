@@ -7,7 +7,7 @@
 ## 2. Canonical Paths
 Escalation chains:
 - Operational (general): specialist -> project_manager -> cwo -> ceo -> owner
-- Operational coordination failures: specialist -> domain_lead -> project_manager -> cwo -> ceo
+- Operational coordination failures: specialist -> domain_leader -> project_manager -> cwo -> ceo
 - Strategic: cso -> ceo -> owner
 - Governance (authority escalation): auditor -> owner (direct)
 - Budget violations:

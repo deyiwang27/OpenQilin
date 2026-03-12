@@ -18,7 +18,7 @@
   - agent template
   - llm profile
   - system prompt package
-- Review PM completion report and co-approve project completion with `ceo` before owner notification.
+- Review Project Manager completion report and co-approve project completion with `ceo` before owner notification.
 
 ## 4. Authority Profile
 | Authority | Value |
@@ -47,7 +47,7 @@
 - Workforce lifecycle actions follow `ceo` strategic direction and policy gates.
 - Escalate budget/policy blockers to `ceo`, with owner path when required by policy.
 - Route domain strategy disputes to `cso`; project-level execution risks to `project_manager`.
-- In first MVP runtime, `domain_lead` role may be declared in schema but remains disabled by policy.
+- In first MVP runtime, `domain_leader` role may be declared in schema but remains disabled by policy.
 
 ## 7. Runtime Interfaces
 - `spec/orchestration/registry/AgentRegistry.md`

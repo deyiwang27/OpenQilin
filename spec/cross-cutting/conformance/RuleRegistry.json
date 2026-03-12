@@ -1831,7 +1831,7 @@
     },
     {
       "id": "OIM-003",
-      "statement": "owner channel access MUST respect role and project scope constraints.",
+      "statement": "owner channel access MUST respect fixed chat-class membership and project-scope constraints.",
       "severity": "high",
       "enforced_by": "Task Orchestrator",
       "primary_source": "spec/orchestration/communication/OwnerInteractionModel.md",

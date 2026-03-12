@@ -9,7 +9,7 @@
 {
   "request_id": "uuid",
   "trace_id": "uuid",
-  "actor": {"id": "string", "role": "owner|secretary|administrator|auditor|ceo|cwo|cso|project_manager|domain_lead|specialist"},
+  "actor": {"id": "string", "role": "owner|secretary|administrator|auditor|ceo|cwo|cso|project_manager|domain_leader|specialist"},
   "action": "string",
   "target": "string",
   "context": {
@@ -25,7 +25,8 @@
     "communication_context": {
       "protocol": "a2a|acp",
       "channel_id": "string",
-      "channel_type": "direct|group|project|executive|governance",
+      "channel_type": "direct|leadership_council|governance|executive|project",
+      "project_lifecycle_stage": "proposed|approved|active|paused|completed|terminated|archived",
       "trust_level": "internal|external_verified|external_untrusted"
     }
   }
@@ -54,6 +55,9 @@
 - Active policy selection: single global active version.
 - Decision mode: fail-closed (errors default to `deny`).
 - Communication posture: runtime supports `a2a` payload with `acp` transport context.
+- Communication policy posture: owner chat channel classes are fixed (`direct`, `leadership_council`, `governance`, `executive`, `project`).
+- Secretary participation in owner chat classes is system-defined but may be marked pending/inactive by runtime profile (first MVP).
+- When `channel_type=project`, policy evaluation must enforce lifecycle-stage membership constraints.
 - Deterministic evaluation order:
   1. actor/role validation
   2. authority and governance constraints

@@ -25,7 +25,7 @@ State clarification:
 | approved | start | budget reservation + policy authorization succeed | emit project-start event | active |
 | active | pause | budget hard breach or safety containment triggered | emit pause + escalation event | paused |
 | paused | resume | remediation complete and authorization=`allow` | emit resume event | active |
-| active | complete | all required milestones=`completed`, required tasks terminal-success, PM completion report submitted, and `cwo+ceo` completion approval recorded | emit completion event + owner notification event | completed |
+| active | complete | all required milestones=`completed`, required tasks terminal-success, Project Manager completion report submitted, and `cwo+ceo` completion approval recorded | emit completion event + owner notification event | completed |
 | active | terminate | owner/governance termination decision | emit termination event | terminated |
 | paused | terminate | owner/governance termination decision | emit termination event | terminated |
 | completed | archive | retention elapsed | persist completion snapshot | archived |
@@ -46,6 +46,6 @@ State clarification:
 - Resuming a paused project without remediation evidence is denied.
 - Project start requires both policy approval and budget reservation.
 - Proposals remain in `proposed` state until explicit approval.
-- Project completion is denied without PM completion report and `cwo+ceo` approval evidence.
+- Project completion is denied without Project Manager completion report and `cwo+ceo` approval evidence.
 - Project completion is denied when any required milestone is not `completed`.
 - Archived projects reject further mutation events.

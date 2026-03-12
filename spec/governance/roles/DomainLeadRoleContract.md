@@ -1,11 +1,11 @@
 # OpenQilin - Domain Lead Role Contract Specification
 
 ## 1. Scope
-- Defines runtime contract for `domain_lead`.
+- Defines runtime contract for `domain_leader`.
 - First MVP posture: role is declared in schema for forward compatibility but runtime activation is disabled by policy.
 
 ## 2. Role Identity
-- `role_id`: `domain_lead`
+- `role_id`: `domain_leader`
 - `display_name`: `Domain Lead`
 - `role_layer`: `operations`
 - `reports_to`: `project_manager`

@@ -89,7 +89,7 @@ Scope:
   - DB-authoritative lifecycle/control fields
   - file-backed rich-text docs under canonical system root
 - document type policy and per-type document caps
-- specialist touchability governance (`pm`-only direct command path)
+- specialist touchability governance (`project_manager`-only direct command path)
 
 Exit:
 - project docs are stored outside repo tree with pointer/hash synchronization
@@ -103,6 +103,14 @@ Scope:
 - Gemini Flash free-tier provider-path activation and quota-usage telemetry validation
 - Discord adapter boundary with role/channel constraints and real round-trip verification
 - MVP acceptance matrix and evidence-pack closeout
+
+WP decomposition:
+1. `M7-WP1`: persistent runtime-state adapters + startup recovery orchestration
+2. `M7-WP2`: Discord ingress context + identity/channel mapping baseline
+3. `M7-WP3`: Discord chat-governance enforcement + lifecycle membership/policy integration
+4. `M7-WP4`: Docker `full` profile runtime cutover
+5. `M7-WP5`: Gemini Flash free-tier provider-path activation + quota telemetry validation
+6. `M7-WP6`: MVP acceptance matrix + evidence-pack closeout
 
 Exit:
 - restart/recovery preserves governance and idempotency invariants and rehydrates institutional agents from persistent state

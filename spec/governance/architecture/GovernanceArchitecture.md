@@ -961,7 +961,7 @@ External systems such as AgentSwarm exist outside the internal authority graph. 
 | cwo | - | ✓ | - | - | - | - | ✓ |
 | cso | ✓ | - | - | - | ✓ | - | - |
 | project_manager | ✓ | ✓ | - | - | - | - | ✓ |
-| domain_lead | - | - | - | ✓ | ✓ | - | - |
+| domain_leader | - | - | - | ✓ | ✓ | - | - |
 | specialist | - | - | ✓ | - | - | - | - |
 
 Display-name mapping used in narrative:
@@ -973,7 +973,7 @@ Display-name mapping used in narrative:
 - `cwo` -> CWO
 - `cso` -> CSO
 - `project_manager` -> Project Manager
-- `domain_lead` -> Domain Lead
+- `domain_leader` -> Domain Lead
 - `specialist` -> Specialist
 
 4.5 Authority Escalation Paths
@@ -1207,7 +1207,7 @@ These agents form the institutional core of governance. Their continuity ensures
 Project leadership agents exist only within the lifecycle of a project. These agents are created when a project is initiated and are retired when the project is completed, cancelled, or paused indefinitely. Project leadership agents include:
 
 - Project Manager (`project_manager`)
-- Domain Lead (`domain_lead`)
+- Domain Lead (`domain_leader`)
 
 Responsibilities of these agents are scoped to a single project. They coordinate execution and ensure that project activities remain aligned with governance rules and strategic direction.
 

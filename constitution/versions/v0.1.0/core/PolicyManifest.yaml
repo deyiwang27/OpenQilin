@@ -41,7 +41,7 @@ policy_bundle:
     - cwo
     - cso
     - project_manager
-    - domain_lead
+    - domain_leader
     - specialist
   required_files:
     - core/AuthorityMatrix.yaml
