@@ -212,13 +212,15 @@ Checklist:
 - evidence: `uv run python ops/scripts/check_release_artifact_package.py` (`passed`)
 - evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` (`158 passed`)
 - evidence doc: `implementation/v1/planning/M4EvidencePack-v1.md`
-- issue closeout: `#26` evidence sync and close - `todo`
+- issue closeout: `#26` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/26#issuecomment-4044441059`) and issue closed - `done`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043167927`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043582302`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043618833`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044251147`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044266430`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/25#issuecomment-4044265685`
+- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044442744`
+- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/26#issuecomment-4044441059`
 
 Update routine:
 - On issue start: add/update item here with branch + issue id.
