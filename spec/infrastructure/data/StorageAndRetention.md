@@ -7,6 +7,12 @@
 ## 2. Storage Classes
 - operational, audit, archive
 
+Project documentation storage boundary (v1):
+- runtime-generated project files must be stored outside repository source tree
+- canonical root: `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`
+- DB is authoritative for project state/control fields; file store is authoritative for rich-text project content
+- governed writes require DB pointer/hash synchronization (`storage_uri`, `content_hash`)
+
 ## 3. Retention Defaults (v1)
 | Data Class | Tier | TTL Default | Compression | Read-Only |
 | --- | --- | --- | --- | --- |
@@ -30,6 +36,13 @@
 4. Transition to next retention tier.
 5. Record transition event in immutable audit log.
 
+Project documentation workflow:
+1. Validate artifact type against allowed project document policy.
+2. Validate per-type document cap before file create.
+3. Write file revision under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`.
+4. Persist/update DB metadata pointer + hash atomically.
+5. Emit immutable audit event for create/update/archive actions.
+
 ## 6. Rule Set
 | Rule ID | Statement | Severity | Enforced By |
 | --- | --- | --- | --- |
@@ -38,9 +51,13 @@
 | STR-003 | Retention transitions MUST preserve traceability metadata. | high | Observability |
 | STR-004 | Destructive deletion overrides MUST require owner approval. | critical | Change Control |
 | STR-005 | Storage access MUST enforce project isolation boundaries. | critical | Policy Engine |
+| STR-006 | Runtime-generated project files MUST live under the canonical system root outside repository source tree. | high | administrator |
+| STR-007 | Project document create/update MUST fail closed when pointer/hash sync validation fails. | critical | Runtime |
 
 ## 7. Conformance Tests
 - Expired operational data follows retention transition policy.
 - Compression attempts without snapshot references are rejected.
 - Deletion override without owner approval is rejected.
 - Cross-project storage retrieval without authorization is denied.
+- Project-file writes outside canonical system root are denied.
+- Pointer/hash mismatch between DB metadata and file content is denied.

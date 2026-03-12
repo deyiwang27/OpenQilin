@@ -99,9 +99,16 @@ Forbidden:
 
 ### 5.9 `data_access`
 - repositories, transaction boundaries, outbox writes, checkpoints
+ - project-document pointer/hash persistence for file-backed runtime docs
 
 ### 5.10 `observability`
 - logs, traces, metrics, audit-event write boundary
+
+### 5.11 `project_document_store` (runtime file boundary)
+- canonical root: `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`
+- stores rich-text project docs (proposal/charter/metric plans/etc.)
+- out-of-repo runtime storage only; source tree is never used for generated project files
+- all writes are policy-gated and synchronized with DB pointer/hash metadata
 
 ## 6. Runnable Apps and Process Topology
 Runnable apps:
@@ -163,6 +170,8 @@ Recommended profiles:
 - `orchestrator_worker` owns task business transitions and governed dispatch decisions
 - `communication_worker` owns retries and dead-letter behavior
 - `admin_cli` owns migrations, seed/bootstrap, and diagnostics
+- `governance/project services` own project-state transitions:
+  - `proposed -> approved -> active -> paused -> completed -> terminated -> archived`
 
 ## 9. Related Follow-Ups
 - foundation details live in `design/v1/foundation/ImplementationFoundation-v1.md`

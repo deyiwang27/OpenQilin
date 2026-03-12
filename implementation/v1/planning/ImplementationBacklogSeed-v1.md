@@ -3,6 +3,7 @@
 ## 1. Scope
 - Seed implementation work from Define and Design artifacts.
 - Organize work in dependency order for governance-core first delivery.
+- Extend backlog structure from completed M0-M4 foundation into MVP v0.1 completion milestones.
 
 ## 2. Tracking Rule
 - `design/TODO.txt` is the design-stage historical tracker and is not reused as implementation live tracking.
@@ -42,14 +43,50 @@
 - stand up OTel collector pipeline
 - provision minimum Grafana dashboards and alert rules
 
+### 3.7 Governance Domain Persistence
+- implement persistent `agents` / `projects` / `tasks` / `execution_logs` schemas
+- replace placeholder governance repository/service surfaces
+- enforce lifecycle constraints for project and agent domain states
+- enforce canonical project lifecycle without standalone rejected state:
+  - `proposed -> approved -> active -> paused -> completed -> terminated -> archived`
+
+### 3.8 Recovery and Runtime Continuity
+- persist runtime task/communication state beyond in-memory shells
+- implement startup rehydration for runtime services and idempotency indexes
+- harden append-only log policy and persistence-boundary constraints
+
+### 3.9 External Owner Adapter
+- implement Discord adapter boundary mapping to canonical owner-command envelope
+- lock command-family contracts (`run_task*`, `llm_*`, `msg_*`, status queries)
+- produce end-to-end MVP acceptance matrix and evidence pack
+
+### 3.10 Proposal and Workforce Governance
+- implement proposal discussion/approval path (`owner`, `ceo`, `cwo`)
+- implement CWO project initialization (scope/objective/budget/metrics)
+- implement template-based workforce creation (`pm` active, `domain_lead` declared-disabled)
+
+### 3.11 Project Documentation Governance
+- store runtime-generated project docs under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`
+- enforce allowed document types and per-type document caps
+- persist DB pointer/hash metadata and fail closed on mismatch
+
+### 3.12 PM/Specialist Operating Constraints
+- codify PM mandatory operations template (milestones/tasks/assignment/reporting)
+- enforce specialist touchability (`pm`-only, domain-lead path disabled for first MVP)
+- enforce owner non-direct-specialist interaction contract
+
 ## 4. Suggested Delivery Order
-1. schema, migrations, and outbox primitives
-2. control-plane ingress and identity mapping
-3. policy runtime and orchestrator admission flow
-4. budget reservation path inside `orchestrator_worker`
-5. sandbox and llm gateway execution targets
-6. communication gateway reliability path
-7. observability and alerting hardening
+1. lock project lifecycle/transition guards (`proposed -> approved -> active -> paused -> completed -> terminated -> archived`)
+2. implement proposal discussion + approval governance APIs (`owner`, `ceo`, `cwo`)
+3. implement CWO project initialization and workforce templating contracts
+4. implement canonical system-root project file storage and DB pointer/hash synchronization
+5. enforce approved document types + per-type caps (fail-closed)
+6. enforce specialist touchability (`pm`-only direct path) and owner non-direct-specialist policy
+7. implement PM mandatory-operations template enforcement
+8. persist governance/runtime state adapters and startup recovery
+9. harden append-only audit persistence behavior and integrity checks
+10. implement Discord adapter with role/channel constraints
+11. run MVP acceptance matrix and publish closeout evidence pack
 
 ## 5. Acceptance Gates
 - governance-core conformance passes

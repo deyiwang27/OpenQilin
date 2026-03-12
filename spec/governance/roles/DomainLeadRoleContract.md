@@ -2,6 +2,7 @@
 
 ## 1. Scope
 - Defines runtime contract for `domain_lead`.
+- First MVP posture: role is declared in schema for forward compatibility but runtime activation is disabled by policy.
 
 ## 2. Role Identity
 - `role_id`: `domain_lead`

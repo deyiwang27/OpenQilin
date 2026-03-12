@@ -10,6 +10,8 @@
 - Sensitive query classes require audit emission.
 
 ## 3. Canonical Read Contracts
+- `get_project_proposal(project_id)`
+  - returns proposal revision state and approval metadata while project is `proposed`
 - `get_project_snapshot(project_id)`
   - returns project state, key metrics, milestone summary, risk summary
 - `get_milestone_plan(milestone_id)`
@@ -22,6 +24,9 @@
   - returns artifact versions and references under project scope
 
 ## 4. Canonical Write Contracts
+- `create_or_update_project_proposal(project_id, content_md, trace_id)`
+- `request_project_state_transition(project_id, event, reason, trace_id)`
+- `create_or_update_project_charter(project_id, content_md, trace_id)`
 - `append_task_note(task_id, content_md, trace_id)`
 - `create_or_update_artifact(scope_type, scope_id, artifact_type, content_md, trace_id)`
 - `request_task_state_transition(task_id, event, reason, trace_id)`
@@ -31,6 +36,7 @@
 - Contract execution requires identity resolution and role authorization.
 - Cross-project access is denied unless explicit policy authorization exists.
 - High-impact write contracts require policy + budget gate checks where applicable.
+- owner direct specialist command path is denied; specialist interactions must route through project-manager contract paths.
 
 ## 6. Response Envelope
 Minimum response fields:
@@ -52,3 +58,5 @@ Minimum response fields:
 - Sensitive read/write contracts emit required audit metadata.
 - Repeated idempotent write call does not duplicate side effects.
 - Unauthorized state transition requests are rejected before mutation.
+- Project proposal transitions violating lifecycle guard matrix are rejected.
+- Project-document writes violating type/cap policy are rejected fail-closed.

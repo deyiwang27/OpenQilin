@@ -7,6 +7,7 @@ Artifact groups:
 - `planning/`: implementation backlog seed, milestone model, execution plan, progress ledger
 - `workflow/`: AI-assisted workflow, developer contribution workflow, GitHub operations policy
 - `quality/`: quality gates, CI delivery posture, release/rollback operations
+- `mvp/`: MVP v0.1 architecture scope, runtime spec, and roadmap
 
 Planning docs:
 - `planning/TODO.txt`
@@ -24,6 +25,11 @@ Workflow docs:
 Quality docs:
 - `quality/QualityAndDelivery-v1.md`
 - `quality/ReleaseVersioningAndRollback-v1.md`
+
+MVP docs:
+- `mvp/MvpCoreGovernance-v1.md`
+- `mvp/MvpRuntimeSpecification-v1.md`
+- `mvp/MvpArchitectureRoadmap-v1.md`
 
 Tracking authority:
 - GitHub Issues/PRs/Project are the operational source of truth.

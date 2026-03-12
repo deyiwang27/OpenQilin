@@ -15,9 +15,9 @@ Status legend:
 - `done`
 
 Current focus:
-- Milestone: `M4 Hardening and Release Readiness`
-- Primary issue: `#21` (M4 Hardening and Release Readiness Kickoff)
-- Active branch: `feat/21-m4-hardening-release-kickoff`
+- Milestone: `M5 MVP Proposal and Governance Activation` (post-M4 MVP kickoff)
+- Primary issue: `TBD` (create M5 parent kickoff issue)
+- Active branch: `feat/mvp-v1`
 
 Checklist:
 0) Repo structure and documentation consistency review (post-migration) - `done`
@@ -165,7 +165,7 @@ Checklist:
 - PR: `https://github.com/deyiwang27/OpenQilin/pull/19`
 - milestone closeout: PR `#19` merged to `main` (`1f933150a9d7ed01e3ba69358669693c68e4b23a`) and issue `#13` closed - `done`
 
-4) M4 hardening and release readiness (`issue #21`) - `in_progress`
+4) M4 hardening and release readiness (`issue #21`) - `completed`
 - kickoff issue created with labels (`milestone:M4`, `type:feature`, `area:operations`, `risk:release-readiness`) - `done`
 - implementation branch created and pushed: `feat/21-m4-hardening-release-kickoff` - `done`
 - decomposition + dependency wiring with child WPs (`#22`..`#26`) - `done`
@@ -174,14 +174,14 @@ Checklist:
 - evidence: `uv run ruff check src/openqilin/observability/alerts tests/unit/test_m4_wp1_observability_release_readiness.py`
 - evidence: `uv run mypy src/openqilin/observability/alerts`
 - evidence: `uv run pytest tests/unit/test_m4_wp1_observability_release_readiness.py` (`4 passed`)
-- evidence doc: `implementation/v1/planning/M4WP1ObservabilityBaseline-v1.md`
+- evidence doc: `implementation/v1/planning/M4EvidencePack-v1.md`
 - issue closeout: `#22` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/22#issuecomment-4043213775`) and issue closed - `done`
 - `M4-WP2` migration validation + rollback drill automation (`issue #23`) - `done`
 - evidence: `uv run ruff check src/openqilin/apps/admin_cli.py ops/scripts/run_migration_rollback_drill.py ops/scripts/check_migration_rollback_readiness.py tests/unit/test_m4_wp2_migration_rollback_drill.py`
 - evidence: `uv run mypy src/openqilin/apps/admin_cli.py`
 - evidence: `uv run pytest tests/unit/test_m4_wp2_migration_rollback_drill.py` (`4 passed`)
 - evidence: `uv run python ops/scripts/check_migration_rollback_readiness.py` (`passed`)
-- evidence doc: `implementation/v1/planning/M4WP2MigrationRollbackDrill-v1.md`
+- evidence doc: `implementation/v1/quality/ReleaseVersioningAndRollback-v1.md`
 - issue closeout: `#23` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/23#issuecomment-4043581589`) and issue closed - `done`
 - `M4-WP3` full-profile smoke + conformance gate hardening (`issue #24`) - `done`
 - evidence: `uv run ruff check src/openqilin/release_readiness ops/scripts/check_release_gate_matrix.py ops/scripts/run_release_gate_matrix.py tests/unit/test_m4_wp3_release_gate_matrix.py tests/conformance/test_m4_wp3_release_gate_hardening_conformance.py`
@@ -189,7 +189,7 @@ Checklist:
 - evidence: `uv run pytest tests/unit/test_m4_wp3_release_gate_matrix.py tests/conformance/test_m4_wp3_release_gate_hardening_conformance.py`
 - evidence: `uv run python ops/scripts/check_release_gate_matrix.py` (`passed`)
 - evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` (`150 passed`)
-- evidence doc: `implementation/v1/planning/M4WP3ReleaseGateHardening-v1.md`
+- evidence doc: `implementation/v1/quality/QualityAndDelivery-v1.md`
 - issue closeout: `#24` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/24#issuecomment-4043616599`) and issue closed - `done`
 - `M4 post-review top-3 remediation` (downgrade destructive-guard enforcement, alert source-owner attribution preservation, structured gate-check parsing for CI/compose) - `done`
 - evidence: `uv run pytest tests/unit/test_m4_wp1_observability_release_readiness.py tests/unit/test_m4_wp2_migration_rollback_drill.py tests/conformance/test_m4_wp3_release_gate_hardening_conformance.py` (`12 passed`)
@@ -201,7 +201,7 @@ Checklist:
 - evidence: `uv run pytest tests/unit/test_m4_wp4_release_artifact_packaging.py tests/conformance/test_m4_wp4_release_artifact_package_conformance.py`
 - evidence: `uv run python ops/scripts/check_release_artifact_package.py` (`passed`)
 - evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` (`156 passed`)
-- evidence doc: `implementation/v1/planning/M4WP4ReleaseArtifactPackaging-v1.md`
+- evidence doc: `implementation/v1/planning/ReleaseArtifactIndex-v1.md`
 - issue closeout: `#25` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/25#issuecomment-4044250483`) and issue closed - `done`
 - `M4-WP5` M4 evidence pack + milestone closeout validation (`issue #26`) - `done`
 - evidence: `uv run ruff check implementation/v1/planning/M4EvidencePack-v1.md implementation/v1/planning/ReleaseArtifactIndex-v1.md tests/conformance/test_m4_wp5_evidence_pack_conformance.py`
@@ -218,6 +218,20 @@ Checklist:
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043618833`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044251147`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044266430`
+
+5) MVP v0.1 post-M4 completion roadmap (`M5`..`M7`) - `in_progress`
+- `M5-WP1`: project lifecycle guard lock (`proposed -> approved -> active -> paused -> completed -> terminated -> archived`) - `todo`
+- `M5-WP2`: proposal discussion and approval APIs (`owner`, `ceo`, `cwo`) - `todo`
+- `M5-WP3`: CWO project initialization flow (scope/objective/budget/metrics) - `todo`
+- `M5-WP4`: workforce template binding (`pm` active, `domain_lead` declared-disabled) - `todo`
+- `M6-WP1`: canonical project file root under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/` + DB pointer/hash model - `todo`
+- `M6-WP2`: project document policy (approved types + per-type caps + fail-closed over-cap) - `todo`
+- `M6-WP3`: specialist touchability enforcement (`pm`-only direct path) - `todo`
+- `M6-WP4`: PM mandatory-operations template enforcement (milestones/decomposition/assignment/reporting) - `todo`
+- `M7-WP1`: persistent runtime-state adapters + startup recovery hardening - `todo`
+- `M7-WP2`: Discord adapter boundary with role/channel constraints - `todo`
+- `M7-WP3`: MVP acceptance matrix + evidence pack closeout - `todo`
+- architecture baseline: `implementation/v1/mvp/MvpArchitectureRoadmap-v1.md`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/25#issuecomment-4044265685`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044442744`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/26#issuecomment-4044441059`

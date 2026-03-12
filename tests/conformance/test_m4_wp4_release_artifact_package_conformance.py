@@ -27,7 +27,7 @@ def test_m4_wp4_conformance_release_docs_have_required_decision_and_traceability
     for snippet in (
         "compose.yml",
         "implementation/v1/quality/ReleasePromotionChecklist-v1.md",
-        "implementation/v1/planning/M4WP3ReleaseGateHardening-v1.md",
+        "src/openqilin/release_readiness/gate_matrix.py",
     ):
         assert snippet in artifact_index
 
