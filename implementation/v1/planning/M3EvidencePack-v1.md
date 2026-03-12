@@ -12,7 +12,9 @@ Primary issue: `#13` (`M3: Communication Reliability Kickoff`)
 - `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
 - `uv run ruff check .`
 - `uv run mypy .`
-- Latest validation run on `2026-03-11`: `134 passed` (`pytest`), `ruff` pass, `mypy` pass.
+- `uv run python ops/scripts/check_spec_integrity.py`
+- Latest validation run on `2026-03-11`: `135 passed` (`pytest`), `ruff` pass, `mypy` pass, and spec-integrity check pass.
+- Latest remediation batch commit: `c34e3fb`.
 
 ## 3. Test Evidence Map
 ### 3.1 A2A Envelope Validation and ACP Contract Baseline
@@ -44,6 +46,7 @@ Primary issue: `#13` (`M3: Communication Reliability Kickoff`)
 3. Retry policy and dead-letter routing produce deterministic, auditable outcomes: covered by M3-WP3 retry tests plus M3-WP4 dead-letter writer/path tests.
 4. Orchestrator callback handling preserves at-least-once semantics without duplicate side effects: covered by M3-WP5 callback processor/integration/contract/conformance tests (duplicate callback replay safety assertions).
 5. Full quality gates pass for merged M3 scope (`ruff`, `mypy`, `pytest` suites including contract/conformance): covered by validation commands listed above.
+6. M3 post-review consistency checks stay enforced in CI: covered by `ops/scripts/check_spec_integrity.py` wired in `.github/workflows/ci.yml`.
 
 ## 5. GitHub Issue Evidence Links
 - Parent milestone issue: https://github.com/deyiwang27/OpenQilin/issues/13

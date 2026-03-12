@@ -155,6 +155,13 @@ Checklist:
 - evidence: `uv run mypy .`
 - evidence doc: `implementation/v1/planning/M3EvidencePack-v1.md`
 - issue closeout: `#18` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/18#issuecomment-4042874734`) and issue closed - `done`
+- `M3 post-review remediation`: reliability profile docs align to `max_attempts=3`, callback terminal immutability guard enforced (`completed|failed|cancelled`), error-code spec casing aligned to lower snake-case, CI spec-integrity check added - `done`
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` (`135 passed`)
+- evidence: `uv run ruff check .`
+- evidence: `uv run mypy .`
+- evidence: `uv run python ops/scripts/check_spec_integrity.py`
+- commit: `c34e3fb`
+- milestone closeout PR for `#13` - `in_progress`
 
 4) M4 hardening prep - `todo`
 - release-gate checklist draft
