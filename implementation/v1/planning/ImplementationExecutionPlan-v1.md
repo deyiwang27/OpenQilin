@@ -160,7 +160,7 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 
 5. `M4-WP5` M4 evidence pack and milestone closeout validation (`issue #26`)
 - Target modules: `implementation/v1/planning/M4EvidencePack-v1.md` and milestone closeout docs.
-- Deliverables: acceptance-criteria mapping with final validation evidence and closeout links.
+- Deliverables: acceptance-criteria mapping with final validation evidence and closeout links, plus conformance coverage for evidence-pack integrity (`tests/conformance/test_m4_wp5_evidence_pack_conformance.py`).
 
 ### 7.3 M4 Exit Evidence Checklist
 - Release-readiness dashboards/alerts are defined, linked to runbooks, and validated.

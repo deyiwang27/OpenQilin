@@ -203,7 +203,16 @@ Checklist:
 - evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` (`156 passed`)
 - evidence doc: `implementation/v1/planning/M4WP4ReleaseArtifactPackaging-v1.md`
 - issue closeout: `#25` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/25#issuecomment-4044250483`) and issue closed - `done`
-- `M4-WP5` M4 evidence pack + milestone closeout validation (`issue #26`) - `todo`
+- `M4-WP5` M4 evidence pack + milestone closeout validation (`issue #26`) - `done`
+- evidence: `uv run ruff check implementation/v1/planning/M4EvidencePack-v1.md implementation/v1/planning/ReleaseArtifactIndex-v1.md tests/conformance/test_m4_wp5_evidence_pack_conformance.py`
+- evidence: `uv run mypy .`
+- evidence: `uv run pytest tests/conformance/test_m4_wp5_evidence_pack_conformance.py` (`2 passed`)
+- evidence: `uv run python ops/scripts/check_migration_rollback_readiness.py` (`passed`)
+- evidence: `uv run python ops/scripts/check_release_gate_matrix.py` (`passed`)
+- evidence: `uv run python ops/scripts/check_release_artifact_package.py` (`passed`)
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` (`158 passed`)
+- evidence doc: `implementation/v1/planning/M4EvidencePack-v1.md`
+- issue closeout: `#26` evidence sync and close - `todo`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043167927`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043582302`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043618833`

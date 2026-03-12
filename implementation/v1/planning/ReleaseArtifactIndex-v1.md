@@ -20,7 +20,7 @@ Scope: `M4-WP4` release artifact packaging and promotion handoff.
 - `M4-WP1` evidence: https://github.com/deyiwang27/OpenQilin/issues/22#issuecomment-4043213775
 - `M4-WP2` evidence: https://github.com/deyiwang27/OpenQilin/issues/23#issuecomment-4043581589
 - `M4-WP3` evidence: https://github.com/deyiwang27/OpenQilin/issues/24#issuecomment-4043616599
-- `M4-WP4` evidence: pending issue `#25` closeout comment
+- `M4-WP4` evidence: https://github.com/deyiwang27/OpenQilin/issues/25#issuecomment-4044250483, https://github.com/deyiwang27/OpenQilin/issues/25#issuecomment-4044265685
 
 ## 3. Packaging Commands
 ```bash
