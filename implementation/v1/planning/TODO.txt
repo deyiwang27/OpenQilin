@@ -162,6 +162,7 @@ Checklist:
 - evidence: `uv run python ops/scripts/check_spec_integrity.py`
 - commit: `c34e3fb`
 - milestone closeout PR for `#13` - `in_progress`
+- PR: `https://github.com/deyiwang27/OpenQilin/pull/19`
 
 4) M4 hardening prep - `todo`
 - release-gate checklist draft

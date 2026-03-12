@@ -50,6 +50,7 @@ Primary issue: `#13` (`M3: Communication Reliability Kickoff`)
 
 ## 5. GitHub Issue Evidence Links
 - Parent milestone issue: https://github.com/deyiwang27/OpenQilin/issues/13
+- Milestone closeout PR: https://github.com/deyiwang27/OpenQilin/pull/19
 - `M3-WP1` issue + evidence: https://github.com/deyiwang27/OpenQilin/issues/14, https://github.com/deyiwang27/OpenQilin/issues/14#issuecomment-4042568446
 - `M3-WP2` issue + evidence: https://github.com/deyiwang27/OpenQilin/issues/15, https://github.com/deyiwang27/OpenQilin/issues/15#issuecomment-4042681776
 - `M3-WP3` issue + evidence: https://github.com/deyiwang27/OpenQilin/issues/16, https://github.com/deyiwang27/OpenQilin/issues/16#issuecomment-4042744335
