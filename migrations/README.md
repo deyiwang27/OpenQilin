@@ -12,3 +12,7 @@ Current contract baseline:
 - `20260311_0001_pgvector_baseline_contract.py`
   - enables `pgvector` extension (`CREATE EXTENSION IF NOT EXISTS vector`)
   - creates `knowledge_embedding` extension-dependent baseline table
+
+Migration validation + rollback drill commands:
+- `uv run python -m openqilin.apps.admin_cli rollback-drill --rollback-mode restore --restore-reference <backup-id>`
+- `uv run python -m openqilin.apps.admin_cli rollback-drill --rollback-mode downgrade --allow-downgrade-destructive --rollback-revision -1` (disposable DB only; blocked by default without explicit allow flag)

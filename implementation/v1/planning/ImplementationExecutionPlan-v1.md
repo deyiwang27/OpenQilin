@@ -135,8 +135,43 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 - Orchestrator callback handling preserves at-least-once semantics without duplicate side effects.
 - Full quality gates pass for merged M3 scope (`ruff`, `mypy`, `pytest` suites including contract/conformance slices).
 
-## 7. Tracking Interfaces
-### 7.1 Issue Contract Fields
+## 7. M4 Kickoff Workplan (Issue `#21`)
+### 7.1 Objective and Boundary
+- Complete hardening and release-readiness gates now that M3 is merged to `main`.
+- Deliver M4 in independently verifiable work packages with explicit release evidence links.
+- Focus on release reliability and operational promotion criteria; avoid net-new product-scope expansion.
+
+### 7.2 Ordered Work Packages
+1. `M4-WP1` Observability dashboards + release alert thresholds (`issue #22`)
+- Target modules: `observability/*`, release monitoring docs/runbooks.
+- Deliverables: release-readiness dashboard/alert contract, thresholds, and ownership/runbook linkage.
+
+2. `M4-WP2` Migration validation + rollback drill automation (`issue #23`)
+- Target modules: `migrations/*`, `ops/scripts/*`, rollout/rollback documentation.
+- Deliverables: deterministic forward/backward migration verification and rollback drill evidence flow (`admin_cli rollback-drill`, `ops/scripts/run_migration_rollback_drill.py`, CI `check_migration_rollback_readiness.py` gate).
+
+3. `M4-WP3` Full-profile smoke + conformance gate hardening (`issue #24`)
+- Target modules: `compose.yml`, CI/release gate workflows, smoke/conformance suites.
+- Deliverables: stable release-gate command matrix and deterministic pass/fail criteria for promotion (`release_readiness/gate_matrix.py`, `ops/scripts/run_release_gate_matrix.py`, CI `check_release_gate_matrix.py` gate, smoke/conformance conformance coverage).
+
+4. `M4-WP4` Release artifact + promotion checklist packaging (`issue #25`)
+- Target modules: release docs/checklists/evidence index artifacts.
+- Deliverables: operator-facing promotion checklist and traceable release artifact packaging (`release_readiness/artifact_packaging.py`, `ops/scripts/run_release_artifact_packager.py`, `ops/scripts/check_release_artifact_package.py`, release artifact index + checklist docs).
+
+5. `M4-WP5` M4 evidence pack and milestone closeout validation (`issue #26`)
+- Target modules: `implementation/v1/planning/M4EvidencePack-v1.md` and milestone closeout docs.
+- Deliverables: acceptance-criteria mapping with final validation evidence and closeout links, plus conformance coverage for evidence-pack integrity (`tests/conformance/test_m4_wp5_evidence_pack_conformance.py`).
+
+### 7.3 M4 Exit Evidence Checklist
+- Release-readiness dashboards/alerts are defined, linked to runbooks, and validated.
+- Migration/rollback drills are repeatable with recorded evidence.
+- `full` profile admin-bootstrap smoke + conformance gates are deterministic promotion blockers.
+- Release artifact/promotion checklist package is complete and operator-usable.
+- Full quality/release gates pass for merged M4 scope.
+- Residual scope boundary is documented: `api_app`/worker placeholder containers are excluded from M4 promotion evidence and tracked as post-M4 hardening work.
+
+## 8. Tracking Interfaces
+### 8.1 Issue Contract Fields
 Each implementation issue must contain:
 - `Milestone`: one of `M0`..`M4`
 - `Goal`: outcome statement tied to milestone intent
@@ -146,20 +181,20 @@ Each implementation issue must contain:
 - `Evidence Links`: PRs, test runs, traces, audit logs, or screenshots
 - `Definition of Done`: close condition beyond "code merged"
 
-### 7.2 Label Taxonomy
+### 8.2 Label Taxonomy
 Required label groups:
 - `milestone:*` (example: `milestone:M1`)
 - `type:*` (example: `type:feature`, `type:infra`, `type:test`)
 - `area:*` (example: `area:control_plane`, `area:task_orchestrator`)
 - `risk:*` (example: `risk:governance-core`)
 
-## 8. Cadence and Update Rules
+## 9. Cadence and Update Rules
 - PR-linked updates: every implementation PR references issue IDs and updates issue acceptance checklist status.
 - Weekly summary: update `ImplementationProgress-v1.md` once per week with milestone percentages, active features, blockers, and evidence links.
 - Milestone close rule: milestone can close only when exit evidence is attached and all required feature issues are closed.
 - Governance check rule: run consistency/governance checks per `implementation/v1/workflow/RepositoryConsistencyAndGovernanceCheck-v1.md` (PR-level light checks; deep checks on milestone close and major structure/policy changes).
 
-## 9. Related Documents
+## 10. Related Documents
 - `implementation/v1/workflow/AIAssistedDeliveryWorkflow-v1.md`
 - `implementation/v1/planning/ImplementationBacklogSeed-v1.md`
 - `implementation/v1/planning/ImplementationMilestones-v1.md`

@@ -16,8 +16,8 @@ Status legend:
 
 Current focus:
 - Milestone: `M4 Hardening and Release Readiness`
-- Primary issue: `TBD`
-- Active branch: `main`
+- Primary issue: `#21` (M4 Hardening and Release Readiness Kickoff)
+- Active branch: `feat/21-m4-hardening-release-kickoff`
 
 Checklist:
 0) Repo structure and documentation consistency review (post-migration) - `done`
@@ -165,9 +165,66 @@ Checklist:
 - PR: `https://github.com/deyiwang27/OpenQilin/pull/19`
 - milestone closeout: PR `#19` merged to `main` (`1f933150a9d7ed01e3ba69358669693c68e4b23a`) and issue `#13` closed - `done`
 
-4) M4 hardening prep - `todo`
-- release-gate checklist draft
-- rollback validation checklist draft
+4) M4 hardening and release readiness (`issue #21`) - `in_progress`
+- kickoff issue created with labels (`milestone:M4`, `type:feature`, `area:operations`, `risk:release-readiness`) - `done`
+- implementation branch created and pushed: `feat/21-m4-hardening-release-kickoff` - `done`
+- decomposition + dependency wiring with child WPs (`#22`..`#26`) - `done`
+- labels applied for M4 children (`milestone:M4`, `type:*`, `area:*`, `risk:release-readiness`) - `done`
+- `M4-WP1` observability dashboards + release alert thresholds (`issue #22`) - `done`
+- evidence: `uv run ruff check src/openqilin/observability/alerts tests/unit/test_m4_wp1_observability_release_readiness.py`
+- evidence: `uv run mypy src/openqilin/observability/alerts`
+- evidence: `uv run pytest tests/unit/test_m4_wp1_observability_release_readiness.py` (`4 passed`)
+- evidence doc: `implementation/v1/planning/M4WP1ObservabilityBaseline-v1.md`
+- issue closeout: `#22` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/22#issuecomment-4043213775`) and issue closed - `done`
+- `M4-WP2` migration validation + rollback drill automation (`issue #23`) - `done`
+- evidence: `uv run ruff check src/openqilin/apps/admin_cli.py ops/scripts/run_migration_rollback_drill.py ops/scripts/check_migration_rollback_readiness.py tests/unit/test_m4_wp2_migration_rollback_drill.py`
+- evidence: `uv run mypy src/openqilin/apps/admin_cli.py`
+- evidence: `uv run pytest tests/unit/test_m4_wp2_migration_rollback_drill.py` (`4 passed`)
+- evidence: `uv run python ops/scripts/check_migration_rollback_readiness.py` (`passed`)
+- evidence doc: `implementation/v1/planning/M4WP2MigrationRollbackDrill-v1.md`
+- issue closeout: `#23` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/23#issuecomment-4043581589`) and issue closed - `done`
+- `M4-WP3` full-profile smoke + conformance gate hardening (`issue #24`) - `done`
+- evidence: `uv run ruff check src/openqilin/release_readiness ops/scripts/check_release_gate_matrix.py ops/scripts/run_release_gate_matrix.py tests/unit/test_m4_wp3_release_gate_matrix.py tests/conformance/test_m4_wp3_release_gate_hardening_conformance.py`
+- evidence: `uv run mypy .`
+- evidence: `uv run pytest tests/unit/test_m4_wp3_release_gate_matrix.py tests/conformance/test_m4_wp3_release_gate_hardening_conformance.py`
+- evidence: `uv run python ops/scripts/check_release_gate_matrix.py` (`passed`)
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` (`150 passed`)
+- evidence doc: `implementation/v1/planning/M4WP3ReleaseGateHardening-v1.md`
+- issue closeout: `#24` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/24#issuecomment-4043616599`) and issue closed - `done`
+- `M4 post-review top-3 remediation` (downgrade destructive-guard enforcement, alert source-owner attribution preservation, structured gate-check parsing for CI/compose) - `done`
+- evidence: `uv run pytest tests/unit/test_m4_wp1_observability_release_readiness.py tests/unit/test_m4_wp2_migration_rollback_drill.py tests/conformance/test_m4_wp3_release_gate_hardening_conformance.py` (`12 passed`)
+- evidence: `uv run python ops/scripts/check_release_gate_matrix.py` (`passed`)
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` (`151 passed`)
+- `M4-WP4` release artifact + promotion checklist packaging (`issue #25`) - `done`
+- evidence: `uv run ruff check src/openqilin/release_readiness/artifact_packaging.py ops/scripts/run_release_artifact_packager.py ops/scripts/check_release_artifact_package.py tests/unit/test_m4_wp4_release_artifact_packaging.py tests/conformance/test_m4_wp4_release_artifact_package_conformance.py`
+- evidence: `uv run mypy src/openqilin/release_readiness/artifact_packaging.py ops/scripts/check_release_artifact_package.py ops/scripts/run_release_artifact_packager.py`
+- evidence: `uv run pytest tests/unit/test_m4_wp4_release_artifact_packaging.py tests/conformance/test_m4_wp4_release_artifact_package_conformance.py`
+- evidence: `uv run python ops/scripts/check_release_artifact_package.py` (`passed`)
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` (`156 passed`)
+- evidence doc: `implementation/v1/planning/M4WP4ReleaseArtifactPackaging-v1.md`
+- issue closeout: `#25` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/25#issuecomment-4044250483`) and issue closed - `done`
+- `M4-WP5` M4 evidence pack + milestone closeout validation (`issue #26`) - `done`
+- evidence: `uv run ruff check implementation/v1/planning/M4EvidencePack-v1.md implementation/v1/planning/ReleaseArtifactIndex-v1.md tests/conformance/test_m4_wp5_evidence_pack_conformance.py`
+- evidence: `uv run mypy .`
+- evidence: `uv run pytest tests/conformance/test_m4_wp5_evidence_pack_conformance.py` (`2 passed`)
+- evidence: `uv run python ops/scripts/check_migration_rollback_readiness.py` (`passed`)
+- evidence: `uv run python ops/scripts/check_release_gate_matrix.py` (`passed`)
+- evidence: `uv run python ops/scripts/check_release_artifact_package.py` (`passed`)
+- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` (`158 passed`)
+- evidence doc: `implementation/v1/planning/M4EvidencePack-v1.md`
+- issue closeout: `#26` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/26#issuecomment-4044441059`) and issue closed - `done`
+- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043167927`
+- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043582302`
+- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043618833`
+- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044251147`
+- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044266430`
+- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/25#issuecomment-4044265685`
+- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044442744`
+- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/26#issuecomment-4044441059`
+- milestone closeout PR for `#21`: `https://github.com/deyiwang27/OpenQilin/pull/27` - `done`
+- milestone closeout: merged to `main` via `PR #27`; issue `#21` closed - `done`
+- post-M4 follow-up: replace placeholder compose services (`api_app`, `orchestrator_worker`, `communication_worker`) with runnable entrypoints and extend smoke-gate conformance coverage - `todo`
+- post-M4 follow-up: enforce non-default connector shared secret in non-local environments at runtime validation layer - `todo`
 
 Update routine:
 - On issue start: add/update item here with branch + issue id.

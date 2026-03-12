@@ -9,6 +9,7 @@ import platform
 import sys
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from enum import Enum
 from pathlib import Path
 from typing import Any, Mapping
 from uuid import uuid4
@@ -19,6 +20,7 @@ from alembic import command
 from alembic.config import Config
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 
 from openqilin.apps.api_app import create_app
 from openqilin.apps.communication_worker import main as communication_worker_main
@@ -26,6 +28,7 @@ from openqilin.apps.orchestrator_worker import main as orchestrator_worker_main
 from openqilin.control_plane.identity.connector_security import sign_payload_hash
 from openqilin.data_access.db.engine import (
     check_pgvector_extension,
+    create_sqlalchemy_engine,
     ping_database,
     resolve_database_url,
 )
@@ -35,6 +38,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_ALEMBIC_INI = PROJECT_ROOT / "alembic.ini"
 OWNER_COMMAND_ROUTE = "/v1/owner/commands"
 DEFAULT_API_BASE_URL = RuntimeSettings().smoke_api_base_url
+DEFAULT_ROLLBACK_DRILL_EVIDENCE = (
+    PROJECT_ROOT / "implementation/v1/planning/artifacts/migration_rollback_drill_latest.json"
+)
 
 app = typer.Typer(help="OpenQilin administrative CLI.")
 
@@ -48,6 +54,13 @@ class CheckResult:
     details: str
 
 
+class RollbackMode(str, Enum):
+    """Rollback drill mode selector."""
+
+    RESTORE = "restore"
+    DOWNGRADE = "downgrade"
+
+
 def _route_paths(app_instance: FastAPI) -> set[str]:
     """Collect route paths from FastAPI app in a type-safe way."""
 
@@ -59,14 +72,214 @@ def _route_paths(app_instance: FastAPI) -> set[str]:
     return paths
 
 
-def apply_migrations(alembic_ini_path: Path) -> None:
-    """Apply Alembic migrations to `head`."""
+def _mask_database_url(database_url: str) -> str:
+    """Mask credentials for safe operator output."""
+
+    if "@" not in database_url or "://" not in database_url:
+        return database_url
+    prefix, suffix = database_url.split("://", 1)
+    if "@" not in suffix:
+        return database_url
+    _, host_path = suffix.split("@", 1)
+    return f"{prefix}://***@{host_path}"
+
+
+def _build_alembic_config(
+    *,
+    alembic_ini_path: Path,
+    database_url_override: str | None = None,
+) -> tuple[Config, str]:
+    """Create Alembic config with resolved runtime database URL."""
 
     if not alembic_ini_path.exists():
         raise FileNotFoundError(f"alembic config not found: {alembic_ini_path}")
     config = Config(str(alembic_ini_path))
-    database_url = resolve_database_url(alembic_ini_path=alembic_ini_path)
+    database_url = resolve_database_url(
+        override=database_url_override,
+        alembic_ini_path=alembic_ini_path,
+    )
     config.set_main_option("sqlalchemy.url", database_url)
+    return config, database_url
+
+
+def check_knowledge_embedding_table(database_url: str) -> tuple[bool, str]:
+    """Verify baseline embedding table is available."""
+
+    engine = None
+    try:
+        engine = create_sqlalchemy_engine(database_url)
+        with engine.connect() as connection:
+            table_name = connection.execute(
+                text("SELECT to_regclass('public.knowledge_embedding')")
+            ).scalar()
+        if table_name in {"knowledge_embedding", "public.knowledge_embedding"}:
+            return True, "knowledge_embedding table is available"
+        return False, "knowledge_embedding table is missing"
+    except Exception as error:
+        return False, f"knowledge_embedding check failed: {error}"
+    finally:
+        if engine is not None:
+            engine.dispose()
+
+
+def run_migration_rollback_drill(
+    *,
+    alembic_ini_path: Path,
+    database_url: str | None,
+    rollback_mode: RollbackMode,
+    rollback_revision: str,
+    restore_reference: str | None,
+    allow_downgrade_destructive: bool = False,
+) -> tuple[list[CheckResult], str]:
+    """Run migration validation plus rollback drill checks."""
+
+    try:
+        config, resolved_database_url = _build_alembic_config(
+            alembic_ini_path=alembic_ini_path,
+            database_url_override=database_url,
+        )
+    except Exception as error:
+        return [CheckResult("migration_drill_preflight", False, str(error))], ""
+
+    results: list[CheckResult] = []
+
+    try:
+        command.upgrade(config, "head")
+        results.append(CheckResult("migration_upgrade_head", True, "migrations applied to head"))
+    except Exception as error:
+        results.append(
+            CheckResult("migration_upgrade_head", False, f"migration head upgrade failed: {error}")
+        )
+        return results, resolved_database_url
+
+    pgvector_ok, pgvector_message = check_pgvector_extension(resolved_database_url)
+    results.append(CheckResult("migration_contract_pgvector", pgvector_ok, pgvector_message))
+    if not pgvector_ok:
+        return results, resolved_database_url
+
+    embedding_ok, embedding_message = check_knowledge_embedding_table(resolved_database_url)
+    results.append(
+        CheckResult("migration_contract_embedding_table", embedding_ok, embedding_message)
+    )
+    if not embedding_ok:
+        return results, resolved_database_url
+
+    if rollback_mode is RollbackMode.RESTORE:
+        reference = (restore_reference or "").strip()
+        if not reference:
+            results.append(
+                CheckResult(
+                    "rollback_restore_reference",
+                    False,
+                    "restore mode requires --restore-reference (backup or snapshot id)",
+                )
+            )
+            return results, resolved_database_url
+        results.append(
+            CheckResult(
+                "rollback_restore_plan",
+                True,
+                f"restore-from-backup reference recorded: {reference}",
+            )
+        )
+        return results, resolved_database_url
+
+    if not allow_downgrade_destructive:
+        results.append(
+            CheckResult(
+                "rollback_downgrade_guard",
+                False,
+                "downgrade mode is blocked by default; pass --allow-downgrade-destructive only for disposable databases",
+            )
+        )
+        return results, resolved_database_url
+
+    try:
+        command.downgrade(config, rollback_revision)
+        results.append(
+            CheckResult("rollback_downgrade", True, f"downgraded to revision {rollback_revision}")
+        )
+    except Exception as error:
+        results.append(
+            CheckResult(
+                "rollback_downgrade",
+                False,
+                f"downgrade to revision {rollback_revision} failed: {error}",
+            )
+        )
+        return results, resolved_database_url
+
+    try:
+        command.upgrade(config, "head")
+        results.append(CheckResult("rollback_recover_head", True, "re-applied migrations to head"))
+    except Exception as error:
+        results.append(
+            CheckResult("rollback_recover_head", False, f"re-upgrade to head failed: {error}")
+        )
+        return results, resolved_database_url
+
+    rollback_pg_ok, rollback_pg_message = check_pgvector_extension(resolved_database_url)
+    results.append(CheckResult("rollback_contract_pgvector", rollback_pg_ok, rollback_pg_message))
+    if not rollback_pg_ok:
+        return results, resolved_database_url
+
+    rollback_embedding_ok, rollback_embedding_message = check_knowledge_embedding_table(
+        resolved_database_url
+    )
+    results.append(
+        CheckResult(
+            "rollback_contract_embedding_table",
+            rollback_embedding_ok,
+            rollback_embedding_message,
+        )
+    )
+    return results, resolved_database_url
+
+
+def build_migration_drill_evidence_payload(
+    *,
+    release_version: str,
+    operator: str,
+    reason: str,
+    rollback_mode: RollbackMode,
+    rollback_revision: str,
+    restore_reference: str | None,
+    database_url: str,
+    results: list[CheckResult],
+) -> dict[str, Any]:
+    """Build deterministic evidence payload for rollback drill artifacts."""
+
+    return {
+        "timestamp_utc": datetime.now(tz=UTC).isoformat(),
+        "release_version": release_version,
+        "operator": operator,
+        "reason": reason,
+        "rollback_mode": rollback_mode.value,
+        "rollback_revision": rollback_revision if rollback_mode is RollbackMode.DOWNGRADE else None,
+        "restore_reference": (
+            (restore_reference or "").strip() if rollback_mode is RollbackMode.RESTORE else None
+        ),
+        "database_url": _mask_database_url(database_url),
+        "overall_success": all(result.success for result in results),
+        "steps": [
+            {"name": result.name, "success": result.success, "details": result.details}
+            for result in results
+        ],
+    }
+
+
+def write_migration_drill_evidence(payload: Mapping[str, Any], output_path: Path) -> Path:
+    """Persist rollback-drill evidence payload."""
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    return output_path
+
+
+def apply_migrations(alembic_ini_path: Path) -> None:
+    """Apply Alembic migrations to `head`."""
+
+    config, _ = _build_alembic_config(alembic_ini_path=alembic_ini_path)
     command.upgrade(config, "head")
 
 
@@ -248,13 +461,7 @@ def run_diagnostics_checks(
         override=database_url,
         alembic_ini_path=alembic_ini_path,
     )
-
-    masked_database_url = configured_database_url
-    if "@" in configured_database_url and "://" in configured_database_url:
-        prefix, suffix = configured_database_url.split("://", 1)
-        if "@" in suffix:
-            _, host_path = suffix.split("@", 1)
-            masked_database_url = f"{prefix}://***@{host_path}"
+    masked_database_url = _mask_database_url(configured_database_url)
 
     results: list[CheckResult] = [
         CheckResult("diagnostics_env", True, f"env={settings.env}"),
@@ -362,6 +569,104 @@ def smoke(
         run_in_process_smoke_check() if in_process else run_smoke_check(api_base_url=api_base_url)
     )
     _render_and_exit([result])
+
+
+@app.command("rollback-drill")
+def rollback_drill(
+    rollback_mode: RollbackMode = typer.Option(
+        RollbackMode.RESTORE,
+        "--rollback-mode",
+        help="Rollback drill mode: restore (policy path) or downgrade (ephemeral-db drill).",
+    ),
+    rollback_revision: str = typer.Option(
+        "-1",
+        "--rollback-revision",
+        help="Revision target used only when --rollback-mode downgrade.",
+    ),
+    allow_downgrade_destructive: bool = typer.Option(
+        False,
+        "--allow-downgrade-destructive",
+        help="Explicitly allow destructive downgrade drill mode (disposable databases only).",
+    ),
+    restore_reference: str | None = typer.Option(
+        None,
+        "--restore-reference",
+        help="Backup/snapshot reference required when --rollback-mode restore.",
+    ),
+    release_version: str = typer.Option(
+        "0.1.0-dev",
+        "--release-version",
+        help="Release version tag recorded in rollback drill evidence.",
+    ),
+    operator: str = typer.Option(
+        "unknown_operator",
+        "--operator",
+        help="Operator identity recorded in rollback drill evidence.",
+    ),
+    reason: str = typer.Option(
+        "release_readiness_drill",
+        "--reason",
+        help="Reason string recorded in rollback drill evidence.",
+    ),
+    evidence_output: Path = typer.Option(
+        DEFAULT_ROLLBACK_DRILL_EVIDENCE,
+        "--evidence-output",
+        help="Path for writing rollback drill evidence JSON.",
+    ),
+    database_url: str | None = typer.Option(
+        None,
+        "--database-url",
+        help="Optional database URL override used for migration drill.",
+    ),
+    alembic_ini: Path = typer.Option(
+        DEFAULT_ALEMBIC_INI,
+        "--alembic-ini",
+        help="Path to Alembic config file used for drill execution.",
+    ),
+) -> None:
+    """Run migration validation and rollback drill with evidence output."""
+
+    results, resolved_database_url = run_migration_rollback_drill(
+        alembic_ini_path=alembic_ini,
+        database_url=database_url,
+        rollback_mode=rollback_mode,
+        rollback_revision=rollback_revision,
+        restore_reference=restore_reference,
+        allow_downgrade_destructive=allow_downgrade_destructive,
+    )
+    if not resolved_database_url:
+        resolved_database_url = resolve_database_url(
+            override=database_url,
+            alembic_ini_path=alembic_ini,
+        )
+    payload = build_migration_drill_evidence_payload(
+        release_version=release_version,
+        operator=operator,
+        reason=reason,
+        rollback_mode=rollback_mode,
+        rollback_revision=rollback_revision,
+        restore_reference=restore_reference,
+        database_url=resolved_database_url,
+        results=results,
+    )
+    try:
+        output_path = write_migration_drill_evidence(payload, evidence_output)
+        results.append(
+            CheckResult(
+                "rollback_drill_evidence",
+                True,
+                f"evidence written to {output_path}",
+            )
+        )
+    except Exception as error:
+        results.append(
+            CheckResult(
+                "rollback_drill_evidence",
+                False,
+                f"failed to write evidence file: {error}",
+            )
+        )
+    _render_and_exit(results)
 
 
 @app.command()

@@ -20,12 +20,15 @@ Release candidate set:
 - migration bundle
 - Compose definitions for local-first baseline
 - release notes and conformance evidence links
+- release artifact index + promotion checklist package (`implementation/v1/planning/ReleaseArtifactIndex-v1.md`, `implementation/v1/quality/ReleasePromotionChecklist-v1.md`)
 
 ## 4. Promotion Rules
 Promotion requires:
 - passing CI
 - passing full-profile smoke and conformance checks
 - migration forward-apply verification
+- rollback-drill verification gate (`uv run python ops/scripts/check_migration_rollback_readiness.py`)
+- release artifact package verification (`uv run python ops/scripts/check_release_artifact_package.py`)
 - rollback plan documented for changed schema/config/runtime surfaces
 - secrets/config readiness confirmed for target environment
 
@@ -38,6 +41,32 @@ Schema rollback:
 - do not rely on destructive down-migrations in v1
 - use forward fixes or restore-from-backup when a schema release is broken
 - migrations must be reviewed for backward compatibility during rolling app rollback windows
+
+## 5.1 Migration Validation and Rollback Drill Commands
+Release and pre-release operators run one of:
+
+```bash
+# Policy-aligned path (production-like): validate forward migration + record restore reference
+uv run python -m openqilin.apps.admin_cli rollback-drill \
+  --rollback-mode restore \
+  --restore-reference backup-2026-03-12T020000Z \
+  --release-version 0.1.0-rc1 \
+  --operator release_manager
+
+# Disposable-environment drill: verify downgrade/upgrade round-trip deterministically
+uv run python -m openqilin.apps.admin_cli rollback-drill \
+  --rollback-mode downgrade \
+  --allow-downgrade-destructive \
+  --rollback-revision -1 \
+  --release-version 0.1.0-rc1 \
+  --operator release_manager
+```
+
+Operational equivalent script entrypoint:
+
+```bash
+uv run python ops/scripts/run_migration_rollback_drill.py --help
+```
 
 Config rollback:
 - routing-profile and provider alias changes must be versioned and auditable

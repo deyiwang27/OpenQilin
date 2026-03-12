@@ -66,8 +66,9 @@ Scope:
 - release artifact preparation
 
 Exit:
-- full compose profile passes smoke and conformance gates
-- release candidate is promotable under manual gate
+- full compose profile admin-bootstrap smoke gate and conformance gates pass deterministically
+- release candidate is promotable under manual gate for implemented runtime surface
+- placeholder container replacement for `api_app` and workers is tracked as post-M4 hardening follow-up
 
 ## 4. First Executable Slice Detail
 Recommended implementation order inside `M1`:
