@@ -170,7 +170,11 @@ Checklist:
 - implementation branch created and pushed: `feat/21-m4-hardening-release-kickoff` - `done`
 - decomposition + dependency wiring with child WPs (`#22`..`#26`) - `done`
 - labels applied for M4 children (`milestone:M4`, `type:*`, `area:*`, `risk:release-readiness`) - `done`
-- `M4-WP1` observability dashboards + release alert thresholds (`issue #22`) - `todo`
+- `M4-WP1` observability dashboards + release alert thresholds (`issue #22`) - `done`
+- evidence: `uv run ruff check src/openqilin/observability/alerts tests/unit/test_m4_wp1_observability_release_readiness.py`
+- evidence: `uv run mypy src/openqilin/observability/alerts`
+- evidence: `uv run pytest tests/unit/test_m4_wp1_observability_release_readiness.py` (`4 passed`)
+- evidence doc: `implementation/v1/planning/M4WP1ObservabilityBaseline-v1.md`
 - `M4-WP2` migration validation + rollback drill automation (`issue #23`) - `todo`
 - `M4-WP3` full-profile smoke + conformance gate hardening (`issue #24`) - `todo`
 - `M4-WP4` release artifact + promotion checklist packaging (`issue #25`) - `todo`
