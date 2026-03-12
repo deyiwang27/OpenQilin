@@ -51,7 +51,10 @@ def test_bind_project_manager_template_as_cwo_returns_active_binding() -> None:
             "role": "project_manager",
             "template_id": "project_manager_template_v1",
             "llm_routing_profile": "dev_gemini_free",
-            "system_prompt": "You are Project Manager.",
+            "system_prompt": (
+                "You are Project Manager. Mandatory operations: milestone planning, "
+                "task decomposition, task assignment, progress reporting."
+            ),
         },
     )
 
@@ -61,6 +64,12 @@ def test_bind_project_manager_template_as_cwo_returns_active_binding() -> None:
     assert body["data"]["role"] == "project_manager"
     assert body["data"]["binding_status"] == "active"
     assert len(body["data"]["system_prompt_hash"]) == 64
+    assert body["data"]["mandatory_operations"] == [
+        "milestone_planning",
+        "progress_reporting",
+        "task_assignment",
+        "task_decomposition",
+    ]
 
 
 def test_bind_domain_leader_template_stays_declared_disabled() -> None:
@@ -96,7 +105,10 @@ def test_bind_workforce_template_rejects_non_cwo_role() -> None:
             "role": "project_manager",
             "template_id": "project_manager_template_v1",
             "llm_routing_profile": "dev_gemini_free",
-            "system_prompt": "You are Project Manager.",
+            "system_prompt": (
+                "You are Project Manager. Mandatory operations: milestone planning, "
+                "task decomposition, task assignment, progress reporting."
+            ),
         },
     )
 
@@ -104,3 +116,24 @@ def test_bind_workforce_template_rejects_non_cwo_role() -> None:
     assert response.status_code == 403
     assert body["status"] == "denied"
     assert body["error"]["code"] == "governance_role_forbidden"
+
+
+def test_bind_project_manager_template_rejects_missing_mandatory_operations() -> None:
+    client = _seed_active_project()
+
+    response = client.post(
+        "/v1/governance/projects/project_m5_wp4/workforce/bind",
+        headers=_headers(actor_id="cwo_1", actor_role="cwo"),
+        json={
+            "trace_id": "trace-m6-wp4-bind-missing-ops-router",
+            "role": "project_manager",
+            "template_id": "project_manager_template_v1",
+            "llm_routing_profile": "dev_gemini_free",
+            "system_prompt": "You are Project Manager.",
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 409
+    assert body["status"] == "denied"
+    assert body["error"]["code"] == "governance_project_manager_template_missing_operations"

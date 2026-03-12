@@ -99,6 +99,7 @@ class WorkforceBindingRecord:
     template_id: str
     llm_routing_profile: str
     system_prompt_hash: str
+    mandatory_operations: tuple[str, ...]
     binding_status: str
     actor_id: str
     actor_role: str
@@ -548,6 +549,7 @@ class InMemoryGovernanceRepository:
         template_id: str,
         llm_routing_profile: str,
         system_prompt_hash: str,
+        mandatory_operations: tuple[str, ...] = (),
         actor_id: str,
         actor_role: str,
         trace_id: str,
@@ -586,6 +588,11 @@ class InMemoryGovernanceRepository:
                     code="governance_project_manager_binding_exists",
                     message="project manager binding already exists for project",
                 )
+            if len(mandatory_operations) == 0:
+                raise GovernanceRepositoryError(
+                    code="governance_project_manager_template_missing_operations",
+                    message=("project manager template must include mandatory operations contract"),
+                )
 
         binding_status = "active" if normalized_role == "project_manager" else "declared_disabled"
         binding = WorkforceBindingRecord(
@@ -595,6 +602,7 @@ class InMemoryGovernanceRepository:
             template_id=template_id.strip(),
             llm_routing_profile=llm_routing_profile.strip(),
             system_prompt_hash=system_prompt_hash.strip(),
+            mandatory_operations=tuple(sorted(set(mandatory_operations))),
             binding_status=binding_status,
             actor_id=actor_id.strip(),
             actor_role=actor_role.strip(),

@@ -39,7 +39,8 @@ Checklist:
 - `M6-WP1` canonical project file root (`${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`) + DB pointer/hash model - `done` (`issue #36`)
 - `M6-WP2` project document policy (approved types + per-type caps + fail-closed over-cap) - `done` (`issue #37`)
 - `M6-WP3` specialist touchability enforcement (`project_manager`-only direct path) - `done` (`issue #38`)
-- `M6-WP4` Project Manager mandatory-operations template enforcement - `todo` (`issue #39`)
+- `M6-WP4` Project Manager mandatory-operations template enforcement - `done` (`issue #39`)
+- milestone closeout PR + parent issue close for `#35` - `todo`
 
 3) `M7 MVP Persistence, Adapter, and Acceptance` - `todo`
 - `M7-WP1` persistent runtime-state adapters + startup recovery hardening - `todo`

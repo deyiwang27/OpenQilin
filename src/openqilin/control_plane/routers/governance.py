@@ -117,6 +117,8 @@ def _map_handler_error(
         "governance_project_artifact_persistence_failed",
         "governance_project_artifact_integrity_failed",
         "governance_project_artifact_policy_denied",
+        "governance_project_manager_template_invalid",
+        "governance_project_manager_template_missing_operations",
     }:
         return (
             status.HTTP_409_CONFLICT,
@@ -400,6 +402,7 @@ def bind_workforce_template(
             "binding_status": outcome.binding_status,
             "template_id": outcome.template_id,
             "llm_routing_profile": outcome.llm_routing_profile,
+            "mandatory_operations": ",".join(outcome.mandatory_operations),
         },
     )
     return _governance_response(
@@ -414,5 +417,6 @@ def bind_workforce_template(
             "template_id": outcome.template_id,
             "llm_routing_profile": outcome.llm_routing_profile,
             "system_prompt_hash": outcome.system_prompt_hash,
+            "mandatory_operations": list(outcome.mandatory_operations),
         },
     )
