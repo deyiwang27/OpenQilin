@@ -20,6 +20,7 @@ Release candidate set:
 - migration bundle
 - Compose definitions for local-first baseline
 - release notes and conformance evidence links
+- release artifact index + promotion checklist package (`implementation/v1/planning/ReleaseArtifactIndex-v1.md`, `implementation/v1/quality/ReleasePromotionChecklist-v1.md`)
 
 ## 4. Promotion Rules
 Promotion requires:
@@ -27,6 +28,7 @@ Promotion requires:
 - passing full-profile smoke and conformance checks
 - migration forward-apply verification
 - rollback-drill verification gate (`uv run python ops/scripts/check_migration_rollback_readiness.py`)
+- release artifact package verification (`uv run python ops/scripts/check_release_artifact_package.py`)
 - rollback plan documented for changed schema/config/runtime surfaces
 - secrets/config readiness confirmed for target environment
 

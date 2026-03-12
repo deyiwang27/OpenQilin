@@ -156,7 +156,7 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 
 4. `M4-WP4` Release artifact + promotion checklist packaging (`issue #25`)
 - Target modules: release docs/checklists/evidence index artifacts.
-- Deliverables: operator-facing promotion checklist and traceable release artifact packaging.
+- Deliverables: operator-facing promotion checklist and traceable release artifact packaging (`release_readiness/artifact_packaging.py`, `ops/scripts/run_release_artifact_packager.py`, `ops/scripts/check_release_artifact_package.py`, release artifact index + checklist docs).
 
 5. `M4-WP5` M4 evidence pack and milestone closeout validation (`issue #26`)
 - Target modules: `implementation/v1/planning/M4EvidencePack-v1.md` and milestone closeout docs.

@@ -9,3 +9,5 @@ Current baseline scripts:
 - `check_migration_rollback_readiness.py`: enforces rollback-drill policy/gate integrity in CI.
 - `run_release_gate_matrix.py`: executes deterministic CI/release-candidate gate command matrix.
 - `check_release_gate_matrix.py`: validates matrix/workflow/compose/doc alignment for release-gate hardening.
+- `run_release_artifact_packager.py`: generates release-candidate artifact bundle JSON and rendered promotion checklist markdown.
+- `check_release_artifact_package.py`: validates release artifact package docs and promotion decision/rollback hooks.

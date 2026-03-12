@@ -24,6 +24,8 @@ uv run pytest tests/contract tests/integration
 uv run pytest tests/conformance
 uv run python ops/scripts/run_release_gate_matrix.py --scope ci
 uv run python ops/scripts/run_release_gate_matrix.py --scope release-candidate --dry-run
+uv run python ops/scripts/check_release_artifact_package.py
+uv run python ops/scripts/run_release_artifact_packager.py --release-version 0.1.0-rc1 --git-commit <commit>
 ```
 
 Fixture rules:
@@ -48,6 +50,7 @@ Mandatory PR checks:
 - contract tests
 - spec/conformance integrity checks
 - release-gate matrix checks (`ops/scripts/check_release_gate_matrix.py`)
+- release artifact package checks (`ops/scripts/check_release_artifact_package.py`)
 
 Additional checks when relevant:
 - integration tests for runtime-flow changes
@@ -81,6 +84,7 @@ Manual promotion gates:
 - config/secret readiness confirmed
 - rollback path documented
 - release-candidate matrix gate run includes smoke + conformance checks (`ops/scripts/run_release_gate_matrix.py --scope release-candidate`)
+- promotion checklist completed and artifact index references verified (`implementation/v1/quality/ReleasePromotionChecklist-v1.md`, `implementation/v1/planning/ReleaseArtifactIndex-v1.md`)
 
 ## 6. Artifact Policy
 - build definitions must be reproducible from the repo
