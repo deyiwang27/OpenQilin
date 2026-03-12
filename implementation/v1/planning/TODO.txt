@@ -22,7 +22,7 @@ Current context:
 Milestone summary:
 - `M0`..`M4`: `done` (see `implementation/v1/planning/ImplementationProgress-v1.md` and evidence packs)
 - `M5`: `done`
-- `M6`: `in_progress`
+- `M6`: `done`
 - `M7`: `todo`
 
 Checklist:
@@ -33,7 +33,7 @@ Checklist:
 - `M5-WP4` workforce template binding (`project_manager` active, `domain_leader` declared-disabled) - `done` (`issue #33`)
 - milestone closeout PR + parent issue close for `#29` - `done` (`PR #34`, merge `b997c46`)
 
-2) `M6 MVP Documentation and Access Governance` (`issue #35`) - `in_progress`
+2) `M6 MVP Documentation and Access Governance` (`issue #35`) - `done`
 - kickoff/decomposition complete with child work packages (`#36`..`#39`) - `done`
 - MVP policy decisions locked (doc-type enum, per-type + total caps, stage/role write matrix, hybrid mutability, pointer/hash integrity semantics) - `done`
 - `M6-WP1` canonical project file root (`${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`) + DB pointer/hash model - `done` (`issue #36`)
@@ -41,7 +41,7 @@ Checklist:
 - `M6-WP3` specialist touchability enforcement (`project_manager`-only direct path) - `done` (`issue #38`)
 - `M6-WP4` Project Manager mandatory-operations template enforcement - `done` (`issue #39`)
 - M6 remediation batch (specialist spoof hardening, six baseline activation docs, role/stage write authorization) - `done`
-- milestone closeout PR + parent issue close for `#35` - `todo`
+- milestone closeout PR + parent issue close for `#35` - `done` (`PR #40`)
 
 3) `M7 MVP Persistence, Adapter, and Acceptance` - `todo`
 - `M7-WP1` persistent runtime-state adapters + startup recovery hardening - `todo`
