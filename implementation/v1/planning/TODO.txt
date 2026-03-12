@@ -208,6 +208,8 @@ Checklist:
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043582302`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043618833`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044251147`
+- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044266430`
+- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/25#issuecomment-4044265685`
 
 Update routine:
 - On issue start: add/update item here with branch + issue id.
