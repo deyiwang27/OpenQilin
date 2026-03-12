@@ -22,6 +22,7 @@ class PolicyEvaluationInput:
     action: str
     target: str
     recipient_types: tuple[str, ...]
+    recipient_ids: tuple[str, ...]
     args: tuple[str, ...]
     project_id: str | None
 

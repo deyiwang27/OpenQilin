@@ -58,6 +58,13 @@ class InMemoryPolicyRuntimeClient:
 
         if payload.principal_role == "owner" and (
             "specialist" in payload.recipient_types
+            or any(recipient_id.startswith("specialist") for recipient_id in payload.recipient_ids)
+            or (
+                payload.action.startswith("msg_")
+                and any(
+                    argument.strip().lower().startswith("specialist") for argument in payload.args
+                )
+            )
             or payload.target.strip().lower() == "specialist"
             or payload.target.strip().lower().startswith("specialist_")
         ):

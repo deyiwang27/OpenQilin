@@ -8,7 +8,16 @@ import pytest
 from openqilin.data_access.repositories.artifacts import (
     InMemoryProjectArtifactRepository,
     ProjectArtifactRepositoryError,
+    ProjectArtifactWriteContext,
 )
+
+
+def _cwo_context() -> ProjectArtifactWriteContext:
+    return ProjectArtifactWriteContext(
+        actor_role="cwo",
+        project_status="approved",
+        approval_roles=("ceo", "cwo"),
+    )
 
 
 def test_write_project_artifact_persists_canonical_path_and_hash(tmp_path: Path) -> None:
@@ -18,6 +27,7 @@ def test_write_project_artifact_persists_canonical_path_and_hash(tmp_path: Path)
         project_id="project_m6_wp1",
         artifact_type="project_charter",
         content="# Charter\n\nM6 WP1 content",
+        write_context=_cwo_context(),
     )
 
     expected_path = (
@@ -54,11 +64,13 @@ def test_write_project_artifact_increments_revision_per_type(tmp_path: Path) -> 
         project_id="project_m6_wp1",
         artifact_type="project_charter",
         content="v1",
+        write_context=_cwo_context(),
     )
     second = repository.write_project_artifact(
         project_id="project_m6_wp1",
         artifact_type="project_charter",
         content="v2",
+        write_context=_cwo_context(),
     )
 
     assert first.revision_no == 1
@@ -72,6 +84,7 @@ def test_verify_pointer_hash_detects_tampered_file(tmp_path: Path) -> None:
         project_id="project_m6_wp1",
         artifact_type="success_metrics",
         content="delivery: green",
+        write_context=_cwo_context(),
     )
 
     Path(pointer.storage_uri).write_text("tampered", encoding="utf-8")
@@ -101,6 +114,20 @@ def test_write_project_artifact_rejects_invalid_identifiers(
             project_id=project_id,
             artifact_type=artifact_type,
             content="x",
+            write_context=_cwo_context(),
         )
 
     assert exc.value.code == expected_code
+
+
+def test_write_project_artifact_rejects_missing_write_context(tmp_path: Path) -> None:
+    repository = InMemoryProjectArtifactRepository(system_root=tmp_path / "system_root")
+
+    with pytest.raises(ProjectArtifactRepositoryError) as exc:
+        repository.write_project_artifact(
+            project_id="project_m6_wp1",
+            artifact_type="project_charter",
+            content="x",
+        )
+
+    assert exc.value.code == "artifact_write_context_missing"

@@ -40,6 +40,7 @@ Checklist:
 - `M6-WP2` project document policy (approved types + per-type caps + fail-closed over-cap) - `done` (`issue #37`)
 - `M6-WP3` specialist touchability enforcement (`project_manager`-only direct path) - `done` (`issue #38`)
 - `M6-WP4` Project Manager mandatory-operations template enforcement - `done` (`issue #39`)
+- M6 remediation batch (specialist spoof hardening, six baseline activation docs, role/stage write authorization) - `done`
 - milestone closeout PR + parent issue close for `#35` - `todo`
 
 3) `M7 MVP Persistence, Adapter, and Acceptance` - `todo`

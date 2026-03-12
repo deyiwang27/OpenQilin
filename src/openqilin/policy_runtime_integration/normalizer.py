@@ -11,9 +11,15 @@ def normalize_policy_input(task: TaskRecord) -> PolicyEvaluationInput:
 
     metadata = dict(task.metadata)
     recipient_types_raw = metadata.get("recipient_types", "")
+    recipient_ids_raw = metadata.get("recipient_ids", "")
     recipient_types = tuple(
         token
         for token in (value.strip().lower() for value in recipient_types_raw.split(","))
+        if token
+    )
+    recipient_ids = tuple(
+        token
+        for token in (value.strip().lower() for value in recipient_ids_raw.split(","))
         if token
     )
 
@@ -28,6 +34,7 @@ def normalize_policy_input(task: TaskRecord) -> PolicyEvaluationInput:
         action=task.command,
         target=task.target,
         recipient_types=recipient_types,
+        recipient_ids=recipient_ids,
         args=task.args,
         project_id=task.project_id,
     )

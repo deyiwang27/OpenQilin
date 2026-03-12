@@ -315,6 +315,18 @@ def initialize_project(
             "workforce_plan": dict(initialization.workforce_plan) if initialization else {},
             "charter_storage_uri": initialization.charter_storage_uri if initialization else None,
             "charter_content_hash": initialization.charter_content_hash if initialization else None,
+            "scope_statement_storage_uri": initialization.scope_statement_storage_uri
+            if initialization
+            else None,
+            "scope_statement_content_hash": initialization.scope_statement_content_hash
+            if initialization
+            else None,
+            "budget_plan_storage_uri": initialization.budget_plan_storage_uri
+            if initialization
+            else None,
+            "budget_plan_content_hash": initialization.budget_plan_content_hash
+            if initialization
+            else None,
             "metric_plan_storage_uri": initialization.metric_plan_storage_uri
             if initialization
             else None,
@@ -325,6 +337,12 @@ def initialize_project(
             if initialization
             else None,
             "workforce_plan_content_hash": initialization.workforce_plan_content_hash
+            if initialization
+            else None,
+            "execution_plan_storage_uri": initialization.execution_plan_storage_uri
+            if initialization
+            else None,
+            "execution_plan_content_hash": initialization.execution_plan_content_hash
             if initialization
             else None,
         },

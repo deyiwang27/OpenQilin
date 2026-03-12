@@ -30,6 +30,21 @@ _MVP_ARTIFACT_TYPE_CAPS: Mapping[str, int] = MappingProxyType(
     }
 )
 _MVP_PROJECT_TOTAL_ACTIVE_DOCUMENT_CAP = 20
+_APPEND_ONLY_ARTIFACT_TYPES = frozenset(
+    {
+        "decision_log",
+        "progress_report",
+        "completion_report",
+    }
+)
+_PROJECT_WRITABLE_STATES = frozenset({"proposed", "approved", "active", "paused"})
+_PROJECT_MANAGER_DIRECT_WRITE_TYPES = frozenset(
+    {"execution_plan", "risk_register", "decision_log", "progress_report", "completion_report"}
+)
+_PROJECT_MANAGER_CONTROLLED_WRITE_TYPES = frozenset(
+    {"scope_statement", "budget_plan", "success_metrics"}
+)
+_PROJECT_MANAGER_FORBIDDEN_WRITE_TYPES = frozenset({"project_charter", "workforce_plan"})
 
 
 class ProjectArtifactRepositoryError(ValueError):
@@ -60,6 +75,15 @@ class ProjectArtifactDocument:
 
     pointer: ProjectArtifactPointer
     content: str
+
+
+@dataclass(frozen=True, slots=True)
+class ProjectArtifactWriteContext:
+    """Authorization context required for governed project artifact writes."""
+
+    actor_role: str
+    project_status: str
+    approval_roles: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -131,22 +155,25 @@ class InMemoryProjectArtifactRepository:
         project_id: str,
         artifact_type: str,
         content: str,
+        write_context: ProjectArtifactWriteContext | None = None,
     ) -> ProjectArtifactPointer:
         """Persist one artifact revision and return pointer/hash metadata."""
 
+        if write_context is None:
+            raise ProjectArtifactRepositoryError(
+                code="artifact_write_context_missing",
+                message="artifact write context is required for governed writes",
+            )
+
         normalized_project_id = self._validate_project_id(project_id)
         normalized_type = self._validate_artifact_type(artifact_type)
+        self._assert_write_authorization(artifact_type=normalized_type, write_context=write_context)
         key = (normalized_project_id, normalized_type)
         per_type_cap = self._policy.cap_for_type(normalized_type)
-
         latest = self._latest_by_key.get(key)
-        is_singleton_type = per_type_cap == 1
+        is_append_only = normalized_type in _APPEND_ONLY_ARTIFACT_TYPES
 
-        if is_singleton_type:
-            revision_no = 1 if latest is None else latest.revision_no + 1
-            if latest is None:
-                self._assert_total_document_cap_available(project_id=normalized_project_id)
-        else:
+        if is_append_only:
             active_count = self._active_doc_count_by_key.get(key, 0)
             if active_count >= per_type_cap:
                 raise ProjectArtifactRepositoryError(
@@ -158,6 +185,10 @@ class InMemoryProjectArtifactRepository:
                 )
             self._assert_total_document_cap_available(project_id=normalized_project_id)
             revision_no = active_count + 1
+        else:
+            revision_no = 1 if latest is None else latest.revision_no + 1
+            if latest is None:
+                self._assert_total_document_cap_available(project_id=normalized_project_id)
 
         payload = content.encode("utf-8")
         content_hash = hashlib.sha256(payload).hexdigest()
@@ -180,10 +211,9 @@ class InMemoryProjectArtifactRepository:
         history = self._history_by_key.get(key, ())
         self._history_by_key[key] = history + (pointer,)
         self._latest_by_key[key] = pointer
-        if is_singleton_type:
-            if latest is None:
-                self._register_new_active_document(project_id=normalized_project_id, key=key)
-        else:
+        if is_append_only:
+            self._register_new_active_document(project_id=normalized_project_id, key=key)
+        elif latest is None:
             self._register_new_active_document(project_id=normalized_project_id, key=key)
         return pointer
 
@@ -290,6 +320,59 @@ class InMemoryProjectArtifactRepository:
         self._total_active_doc_count_by_project[project_id] = (
             self._total_active_doc_count_by_project.get(project_id, 0) + 1
         )
+
+    @staticmethod
+    def _assert_write_authorization(
+        *,
+        artifact_type: str,
+        write_context: ProjectArtifactWriteContext,
+    ) -> None:
+        actor_role = write_context.actor_role.strip().lower()
+        project_status = write_context.project_status.strip().lower()
+        approval_roles = {
+            role.strip().lower() for role in write_context.approval_roles if role.strip()
+        }
+
+        if project_status not in _PROJECT_WRITABLE_STATES:
+            raise ProjectArtifactRepositoryError(
+                code="artifact_write_project_read_only",
+                message=f"project status is read-only for document writes: {project_status}",
+            )
+
+        if actor_role in {"owner", "ceo", "cwo"}:
+            return
+
+        if actor_role != "project_manager":
+            raise ProjectArtifactRepositoryError(
+                code="artifact_write_role_forbidden",
+                message=f"artifact write forbidden for role: {actor_role}",
+            )
+
+        if project_status != "active":
+            raise ProjectArtifactRepositoryError(
+                code="artifact_write_project_manager_inactive",
+                message="project_manager document writes require active project status",
+            )
+
+        if artifact_type in _PROJECT_MANAGER_FORBIDDEN_WRITE_TYPES:
+            raise ProjectArtifactRepositoryError(
+                code="artifact_write_project_manager_forbidden_type",
+                message=f"project_manager cannot write artifact_type: {artifact_type}",
+            )
+
+        if artifact_type in _PROJECT_MANAGER_CONTROLLED_WRITE_TYPES:
+            if {"ceo", "cwo"}.issubset(approval_roles):
+                return
+            raise ProjectArtifactRepositoryError(
+                code="artifact_write_project_manager_approval_missing",
+                message=("project_manager controlled document write requires ceo and cwo approval"),
+            )
+
+        if artifact_type not in _PROJECT_MANAGER_DIRECT_WRITE_TYPES:
+            raise ProjectArtifactRepositoryError(
+                code="artifact_write_project_manager_forbidden_type",
+                message=f"project_manager cannot write artifact_type: {artifact_type}",
+            )
 
     def _assert_under_system_root(self, path: Path) -> None:
         resolved = path.resolve()

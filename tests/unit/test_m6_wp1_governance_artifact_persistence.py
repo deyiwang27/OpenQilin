@@ -21,7 +21,7 @@ def _seed_approved_project(repository: InMemoryGovernanceRepository) -> None:
     )
 
 
-def test_initialize_project_persists_charter_metric_and_workforce_artifacts(
+def test_initialize_project_persists_activation_baseline_artifacts(
     tmp_path: Path,
 ) -> None:
     artifact_repository = InMemoryProjectArtifactRepository(system_root=tmp_path / "system_root")
@@ -44,10 +44,16 @@ def test_initialize_project_persists_charter_metric_and_workforce_artifacts(
     assert initialization is not None
     assert initialization.charter_storage_uri is not None
     assert initialization.charter_content_hash is not None
+    assert initialization.scope_statement_storage_uri is not None
+    assert initialization.scope_statement_content_hash is not None
+    assert initialization.budget_plan_storage_uri is not None
+    assert initialization.budget_plan_content_hash is not None
     assert initialization.metric_plan_storage_uri is not None
     assert initialization.metric_plan_content_hash is not None
     assert initialization.workforce_plan_storage_uri is not None
     assert initialization.workforce_plan_content_hash is not None
+    assert initialization.execution_plan_storage_uri is not None
+    assert initialization.execution_plan_content_hash is not None
     assert initialization.charter_storage_uri.startswith(
         str((tmp_path / "system_root" / "projects" / "project_m6_wp1").resolve())
     )
@@ -57,9 +63,21 @@ def test_initialize_project_persists_charter_metric_and_workforce_artifacts(
     )
     assert artifact_repository.verify_pointer_hash(
         project_id="project_m6_wp1",
+        artifact_type="scope_statement",
+    )
+    assert artifact_repository.verify_pointer_hash(
+        project_id="project_m6_wp1",
+        artifact_type="budget_plan",
+    )
+    assert artifact_repository.verify_pointer_hash(
+        project_id="project_m6_wp1",
         artifact_type="success_metrics",
     )
     assert artifact_repository.verify_pointer_hash(
         project_id="project_m6_wp1",
         artifact_type="workforce_plan",
+    )
+    assert artifact_repository.verify_pointer_hash(
+        project_id="project_m6_wp1",
+        artifact_type="execution_plan",
     )

@@ -59,6 +59,7 @@ def test_normalize_policy_input_maps_task_fields() -> None:
     assert policy_input.trace_id == task.trace_id
     assert policy_input.action == task.command
     assert policy_input.recipient_types == ("runtime",)
+    assert policy_input.recipient_ids == ("sandbox",)
 
 
 def test_policy_fail_closed_allows_on_allow_decision() -> None:
@@ -112,6 +113,21 @@ def test_policy_denies_direct_owner_to_specialist_touchability_path() -> None:
     task = _build_task_with_recipients(
         "msg_notify",
         recipients=[{"recipient_id": "specialist_1", "recipient_type": "specialist"}],
+    )
+    client = InMemoryPolicyRuntimeClient()
+
+    outcome = evaluate_with_fail_closed(normalize_policy_input(task), client)
+
+    assert outcome.allowed is False
+    assert outcome.error_code == "governance_specialist_direct_command_denied"
+    assert outcome.policy_result is not None
+    assert outcome.policy_result.decision == "deny"
+
+
+def test_policy_denies_owner_to_specialist_when_recipient_type_is_spoofed() -> None:
+    task = _build_task_with_recipients(
+        "msg_notify",
+        recipients=[{"recipient_id": "specialist_1", "recipient_type": "runtime"}],
     )
     client = InMemoryPolicyRuntimeClient()
 

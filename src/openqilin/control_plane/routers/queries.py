@@ -139,6 +139,7 @@ def search_project_artifacts(
         action="query_search_project_artifacts",
         target="artifact_search",
         recipient_types=(),
+        recipient_ids=(),
         args=(payload.query, payload.artifact_type or ""),
         project_id=project_id,
     )
