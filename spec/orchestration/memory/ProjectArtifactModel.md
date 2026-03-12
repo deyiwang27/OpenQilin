@@ -1,7 +1,7 @@
 # OpenQilin - Project Artifact Model Specification
 
 ## 1. Scope
-- Defines project/milestone/task narrative artifacts used alongside structured runtime state.
+- Defines governed project-level narrative artifacts used alongside structured runtime state.
 - Defines artifact taxonomy, ownership, lifecycle, and write/read boundaries for agents.
 
 ## 2. Design Intent
@@ -21,46 +21,52 @@
   - `content_hash`
   - `revision_no`
 
-## 3. Canonical Artifact Types
-| Artifact Type | Primary Owner | Scope | Purpose |
-| --- | --- | --- | --- |
-| `project_proposal` | `owner`, `ceo`, `cwo` | project | proposal discussion baseline prior to approval |
-| `project_charter` | `owner`, `ceo`, `cwo` | project | approved scope, objectives, pathways, risks, success metrics |
-| `workforce_plan` | `cwo` | project | Project Manager/Domain Leader template selection, llm profile binding, staffing rationale |
-| `project_strategy` | `project_manager` | project | plan updates, execution strategy |
-| `project_risk_register` | `cwo`, `project_manager`, `domain_leader` | project | risk tracking and mitigations |
-| `project_metric_plan` | `ceo`, `project_manager` | project | KPI/metric definitions and targets |
-| `milestone_plan` | `project_manager`, `domain_leader` | milestone | milestone-specific deliverables and sequencing |
-| `task_brief` | `project_manager`, `domain_leader` | task | requirements, acceptance criteria, dependencies |
-| `task_execution_notes` | `specialist` | task | execution notes, findings, blockers |
-| `task_handover_report` | `specialist` | task | completion summary and handoff context |
-| `project_retrospective` | `project_manager`, `ceo` | project | closure review and lessons learned |
+## 3. Canonical Artifact Types (MVP-Strict Enum)
+| Artifact Type | Primary Owner | Scope | Required For `approved -> active` | Per-Type Active Cap | Mutability Model |
+| --- | --- | --- | --- | --- | --- |
+| `project_charter` | `owner`, `ceo`, `cwo` | project | yes | 1 | versioned update |
+| `scope_statement` | `owner`, `ceo`, `cwo` | project | yes | 1 | versioned update |
+| `budget_plan` | `owner`, `ceo`, `cwo` | project | yes | 1 | versioned update |
+| `success_metrics` | `owner`, `ceo`, `cwo` | project | yes | 1 | versioned update |
+| `workforce_plan` | `cwo` | project | yes | 1 | versioned update |
+| `execution_plan` | `project_manager` | project | yes | 1 | versioned update |
+| `decision_log` | `project_manager`, `cwo`, `ceo` | project | no | 4 | append-only entries |
+| `risk_register` | `project_manager` | project | no | 3 | versioned update |
+| `progress_report` | `project_manager` | project | no | 6 | append-only entries |
+| `completion_report` | `project_manager` | project | no | 1 | append-only final report |
 
-## 3.1 MVP Document Type Policy and Volume Caps
-Per project, first-MVP limits:
-- `project_proposal`: max 1 active document
-- `project_charter`: max 1 active document
-- `workforce_plan`: max 1 active document
-- `project_metric_plan`: max 1 active document
-- `project_risk_register`: max 1 active document
-- `project_strategy`: max 1 active document
-- `milestone_plan`: max 20 active documents
-- `task_brief`: max 500 active documents
-- `task_execution_notes`: max 2000 active documents
-- `task_handover_report`: max 500 active documents
-- `project_retrospective`: max 1 active document
+MVP strictness:
+- Only the above 10 `artifact_type` values are valid in first MVP.
+- No per-project artifact-type overrides in MVP.
+
+## 3.1 MVP Document Cap Policy
+Per project caps:
+- Per-type active-document caps are enforced as listed above.
+- Total active-document cap per project: `20`.
 
 Policy behavior:
-- Creating documents beyond cap is denied fail-closed.
-- Revisions increment `version_no` on existing documents instead of creating new active records.
-- Archived projects are read-only for all project documentation types.
+- Creating documents beyond per-type or total cap is denied fail-closed.
+- Cap checks apply to active artifact records, not historical versions.
+- Revisions increment `version_no` on existing artifacts and remain trace-linked.
+- `completed|terminated|archived` projects are read-only for all project documentation types.
+
+## 3.2 Activation Baseline Requirement
+Before `approved -> active` transition:
+- Initial version (`version_no=1`) must exist and be finalized for:
+  - `project_charter`
+  - `scope_statement`
+  - `budget_plan`
+  - `success_metrics`
+  - `workforce_plan`
+  - `execution_plan`
+- Finalization evidence is required in governance records prior to activation.
 
 ## 4. Artifact Data Contract
 Minimum artifact record:
 - canonical table: `project_artifact`
 - `artifact_id`
 - `artifact_type`
-- `scope_type` (`project|milestone|task`)
+- `scope_type` (`project` in MVP v0.1)
 - `scope_id`
 - `current_version`
 - `status`
@@ -93,13 +99,23 @@ Lifecycle rules:
 - A published working version moves artifact state to `active`.
 - Newer accepted version marks previous version `superseded`.
 - Artifacts for archived projects become `archived` and read-only.
+- `completion_report` is immutable after publish (no in-place updates).
 
 ## 6. Governance and Access
 - Artifact writes must pass policy checks for role + scope.
-- Artifact updates cannot bypass state-machine constraints for project/task transitions.
+- Artifact updates cannot bypass state-machine constraints for project transitions.
 - Sensitive artifact reads/writes are auditable with `trace_id`.
-- `specialist` write authority is limited to task-scoped artifact types only.
-- owner cannot directly mutate specialist-owned task execution artifacts.
+- Strict fixed access matrix is enforced in code/spec for MVP (no project-level overrides).
+- Stage-aware write contract:
+  - writable project states: `proposed|approved|active|paused`
+  - read-only project states: `completed|terminated|archived`
+- `project_manager` write contract:
+  - write allowed only when project state is `active`
+  - direct-write types in `active`: `execution_plan`, `risk_register`, `decision_log`, `progress_report`
+  - conditional-write types in `active` require `cwo+ceo` approval evidence: `scope_statement`, `budget_plan`, `success_metrics`
+  - cannot directly edit `project_charter` or `workforce_plan`
+- `cwo` and `ceo` may approve and apply controlled updates in `proposed|approved|active|paused`.
+- `specialist` has no direct write path for project documentation types in MVP.
 
 ## 7. Synchronization Semantics
 - Artifact updates may produce structured extractions (objectives/risks/requirements/metrics).
@@ -107,11 +123,16 @@ Lifecycle rules:
 - On extraction conflicts, relational state-machine fields remain authoritative.
 - DB pointer (`storage_uri`) and file hash (`content_hash`) must remain synchronized atomically.
 - Hash mismatch between DB and file-backed content is treated as integrity failure and blocks mutation until reconciled.
+- `content_hash` uses `sha256` for MVP.
+- On integrity failure:
+  - write/update/archive operations are denied fail-closed
+  - reads may return last verified version metadata/content
+  - runtime must emit immutable audit event with denial reason
 
 ## 8. Conformance Tests
 - Unauthorized role cannot create or update restricted artifact types.
 - Every artifact version write includes `trace_id`.
-- Document cap policy blocks over-limit create attempts.
-- Project/task archived state enforces artifact read-only behavior.
-- Artifact update does not directly perform illegal project/task state transitions.
+- Document cap policy blocks per-type and total-cap over-limit create attempts.
+- Project archived state enforces artifact read-only behavior.
+- Artifact update does not directly perform illegal project state transitions.
 - DB pointer/hash mismatch is detected and denied for governed writes.

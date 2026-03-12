@@ -15,6 +15,7 @@
 - Approve project creation, prioritization, and executive trade-offs.
 - Coordinate response to governance escalations without bypassing governance enforcement.
 - Co-approve project completion with `cwo` before owner completion notification.
+- Co-approve controlled Project Manager documentation edits (`scope_statement`, `budget_plan`, `success_metrics`) with `cwo`.
 
 ## 4. Authority Profile
 | Authority | Value |
@@ -33,6 +34,7 @@
   - executive and governance reporting views
 - Write scope:
   - strategic decisions, executive directives, and approval outcomes
+  - controlled project-document approvals for governed edits in `proposed|approved|active|paused`
 - Prohibited:
   - direct specialist task execution
   - governance override actions
@@ -62,3 +64,4 @@
 - CEO directives requiring execution authority are routed to authorized roles.
 - CEO actions cannot bypass governance policy decisions.
 - CEO decisions include required policy/audit metadata in governed flows.
+- Controlled Project Manager document edits are denied without paired `cwo` approval evidence.

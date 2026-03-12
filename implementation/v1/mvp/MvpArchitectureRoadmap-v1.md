@@ -124,3 +124,6 @@ Exit criteria:
 - Project lifecycle lock: `proposed -> approved -> active -> paused -> completed -> terminated -> archived`
 - No standalone `rejected` project state in first MVP
 - `domain_leader` role declared but runtime-disabled for first MVP
+- Project documentation uses strict 10-type enum with mixed per-type caps plus project total active-doc cap (`20`)
+- Project documentation mutability is hybrid (versioned core plans + append-only logs/reports)
+- `project_manager` project-document writes are `active`-only; controlled doc edits require `cwo+ceo` approval evidence

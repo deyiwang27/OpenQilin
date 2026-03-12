@@ -167,11 +167,30 @@ Any unauthorized modification attempt is blocked and audited.
 Storage strategy:
 - Rich-text project docs live under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/` (outside repo tree).
 - DB remains authoritative for state/control metadata and file pointer/hash references.
+- Deterministic file path convention:
+  - `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/docs/<artifact_type>/<artifact_type>--v<revision_no>.md`
 
 MVP policy:
-- Only approved artifact types may be created.
-- Each artifact type has max active-document caps to control file volume.
+- Only approved artifact types may be created (strict 10-type enum):
+  - `project_charter`, `scope_statement`, `budget_plan`, `success_metrics`, `workforce_plan`, `execution_plan`, `decision_log`, `risk_register`, `progress_report`, `completion_report`
+- Each artifact type has max active-document caps:
+  - `project_charter`: 1, `scope_statement`: 1, `budget_plan`: 1, `success_metrics`: 1, `workforce_plan`: 1, `execution_plan`: 1, `decision_log`: 4, `risk_register`: 3, `progress_report`: 6, `completion_report`: 1
+- Total active-document cap per project: `20`.
 - Over-cap document creation is denied fail-closed and audited.
+- Pointer/hash uses `storage_uri` + `content_hash` (`sha256`) and is synchronized atomically.
+
+Mutability and stage policy:
+- Versioned update: charter/scope/budget/metrics/workforce/execution/risk docs.
+- Append-only: decision and progress reports; completion report is append-only final.
+- Writable states: `proposed|approved|active|paused`.
+- Read-only states: `completed|terminated|archived`.
+- `project_manager` may edit only when project is `active`.
+- `project_manager` edits to `scope_statement|budget_plan|success_metrics` require `cwo+ceo` approval evidence.
+
+Activation baseline gate:
+- `approved -> active` requires initial finalized versions for:
+  - `project_charter`, `scope_statement`, `budget_plan`, `success_metrics`, `workforce_plan`, `execution_plan`
+- Initial baseline finalization is recorded during `proposed|approved` governance review and approved by `owner+ceo+cwo` before activation.
 
 ## 9. Logging and Audit
 

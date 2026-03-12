@@ -14,6 +14,7 @@
 - Enforce storage, retention, and infrastructure integrity controls.
 - Govern memory lifecycle, archival transitions, and data hygiene operations.
 - Execute infrastructure containment actions for security and reliability incidents.
+- Enforce project-document path, cap, and write-access policy controls at runtime boundaries.
 
 ## 4. Authority Profile
 | Authority | Value |

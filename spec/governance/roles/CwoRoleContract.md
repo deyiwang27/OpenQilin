@@ -19,6 +19,7 @@
   - llm profile
   - system prompt package
 - Review Project Manager completion report and co-approve project completion with `ceo` before owner notification.
+- Co-approve controlled Project Manager documentation edits (`scope_statement`, `budget_plan`, `success_metrics`) with `ceo`.
 
 ## 4. Authority Profile
 | Authority | Value |
@@ -38,6 +39,7 @@
 - Write scope:
   - workforce lifecycle actions and assignment updates within policy bounds
   - project charter/workforce-plan documentation updates for approved projects
+  - controlled project-document approvals/updates in `proposed|approved|active|paused`
 - Prohibited:
   - governance override
   - constitutional policy mutation
@@ -65,3 +67,4 @@
 - Workforce lifecycle actions outside authorized scope are denied.
 - System-level workforce mutations without required approvals are denied.
 - Workforce actions emit required policy and audit metadata.
+- Controlled Project Manager document edits are denied without paired `ceo` approval evidence.

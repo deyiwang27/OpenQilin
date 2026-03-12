@@ -41,6 +41,14 @@ State clarification:
 - `terminated` -> `active`.
 - `archived` -> any state.
 
+## 4.1 Project Documentation Mutation Guard (MVP)
+- Writable lifecycle states for governed project documentation:
+  - `proposed|approved|active|paused`
+- Read-only lifecycle states:
+  - `completed|terminated|archived`
+- `project_manager` write operations are allowed only in `active`.
+- `project_manager` updates to controlled documents (`scope_statement`, `budget_plan`, `success_metrics`) require `cwo+ceo` approval evidence.
+
 ## 5. Conformance Tests
 - Hard budget breach transitions project to `paused` with enforcement metadata.
 - Resuming a paused project without remediation evidence is denied.

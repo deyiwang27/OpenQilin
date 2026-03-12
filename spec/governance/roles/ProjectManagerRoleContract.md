@@ -19,6 +19,7 @@
   - task decomposition
   - task assignment
   - progress/status reporting to `cwo`
+- Maintain governed project documentation during `active` state only.
 
 ## 4. Authority Profile
 | Authority | Value |
@@ -36,12 +37,17 @@
   - project task state, milestone progress, scoped budget and risk status
   - project artifacts and execution summaries
 - Write scope:
-  - task planning, assignment, project artifact updates, specialist management in-scope
+  - task planning, assignment, specialist management in-scope
+  - project documentation in `active` state only:
+    - direct-write: `execution_plan`, `risk_register`, `decision_log`, `progress_report`
+    - conditional-write (requires `cwo+ceo` approval evidence): `scope_statement`, `budget_plan`, `success_metrics`
 - Prohibited:
   - governance policy changes
   - cross-project command outside authorized scope
   - system-level workforce lifecycle actions
   - changing project terminal state without governance approval path
+  - direct edit of `project_charter` and `workforce_plan`
+  - project-document mutation when project is not `active`
 
 ## 6. Escalation and Routing
 - Escalate project resource or structural constraints to `cwo`.
@@ -66,3 +72,5 @@
 - Project manager cannot issue out-of-scope cross-project commands.
 - Workforce actions beyond project scope are denied.
 - Task planning and assignment changes emit required trace and audit metadata.
+- Project manager project-document writes are denied outside `active` state.
+- Conditional-write types require `cwo+ceo` approval evidence.

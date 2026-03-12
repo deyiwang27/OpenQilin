@@ -12,6 +12,8 @@ Project documentation storage boundary (v1):
 - canonical root: `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`
 - DB is authoritative for project state/control fields; file store is authoritative for rich-text project content
 - governed writes require DB pointer/hash synchronization (`storage_uri`, `content_hash`)
+- deterministic file path pattern:
+  - `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/docs/<artifact_type>/<artifact_type>--v<revision_no>.md`
 
 ## 3. Retention Defaults (v1)
 | Data Class | Tier | TTL Default | Compression | Read-Only |
@@ -38,10 +40,16 @@ Project documentation storage boundary (v1):
 
 Project documentation workflow:
 1. Validate artifact type against allowed project document policy.
-2. Validate per-type document cap before file create.
-3. Write file revision under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`.
-4. Persist/update DB metadata pointer + hash atomically.
-5. Emit immutable audit event for create/update/archive actions.
+2. Validate per-type cap and project total active-document cap before file create.
+3. Validate role/stage write permissions.
+4. Write file revision under canonical project path convention.
+5. Persist/update DB metadata pointer + `sha256` content hash atomically.
+6. Emit immutable audit event for create/update/archive actions.
+
+Integrity-failure behavior:
+- write/update/archive operations fail closed.
+- reads may serve last verified version when latest integrity check fails.
+- every integrity denial emits immutable audit evidence.
 
 ## 6. Rule Set
 | Rule ID | Statement | Severity | Enforced By |
@@ -53,6 +61,9 @@ Project documentation workflow:
 | STR-005 | Storage access MUST enforce project isolation boundaries. | critical | Policy Engine |
 | STR-006 | Runtime-generated project files MUST live under the canonical system root outside repository source tree. | high | administrator |
 | STR-007 | Project document create/update MUST fail closed when pointer/hash sync validation fails. | critical | Runtime |
+| STR-008 | Project document creates MUST fail closed when per-type or total active-document cap is exceeded. | critical | Runtime |
+| STR-009 | Project document writes MUST use deterministic typed path conventions under canonical root. | high | administrator |
+| STR-010 | On integrity failure, writes MUST be denied and immutable audit evidence MUST be emitted; reads MAY return last verified version. | high | auditor |
 
 ## 7. Conformance Tests
 - Expired operational data follows retention transition policy.
@@ -61,3 +72,5 @@ Project documentation workflow:
 - Cross-project storage retrieval without authorization is denied.
 - Project-file writes outside canonical system root are denied.
 - Pointer/hash mismatch between DB metadata and file content is denied.
+- Over-cap project document create attempts are denied (per-type and total cap).
+- Integrity-failure read path returns last verified version with audit evidence.
