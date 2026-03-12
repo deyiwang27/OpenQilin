@@ -27,7 +27,7 @@
   },
   "reliability": {
     "attempt": 1,
-    "max_attempts": 5,
+    "max_attempts": 3,
     "ack_deadline_ms": 30000,
     "ttl_ms": 600000
   },
@@ -72,7 +72,7 @@ Nack frame:
 
 OpenQilin reliability profile v1 (ACP transport):
 - `ack_deadline_ms`: `30000`.
-- `max_attempts`: `5` total attempts.
+- `max_attempts`: `3` total attempts.
 - Retry trigger: ack timeout or `retryable=true` nack.
 - Retry backoff schedule: `500ms`, `1s`, `2s`, `4s`, `8s` (jittered, cap `10s`).
 - Dead-letter on non-retryable nack or retry exhaustion.

@@ -13,6 +13,7 @@ from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
 from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
 
 DeliveryOutcome = Literal["delivered", "nacked", "dead_lettered"]
+IMMUTABLE_TASK_STATUSES = frozenset({"completed", "failed", "cancelled"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,6 +85,42 @@ class InMemoryDeliveryEventCallbackProcessor:
                 task_status="missing",
                 message="callback task not found",
                 reason_code="callback_task_not_found",
+            )
+
+        if task.status in IMMUTABLE_TASK_STATUSES:
+            self._processed_callback_ids.add(event.callback_id)
+            self._metric_recorder.increment_counter(
+                "communication_callback_events_total",
+                labels={"outcome": event.delivery_outcome, "replayed": "false"},
+            )
+            self._audit_writer.write_event(
+                event_type="communication.callback.ignored_terminal",
+                outcome="ignored_terminal",
+                trace_id=event.trace_id,
+                request_id=task.request_id,
+                task_id=task.task_id,
+                principal_id=task.principal_id,
+                principal_role=task.principal_role,
+                source="communication_callback",
+                reason_code="callback_task_terminal_immutable",
+                message="callback ignored because task is already terminal",
+                payload={
+                    "callback_id": event.callback_id,
+                    "delivery_outcome": event.delivery_outcome,
+                    "current_status": task.status,
+                },
+                attributes={
+                    "callback_id": event.callback_id,
+                    "delivery_outcome": event.delivery_outcome,
+                    "current_status": task.status,
+                },
+            )
+            return DeliveryCallbackResult(
+                applied=False,
+                replayed=False,
+                task_status=task.status,
+                message="callback ignored for terminal task state",
+                reason_code="callback_task_terminal_immutable",
             )
 
         outcome_details: dict[str, object] = {

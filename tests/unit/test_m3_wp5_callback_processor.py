@@ -168,3 +168,72 @@ def test_callback_processor_is_duplicate_safe_for_replayed_callback_id() -> None
     )
     events = audit_writer.get_events()
     assert len(events) == 1
+
+
+def test_callback_processor_keeps_terminal_task_state_immutable() -> None:
+    runtime_repo, task_id = _build_runtime_state_repo_with_task()
+    runtime_repo.update_task_status(
+        task_id,
+        "completed",
+        outcome_source="execution_runtime",
+        outcome_message="task completed",
+    )
+    audit_writer = InMemoryAuditWriter()
+    metric_recorder = InMemoryMetricRecorder()
+    processor = InMemoryDeliveryEventCallbackProcessor(
+        runtime_state_repo=runtime_repo,
+        audit_writer=audit_writer,
+        metric_recorder=metric_recorder,
+    )
+
+    first = processor.process(
+        DeliveryCallbackEvent(
+            callback_id="cb-terminal-immutable-001",
+            task_id=task_id,
+            trace_id="trace-callback-unit-12345",
+            dispatch_target="communication",
+            delivery_outcome="dead_lettered",
+            message="late callback should not mutate terminal state",
+            reason_code="communication_retry_exhausted",
+        )
+    )
+    second = processor.process(
+        DeliveryCallbackEvent(
+            callback_id="cb-terminal-immutable-001",
+            task_id=task_id,
+            trace_id="trace-callback-unit-12345",
+            dispatch_target="communication",
+            delivery_outcome="dead_lettered",
+            message="duplicate late callback should replay",
+            reason_code="communication_retry_exhausted",
+        )
+    )
+
+    assert first.applied is False
+    assert first.replayed is False
+    assert first.task_status == "completed"
+    assert first.reason_code == "callback_task_terminal_immutable"
+    assert second.applied is False
+    assert second.replayed is True
+    task = runtime_repo.get_task_by_id(task_id)
+    assert task is not None
+    assert task.status == "completed"
+    assert task.outcome_source == "execution_runtime"
+    assert task.outcome_message == "task completed"
+    assert (
+        metric_recorder.get_counter_value(
+            "communication_callback_events_total",
+            labels={"outcome": "dead_lettered", "replayed": "false"},
+        )
+        == 1
+    )
+    assert (
+        metric_recorder.get_counter_value(
+            "communication_callback_events_total",
+            labels={"outcome": "dead_lettered", "replayed": "true"},
+        )
+        == 1
+    )
+    events = audit_writer.get_events()
+    assert len(events) == 1
+    assert events[0].event_type == "communication.callback.ignored_terminal"

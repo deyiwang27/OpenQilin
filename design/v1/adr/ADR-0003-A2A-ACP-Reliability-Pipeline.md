@@ -32,12 +32,12 @@ Retry transitions:
 - retry when `ack_timeout` or `retryable=true` nack
 - dead-letter when:
   - non-retryable nack
-  - attempts exceed `max_attempts=5`
+  - attempts exceed `max_attempts=3`
 
 ### 2. Reliability Profile (locked)
 - Delivery: `at-least-once`
 - `ack_deadline_ms`: `30000`
-- `max_attempts`: `5`
+- `max_attempts`: `3`
 - Backoff schedule (bounded exponential with jitter):
   - `500ms`, `1s`, `2s`, `4s`, `8s` (cap `10s`)
 - Dead-letter trigger:
@@ -110,7 +110,7 @@ sequenceDiagram
         GW-->>PROD: acked
     else retryable failure or ack timeout
         CONS-->>ACP: nack(retryable=true) or timeout
-        ACP->>ACP: backoff and retry (max_attempts=5)
+        ACP->>ACP: backoff and retry (max_attempts=3)
         alt retries exhausted
             ACP->>DLQ: append dead-letter record
             ACP-->>GW: terminal failure

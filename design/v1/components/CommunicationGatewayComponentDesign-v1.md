@@ -30,7 +30,7 @@ Non-responsibilities:
 ## 4. Delivery Rules
 - delivery guarantee: `at-least-once`
 - `ack_deadline_ms`: `30000`
-- `max_attempts`: `5`
+- `max_attempts`: `3`
 - retry triggers:
   - ack timeout
   - retryable nack
