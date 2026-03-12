@@ -43,12 +43,20 @@ src/openqilin/control_plane/
 - `idempotency`: header/body replay safety before mutation dispatch
 - `presenters`: canonical response and error envelopes
 
+MVP v1 additions:
+- proposal discussion and project-lifecycle APIs are first-class control-plane contracts.
+- owner-to-specialist direct command attempts must be denied at ingress/policy boundaries.
+- governance/project mutation APIs must enforce project-state transition guards.
+
 ## 4. Key Interfaces
 - `CommandHandler.submit_owner_command(envelope, principal_ctx)`
 - `QueryHandler.execute(contract_name, params, principal_ctx)`
 - `GovernanceHandler.submit_action(action_request, principal_ctx)`
 - `PrincipalResolver.resolve(external_identity)`
 - `IngressDedupe.claim(idempotency_key, payload_hash)`
+- `GovernanceHandler.submit_project_proposal(...)`
+- `GovernanceHandler.request_project_state_transition(...)`
+- `GovernanceHandler.create_or_update_project_charter(...)`
 
 ## 5. Dependency Rules
 Allowed:

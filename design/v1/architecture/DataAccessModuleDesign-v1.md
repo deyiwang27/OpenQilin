@@ -36,6 +36,11 @@ src/openqilin/data_access/
 - read models may use SQLAlchemy Core-oriented queries for contract efficiency
 - Redis-backed stores are non-authoritative helpers only
 
+MVP v1 data posture additions:
+- relational DB is authoritative for project lifecycle and control metadata.
+- rich-text project documents are file-backed under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`.
+- repositories must persist file pointer/hash metadata and fail closed on mismatch.
+
 ## 4. Key Interfaces
 - `UnitOfWork.begin()`
 - `RuntimeStateRepository.save_task(...)`
@@ -43,6 +48,8 @@ src/openqilin/data_access/
 - `OutboxWriter.append(event)`
 - `CheckpointStore.advance(consumer_name, checkpoint)`
 - `ArtifactSearchReadModel.search(project_id, query, filters)`
+- `ProjectArtifactRepository.create_or_update_with_hash(...)`
+- `ProjectDocumentPolicyRepository.validate_type_and_cap(...)`
 
 ## 5. Testing Focus
 - transaction boundary correctness

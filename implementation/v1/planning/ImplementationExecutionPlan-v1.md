@@ -20,6 +20,9 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 | `M2 Execution Targets` | replace stubs with real execution adapters | real sandbox dispatch, LiteLLM-backed `llm_gateway`, basic retrieval-backed query path | governed dispatch reaches sandbox or Gemini-backed path; usage/cost metadata and retrieval path are validated |
 | `M3 Communication Reliability` | harden delivery lifecycle | A2A validation, ACP send/ack/nack, retries, dead-letter flow, orchestrator callback integration | deterministic at-least-once behavior, duplicate safety, and dead-letter alert/audit evidence |
 | `M4 Hardening and Release Readiness` | complete release hardening gates | dashboards/alerts, migration and rollback validation, conformance+smoke suites, release artifact prep | `full` profile passes smoke and conformance gates and release candidate is promotable |
+| `M5 MVP Proposal and Governance Activation` | implement proposal-to-activation governance contracts | project lifecycle lock, proposal/approval APIs, CWO initialization flow, workforce templating with declared-disabled `domain_lead` | proposal/approval/activation workflow is enforced with deterministic lifecycle guards and audit evidence |
+| `M6 MVP Documentation and Access Governance` | implement hybrid project-doc governance and role-touchability controls | canonical system-root project docs, file type/cap policy, DB pointer/hash integrity, PM-only specialist touchability policy | project-document writes are policy-governed and specialist access constraints are enforced fail-closed |
+| `M7 MVP Persistence, Adapter, and Acceptance` | close MVP with recovery hardening and constrained Discord adapter | persistent runtime recovery path, Discord adapter with role/channel constraints, MVP acceptance matrix and evidence pack | restart invariants and Discord-governed ingress constraints pass end-to-end acceptance evidence |
 
 ## 4. M1 Implementation Workplan (Kickoff on Issue `#4`)
 ### 4.1 Objective and Boundary
@@ -170,10 +173,75 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 - Full quality/release gates pass for merged M4 scope.
 - Residual scope boundary is documented: `api_app`/worker placeholder containers are excluded from M4 promotion evidence and tracked as post-M4 hardening work.
 
-## 8. Tracking Interfaces
-### 8.1 Issue Contract Fields
+## 8. Post-M4 MVP Completion Workplan
+### 8.1 Objective and Boundary
+- Convert post-M4 foundations into a governance-first MVP runtime aligned to the finalized operating model:
+  - proposal/approval workflow owned by `owner` + `ceo` + `cwo`
+  - CWO-initialized project charter/workforce setup
+  - PM-led execution with specialist touchability constraints
+- Keep delivery incremental and evidence-driven across `M5`..`M7`.
+- Preserve fail-closed behavior while adding persistent governance/project contracts.
+
+### 8.2 Ordered Milestone Work Packages
+1. `M5-WP1` Project lifecycle contract lock
+- Target modules: `spec/state-machines/ProjectStateMachine.md`, governance transition validators, related API schemas.
+- Deliverables: enforced lifecycle
+  - `proposed -> approved -> active -> paused -> completed -> terminated -> archived`
+  - no standalone `rejected` state
+  - transition-guard enforcement in governed APIs.
+
+2. `M5-WP2` Proposal discussion and approval API surfaces
+- Target modules: `control_plane/routers/owner_discussions.py`, `control_plane/routers/governance.py`, handlers/schemas.
+- Deliverables: proposal revision workflow in `proposed`, triad approval path (`owner`, `ceo`, `cwo`), immutable audit evidence.
+
+3. `M5-WP3` CWO project initialization workflow
+- Target modules: governance services + repositories, project artifact contracts.
+- Deliverables: governed initialization for scope/objective/budget/metrics and workforce-plan records.
+
+4. `M5-WP4` Workforce templating contract (`pm` + `domain_lead` declared-disabled)
+- Target modules: agent registry contracts, template/prompt metadata, policy guard rules.
+- Deliverables: CWO binds template + llm profile + system prompt package; `domain_lead` schema-declared but runtime-disabled.
+
+5. `M6-WP1` Canonical project file root and pointer/hash model
+- Target modules: `data_access/repositories/artifacts.py`, storage policy services, environment config.
+- Deliverables: project docs stored under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/` with DB `storage_uri` + `content_hash`.
+
+6. `M6-WP2` Project document policy and volume cap enforcement
+- Target modules: project artifact policy validators + governance middleware.
+- Deliverables: approved doc-type list with per-type active-document caps and fail-closed over-cap handling.
+
+7. `M6-WP3` Specialist touchability policy enforcement
+- Target modules: owner command/policy integration + communication access checks.
+- Deliverables: owner direct specialist command blocked; specialist path routed through `project_manager`.
+
+8. `M6-WP4` PM mandatory-operations template enforcement
+- Target modules: PM template registry + orchestrator planning contracts.
+- Deliverables: mandatory PM operations (milestones, decomposition, assignment, reporting) contract-tested.
+
+9. `M7-WP1` Persistent runtime-state adapters + recovery
+- Target modules: runtime-state/communication repositories, service bootstrap dependencies.
+- Deliverables: restart/rehydration preserving idempotency and governance invariants.
+
+10. `M7-WP2` Discord adapter boundary with role/channel constraints
+- Target modules: Discord adapter package + ingress mapping path.
+- Deliverables: canonical envelope mapping, connector verification, specialist-access restrictions in adapter path.
+
+11. `M7-WP3` MVP acceptance matrix and closeout evidence
+- Target modules: `tests/contract`, `tests/conformance`, MVP evidence docs.
+- Deliverables: end-to-end acceptance across proposal, activation, PM-managed execution, completion approval, and owner notification.
+
+### 8.3 MVP Exit Evidence Checklist
+- Proposal lifecycle and approval gates are enforced with canonical state transitions.
+- CWO initialization produces governed project charter/workforce evidence.
+- Project docs persist under canonical system root with type/cap/pointer-hash policy enforcement.
+- Specialist touchability restrictions are enforced (`pm`-only in first MVP).
+- Recovery and Discord adapter paths preserve governance and idempotency invariants.
+- MVP evidence pack maps all exit criteria to deterministic test/ops evidence.
+
+## 9. Tracking Interfaces
+### 9.1 Issue Contract Fields
 Each implementation issue must contain:
-- `Milestone`: one of `M0`..`M4`
+- `Milestone`: one of `M0`..`M7`
 - `Goal`: outcome statement tied to milestone intent
 - `Scope`: explicit in/out implementation boundaries
 - `Acceptance Criteria`: testable completion conditions
@@ -181,23 +249,26 @@ Each implementation issue must contain:
 - `Evidence Links`: PRs, test runs, traces, audit logs, or screenshots
 - `Definition of Done`: close condition beyond "code merged"
 
-### 8.2 Label Taxonomy
+### 9.2 Label Taxonomy
 Required label groups:
 - `milestone:*` (example: `milestone:M1`)
 - `type:*` (example: `type:feature`, `type:infra`, `type:test`)
 - `area:*` (example: `area:control_plane`, `area:task_orchestrator`)
 - `risk:*` (example: `risk:governance-core`)
 
-## 9. Cadence and Update Rules
+## 10. Cadence and Update Rules
 - PR-linked updates: every implementation PR references issue IDs and updates issue acceptance checklist status.
 - Weekly summary: update `ImplementationProgress-v1.md` once per week with milestone percentages, active features, blockers, and evidence links.
 - Milestone close rule: milestone can close only when exit evidence is attached and all required feature issues are closed.
 - Governance check rule: run consistency/governance checks per `implementation/v1/workflow/RepositoryConsistencyAndGovernanceCheck-v1.md` (PR-level light checks; deep checks on milestone close and major structure/policy changes).
 
-## 10. Related Documents
+## 11. Related Documents
 - `implementation/v1/workflow/AIAssistedDeliveryWorkflow-v1.md`
 - `implementation/v1/planning/ImplementationBacklogSeed-v1.md`
 - `implementation/v1/planning/ImplementationMilestones-v1.md`
 - `implementation/v1/planning/ImplementationProgress-v1.md`
+- `implementation/v1/mvp/MvpArchitectureRoadmap-v1.md`
+- `implementation/v1/mvp/MvpCoreGovernance-v1.md`
+- `implementation/v1/mvp/MvpRuntimeSpecification-v1.md`
 - `implementation/v1/workflow/GitHubOperationsManagementGuide-v1.md`
 - `implementation/v1/workflow/RepositoryConsistencyAndGovernanceCheck-v1.md`

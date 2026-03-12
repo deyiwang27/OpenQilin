@@ -3,6 +3,7 @@
 ## 1. Scope
 - Convert the implementation backlog into milestone-level delivery slices.
 - Lock the first executable slice for governance-core validation.
+- Define post-foundation milestones required to reach MVP v0.1 runtime completion.
 
 ## 2. Planning Authority
 - `design/TODO.txt` is a design-stage tracker and historical closeout record.
@@ -70,6 +71,42 @@ Exit:
 - release candidate is promotable under manual gate for implemented runtime surface
 - placeholder container replacement for `api_app` and workers is tracked as post-M4 hardening follow-up
 
+### M5 MVP Proposal and Governance Activation
+Scope:
+- proposal-to-approval governance flow (`proposed -> approved`)
+- project activation controls (`approved -> active`) and lifecycle guard enforcement
+- CWO initialization workflow (scope/objective/budget/metric persistence + workforce bootstrap)
+
+Exit:
+- project state transitions align with canonical lifecycle:
+  - `proposed -> approved -> active -> paused -> completed -> terminated -> archived`
+- no standalone `rejected` project state; proposal revisions remain `proposed`
+- CWO-driven initialization flow is implemented and contract-tested
+
+### M6 MVP Documentation and Access Governance
+Scope:
+- hybrid project-document model:
+  - DB-authoritative lifecycle/control fields
+  - file-backed rich-text docs under canonical system root
+- document type policy and per-type document caps
+- specialist touchability governance (`pm`-only direct command path)
+
+Exit:
+- project docs are stored outside repo tree with pointer/hash synchronization
+- over-cap or out-of-policy project document writes fail closed
+- owner direct specialist command path is blocked in governed ingress
+
+### M7 MVP Persistence, Adapter, and Acceptance Closeout
+Scope:
+- persistent runtime-state adapters + startup recovery hardening
+- Discord adapter boundary with role/channel constraints
+- MVP acceptance matrix and evidence-pack closeout
+
+Exit:
+- restart/recovery preserves governance and idempotency invariants
+- Discord-originated owner flows are validated with specialist-access constraints
+- MVP v0.1 evidence pack and closeout checklist are complete
+
 ## 4. First Executable Slice Detail
 Recommended implementation order inside `M1`:
 1. schema, migrations, and idempotency primitives
@@ -82,3 +119,5 @@ Recommended implementation order inside `M1`:
 ## 5. Blocking Rules
 - Do not start communication reliability hardening before M1 governed path is stable.
 - Do not start release hardening before M2 and M3 produce runnable end-to-end evidence.
+- Do not start M6 recovery hardening before M5 domain persistence contracts are merged.
+- Do not close MVP milestone (M7) before Discord adapter and end-to-end acceptance evidence are both complete.

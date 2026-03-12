@@ -61,6 +61,10 @@ Normative precedence:
   - authoritative state: project/task/milestone/agent/event
   - registry + governance/audit supporting entities
   - relational and JSONB models
+- `project_document_store`:
+  - file-backed rich-text project documentation under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`
+  - out-of-repo runtime storage only; never under source tree
+  - pointer/hash synchronization with relational metadata is required
 - `pgvector`:
   - embedding index co-located with Postgres data model
 - `redis`:
@@ -90,6 +94,10 @@ Normative precedence:
   - `spec/state-machines/ProjectStateMachine.md`
   - `spec/state-machines/MilestoneStateMachine.md`
   - `spec/state-machines/AgentStateMachine.md`
+
+Project lifecycle lock (v1):
+- `proposed -> approved -> active -> paused -> completed -> terminated -> archived`
+- no separate `rejected` project state in first MVP; proposal revisions remain in `proposed`
 
 ### 4.3 `a2a+acp`
 - Envelope contract: `spec/orchestration/communication/AgentCommunicationA2A.md`

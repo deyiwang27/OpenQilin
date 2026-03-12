@@ -14,6 +14,11 @@
 - Decompose project goals into milestones and tasks.
 - Coordinate specialist execution and delivery sequencing.
 - Manage project-level risk, schedule, and resource posture within scope.
+- Execute mandatory project-management operations defined by PM system-prompt template:
+  - milestone planning
+  - task decomposition
+  - task assignment
+  - progress/status reporting to `cwo`
 
 ## 4. Authority Profile
 | Authority | Value |
@@ -36,11 +41,15 @@
   - governance policy changes
   - cross-project command outside authorized scope
   - system-level workforce lifecycle actions
+  - changing project terminal state without governance approval path
 
 ## 6. Escalation and Routing
 - Escalate project resource or structural constraints to `cwo`.
 - Escalate strategic conflicts to `ceo` through defined review gates.
 - Route deep technical review to `domain_lead`.
+- Specialist interaction authority:
+  - PM is the only active role allowed to directly command/touch specialists in first MVP.
+  - `domain_lead` touchability path is reserved but disabled until activated by policy.
 
 ## 7. Runtime Interfaces
 - `spec/orchestration/control/TaskOrchestrator.md`

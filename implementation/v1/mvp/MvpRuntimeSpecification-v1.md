@@ -14,6 +14,7 @@ It is intentionally aligned with current runtime semantics and naming.
 - Budget hard-threshold default: `1.00`
 - Communication retry `max_attempts`: `3`
 - Project workforce cap: `1 pm + up to 2 specialist`
+- Canonical project file root: `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`
 
 Budget thresholds are configurable per environment, but these are the MVP defaults.
 
@@ -23,7 +24,7 @@ Budget thresholds are configurable per environment, but these are the MVP defaul
 
 Columns:
 - `id` (uuid, pk)
-- `role` (text: `ceo|cwo|auditor|administrator|pm|specialist`)
+- `role` (text: `ceo|cwo|auditor|administrator|pm|specialist|domain_lead`)
 - `autonomy_level` (int)
 - `authority_flags` (jsonb)
 - `lifecycle_state` (text: `created|active|paused|retired`)
@@ -31,17 +32,24 @@ Columns:
 - `created_at` (timestamp)
 - `updated_at` (timestamp)
 
+MVP activation note:
+- `domain_lead` role is schema-declared for forward compatibility but runtime-disabled in first MVP.
+
 ## 3.2 `projects`
 
 Columns:
 - `id` (uuid, pk)
 - `name` (text)
 - `objective` (text)
-- `status` (text: `created|active|paused|completed|archived`)
+- `status` (text: `proposed|approved|active|paused|completed|terminated|archived`)
 - `budget_currency_total` (numeric)
 - `budget_quota_total` (numeric)
 - `budget_currency_used` (numeric)
 - `budget_quota_used` (numeric)
+- `charter_storage_uri` (text)
+- `charter_content_hash` (text)
+- `metric_plan_storage_uri` (text)
+- `metric_plan_content_hash` (text)
 - `created_at` (timestamp)
 - `updated_at` (timestamp)
 
@@ -84,6 +92,26 @@ Enforcement contract:
 - No update/delete API for log records
 - Database roles for runtime writers must deny direct update/delete
 
+## 3.5 `project_artifact` + `project_artifact_version`
+
+Minimum `project_artifact` fields:
+- `artifact_id` (uuid, pk)
+- `project_id` (uuid)
+- `artifact_type` (text)
+- `scope_type` (`project|milestone|task`)
+- `scope_id` (text/uuid)
+- `current_version` (int)
+- `status` (`draft|active|superseded|archived`)
+- `storage_uri` (text; under canonical project file root)
+- `content_hash` (text)
+
+Minimum `project_artifact_version` fields:
+- `artifact_id` (uuid)
+- `version_no` (int)
+- `author_role` (text)
+- `trace_id` (text)
+- `created_at` (timestamp)
+
 ## 4. Owner Command Ingress Contract
 
 Primary endpoint:
@@ -100,6 +128,11 @@ Command-family routing:
 - `msg_*` -> `communication`
 - all others -> `sandbox`
 
+Owner interaction policy:
+- Proposal discussions are constrained to `owner`, `ceo`, and `cwo`.
+- owner cannot directly command `specialist` in first MVP.
+- Specialist command path is via `project_manager`.
+
 ## 5. Governance Middleware Pipeline
 
 Required synchronous pipeline:
@@ -110,6 +143,7 @@ Fail-closed rules:
 - policy uncertainty or policy runtime error -> `blocked`
 - budget uncertainty or budget runtime error -> `blocked`
 - dispatch adapter failure -> `blocked`
+- project-document policy violation (type/cap/path/hash mismatch) -> `blocked`
 
 ## 6. Budget Engine Contract
 
@@ -131,6 +165,16 @@ Project allocation model:
 - Optional ratio planning is allowed upstream but must resolve to absolute caps before runtime execution
 
 ## 7. Lifecycle and Replay Contracts
+
+Project state contracts:
+- proposal revisions stay in `proposed`
+- `proposed -> approved -> active -> paused -> completed|terminated -> archived`
+- `terminated` allowed only from `active|paused`
+- `archived` allowed only from `completed|terminated`
+- project completion requires:
+  - PM completion report persisted
+  - `cwo` + `ceo` approval evidence persisted
+  - owner notification event emitted
 
 Task state contracts:
 - admission creates `queued`
@@ -157,6 +201,18 @@ Protected directories (MVP baseline):
 
 Unauthorized write attempts must return blocked outcome with audit evidence.
 
+## 8.1 Project Documentation Policy Contract
+
+Storage location:
+- Project-generated rich-text docs must be stored under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`.
+- Writes outside canonical project root are denied.
+
+Policy constraints:
+- Only approved doc types may be created.
+- Per-type active-document caps are enforced per project.
+- File create/update requires DB pointer (`storage_uri`) + hash (`content_hash`) synchronization.
+- Pointer/hash mismatch is treated as integrity failure and denied fail-closed.
+
 ## 9. Discord Adapter Contract
 
 Allowed operations through owner ingress:
@@ -164,11 +220,13 @@ Allowed operations through owner ingress:
 - `llm_*`
 - `msg_*`
 - status query commands (`query_project_status`, `query_agent_status`, `query_budget_status`)
+- proposal discussion messages routed to governance discussion contracts (`owner`, `ceo`, `cwo`)
 
 Adapter behavior:
 - maps Discord message metadata to canonical owner-command envelope
 - submits only through governed owner ingress endpoint
 - does not bypass policy, budget, or authority middleware
+- enforces specialist-touchability restriction for owner-originated commands
 
 ## 10. Recovery Contract
 
@@ -184,4 +242,4 @@ Startup recovery sequence:
 - Portfolio-level optimization and cross-project rebalancing
 - Auto-discovery of all provider free-tier quota contracts
 - Autonomous governance model mutation by project agents
-
+- Runtime activation of `domain_lead` command path (declared but disabled)

@@ -15,9 +15,9 @@ Status legend:
 - `done`
 
 Current focus:
-- Milestone: `M4 Hardening and Release Readiness`
-- Primary issue: `#21` (M4 Hardening and Release Readiness Kickoff)
-- Active branch: `feat/21-m4-hardening-release-kickoff`
+- Milestone: `M5 MVP Proposal and Governance Activation` (post-M4 MVP kickoff)
+- Primary issue: `TBD` (create M5 parent kickoff issue)
+- Active branch: `feat/mvp-v1`
 
 Checklist:
 0) Repo structure and documentation consistency review (post-migration) - `done`
@@ -218,6 +218,20 @@ Checklist:
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043618833`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044251147`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044266430`
+
+5) MVP v0.1 post-M4 completion roadmap (`M5`..`M7`) - `in_progress`
+- `M5-WP1`: project lifecycle guard lock (`proposed -> approved -> active -> paused -> completed -> terminated -> archived`) - `todo`
+- `M5-WP2`: proposal discussion and approval APIs (`owner`, `ceo`, `cwo`) - `todo`
+- `M5-WP3`: CWO project initialization flow (scope/objective/budget/metrics) - `todo`
+- `M5-WP4`: workforce template binding (`pm` active, `domain_lead` declared-disabled) - `todo`
+- `M6-WP1`: canonical project file root under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/` + DB pointer/hash model - `todo`
+- `M6-WP2`: project document policy (approved types + per-type caps + fail-closed over-cap) - `todo`
+- `M6-WP3`: specialist touchability enforcement (`pm`-only direct path) - `todo`
+- `M6-WP4`: PM mandatory-operations template enforcement (milestones/decomposition/assignment/reporting) - `todo`
+- `M7-WP1`: persistent runtime-state adapters + startup recovery hardening - `todo`
+- `M7-WP2`: Discord adapter boundary with role/channel constraints - `todo`
+- `M7-WP3`: MVP acceptance matrix + evidence pack closeout - `todo`
+- architecture baseline: `implementation/v1/mvp/MvpArchitectureRoadmap-v1.md`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/25#issuecomment-4044265685`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044442744`
 - issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/26#issuecomment-4044441059`

@@ -48,7 +48,16 @@
 ### 4.1 `project_container`
 - `project_id` (PK)
 - `state`
+- `proposal_revision_no`
 - `budget_allocation`
+- `budget_currency_total`
+- `budget_quota_total`
+- `budget_currency_used`
+- `budget_quota_used`
+- `charter_storage_uri`
+- `charter_content_hash`
+- `metric_plan_storage_uri`
+- `metric_plan_content_hash`
 - `constitution_policy_version`
 - `created_at`
 - `updated_at`
@@ -68,6 +77,10 @@
 - `role_type`
 - `state`
 - `base_model`
+- `template_id`
+- `template_version`
+- `system_prompt_ref`
+- `enabled`
 - `tool_bindings`
 - `memory_scope`
 - `autonomy_level`
@@ -160,6 +173,8 @@
 - `scope_id`
 - `current_version`
 - `status`
+- `storage_uri`
+- `content_hash`
 - `created_at`
 - `updated_at`
 
@@ -186,6 +201,8 @@
 - Every mutable entity update must include `updated_at` and actor provenance.
 - File/document ingestion and relational CDC are distinct pipelines; only relational changes are treated as CDC streams.
 - Milestone and task states should use canonical values from their state-machine specs.
+- Project rich-text documentation is file-backed under canonical system root; relational store tracks authoritative pointers and hashes.
+- Runtime must fail closed on pointer/hash mismatch between relational metadata and file-backed project docs.
 
 ## 7. Rule Set
 | Rule ID | Statement | Severity | Enforced By |

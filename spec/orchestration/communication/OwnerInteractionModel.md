@@ -20,6 +20,13 @@ Allowed direct access (v1):
 - owner may direct-message: administrator, auditor, ceo, cwo, cso, `secretary`.
 - owner may join project and executive channels as observer/commander according to policy.
 
+MVP v1 governance posture:
+- Proposal discussion path is `owner <-> ceo <-> cwo` with optional joint discussion channel.
+- owner may communicate with selected non-specialist agents by policy scope.
+- owner direct interaction with `specialist` is prohibited; specialist communication routes through `project_manager`.
+- `domain_lead` may be declared in schema but remains disabled in first MVP runtime activation.
+- first MVP operational role set is `ceo`, `cwo`, `auditor`, `administrator`, `project_manager`, `specialist`.
+
 ## 3. Message Types
 - `command`
 - `query`
@@ -74,6 +81,8 @@ Canonical examples:
 - owner interaction must not bypass policy authorization for execution actions.
 - High-impact actions triggered by owner messages must still pass policy and budget gates.
 - All critical owner interactions must produce immutable audit events.
+- Proposal approval state transitions are constrained by project state machine (`proposed -> approved -> active ...`).
+- Specialist touchability policy is enforced at ingress + policy layers (owner cannot directly command specialist).
 
 ## 8. Rule Set
 | Rule ID | Statement | Severity | Enforced By |
@@ -82,6 +91,7 @@ Canonical examples:
 | OIM-002 | Critical owner interaction events MUST generate immutable audit records. | high | Observability |
 | OIM-003 | owner channel access MUST respect role and project scope constraints. | high | Task Orchestrator |
 | OIM-004 | Alert severity mapping MUST follow constitutional safety/escalation policies. | high | Observability |
+| OIM-005 | owner MUST NOT directly command specialist agents; specialist interactions route through `project_manager`. | critical | Policy Engine |
 
 ## 9. Conformance Tests
 - Unauthorized owner-issued execution requests are denied by policy engine.

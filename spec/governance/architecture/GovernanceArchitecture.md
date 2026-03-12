@@ -851,13 +851,18 @@ Examples:
 
 4.2 Decision and Review Gates
 
-To ensure coordination between strategic planning and operational execution, project proposals follow a structured review process before final approval. All project proposals initiated by the CWO must undergo a strategic review by the CSO before submission to the CEO.
+To ensure coordination between strategic planning and operational execution, project proposals follow a structured review process before final approval.
+
+First-MVP posture:
+- proposal discussion and revision cycle is centered on `owner`, `ceo`, and `cwo`
+- proposal revisions remain in `proposed` state until explicit approval
+- CSO strategic-review dependency is deferred in first MVP activation
 
 The CSO evaluates the proposal's alignment with portfolio strategy, opportunity cost, and long-term system objectives. The CSO may issue one of the following advisory outcomes:
 
 - Aligned - the proposal may proceed to CEO approval.
 - Needs Revision - the proposal must be revised before resubmission.
-- Strategic Conflict - if the proposal is rejected three times, it cannot proceed unless the CEO explicitly overrides the advisory.
+- Strategic Conflict - if the proposal reaches three unresolved revision cycles, it cannot proceed unless the CEO explicitly overrides the advisory.
 
 This process preserves the CEO's final decision authority while ensuring that project execution remains aligned with long-term strategic priorities.
 

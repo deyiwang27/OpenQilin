@@ -14,6 +14,7 @@
 - Translate owner intent into strategic direction and project portfolio decisions.
 - Approve project creation, prioritization, and executive trade-offs.
 - Coordinate response to governance escalations without bypassing governance enforcement.
+- Co-approve project completion with `cwo` before owner completion notification.
 
 ## 4. Authority Profile
 | Authority | Value |
@@ -41,6 +42,9 @@
 - Escalate structural or constitutional exceptions to `owner`.
 - Route workforce lifecycle intents to `cwo`.
 - Route domain strategy concerns to `cso` and project concerns to `project_manager`.
+- Proposal workflow alignment:
+  - `proposed` state may iterate revisions
+  - explicit CEO approval is required for transition to `approved`
 
 ## 7. Runtime Interfaces
 - `spec/governance/architecture/DecisionReviewGates.md`

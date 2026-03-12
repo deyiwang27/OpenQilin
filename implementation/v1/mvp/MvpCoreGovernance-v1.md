@@ -13,17 +13,20 @@ The MVP must prove a governance-first multi-agent runtime that can:
 - Enforce authority and budget controls before execution
 - Dispatch to sandbox, LLM, and communication execution boundaries
 - Persist immutable audit evidence for every decision path
+- Execute proposal-to-project activation workflow with explicit approval gates
 
 ## 2. Scope
 
 Included:
 - Institutional agents: `ceo`, `cwo`, `auditor`, `administrator`
 - Project roles: `pm` plus up to 2 `specialist` agents per project
+- `domain_lead` role declared in schema but disabled in first MVP runtime
 - Hybrid runtime: in-memory workers plus PostgreSQL authoritative state
 - Dual budget control: currency (`usd`) and quota (`units`)
 - Discord as owner-facing command adapter
 - Tool execution only through governed dispatch boundaries
 - Hard-block governance file-path controls
+- Project documentation policy with file-type caps and governed storage root
 
 Excluded:
 - CSO and Domain Lead role systems
@@ -53,8 +56,9 @@ Core runtime components:
 - Cannot bypass `auditor` hard-budget pause without explicit owner action
 
 `cwo`:
-- Creates project workforce (`pm`, `specialist`)
+- Creates project workforce (`pm`, `specialist`, and `domain_lead` declaration when needed)
 - Cannot change governance policy or budget engine rules
+- Attaches template + llm profile + system prompt package when initializing workforce
 
 `auditor`:
 - Enforces budget and governance containment
@@ -68,10 +72,12 @@ Core runtime components:
 `pm`:
 - Coordinates project execution under approved budget
 - Delegates scoped execution tasks to specialists
+- Must execute mandatory operations from PM template (milestones, decomposition, assignment, reporting)
 
 `specialist`:
 - Executes bounded delivery tasks only
 - Cannot create agents or modify governance controls
+- Is touchable only by `pm` in first MVP (domain-lead path reserved but disabled)
 
 ## 5. Budget Governance
 
@@ -92,7 +98,18 @@ Free-tier providers (for example Gemini free plans) are tracked by quota usage e
 ## 6. Lifecycle Model
 
 Project lifecycle states:
-- `created -> active -> paused -> completed -> archived`
+- `proposed -> approved -> active -> paused -> completed -> terminated -> archived`
+
+Project lifecycle constraints:
+- no standalone `rejected` state in first MVP
+- proposals remain `proposed` until approved
+- `terminated` allowed only from `active|paused`
+- `archived` allowed only from `completed|terminated`
+
+Project completion governance chain:
+- PM submits completion report to `cwo`.
+- `cwo` and `ceo` co-approve completion decision.
+- owner is notified after completion decision is recorded.
 
 Task/runtime lifecycle states (canonical in current implementation):
 - `queued -> authorized -> dispatched`
@@ -111,6 +128,11 @@ Owner command families in MVP:
 
 Owner commands do not mutate runtime state directly. They always execute through the governed pipeline.
 
+Owner interaction constraints:
+- Proposal discussion path is `owner`, `ceo`, and `cwo`.
+- owner may communicate with selected non-specialist agents under policy scope.
+- owner cannot directly command `specialist`; specialist communication routes through `pm`.
+
 ## 8. Governance Boundaries
 
 Protected paths for MVP governance guard:
@@ -121,6 +143,17 @@ Protected paths for MVP governance guard:
 - `src/openqilin/control_plane/identity/`
 
 Any unauthorized modification attempt is blocked and audited.
+
+## 8.1 Project Documentation Governance
+
+Storage strategy:
+- Rich-text project docs live under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/` (outside repo tree).
+- DB remains authoritative for state/control metadata and file pointer/hash references.
+
+MVP policy:
+- Only approved artifact types may be created.
+- Each artifact type has max active-document caps to control file volume.
+- Over-cap document creation is denied fail-closed and audited.
 
 ## 9. Logging and Audit
 
