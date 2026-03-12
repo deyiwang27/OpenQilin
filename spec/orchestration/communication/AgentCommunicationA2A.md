@@ -29,7 +29,7 @@
   },
   "channel_context": {
     "channel_id": "string",
-    "channel_type": "direct|group|project|executive|governance",
+    "channel_type": "direct|leadership_council|governance|executive|project",
     "trust_level": "internal|external_verified|external_untrusted",
     "ordering_key": "string"
   },

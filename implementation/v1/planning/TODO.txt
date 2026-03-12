@@ -4,9 +4,9 @@ Stage: implementation/v1
 Archive status: active
 
 Tracking model:
-- GitHub Issues/PRs/Project remain the execution source of truth.
-- This file is the implementation-stage working checklist mirror for fast local progress scanning.
-- Milestone-level status authority remains in `implementation/v1/planning/ImplementationProgress-v1.md`.
+- GitHub Issues/PRs/Project are the execution source of truth.
+- This file is a concise working checklist for active milestones.
+- Detailed status/evidence authority is `implementation/v1/planning/ImplementationProgress-v1.md`.
 
 Status legend:
 - `todo`
@@ -14,251 +14,44 @@ Status legend:
 - `blocked`
 - `done`
 
-Current focus:
-- Milestone: `M5 MVP Proposal and Governance Activation` (post-M4 MVP kickoff)
-- Primary issue: `#29` (M5 kickoff parent)
+Current context:
 - Active branch: `feat/29-m5-governance-activation-kickoff`
+- Current scope: MVP v0.1 post-M4 roadmap (`M5`..`M7`)
+- Baseline roadmap: `implementation/v1/mvp/MvpArchitectureRoadmap-v1.md`
+
+Milestone summary:
+- `M0`..`M4`: `done` (see `implementation/v1/planning/ImplementationProgress-v1.md` and evidence packs)
+- `M5`: `in_progress`
+- `M6`: `todo`
+- `M7`: `todo`
 
 Checklist:
-0) Repo structure and documentation consistency review (post-migration) - `done`
-- stale path references removed
-- implementation tracker consolidated under `implementation/v1/planning/`
-- workflow docs aligned with current scaffold limitations
+1) `M5 MVP Proposal and Governance Activation` (`issue #29`) - `in_progress`
+- `M5-WP1` project lifecycle guard lock - `done` (`issue #30`)
+- `M5-WP2` proposal discussion + triad approval APIs (`owner`, `ceo`, `cwo`) - `done` (`issue #31`)
+- `M5-WP3` CWO initialization flow (scope/objective/budget/metrics) - `done` (`issue #32`)
+- `M5-WP4` workforce template binding (`project_manager` active, `domain_leader` declared-disabled) - `done` (`issue #33`)
+- milestone closeout PR + parent issue close for `#29` - `todo`
 
-0.1) Governance check formalization - `done`
-- canonical governance check doc added
-- trigger policy defined (PR-level and deep-level)
-- enforcement wired into PR template and workflow/quality/GitHub policy docs
+2) `M6 MVP Documentation and Access Governance` - `todo`
+- `M6-WP1` canonical project file root (`${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`) + DB pointer/hash model - `todo`
+- `M6-WP2` project document policy (approved types + per-type caps + fail-closed over-cap) - `todo`
+- `M6-WP3` specialist touchability enforcement (`project_manager`-only direct path) - `todo`
+- `M6-WP4` Project Manager mandatory-operations template enforcement - `todo`
 
-0.2) Host/application prerequisite verification - `done`
-- Docker and Docker Compose installed; Docker daemon reachable
-- `uv` toolchain active and project environment synced with Python `3.12`
-- baseline CLI tooling verified (`git`, `gh`, `uv`, `docker`, `docker compose`)
-- compose profiles/services resolve from `compose.yml`
+3) `M7 MVP Persistence, Adapter, and Acceptance` - `todo`
+- `M7-WP1` persistent runtime-state adapters + startup recovery hardening - `todo`
+- `M7-WP2` Discord ingress context + identity/channel mapping baseline (`guild_id`/`channel_id`/`channel_type`; allowlist states `pending|verified|revoked`) - `todo`
+- `M7-WP3` Discord chat-governance enforcement (`direct|leadership_council|governance|executive|project`) + lifecycle membership resolver + specialist access constraints + pending-role profile flags (`secretary`, `cso`, `domain_leader`) - `todo`
+- `M7-WP4` Docker `full` profile runtime cutover (`api_app`/workers placeholder replacement) - `todo`
+- `M7-WP5` Gemini Flash free-tier provider-path activation + quota telemetry validation - `todo`
+- `M7-WP6` MVP acceptance matrix + evidence pack closeout - `todo`
 
-1) M1 governed path kickoff (`issue #4`) - `done`
-- M1 implementation workplan decomposition and tracker sync (execution plan/progress/TODO alignment) - `done`
-- `M1-WP1`: owner command contract + ingress validation (`control_plane` + `task_orchestrator/admission`) - `done`
-- evidence: `uv run pytest tests/unit/test_m1_wp1_ingress_primitives.py tests/component/test_m1_wp1_owner_command_router.py tests/integration/test_m1_wp1_governed_ingress_path.py`
-- evidence: `uv run ruff check src tests`
-- evidence: `uv run mypy src`
-- `M1-WP2`: task admission + idempotency shell (`task_orchestrator/admission`, `control_plane/idempotency`, `runtime_state`) - `done`
-- evidence: `uv run pytest tests/unit/test_m1_wp1_ingress_primitives.py tests/unit/test_m1_wp2_admission_idempotency.py tests/component/test_m1_wp1_owner_command_router.py tests/integration/test_m1_wp1_governed_ingress_path.py`
-- evidence: `uv run ruff check src tests`
-- evidence: `uv run mypy src`
-- `M1-WP3`: policy decision path + fail-closed policy uncertainty handling (`policy_runtime_integration`) - `done`
-- evidence: `uv run pytest tests/unit/test_m1_wp1_ingress_primitives.py tests/unit/test_m1_wp2_admission_idempotency.py tests/unit/test_m1_wp3_policy_runtime.py tests/component/test_m1_wp1_owner_command_router.py tests/integration/test_m1_wp1_governed_ingress_path.py`
-- evidence: `uv run ruff check src tests`
-- evidence: `uv run ruff format --check .`
-- evidence: `uv run mypy src`
-- `M1-WP4`: budget reservation path + fail-closed budget uncertainty handling (`budget_runtime`) - `done`
-- evidence: `uv run pytest tests/unit/test_m1_wp1_ingress_primitives.py tests/unit/test_m1_wp2_admission_idempotency.py tests/unit/test_m1_wp3_policy_runtime.py tests/unit/test_m1_wp4_budget_runtime.py tests/component/test_m1_wp1_owner_command_router.py tests/integration/test_m1_wp1_governed_ingress_path.py`
-- evidence: `uv run ruff check src tests`
-- evidence: `uv run ruff format --check .`
-- evidence: `uv run mypy src`
-- `M1-WP5`: dispatch stub and task lifecycle wiring (`task_orchestrator/dispatch`, `task_orchestrator/services`) - `done`
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
-- evidence: `uv run ruff check .`
-- evidence: `uv run ruff format --check .`
-- evidence: `uv run mypy .`
-- `M1-WP6`: trace/audit/metric emission on accept/block paths (`observability`) - `done`
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
-- evidence: `uv run ruff check .`
-- evidence: `uv run ruff format --check .`
-- evidence: `uv run mypy .`
-- `M1-WP7`: admin CLI command implementation for `migrate`, `bootstrap`, `smoke`, and `diagnostics` (`apps/admin_cli.py`) - `done`
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
-- evidence: `uv run ruff check .`
-- evidence: `uv run ruff format --check .`
-- evidence: `uv run mypy .`
-- `M1-WP8`: M1 test + evidence pack (unit/component/integration/contract + issue/PR links) - `done`
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
-- evidence: `uv run ruff check .`
-- evidence: `uv run ruff format --check .`
-- evidence: `uv run mypy .`
-- evidence doc: `implementation/v1/planning/M1EvidencePack-v1.md`
-- `M1 post-review flaw remediation`: replay determinism + blocked replay detail parity + env-configurable live smoke default + admin container bootstrap/runability + workflow/progress doc alignment - `done`
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
-- evidence: `uv run ruff check .`
-- evidence: `uv run ruff format --check .`
-- evidence: `uv run mypy .`
-- `M1 spec/design top-2 conformance remediation`: canonical owner command ingress/response envelope + connector signature validation + external identity mapping shell - `done`
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
-- evidence: `uv run ruff check .`
-- evidence: `uv run ruff format --check .`
-- evidence: `uv run mypy .`
-- `M1 spec/design conformance hardening`: canonical orchestrator status transitions + audit required fields (`actor_id`, `actor_role`, `policy_version`, `policy_hash`, `rule_ids`, `payload`) + required trace span boundaries (`owner_ingress`, `task_orchestration`, `policy_evaluation`, `budget_reservation`, `execution_sandbox`, `audit_emit`) - `done`
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
-- evidence: `uv run ruff check .`
-- evidence: `uv run ruff format --check .`
-- evidence: `uv run mypy .`
-- milestone closeout: merged to `main`; issue `#4` closed - `done`
-
-2) M2 execution targets kickoff (`issue #6`) - `done`
-- decomposition + dependency wiring with child WPs (`#7`..`#11`) - `done`
-- labels applied (`milestone:M2`, `type:*`, `area:*`, `risk:execution-core`) - `done`
-- `M2-WP1` sandbox adapter wiring (`issue #7`) - `done`
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
-- evidence: `uv run ruff check .`
-- evidence: `uv run mypy .`
-- `M2-WP2` LiteLLM runtime integration (`issue #8`) - `done`
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
-- evidence: `uv run ruff check .`
-- evidence: `uv run mypy .`
-- `M2-WP3` retrieval-backed query baseline (`issue #9`) - `done`
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
-- evidence: `uv run ruff check .`
-- evidence: `uv run mypy .`
-- `M2 post-review top-3 remediation`: query identity+project-scope+policy gate, retrieval unexpected-error fail-closed hardening, and llm dispatch routing/budget de-hardcode via runtime settings - `done`
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
-- evidence: `uv run ruff check .`
-- evidence: `uv run mypy .`
-- `M2-WP4` PostgreSQL `pgvector` enablement + migration contract (`issue #10`) - `done`
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
-- evidence: `uv run ruff check .`
-- evidence: `uv run mypy .`
-- `M2-WP5` M2 evidence pack + milestone exit validation (`issue #11`) - `done`
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
-- evidence: `uv run ruff check .`
-- evidence: `uv run mypy .`
-- evidence doc: `implementation/v1/planning/M2EvidencePack-v1.md`
-- milestone closeout: merged to `main` via `PR #12`; issue `#6` closed - `done`
-
-3) M3 reliability prep - `done`
-- kickoff issue created: `#13` (`milestone:M3`, `type:feature`, `area:task_orchestrator`, `risk:execution-core`) - `done`
-- implementation branch created and pushed: `feat/13-m3-communication-reliability-kickoff` - `done`
-- decomposition + dependency wiring with child WPs (`#14`..`#18`) - `done`
-- labels applied for M3 children (`milestone:M3`, `type:*`, `area:communication|area:task_orchestrator`, `risk:execution-core`) - `done`
-- `M3-WP1` A2A envelope validation + ACP contract baseline (`issue #14`) - `done`
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
-- evidence: `uv run ruff check .`
-- evidence: `uv run mypy .`
-- issue closeout: `#14` closed with implementation evidence - `done`
-- `M3-WP2` ACP send/ack/nack delivery pipeline (`issue #15`) - `done`
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
-- evidence: `uv run ruff check .`
-- evidence: `uv run mypy .`
-- issue closeout: `#15` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/15#issuecomment-4042681776`) and issue closed - `done`
-- `M3-WP3` retry scheduler + duplicate-safe idempotency (`issue #16`) - `done`
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
-- evidence: `uv run ruff check .`
-- evidence: `uv run mypy .`
-- issue closeout: `#16` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/16#issuecomment-4042744335`) and issue closed - `done`
-- `M3-WP4` dead-letter flow + alert/audit emission (`issue #17`) - `done`
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance`
-- evidence: `uv run ruff check .`
-- evidence: `uv run mypy .`
-- issue closeout: `#17` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/17#issuecomment-4042798885`) and issue closed - `done`
-- `M3-WP5` orchestrator callback integration + M3 exit evidence pack (`issue #18`) - `done`
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` (`134 passed`)
-- evidence: `uv run ruff check .`
-- evidence: `uv run mypy .`
-- evidence doc: `implementation/v1/planning/M3EvidencePack-v1.md`
-- issue closeout: `#18` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/18#issuecomment-4042874734`) and issue closed - `done`
-- `M3 post-review remediation`: reliability profile docs align to `max_attempts=3`, callback terminal immutability guard enforced (`completed|failed|cancelled`), error-code spec casing aligned to lower snake-case, CI spec-integrity check added - `done`
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` (`135 passed`)
-- evidence: `uv run ruff check .`
-- evidence: `uv run mypy .`
-- evidence: `uv run python ops/scripts/check_spec_integrity.py`
-- commit: `c34e3fb`
-- milestone closeout PR for `#13` - `done`
-- PR: `https://github.com/deyiwang27/OpenQilin/pull/19`
-- milestone closeout: PR `#19` merged to `main` (`1f933150a9d7ed01e3ba69358669693c68e4b23a`) and issue `#13` closed - `done`
-
-4) M4 hardening and release readiness (`issue #21`) - `completed`
-- kickoff issue created with labels (`milestone:M4`, `type:feature`, `area:operations`, `risk:release-readiness`) - `done`
-- implementation branch created and pushed: `feat/21-m4-hardening-release-kickoff` - `done`
-- decomposition + dependency wiring with child WPs (`#22`..`#26`) - `done`
-- labels applied for M4 children (`milestone:M4`, `type:*`, `area:*`, `risk:release-readiness`) - `done`
-- `M4-WP1` observability dashboards + release alert thresholds (`issue #22`) - `done`
-- evidence: `uv run ruff check src/openqilin/observability/alerts tests/unit/test_m4_wp1_observability_release_readiness.py`
-- evidence: `uv run mypy src/openqilin/observability/alerts`
-- evidence: `uv run pytest tests/unit/test_m4_wp1_observability_release_readiness.py` (`4 passed`)
-- evidence doc: `implementation/v1/planning/M4EvidencePack-v1.md`
-- issue closeout: `#22` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/22#issuecomment-4043213775`) and issue closed - `done`
-- `M4-WP2` migration validation + rollback drill automation (`issue #23`) - `done`
-- evidence: `uv run ruff check src/openqilin/apps/admin_cli.py ops/scripts/run_migration_rollback_drill.py ops/scripts/check_migration_rollback_readiness.py tests/unit/test_m4_wp2_migration_rollback_drill.py`
-- evidence: `uv run mypy src/openqilin/apps/admin_cli.py`
-- evidence: `uv run pytest tests/unit/test_m4_wp2_migration_rollback_drill.py` (`4 passed`)
-- evidence: `uv run python ops/scripts/check_migration_rollback_readiness.py` (`passed`)
-- evidence doc: `implementation/v1/quality/ReleaseVersioningAndRollback-v1.md`
-- issue closeout: `#23` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/23#issuecomment-4043581589`) and issue closed - `done`
-- `M4-WP3` full-profile smoke + conformance gate hardening (`issue #24`) - `done`
-- evidence: `uv run ruff check src/openqilin/release_readiness ops/scripts/check_release_gate_matrix.py ops/scripts/run_release_gate_matrix.py tests/unit/test_m4_wp3_release_gate_matrix.py tests/conformance/test_m4_wp3_release_gate_hardening_conformance.py`
-- evidence: `uv run mypy .`
-- evidence: `uv run pytest tests/unit/test_m4_wp3_release_gate_matrix.py tests/conformance/test_m4_wp3_release_gate_hardening_conformance.py`
-- evidence: `uv run python ops/scripts/check_release_gate_matrix.py` (`passed`)
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` (`150 passed`)
-- evidence doc: `implementation/v1/quality/QualityAndDelivery-v1.md`
-- issue closeout: `#24` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/24#issuecomment-4043616599`) and issue closed - `done`
-- `M4 post-review top-3 remediation` (downgrade destructive-guard enforcement, alert source-owner attribution preservation, structured gate-check parsing for CI/compose) - `done`
-- evidence: `uv run pytest tests/unit/test_m4_wp1_observability_release_readiness.py tests/unit/test_m4_wp2_migration_rollback_drill.py tests/conformance/test_m4_wp3_release_gate_hardening_conformance.py` (`12 passed`)
-- evidence: `uv run python ops/scripts/check_release_gate_matrix.py` (`passed`)
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` (`151 passed`)
-- `M4-WP4` release artifact + promotion checklist packaging (`issue #25`) - `done`
-- evidence: `uv run ruff check src/openqilin/release_readiness/artifact_packaging.py ops/scripts/run_release_artifact_packager.py ops/scripts/check_release_artifact_package.py tests/unit/test_m4_wp4_release_artifact_packaging.py tests/conformance/test_m4_wp4_release_artifact_package_conformance.py`
-- evidence: `uv run mypy src/openqilin/release_readiness/artifact_packaging.py ops/scripts/check_release_artifact_package.py ops/scripts/run_release_artifact_packager.py`
-- evidence: `uv run pytest tests/unit/test_m4_wp4_release_artifact_packaging.py tests/conformance/test_m4_wp4_release_artifact_package_conformance.py`
-- evidence: `uv run python ops/scripts/check_release_artifact_package.py` (`passed`)
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` (`156 passed`)
-- evidence doc: `implementation/v1/planning/ReleaseArtifactIndex-v1.md`
-- issue closeout: `#25` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/25#issuecomment-4044250483`) and issue closed - `done`
-- `M4-WP5` M4 evidence pack + milestone closeout validation (`issue #26`) - `done`
-- evidence: `uv run ruff check implementation/v1/planning/M4EvidencePack-v1.md implementation/v1/planning/ReleaseArtifactIndex-v1.md tests/conformance/test_m4_wp5_evidence_pack_conformance.py`
-- evidence: `uv run mypy .`
-- evidence: `uv run pytest tests/conformance/test_m4_wp5_evidence_pack_conformance.py` (`2 passed`)
-- evidence: `uv run python ops/scripts/check_migration_rollback_readiness.py` (`passed`)
-- evidence: `uv run python ops/scripts/check_release_gate_matrix.py` (`passed`)
-- evidence: `uv run python ops/scripts/check_release_artifact_package.py` (`passed`)
-- evidence: `uv run pytest tests/unit tests/component tests/integration tests/contract tests/conformance` (`158 passed`)
-- evidence doc: `implementation/v1/planning/M4EvidencePack-v1.md`
-- issue closeout: `#26` evidence synced (`https://github.com/deyiwang27/OpenQilin/issues/26#issuecomment-4044441059`) and issue closed - `done`
-- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043167927`
-- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043582302`
-- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4043618833`
-- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044251147`
-- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044266430`
-
-5) MVP v0.1 post-M4 completion roadmap (`M5`..`M7`) - `in_progress`
-- `M5-WP1`: project lifecycle guard lock (`proposed -> approved -> active -> paused -> completed -> terminated -> archived`) - `done`
-- issue: `#30`
-- evidence: `uv run ruff check src/openqilin/control_plane/governance src/openqilin/control_plane/schemas/governance.py src/openqilin/data_access/repositories/governance.py tests/unit/test_m5_wp1_project_lifecycle.py`
-- evidence: `uv run mypy src/openqilin/control_plane/governance src/openqilin/control_plane/schemas/governance.py src/openqilin/data_access/repositories/governance.py`
-- evidence: `uv run pytest tests/unit/test_m5_wp1_project_lifecycle.py` (`26 passed`)
-- `M5-WP2`: proposal discussion and approval APIs (`owner`, `ceo`, `cwo`) - `done`
-- issue: `#31`
-- evidence: `uv run ruff check src/openqilin/control_plane/api/app.py src/openqilin/control_plane/api/dependencies.py src/openqilin/control_plane/handlers/governance_handler.py src/openqilin/control_plane/routers/governance.py src/openqilin/control_plane/routers/owner_discussions.py src/openqilin/control_plane/schemas/governance.py src/openqilin/data_access/repositories/governance.py tests/unit/test_m5_wp2_governance_handler.py tests/component/test_m5_wp2_governance_routers.py`
-- evidence: `uv run mypy src/openqilin/control_plane/api/app.py src/openqilin/control_plane/api/dependencies.py src/openqilin/control_plane/handlers/governance_handler.py src/openqilin/control_plane/routers/governance.py src/openqilin/control_plane/routers/owner_discussions.py src/openqilin/control_plane/schemas/governance.py src/openqilin/data_access/repositories/governance.py`
-- evidence: `uv run pytest tests/unit/test_m5_wp1_project_lifecycle.py tests/unit/test_m5_wp2_governance_handler.py tests/component/test_m5_wp2_governance_routers.py` (`34 passed`)
-- `M5-WP3`: CWO project initialization flow (scope/objective/budget/metrics) - `done`
-- issue: `#32`
-- evidence: `uv run ruff check src/openqilin/control_plane/handlers/governance_handler.py src/openqilin/control_plane/routers/governance.py src/openqilin/control_plane/schemas/governance.py src/openqilin/data_access/repositories/governance.py tests/unit/test_m5_wp3_governance_initialization_handler.py tests/component/test_m5_wp3_governance_initialization_router.py`
-- evidence: `uv run mypy src/openqilin/control_plane/handlers/governance_handler.py src/openqilin/control_plane/routers/governance.py src/openqilin/control_plane/schemas/governance.py src/openqilin/data_access/repositories/governance.py`
-- evidence: `uv run pytest tests/unit/test_m5_wp1_project_lifecycle.py tests/unit/test_m5_wp2_governance_handler.py tests/component/test_m5_wp2_governance_routers.py tests/unit/test_m5_wp3_governance_initialization_handler.py tests/component/test_m5_wp3_governance_initialization_router.py` (`40 passed`)
-- `M5-WP4`: workforce template binding (`project_manager` active, `domain_leader` declared-disabled) - `done`
-- issue: `#33`
-- evidence: `uv run ruff check src/openqilin/control_plane/handlers/governance_handler.py src/openqilin/control_plane/routers/governance.py src/openqilin/control_plane/schemas/governance.py src/openqilin/data_access/repositories/governance.py tests/unit/test_m5_wp4_workforce_binding_handler.py tests/component/test_m5_wp4_workforce_binding_router.py`
-- evidence: `uv run mypy src/openqilin/control_plane/handlers/governance_handler.py src/openqilin/control_plane/routers/governance.py src/openqilin/control_plane/schemas/governance.py src/openqilin/data_access/repositories/governance.py`
-- evidence: `uv run pytest tests/unit/test_m5_wp1_project_lifecycle.py tests/unit/test_m5_wp2_governance_handler.py tests/component/test_m5_wp2_governance_routers.py tests/unit/test_m5_wp3_governance_initialization_handler.py tests/component/test_m5_wp3_governance_initialization_router.py tests/unit/test_m5_wp4_workforce_binding_handler.py tests/component/test_m5_wp4_workforce_binding_router.py` (`46 passed`)
-- `M6-WP1`: canonical project file root under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/` + DB pointer/hash model - `todo`
-- `M6-WP2`: project document policy (approved types + per-type caps + fail-closed over-cap) - `todo`
-- `M6-WP3`: specialist touchability enforcement (`project_manager`-only direct path) - `todo`
-- `M6-WP4`: Project Manager mandatory-operations template enforcement (milestones/decomposition/assignment/reporting) - `todo`
-- `M7-WP1`: persistent runtime-state adapters + startup recovery hardening - `todo`
-- `M7-WP2`: Discord adapter boundary with role/channel constraints - `todo`
-- `M7-WP3`: Docker `full` profile runtime cutover (`api_app`/workers placeholder replacement) - `todo`
-- `M7-WP4`: Gemini Flash free-tier provider-path activation + quota telemetry validation - `todo`
-- `M7-WP5`: MVP acceptance matrix + evidence pack closeout - `todo`
-- architecture baseline: `implementation/v1/mvp/MvpArchitectureRoadmap-v1.md`
-- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/25#issuecomment-4044265685`
-- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/21#issuecomment-4044442744`
-- issue evidence: `https://github.com/deyiwang27/OpenQilin/issues/26#issuecomment-4044441059`
-- milestone closeout PR for `#21`: `https://github.com/deyiwang27/OpenQilin/pull/27` - `done`
-- milestone closeout: merged to `main` via `PR #27`; issue `#21` closed - `done`
-- post-M4 follow-up: replace placeholder compose services (`api_app`, `orchestrator_worker`, `communication_worker`) with runnable entrypoints and extend smoke-gate conformance coverage - `todo`
-- post-M4 follow-up: enforce non-default connector shared secret in non-local environments at runtime validation layer - `todo`
+Carryover follow-ups:
+- replace placeholder compose services (`api_app`, `orchestrator_worker`, `communication_worker`) with runnable entrypoints and extend smoke-gate conformance coverage - `todo`
+- enforce non-default connector shared secret in non-local environments at runtime validation layer - `todo`
 
 Update routine:
-- On issue start: add/update item here with branch + issue id.
-- On PR open/merge: update item status and attach PR link in GitHub issue evidence.
-- Weekly: sync milestone percentage and evidence into `implementation/v1/planning/ImplementationProgress-v1.md`.
+- On issue start: add/update item here with issue id and status.
+- On PR open/merge: update related item status and link PR in issue evidence.
+- Weekly: sync milestone percentages into `implementation/v1/planning/ImplementationProgress-v1.md`.

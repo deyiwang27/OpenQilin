@@ -31,12 +31,14 @@ Normative precedence:
 | Observability overlays | LangSmith + AgentOps (retained) | `spec/rfcs/RFC-02-Memory-Intelligence-Observability.md` |
 | Deployment path | local-first with Docker, then cloud hybrid promotion | `spec/rfcs/RFC-05-Deployment-and-Cost-Strategy.md` |
 | Owner interface posture | Discord-first + Grafana, React/TypeScript defer | `spec/rfcs/RFC-03-Language-Runtime-Persistence-Deployment.md` |
+| Owner chat governance posture | fixed Discord chat classes with state-driven project-channel membership; `secretary` participation defined as pending in first MVP | `spec/orchestration/communication/OwnerInteractionModel.md` |
 
 ## 3. Runtime Component Map
 ### 3.1 Governance and Control Plane
 - `owner_channel_adapter`:
   - primary: Discord connector (v1)
   - responsibility: ingress normalization, identity binding, trace initialization
+  - enforces contract-defined owner chat classes and membership constraints before governed ingress
 - `control_plane_api` (FastAPI):
   - authoritative API boundary for commands, queries, and governed actions
   - exposes stable contracts to any non-core adapters
@@ -102,6 +104,8 @@ Project lifecycle lock (v1):
 ### 4.3 `a2a+acp`
 - Envelope contract: `spec/orchestration/communication/AgentCommunicationA2A.md`
 - Transport/reliability contract: `spec/orchestration/communication/AgentCommunicationACP.md`
+- Owner chat-class and membership contract: `spec/orchestration/communication/OwnerInteractionModel.md`
+- Discord identity/channel hardening controls: `spec/cross-cutting/security/DiscordOwnerChannelIdentityHardening.md`
 
 ### 4.4 `llm_gateway`
 - Runtime boundary: `spec/infrastructure/architecture/LlmGatewayContract.md`

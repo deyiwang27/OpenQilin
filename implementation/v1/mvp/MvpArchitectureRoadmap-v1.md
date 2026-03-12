@@ -99,16 +99,18 @@ Objective:
 
 Work packages:
 1. `M7-WP1`: persistent runtime-state adapters + startup recovery orchestration
-2. `M7-WP2`: Discord adapter service mapping inbound payloads to owner envelope with role/channel constraints
-3. `M7-WP3`: Docker `full` profile runtime cutover (replace `api_app`/worker placeholder containers with real runtime entrypoints)
-4. `M7-WP4`: Gemini Flash free-tier provider-path activation + quota accounting validation
-5. `M7-WP5`: MVP acceptance matrix + evidence pack + closeout checklist (including Project Manager reporting, completion approval path, and full lifecycle E2E)
+2. `M7-WP2`: Discord ingress context + identity/channel mapping baseline (`guild_id`/`channel_id`/`channel_type`, connector verification, allowlist state model)
+3. `M7-WP3`: Discord chat-governance enforcement (`direct`/`leadership_council`/`governance`/`executive`/`project`) + lifecycle-driven project-channel membership + specialist-access constraints
+4. `M7-WP4`: Docker `full` profile runtime cutover (replace `api_app`/worker placeholder containers with real runtime entrypoints)
+5. `M7-WP5`: Gemini Flash free-tier provider-path activation + quota accounting validation
+6. `M7-WP6`: MVP acceptance matrix + evidence pack + closeout checklist (including Project Manager reporting, completion approval path, and full lifecycle E2E)
 
 Exit criteria:
 - restart/recovery preserves governance and idempotency invariants and restores institutional-agent state
 - Docker `full` profile executes real runtime services (no placeholder app/worker containers)
 - Gemini free-tier provider path is validated through governed dispatch with quota telemetry evidence
 - Discord-to-governed-ingress path is executable end-to-end with specialist-access constraints
+- Discord adapter enforces fixed chat classes (`direct`, `leadership_council`, `governance`, `executive`, `project`) and lifecycle-driven project-channel membership constraints, including deferred/pending `secretary` participation profile handling
 - full project lifecycle (`proposed -> approved -> active -> paused -> completed -> terminated -> archived`) is validated via governed acceptance scenarios
 - MVP v0.1 evidence pack is complete and traceable
 

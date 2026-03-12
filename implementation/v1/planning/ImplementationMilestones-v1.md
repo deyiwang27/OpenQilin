@@ -104,6 +104,14 @@ Scope:
 - Discord adapter boundary with role/channel constraints and real round-trip verification
 - MVP acceptance matrix and evidence-pack closeout
 
+WP decomposition:
+1. `M7-WP1`: persistent runtime-state adapters + startup recovery orchestration
+2. `M7-WP2`: Discord ingress context + identity/channel mapping baseline
+3. `M7-WP3`: Discord chat-governance enforcement + lifecycle membership/policy integration
+4. `M7-WP4`: Docker `full` profile runtime cutover
+5. `M7-WP5`: Gemini Flash free-tier provider-path activation + quota telemetry validation
+6. `M7-WP6`: MVP acceptance matrix + evidence-pack closeout
+
 Exit:
 - restart/recovery preserves governance and idempotency invariants and rehydrates institutional agents from persistent state
 - Docker `full` profile starts real `api_app`, `orchestrator_worker`, and `communication_worker` runtime entrypoints

@@ -142,6 +142,14 @@ Owner interaction constraints:
 - Proposal discussion path is `owner`, `ceo`, and `cwo`.
 - owner may communicate with selected non-specialist agents under policy scope.
 - owner cannot directly command `specialist`; specialist communication routes through `project_manager`.
+- Discord chat classes are fixed (`direct`, `leadership_council`, `governance`, `executive`, `project`) and free-style owner group creation is out of scope.
+- MVP active membership profile:
+  - owner direct messages: `administrator`, `auditor`, `ceo`, `cwo`
+  - `leadership_council`: `owner`, `administrator`, `auditor`, `ceo`, `cwo`
+  - `governance`: `owner`, `administrator`, `auditor`
+  - `executive`: `owner`, `ceo`, `cwo`
+  - `project` (`<project_name>`): `proposed` (`owner`, `ceo`, `cwo`), `approved|active|paused` (+`project_manager`), `completed|terminated` read-only, `archived` locked
+- System-level target (deferred in MVP): add `secretary` to owner direct messages and all group chat classes.
 
 ## 8. Governance Boundaries
 

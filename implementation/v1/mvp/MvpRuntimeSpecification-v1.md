@@ -238,6 +238,21 @@ Adapter behavior:
 - does not bypass policy, budget, or authority middleware
 - enforces specialist-touchability restriction for owner-originated commands
 
+Discord chat governance contract:
+- Chat classes are fixed: `direct`, `leadership_council`, `governance`, `executive`, `project`.
+- Owner direct-message allowlist in MVP: `administrator`, `auditor`, `ceo`, `cwo`.
+- Free-style owner group creation outside contract classes is denied.
+- Project-channel (`<project_name>`) membership is state-driven in MVP:
+  - `proposed`: `owner`, `ceo`, `cwo`
+  - `approved|active|paused`: `owner`, `ceo`, `cwo`, `project_manager`
+  - `completed|terminated`: read-only
+  - `archived`: locked
+
+System-level target profile (documented, deferred in MVP):
+- Add `secretary` to owner direct-message allowlist and all chat classes (`leadership_council`, `governance`, `executive`, `project`) as pending activation.
+- Add `cso` to `leadership_council`, `executive`, and `project` proposed-stage membership.
+- Add `domain_leader` to `project` active-stage membership after role activation policy allows it.
+
 ## 10. Recovery Contract
 
 Startup recovery sequence:

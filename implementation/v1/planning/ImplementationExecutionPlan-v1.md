@@ -225,21 +225,25 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 - Target modules: runtime-state/communication repositories, service bootstrap dependencies, governance/agent registry repositories.
 - Deliverables: restart/rehydration preserving idempotency and governance invariants, including institutional-agent bootstrap from persistent state.
 
-10. `M7-WP2` Discord adapter boundary with role/channel constraints
-- Target modules: Discord adapter package + ingress mapping path.
-- Deliverables: canonical envelope mapping, connector verification, specialist-access restrictions in adapter path, and real Discord round-trip validation evidence.
+10. `M7-WP2` Discord ingress context + identity/channel mapping
+- Target modules: Discord adapter package, owner-command ingress schemas, connector identity repositories.
+- Deliverables: canonical Discord communication context (`guild_id`, `channel_id`, `channel_type`) mapped into owner envelope contracts, connector verification, identity/channel mapping store with `pending|verified|revoked` states, and allowlist lookup primitives.
 
-11. `M7-WP3` Docker `full` profile runtime cutover
+11. `M7-WP3` Discord chat-governance enforcement + policy/runtime integration
+- Target modules: Discord adapter authorization path, policy input normalizer/rule evaluation, task/audit persistence contracts.
+- Deliverables: fixed chat-class validator (`direct`, `leadership_council`, `governance`, `executive`, `project`), lifecycle-aware project membership resolver, specialist access constraints, pending-role activation flags (`secretary`, `cso`, `domain_leader`), and traceable context persistence for replay-safe decisions.
+
+12. `M7-WP4` Docker `full` profile runtime cutover
 - Target modules: `compose.yml`, runtime container entrypoints, healthchecks/startup sequencing, operator runbooks.
 - Deliverables: `api_app`, `orchestrator_worker`, and `communication_worker` run real application entrypoints in Docker `full` profile (no placeholder commands).
 
-12. `M7-WP4` Gemini Flash free-tier provider-path activation + quota telemetry validation
+13. `M7-WP5` Gemini Flash free-tier provider-path activation + quota telemetry validation
 - Target modules: `llm_gateway/providers`, runtime settings/env wiring, budget/quota observability surfaces, acceptance tests.
 - Deliverables: governed `llm_*` dispatch executes through configured Gemini Flash free-tier provider path with deterministic quota-usage evidence and fail-closed behavior on provider/runtime uncertainty.
 
-13. `M7-WP5` MVP acceptance matrix and closeout evidence
+14. `M7-WP6` MVP acceptance matrix and closeout evidence
 - Target modules: `tests/contract`, `tests/conformance`, MVP evidence docs.
-- Deliverables: end-to-end acceptance across proposal, activation, Project Manager-managed execution, completion approval, owner notification, and full project lifecycle progression evidence.
+- Deliverables: end-to-end acceptance across proposal, activation, Project Manager-managed execution, completion approval, owner notification, full project lifecycle progression evidence, and Discord round-trip validation against governed chat classes.
 
 ### 8.3 MVP Exit Evidence Checklist
 - Proposal lifecycle and approval gates are enforced with canonical state transitions.
