@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
+from textwrap import dedent
 from typing import Mapping
 from uuid import uuid4
 
@@ -12,6 +13,10 @@ from openqilin.control_plane.governance.project_lifecycle import (
     ProjectStatus,
     assert_project_transition,
     parse_project_status,
+)
+from openqilin.data_access.repositories.artifacts import (
+    InMemoryProjectArtifactRepository,
+    ProjectArtifactRepositoryError,
 )
 
 
@@ -75,6 +80,12 @@ class ProjectInitializationSnapshot:
     actor_id: str
     actor_role: str
     trace_id: str
+    charter_storage_uri: str | None
+    charter_content_hash: str | None
+    metric_plan_storage_uri: str | None
+    metric_plan_content_hash: str | None
+    workforce_plan_storage_uri: str | None
+    workforce_plan_content_hash: str | None
     initialized_at: datetime
 
 
@@ -116,8 +127,13 @@ class ProjectRecord:
 class InMemoryGovernanceRepository:
     """In-memory governance repository with canonical lifecycle enforcement."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        artifact_repository: InMemoryProjectArtifactRepository | None = None,
+    ) -> None:
         self._projects_by_id: dict[str, ProjectRecord] = {}
+        self._artifact_repository = artifact_repository
 
     def create_project(
         self,
@@ -364,6 +380,12 @@ class InMemoryGovernanceRepository:
                 message="project budget totals must be non-negative",
             )
 
+        pointers = self._persist_initialization_artifacts(
+            project_id=project_id,
+            objective=objective.strip(),
+            metric_plan=metric_plan,
+            workforce_plan=workforce_plan,
+        )
         snapshot = ProjectInitializationSnapshot(
             objective=objective.strip(),
             budget_currency_total=float(budget_currency_total),
@@ -381,6 +403,12 @@ class InMemoryGovernanceRepository:
             actor_id=actor_id.strip(),
             actor_role=actor_role.strip(),
             trace_id=trace_id.strip(),
+            charter_storage_uri=pointers.get("project_charter_storage_uri"),
+            charter_content_hash=pointers.get("project_charter_content_hash"),
+            metric_plan_storage_uri=pointers.get("success_metrics_storage_uri"),
+            metric_plan_content_hash=pointers.get("success_metrics_content_hash"),
+            workforce_plan_storage_uri=pointers.get("workforce_plan_storage_uri"),
+            workforce_plan_content_hash=pointers.get("workforce_plan_content_hash"),
             initialized_at=datetime.now(tz=UTC),
         )
         updated = replace(
@@ -399,8 +427,109 @@ class InMemoryGovernanceRepository:
             metadata={
                 "budget_currency_total": snapshot.budget_currency_total,
                 "budget_quota_total": snapshot.budget_quota_total,
+                "charter_storage_uri": snapshot.charter_storage_uri or "",
+                "metric_plan_storage_uri": snapshot.metric_plan_storage_uri or "",
             },
         )
+
+    def _persist_initialization_artifacts(
+        self,
+        *,
+        project_id: str,
+        objective: str,
+        metric_plan: Mapping[str, object] | None,
+        workforce_plan: Mapping[str, object] | None,
+    ) -> dict[str, str]:
+        if self._artifact_repository is None:
+            return {}
+        try:
+            charter_pointer = self._artifact_repository.write_project_artifact(
+                project_id=project_id,
+                artifact_type="project_charter",
+                content=self._render_project_charter(objective=objective),
+            )
+            metric_pointer = self._artifact_repository.write_project_artifact(
+                project_id=project_id,
+                artifact_type="success_metrics",
+                content=self._render_mapping_document(
+                    title="Success Metrics",
+                    values=metric_plan,
+                ),
+            )
+            workforce_pointer = self._artifact_repository.write_project_artifact(
+                project_id=project_id,
+                artifact_type="workforce_plan",
+                content=self._render_mapping_document(
+                    title="Workforce Plan",
+                    values=workforce_plan,
+                ),
+            )
+            if not self._artifact_repository.verify_pointer_hash(
+                project_id=project_id,
+                artifact_type="project_charter",
+            ):
+                raise GovernanceRepositoryError(
+                    code="governance_project_artifact_integrity_failed",
+                    message="project charter pointer/hash verification failed",
+                )
+            if not self._artifact_repository.verify_pointer_hash(
+                project_id=project_id,
+                artifact_type="success_metrics",
+            ):
+                raise GovernanceRepositoryError(
+                    code="governance_project_artifact_integrity_failed",
+                    message="success metrics pointer/hash verification failed",
+                )
+            if not self._artifact_repository.verify_pointer_hash(
+                project_id=project_id,
+                artifact_type="workforce_plan",
+            ):
+                raise GovernanceRepositoryError(
+                    code="governance_project_artifact_integrity_failed",
+                    message="workforce plan pointer/hash verification failed",
+                )
+        except ProjectArtifactRepositoryError as error:
+            raise GovernanceRepositoryError(
+                code="governance_project_artifact_persistence_failed",
+                message=error.message,
+            ) from error
+
+        return {
+            "project_charter_storage_uri": charter_pointer.storage_uri,
+            "project_charter_content_hash": charter_pointer.content_hash,
+            "success_metrics_storage_uri": metric_pointer.storage_uri,
+            "success_metrics_content_hash": metric_pointer.content_hash,
+            "workforce_plan_storage_uri": workforce_pointer.storage_uri,
+            "workforce_plan_content_hash": workforce_pointer.content_hash,
+        }
+
+    @staticmethod
+    def _render_project_charter(*, objective: str) -> str:
+        return dedent(
+            f"""\
+            # Project Charter
+
+            ## Objective
+            {objective}
+            """
+        ).strip()
+
+    @staticmethod
+    def _render_mapping_document(*, title: str, values: Mapping[str, object] | None) -> str:
+        if values is None or len(values) == 0:
+            body = "- (empty)"
+        else:
+            body = "\n".join(
+                f"- {str(key)}: {str(value)}"
+                for key, value in sorted(values.items(), key=lambda item: str(item[0]))
+            )
+        return dedent(
+            f"""\
+            # {title}
+
+            {body}
+            """
+        ).strip()
 
     def bind_workforce_template(
         self,

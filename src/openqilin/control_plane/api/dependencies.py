@@ -11,6 +11,7 @@ from openqilin.budget_runtime.client import InMemoryBudgetRuntimeClient
 from openqilin.budget_runtime.reservation_service import BudgetReservationService
 from openqilin.communication_gateway.callbacks.outcome_notifier import CommunicationOutcomeNotifier
 from openqilin.control_plane.idempotency.ingress_dedupe import InMemoryIngressDedupe
+from openqilin.data_access.repositories.artifacts import InMemoryProjectArtifactRepository
 from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
 from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
 from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
@@ -38,6 +39,7 @@ class RuntimeServices:
 
     ingress_dedupe: InMemoryIngressDedupe
     runtime_state_repo: InMemoryRuntimeStateRepository
+    project_artifact_repo: InMemoryProjectArtifactRepository
     governance_repo: InMemoryGovernanceRepository
     admission_service: AdmissionService
     policy_runtime_client: InMemoryPolicyRuntimeClient
@@ -58,7 +60,8 @@ def build_runtime_services() -> RuntimeServices:
 
     ingress_dedupe = InMemoryIngressDedupe()
     runtime_state_repo = InMemoryRuntimeStateRepository()
-    governance_repo = InMemoryGovernanceRepository()
+    project_artifact_repo = InMemoryProjectArtifactRepository()
+    governance_repo = InMemoryGovernanceRepository(artifact_repository=project_artifact_repo)
     admission_service = AdmissionService(
         dedupe_store=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
@@ -87,6 +90,7 @@ def build_runtime_services() -> RuntimeServices:
     return RuntimeServices(
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
+        project_artifact_repo=project_artifact_repo,
         governance_repo=governance_repo,
         admission_service=admission_service,
         policy_runtime_client=policy_runtime_client,

@@ -114,6 +114,8 @@ def _map_handler_error(
         "governance_project_manager_binding_exists",
         "governance_workforce_role_invalid",
         "governance_project_invalid_budget",
+        "governance_project_artifact_persistence_failed",
+        "governance_project_artifact_integrity_failed",
     }:
         return (
             status.HTTP_409_CONFLICT,
@@ -308,6 +310,20 @@ def initialize_project(
             "budget_quota_total": initialization.budget_quota_total if initialization else None,
             "metric_plan": dict(initialization.metric_plan) if initialization else {},
             "workforce_plan": dict(initialization.workforce_plan) if initialization else {},
+            "charter_storage_uri": initialization.charter_storage_uri if initialization else None,
+            "charter_content_hash": initialization.charter_content_hash if initialization else None,
+            "metric_plan_storage_uri": initialization.metric_plan_storage_uri
+            if initialization
+            else None,
+            "metric_plan_content_hash": initialization.metric_plan_content_hash
+            if initialization
+            else None,
+            "workforce_plan_storage_uri": initialization.workforce_plan_storage_uri
+            if initialization
+            else None,
+            "workforce_plan_content_hash": initialization.workforce_plan_content_hash
+            if initialization
+            else None,
         },
     )
 
