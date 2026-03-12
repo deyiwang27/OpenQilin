@@ -138,6 +138,7 @@ def search_project_artifacts(
         connector=principal.connector,
         action="query_search_project_artifacts",
         target="artifact_search",
+        recipient_types=(),
         args=(payload.query, payload.artifact_type or ""),
         project_id=project_id,
     )
