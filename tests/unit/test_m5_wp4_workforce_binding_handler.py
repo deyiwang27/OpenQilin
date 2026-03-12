@@ -46,12 +46,24 @@ def test_bind_workforce_template_creates_active_project_manager_binding() -> Non
         role="project_manager",
         template_id="project_manager_template_v1",
         llm_routing_profile="dev_gemini_free",
-        system_prompt="You are Project Manager.",
+        system_prompt=(
+            "You are Project Manager. Mandatory operations: milestone planning, "
+            "task decomposition, task assignment, progress reporting."
+        ),
     )
 
     assert outcome.role == "project_manager"
     assert outcome.binding_status == "active"
     assert len(outcome.system_prompt_hash) == 64
+    assert outcome.mandatory_operations == (
+        "milestone_planning",
+        "progress_reporting",
+        "task_assignment",
+        "task_decomposition",
+    )
+    project = repository.get_project("project_m5_wp4")
+    assert project is not None
+    assert project.workforce_bindings[-1].mandatory_operations == outcome.mandatory_operations
 
 
 def test_bind_workforce_template_keeps_domain_leader_declared_disabled() -> None:
@@ -72,6 +84,27 @@ def test_bind_workforce_template_keeps_domain_leader_declared_disabled() -> None
 
     assert outcome.role == "domain_leader"
     assert outcome.binding_status == "declared_disabled"
+    assert outcome.mandatory_operations == ()
+
+
+def test_bind_project_manager_template_rejects_missing_mandatory_operations() -> None:
+    repository = InMemoryGovernanceRepository()
+    _seed_active_project(repository)
+
+    with pytest.raises(GovernanceHandlerError) as exc:
+        bind_workforce_template_by_cwo(
+            repository=repository,
+            project_id="project_m5_wp4",
+            actor_id="cwo_1",
+            actor_role="cwo",
+            trace_id="trace-m6-wp4-bind-missing-ops",
+            role="project_manager",
+            template_id="project_manager_template_v1",
+            llm_routing_profile="dev_gemini_free",
+            system_prompt="You are Project Manager.",
+        )
+
+    assert exc.value.code == "governance_project_manager_template_missing_operations"
 
 
 def test_bind_workforce_template_rejects_non_cwo_role() -> None:
@@ -88,7 +121,10 @@ def test_bind_workforce_template_rejects_non_cwo_role() -> None:
             role="project_manager",
             template_id="project_manager_template_v1",
             llm_routing_profile="dev_gemini_free",
-            system_prompt="You are Project Manager.",
+            system_prompt=(
+                "You are Project Manager. Mandatory operations: milestone planning, "
+                "task decomposition, task assignment, progress reporting."
+            ),
         )
 
     assert exc.value.code == "governance_role_forbidden"

@@ -82,6 +82,20 @@ def validate_owner_command_envelope(
             code="envelope_invalid_trace_id",
             message="trace identifier must not be blank",
         )
+    normalized_recipient_types = sorted(
+        {
+            recipient.recipient_type.strip().lower()
+            for recipient in payload.recipients
+            if recipient.recipient_type.strip()
+        }
+    )
+    normalized_recipient_ids = sorted(
+        {
+            recipient.recipient_id.strip()
+            for recipient in payload.recipients
+            if recipient.recipient_id.strip()
+        }
+    )
 
     return AdmissionEnvelope(
         request_id=str(uuid4()),
@@ -102,6 +116,8 @@ def validate_owner_command_envelope(
                     "sender_role": payload.sender.actor_role,
                     "external_message_id": payload.connector.external_message_id,
                     "raw_payload_hash": payload.connector.raw_payload_hash,
+                    "recipient_types": ",".join(normalized_recipient_types),
+                    "recipient_ids": ",".join(normalized_recipient_ids),
                 }.items()
             )
         ),

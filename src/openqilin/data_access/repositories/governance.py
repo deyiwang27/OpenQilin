@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
+from textwrap import dedent
 from typing import Mapping
 from uuid import uuid4
 
@@ -12,6 +13,11 @@ from openqilin.control_plane.governance.project_lifecycle import (
     ProjectStatus,
     assert_project_transition,
     parse_project_status,
+)
+from openqilin.data_access.repositories.artifacts import (
+    InMemoryProjectArtifactRepository,
+    ProjectArtifactRepositoryError,
+    ProjectArtifactWriteContext,
 )
 
 
@@ -75,6 +81,18 @@ class ProjectInitializationSnapshot:
     actor_id: str
     actor_role: str
     trace_id: str
+    charter_storage_uri: str | None
+    charter_content_hash: str | None
+    scope_statement_storage_uri: str | None
+    scope_statement_content_hash: str | None
+    budget_plan_storage_uri: str | None
+    budget_plan_content_hash: str | None
+    metric_plan_storage_uri: str | None
+    metric_plan_content_hash: str | None
+    workforce_plan_storage_uri: str | None
+    workforce_plan_content_hash: str | None
+    execution_plan_storage_uri: str | None
+    execution_plan_content_hash: str | None
     initialized_at: datetime
 
 
@@ -88,6 +106,7 @@ class WorkforceBindingRecord:
     template_id: str
     llm_routing_profile: str
     system_prompt_hash: str
+    mandatory_operations: tuple[str, ...]
     binding_status: str
     actor_id: str
     actor_role: str
@@ -116,8 +135,13 @@ class ProjectRecord:
 class InMemoryGovernanceRepository:
     """In-memory governance repository with canonical lifecycle enforcement."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        artifact_repository: InMemoryProjectArtifactRepository | None = None,
+    ) -> None:
         self._projects_by_id: dict[str, ProjectRecord] = {}
+        self._artifact_repository = artifact_repository
 
     def create_project(
         self,
@@ -364,6 +388,16 @@ class InMemoryGovernanceRepository:
                 message="project budget totals must be non-negative",
             )
 
+        pointers = self._persist_initialization_artifacts(
+            project_id=project_id,
+            objective=objective.strip(),
+            budget_currency_total=float(budget_currency_total),
+            budget_quota_total=float(budget_quota_total),
+            metric_plan=metric_plan,
+            workforce_plan=workforce_plan,
+            actor_role=actor_role.strip(),
+            project_status=project.status,
+        )
         snapshot = ProjectInitializationSnapshot(
             objective=objective.strip(),
             budget_currency_total=float(budget_currency_total),
@@ -381,6 +415,18 @@ class InMemoryGovernanceRepository:
             actor_id=actor_id.strip(),
             actor_role=actor_role.strip(),
             trace_id=trace_id.strip(),
+            charter_storage_uri=pointers.get("project_charter_storage_uri"),
+            charter_content_hash=pointers.get("project_charter_content_hash"),
+            scope_statement_storage_uri=pointers.get("scope_statement_storage_uri"),
+            scope_statement_content_hash=pointers.get("scope_statement_content_hash"),
+            budget_plan_storage_uri=pointers.get("budget_plan_storage_uri"),
+            budget_plan_content_hash=pointers.get("budget_plan_content_hash"),
+            metric_plan_storage_uri=pointers.get("success_metrics_storage_uri"),
+            metric_plan_content_hash=pointers.get("success_metrics_content_hash"),
+            workforce_plan_storage_uri=pointers.get("workforce_plan_storage_uri"),
+            workforce_plan_content_hash=pointers.get("workforce_plan_content_hash"),
+            execution_plan_storage_uri=pointers.get("execution_plan_storage_uri"),
+            execution_plan_content_hash=pointers.get("execution_plan_content_hash"),
             initialized_at=datetime.now(tz=UTC),
         )
         updated = replace(
@@ -399,8 +445,242 @@ class InMemoryGovernanceRepository:
             metadata={
                 "budget_currency_total": snapshot.budget_currency_total,
                 "budget_quota_total": snapshot.budget_quota_total,
+                "charter_storage_uri": snapshot.charter_storage_uri or "",
+                "scope_statement_storage_uri": snapshot.scope_statement_storage_uri or "",
+                "budget_plan_storage_uri": snapshot.budget_plan_storage_uri or "",
+                "metric_plan_storage_uri": snapshot.metric_plan_storage_uri or "",
+                "workforce_plan_storage_uri": snapshot.workforce_plan_storage_uri or "",
+                "execution_plan_storage_uri": snapshot.execution_plan_storage_uri or "",
             },
         )
+
+    def _persist_initialization_artifacts(
+        self,
+        *,
+        project_id: str,
+        objective: str,
+        budget_currency_total: float,
+        budget_quota_total: float,
+        metric_plan: Mapping[str, object] | None,
+        workforce_plan: Mapping[str, object] | None,
+        actor_role: str,
+        project_status: str,
+    ) -> dict[str, str]:
+        if self._artifact_repository is None:
+            return {}
+        write_context = ProjectArtifactWriteContext(
+            actor_role=actor_role,
+            project_status=project_status,
+            approval_roles=("ceo", "cwo"),
+        )
+        try:
+            charter_pointer = self._artifact_repository.write_project_artifact(
+                project_id=project_id,
+                artifact_type="project_charter",
+                content=self._render_project_charter(objective=objective),
+                write_context=write_context,
+            )
+            scope_pointer = self._artifact_repository.write_project_artifact(
+                project_id=project_id,
+                artifact_type="scope_statement",
+                content=self._render_scope_statement(objective=objective),
+                write_context=write_context,
+            )
+            budget_pointer = self._artifact_repository.write_project_artifact(
+                project_id=project_id,
+                artifact_type="budget_plan",
+                content=self._render_budget_plan(
+                    budget_currency_total=budget_currency_total,
+                    budget_quota_total=budget_quota_total,
+                ),
+                write_context=write_context,
+            )
+            metric_pointer = self._artifact_repository.write_project_artifact(
+                project_id=project_id,
+                artifact_type="success_metrics",
+                content=self._render_mapping_document(
+                    title="Success Metrics",
+                    values=metric_plan,
+                ),
+                write_context=write_context,
+            )
+            workforce_pointer = self._artifact_repository.write_project_artifact(
+                project_id=project_id,
+                artifact_type="workforce_plan",
+                content=self._render_mapping_document(
+                    title="Workforce Plan",
+                    values=workforce_plan,
+                ),
+                write_context=write_context,
+            )
+            execution_pointer = self._artifact_repository.write_project_artifact(
+                project_id=project_id,
+                artifact_type="execution_plan",
+                content=self._render_execution_plan(workforce_plan=workforce_plan),
+                write_context=write_context,
+            )
+            if not self._artifact_repository.verify_pointer_hash(
+                project_id=project_id,
+                artifact_type="project_charter",
+            ):
+                raise GovernanceRepositoryError(
+                    code="governance_project_artifact_integrity_failed",
+                    message="project charter pointer/hash verification failed",
+                )
+            if not self._artifact_repository.verify_pointer_hash(
+                project_id=project_id,
+                artifact_type="scope_statement",
+            ):
+                raise GovernanceRepositoryError(
+                    code="governance_project_artifact_integrity_failed",
+                    message="scope statement pointer/hash verification failed",
+                )
+            if not self._artifact_repository.verify_pointer_hash(
+                project_id=project_id,
+                artifact_type="budget_plan",
+            ):
+                raise GovernanceRepositoryError(
+                    code="governance_project_artifact_integrity_failed",
+                    message="budget plan pointer/hash verification failed",
+                )
+            if not self._artifact_repository.verify_pointer_hash(
+                project_id=project_id,
+                artifact_type="success_metrics",
+            ):
+                raise GovernanceRepositoryError(
+                    code="governance_project_artifact_integrity_failed",
+                    message="success metrics pointer/hash verification failed",
+                )
+            if not self._artifact_repository.verify_pointer_hash(
+                project_id=project_id,
+                artifact_type="workforce_plan",
+            ):
+                raise GovernanceRepositoryError(
+                    code="governance_project_artifact_integrity_failed",
+                    message="workforce plan pointer/hash verification failed",
+                )
+            if not self._artifact_repository.verify_pointer_hash(
+                project_id=project_id,
+                artifact_type="execution_plan",
+            ):
+                raise GovernanceRepositoryError(
+                    code="governance_project_artifact_integrity_failed",
+                    message="execution plan pointer/hash verification failed",
+                )
+        except ProjectArtifactRepositoryError as error:
+            if error.code in {
+                "artifact_type_not_allowed",
+                "artifact_type_cap_exceeded",
+                "artifact_project_total_cap_exceeded",
+                "artifact_write_context_missing",
+                "artifact_write_project_read_only",
+                "artifact_write_role_forbidden",
+                "artifact_write_project_manager_inactive",
+                "artifact_write_project_manager_forbidden_type",
+                "artifact_write_project_manager_approval_missing",
+            }:
+                raise GovernanceRepositoryError(
+                    code="governance_project_artifact_policy_denied",
+                    message=error.message,
+                ) from error
+            raise GovernanceRepositoryError(
+                code="governance_project_artifact_persistence_failed",
+                message=error.message,
+            ) from error
+
+        return {
+            "project_charter_storage_uri": charter_pointer.storage_uri,
+            "project_charter_content_hash": charter_pointer.content_hash,
+            "scope_statement_storage_uri": scope_pointer.storage_uri,
+            "scope_statement_content_hash": scope_pointer.content_hash,
+            "budget_plan_storage_uri": budget_pointer.storage_uri,
+            "budget_plan_content_hash": budget_pointer.content_hash,
+            "success_metrics_storage_uri": metric_pointer.storage_uri,
+            "success_metrics_content_hash": metric_pointer.content_hash,
+            "workforce_plan_storage_uri": workforce_pointer.storage_uri,
+            "workforce_plan_content_hash": workforce_pointer.content_hash,
+            "execution_plan_storage_uri": execution_pointer.storage_uri,
+            "execution_plan_content_hash": execution_pointer.content_hash,
+        }
+
+    @staticmethod
+    def _render_project_charter(*, objective: str) -> str:
+        return dedent(
+            f"""\
+            # Project Charter
+
+            ## Objective
+            {objective}
+            """
+        ).strip()
+
+    @staticmethod
+    def _render_scope_statement(*, objective: str) -> str:
+        return dedent(
+            f"""\
+            # Scope Statement
+
+            ## Scope Intent
+            {objective}
+            """
+        ).strip()
+
+    @staticmethod
+    def _render_budget_plan(
+        *,
+        budget_currency_total: float,
+        budget_quota_total: float,
+    ) -> str:
+        return dedent(
+            f"""\
+            # Budget Plan
+
+            - currency_usd_total: {budget_currency_total:.2f}
+            - quota_units_total: {budget_quota_total:.2f}
+            """
+        ).strip()
+
+    @staticmethod
+    def _render_execution_plan(*, workforce_plan: Mapping[str, object] | None) -> str:
+        workforce_lines = (
+            "\n".join(
+                f"- {str(key)}: {str(value)}"
+                for key, value in sorted(workforce_plan.items(), key=lambda item: str(item[0]))
+            )
+            if workforce_plan
+            else "- (empty)"
+        )
+        return dedent(
+            f"""\
+            # Execution Plan
+
+            ## Workforce Baseline
+            {workforce_lines}
+
+            ## Mandatory Project Manager Operations
+            - milestone_planning
+            - task_decomposition
+            - task_assignment
+            - progress_reporting
+            """
+        ).strip()
+
+    @staticmethod
+    def _render_mapping_document(*, title: str, values: Mapping[str, object] | None) -> str:
+        if values is None or len(values) == 0:
+            body = "- (empty)"
+        else:
+            body = "\n".join(
+                f"- {str(key)}: {str(value)}"
+                for key, value in sorted(values.items(), key=lambda item: str(item[0]))
+            )
+        return dedent(
+            f"""\
+            # {title}
+
+            {body}
+            """
+        ).strip()
 
     def bind_workforce_template(
         self,
@@ -410,6 +690,7 @@ class InMemoryGovernanceRepository:
         template_id: str,
         llm_routing_profile: str,
         system_prompt_hash: str,
+        mandatory_operations: tuple[str, ...] = (),
         actor_id: str,
         actor_role: str,
         trace_id: str,
@@ -448,6 +729,11 @@ class InMemoryGovernanceRepository:
                     code="governance_project_manager_binding_exists",
                     message="project manager binding already exists for project",
                 )
+            if len(mandatory_operations) == 0:
+                raise GovernanceRepositoryError(
+                    code="governance_project_manager_template_missing_operations",
+                    message=("project manager template must include mandatory operations contract"),
+                )
 
         binding_status = "active" if normalized_role == "project_manager" else "declared_disabled"
         binding = WorkforceBindingRecord(
@@ -457,6 +743,7 @@ class InMemoryGovernanceRepository:
             template_id=template_id.strip(),
             llm_routing_profile=llm_routing_profile.strip(),
             system_prompt_hash=system_prompt_hash.strip(),
+            mandatory_operations=tuple(sorted(set(mandatory_operations))),
             binding_status=binding_status,
             actor_id=actor_id.strip(),
             actor_role=actor_role.strip(),

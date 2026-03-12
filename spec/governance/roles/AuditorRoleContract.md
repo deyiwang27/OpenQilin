@@ -14,6 +14,7 @@
 - Monitor policy compliance, budget posture, and logical/behavioral risks.
 - Trigger enforcement actions (pause/escalation) on severe governance violations.
 - Provide auditable compliance findings to owner and executive leadership.
+- Monitor project-document policy compliance (type/cap/lifecycle/access/integrity) and escalate violations.
 
 ## 4. Authority Profile
 | Authority | Value |

@@ -211,7 +211,7 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 
 6. `M6-WP2` Project document policy and volume cap enforcement
 - Target modules: project artifact policy validators + governance middleware.
-- Deliverables: approved doc-type list with per-type active-document caps and fail-closed over-cap handling.
+- Deliverables: strict approved doc-type enum, mixed per-type active-document caps plus project total active-document cap, and fail-closed over-cap handling.
 
 7. `M6-WP3` Specialist touchability policy enforcement
 - Target modules: owner command/policy integration + communication access checks.
@@ -219,7 +219,7 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 
 8. `M6-WP4` Project Manager mandatory-operations template enforcement
 - Target modules: Project Manager template registry + orchestrator planning contracts.
-- Deliverables: mandatory Project Manager operations (milestones, decomposition, assignment, reporting) contract-tested.
+- Deliverables: mandatory Project Manager operations (milestones, decomposition, assignment, reporting) contract-tested, including active-state-only write behavior and controlled-doc update approval gates (`cwo+ceo`).
 
 9. `M7-WP1` Persistent runtime-state adapters + recovery
 - Target modules: runtime-state/communication repositories, service bootstrap dependencies, governance/agent registry repositories.

@@ -67,6 +67,7 @@ Normative precedence:
   - file-backed rich-text project documentation under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`
   - out-of-repo runtime storage only; never under source tree
   - pointer/hash synchronization with relational metadata is required
+  - strict MVP document-type enum and cap policy (including total active-doc cap) is enforced fail-closed
 - `pgvector`:
   - embedding index co-located with Postgres data model
 - `redis`:

@@ -15,6 +15,7 @@ It is intentionally aligned with current runtime semantics and naming.
 - Communication retry `max_attempts`: `3`
 - Project workforce cap: `1 project_manager + up to 2 specialist`
 - Canonical project file root: `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`
+- Project documentation total active-document cap: `20`
 
 Canonical role naming:
 - Administrator -> `administrator`
@@ -108,12 +109,12 @@ Minimum `project_artifact` fields:
 - `artifact_id` (uuid, pk)
 - `project_id` (uuid)
 - `artifact_type` (text)
-- `scope_type` (`project|milestone|task`)
+- `scope_type` (`project` in MVP v0.1)
 - `scope_id` (text/uuid)
 - `current_version` (int)
 - `status` (`draft|active|superseded|archived`)
 - `storage_uri` (text; under canonical project file root)
-- `content_hash` (text)
+- `content_hash` (text; `sha256`)
 
 Minimum `project_artifact_version` fields:
 - `artifact_id` (uuid)
@@ -216,12 +217,55 @@ Unauthorized write attempts must return blocked outcome with audit evidence.
 Storage location:
 - Project-generated rich-text docs must be stored under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`.
 - Writes outside canonical project root are denied.
+- Deterministic file convention:
+  - `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/docs/<artifact_type>/<artifact_type>--v<revision_no>.md`
 
 Policy constraints:
-- Only approved doc types may be created.
-- Per-type active-document caps are enforced per project.
+- Only approved doc types may be created (MVP strict enum):
+  - `project_charter`
+  - `scope_statement`
+  - `budget_plan`
+  - `success_metrics`
+  - `workforce_plan`
+  - `execution_plan`
+  - `decision_log`
+  - `risk_register`
+  - `progress_report`
+  - `completion_report`
+- Per-type active-document caps are enforced per project:
+  - `project_charter`: 1
+  - `scope_statement`: 1
+  - `budget_plan`: 1
+  - `success_metrics`: 1
+  - `workforce_plan`: 1
+  - `execution_plan`: 1
+  - `decision_log`: 4
+  - `risk_register`: 3
+  - `progress_report`: 6
+  - `completion_report`: 1
+- Project-level total active-document cap is enforced: `20`.
 - File create/update requires DB pointer (`storage_uri`) + hash (`content_hash`) synchronization.
 - Pointer/hash mismatch is treated as integrity failure and denied fail-closed.
+
+Mutability model:
+- Versioned update: `project_charter`, `scope_statement`, `budget_plan`, `success_metrics`, `workforce_plan`, `execution_plan`, `risk_register`
+- Append-only entries: `decision_log`, `progress_report`
+- Append-only final report: `completion_report`
+
+Lifecycle and stage write constraints:
+- Writable states: `proposed|approved|active|paused`
+- Read-only states: `completed|terminated|archived`
+- `project_manager` may write only when project state is `active`.
+- `project_manager` direct-write types in `active`: `execution_plan`, `risk_register`, `decision_log`, `progress_report`.
+- `project_manager` writes to `scope_statement|budget_plan|success_metrics` require `cwo+ceo` approval evidence.
+- Activation gate (`approved -> active`) requires initial finalized versions for:
+  - `project_charter`, `scope_statement`, `budget_plan`, `success_metrics`, `workforce_plan`, `execution_plan`
+- Initial baseline finalization is recorded during `proposed|approved` governance review and approved by `owner+ceo+cwo` before activation.
+
+Integrity-failure behavior:
+- write/update/archive operations are denied fail-closed.
+- reads may return last verified version.
+- immutable audit evidence is required for each denial.
 
 ## 9. Discord Adapter Contract
 

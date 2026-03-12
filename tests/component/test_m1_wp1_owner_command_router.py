@@ -363,6 +363,61 @@ def test_submit_owner_command_accepts_communication_target() -> None:
     assert body["data"]["dispatch_id"]
 
 
+def test_submit_owner_command_denies_owner_direct_specialist_path() -> None:
+    app = create_control_plane_app()
+    client = TestClient(app)
+    payload = build_owner_command_request_dict(
+        action="msg_notify",
+        args=["deliver update"],
+        actor_id="owner_specialist_denied",
+        idempotency_key="idem-specialist-denied-component-12345",
+        target="communication",
+        recipients=[{"recipient_id": "specialist_1", "recipient_type": "specialist"}],
+    )
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers=build_owner_command_headers(payload),
+        json=payload,
+    )
+
+    body = response.json()
+    assert response.status_code == 403
+    assert body["status"] == "denied"
+    assert body["error"]["code"] == "governance_specialist_direct_command_denied"
+    assert body["error"]["class"] == "authorization_error"
+    assert body["error"]["source_component"] == "policy_engine"
+    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(
+        body["error"]["details"]["task_id"]
+    )
+    assert task is not None
+    assert task.status == "blocked"
+
+
+def test_submit_owner_command_allows_owner_to_project_manager_path() -> None:
+    client = TestClient(create_control_plane_app())
+    payload = build_owner_command_request_dict(
+        action="msg_notify",
+        args=["delegate to specialist"],
+        actor_id="owner_pm_allowed",
+        idempotency_key="idem-owner-pm-allowed-component-12345",
+        target="communication",
+        recipients=[{"recipient_id": "project_manager_1", "recipient_type": "project_manager"}],
+    )
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers=build_owner_command_headers(payload),
+        json=payload,
+    )
+
+    body = response.json()
+    assert response.status_code == 202
+    assert body["status"] == "accepted"
+    assert body["data"]["dispatch_target"] == "communication"
+    assert body["data"]["dispatch_id"]
+
+
 def test_submit_owner_command_denies_communication_contract_violation() -> None:
     app = create_control_plane_app()
     client = TestClient(app)

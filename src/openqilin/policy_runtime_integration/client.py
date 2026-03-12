@@ -56,6 +56,29 @@ class InMemoryPolicyRuntimeClient:
                 rule_ids=("POL-003",),
             )
 
+        if payload.principal_role == "owner" and (
+            "specialist" in payload.recipient_types
+            or any(recipient_id.startswith("specialist") for recipient_id in payload.recipient_ids)
+            or (
+                payload.action.startswith("msg_")
+                and any(
+                    argument.strip().lower().startswith("specialist") for argument in payload.args
+                )
+            )
+            or payload.target.strip().lower() == "specialist"
+            or payload.target.strip().lower().startswith("specialist_")
+        ):
+            return PolicyEvaluationResult(
+                decision="deny",
+                reason_code="governance_specialist_direct_command_denied",
+                reason_message=(
+                    "owner cannot directly command specialist; route through project_manager"
+                ),
+                policy_version=self._policy_version,
+                policy_hash=self._policy_hash,
+                rule_ids=("OIM-005",),
+            )
+
         if payload.action.startswith("deny_"):
             return PolicyEvaluationResult(
                 decision="deny",

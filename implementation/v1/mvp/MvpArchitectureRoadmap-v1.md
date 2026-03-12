@@ -83,15 +83,17 @@ Objective:
 - implement hybrid DB+file project documentation model and role-touchability rules
 
 Work packages:
-1. `M6-WP1`: implement canonical project file root under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`
-2. `M6-WP2`: enforce approved doc types and per-type document caps
-3. `M6-WP3`: enforce DB pointer/hash synchronization and fail-closed integrity policy
-4. `M6-WP4`: enforce specialist touchability policy (Project Manager-only in first MVP)
+1. `M6-WP1`: implement canonical project file root under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/` with DB pointer/hash synchronization
+2. `M6-WP2`: enforce approved doc types, mixed per-type + project-total caps, and lifecycle/role write-governance policy
+3. `M6-WP3`: enforce specialist touchability policy (Project Manager-only in first MVP)
+4. `M6-WP4`: enforce Project Manager mandatory-operations template contract
 
 Exit criteria:
 - project docs persist outside repo tree with governed policy constraints
-- over-cap or out-of-policy document writes are blocked and audited
+- approved-to-active initialization persists baseline artifacts (`project_charter`, `scope_statement`, `budget_plan`, `success_metrics`, `workforce_plan`, `execution_plan`) with verified pointer/hash metadata
+- over-cap, out-of-policy, or role/stage unauthorized document writes are blocked and audited
 - owner cannot directly command specialist in any governed channel path
+- Project Manager template binding fails closed when mandatory operations are missing
 
 ## M7 - Persistence/Recovery + Discord Acceptance Closeout
 Objective:
@@ -124,3 +126,6 @@ Exit criteria:
 - Project lifecycle lock: `proposed -> approved -> active -> paused -> completed -> terminated -> archived`
 - No standalone `rejected` project state in first MVP
 - `domain_leader` role declared but runtime-disabled for first MVP
+- Project documentation uses strict 10-type enum with mixed per-type caps plus project total active-doc cap (`20`)
+- Project documentation mutability is hybrid (versioned core plans + append-only logs/reports)
+- `project_manager` project-document writes are `active`-only; controlled doc edits require `cwo+ceo` approval evidence

@@ -6,6 +6,10 @@ import hashlib
 from dataclasses import dataclass
 from typing import Mapping
 
+from openqilin.control_plane.governance.project_manager_template import (
+    ProjectManagerTemplateError,
+    validate_project_manager_template,
+)
 from openqilin.data_access.repositories.governance import (
     GovernanceRepositoryError,
     InMemoryGovernanceRepository,
@@ -52,6 +56,7 @@ class WorkforceBindingOutcome:
     template_id: str
     llm_routing_profile: str
     system_prompt_hash: str
+    mandatory_operations: tuple[str, ...]
 
 
 def submit_proposal_message(
@@ -188,14 +193,27 @@ def bind_workforce_template_by_cwo(
             code="governance_role_forbidden",
             message="workforce template binding is limited to cwo",
         )
+    normalized_role = role.strip().lower()
+    mandatory_operations: tuple[str, ...] = ()
+    if normalized_role == "project_manager":
+        try:
+            validation = validate_project_manager_template(system_prompt)
+        except ProjectManagerTemplateError as error:
+            raise GovernanceHandlerError(
+                code=f"governance_{error.code}",
+                message=error.message,
+            ) from error
+        mandatory_operations = validation.mandatory_operations
+
     system_prompt_hash = hashlib.sha256(system_prompt.encode("utf-8")).hexdigest()
     try:
         binding = repository.bind_workforce_template(
             project_id=project_id,
-            role=role,
+            role=normalized_role,
             template_id=template_id,
             llm_routing_profile=llm_routing_profile,
             system_prompt_hash=system_prompt_hash,
+            mandatory_operations=mandatory_operations,
             actor_id=actor_id,
             actor_role=normalized_actor_role,
             trace_id=trace_id,
@@ -216,4 +234,5 @@ def bind_workforce_template_by_cwo(
         template_id=binding.template_id,
         llm_routing_profile=binding.llm_routing_profile,
         system_prompt_hash=binding.system_prompt_hash,
+        mandatory_operations=binding.mandatory_operations,
     )
