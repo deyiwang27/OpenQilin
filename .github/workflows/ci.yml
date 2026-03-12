@@ -46,6 +46,9 @@ jobs:
       - name: Spec integrity checks
         run: uv run python ops/scripts/check_spec_integrity.py
 
+      - name: Migration rollback readiness checks
+        run: uv run python ops/scripts/check_migration_rollback_readiness.py
+
       - name: Unit and component tests
         run: uv run pytest tests/unit tests/component
 

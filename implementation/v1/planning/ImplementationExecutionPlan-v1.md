@@ -148,7 +148,7 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 
 2. `M4-WP2` Migration validation + rollback drill automation (`issue #23`)
 - Target modules: `migrations/*`, `ops/scripts/*`, rollout/rollback documentation.
-- Deliverables: deterministic forward/backward migration verification and rollback drill evidence flow.
+- Deliverables: deterministic forward/backward migration verification and rollback drill evidence flow (`admin_cli rollback-drill`, `ops/scripts/run_migration_rollback_drill.py`, CI `check_migration_rollback_readiness.py` gate).
 
 3. `M4-WP3` Full-profile smoke + conformance gate hardening (`issue #24`)
 - Target modules: `compose.yml`, CI/release gate workflows, smoke/conformance suites.
