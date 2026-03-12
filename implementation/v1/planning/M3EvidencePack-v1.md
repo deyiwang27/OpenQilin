@@ -1,6 +1,6 @@
 # OpenQilin v1 - M3 Evidence Pack
 
-Date: `2026-03-11`  
+Date: `2026-03-12`  
 Milestone: `M3 Communication Reliability`  
 Primary issue: `#13` (`M3: Communication Reliability Kickoff`)
 
@@ -51,6 +51,8 @@ Primary issue: `#13` (`M3: Communication Reliability Kickoff`)
 ## 5. GitHub Issue Evidence Links
 - Parent milestone issue: https://github.com/deyiwang27/OpenQilin/issues/13
 - Milestone closeout PR: https://github.com/deyiwang27/OpenQilin/pull/19
+- Merge commit: `1f933150a9d7ed01e3ba69358669693c68e4b23a`
+- Parent issue close timestamp: `2026-03-12T00:37:38Z`
 - Parent closeout evidence update: https://github.com/deyiwang27/OpenQilin/issues/13#issuecomment-4043083361
 - `M3-WP1` issue + evidence: https://github.com/deyiwang27/OpenQilin/issues/14, https://github.com/deyiwang27/OpenQilin/issues/14#issuecomment-4042568446
 - `M3-WP2` issue + evidence: https://github.com/deyiwang27/OpenQilin/issues/15, https://github.com/deyiwang27/OpenQilin/issues/15#issuecomment-4042681776

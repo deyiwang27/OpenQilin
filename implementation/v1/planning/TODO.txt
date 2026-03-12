@@ -1,5 +1,5 @@
 OpenQilin Implementation TODO Tracker
-Date: 2026-03-11
+Date: 2026-03-12
 Stage: implementation/v1
 Archive status: active
 
@@ -15,9 +15,9 @@ Status legend:
 - `done`
 
 Current focus:
-- Milestone: `M3 Communication Reliability`
-- Primary issue: `#13` (Communication Reliability Kickoff)
-- Active branch: `feat/13-m3-communication-reliability-kickoff`
+- Milestone: `M4 Hardening and Release Readiness`
+- Primary issue: `TBD`
+- Active branch: `main`
 
 Checklist:
 0) Repo structure and documentation consistency review (post-migration) - `done`
@@ -124,7 +124,7 @@ Checklist:
 - evidence doc: `implementation/v1/planning/M2EvidencePack-v1.md`
 - milestone closeout: merged to `main` via `PR #12`; issue `#6` closed - `done`
 
-3) M3 reliability prep - `in_progress`
+3) M3 reliability prep - `done`
 - kickoff issue created: `#13` (`milestone:M3`, `type:feature`, `area:task_orchestrator`, `risk:execution-core`) - `done`
 - implementation branch created and pushed: `feat/13-m3-communication-reliability-kickoff` - `done`
 - decomposition + dependency wiring with child WPs (`#14`..`#18`) - `done`
@@ -161,8 +161,9 @@ Checklist:
 - evidence: `uv run mypy .`
 - evidence: `uv run python ops/scripts/check_spec_integrity.py`
 - commit: `c34e3fb`
-- milestone closeout PR for `#13` - `in_progress`
+- milestone closeout PR for `#13` - `done`
 - PR: `https://github.com/deyiwang27/OpenQilin/pull/19`
+- milestone closeout: PR `#19` merged to `main` (`1f933150a9d7ed01e3ba69358669693c68e4b23a`) and issue `#13` closed - `done`
 
 4) M4 hardening prep - `todo`
 - release-gate checklist draft
