@@ -37,7 +37,7 @@ Checklist:
 - kickoff/decomposition complete with child work packages (`#36`..`#39`) - `done`
 - MVP policy decisions locked (doc-type enum, per-type + total caps, stage/role write matrix, hybrid mutability, pointer/hash integrity semantics) - `done`
 - `M6-WP1` canonical project file root (`${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`) + DB pointer/hash model - `done` (`issue #36`)
-- `M6-WP2` project document policy (approved types + per-type caps + fail-closed over-cap) - `todo` (`issue #37`)
+- `M6-WP2` project document policy (approved types + per-type caps + fail-closed over-cap) - `done` (`issue #37`)
 - `M6-WP3` specialist touchability enforcement (`project_manager`-only direct path) - `todo` (`issue #38`)
 - `M6-WP4` Project Manager mandatory-operations template enforcement - `todo` (`issue #39`)
 

@@ -489,6 +489,15 @@ class InMemoryGovernanceRepository:
                     message="workforce plan pointer/hash verification failed",
                 )
         except ProjectArtifactRepositoryError as error:
+            if error.code in {
+                "artifact_type_not_allowed",
+                "artifact_type_cap_exceeded",
+                "artifact_project_total_cap_exceeded",
+            }:
+                raise GovernanceRepositoryError(
+                    code="governance_project_artifact_policy_denied",
+                    message=error.message,
+                ) from error
             raise GovernanceRepositoryError(
                 code="governance_project_artifact_persistence_failed",
                 message=error.message,

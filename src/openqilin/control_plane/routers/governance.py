@@ -116,6 +116,7 @@ def _map_handler_error(
         "governance_project_invalid_budget",
         "governance_project_artifact_persistence_failed",
         "governance_project_artifact_integrity_failed",
+        "governance_project_artifact_policy_denied",
     }:
         return (
             status.HTTP_409_CONFLICT,
