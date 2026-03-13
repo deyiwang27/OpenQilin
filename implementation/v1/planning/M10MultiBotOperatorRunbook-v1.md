@@ -78,3 +78,9 @@ When reporting runtime incidents, include:
 - `docker compose logs api_app --tail=400`
 - command payload used and returned trace/task IDs
 - screenshots for DM/group behavior where relevant
+
+For M10 live acceptance artifact initialization and checks:
+- `uv run python ops/scripts/run_m10_live_multi_bot_acceptance.py --mode preflight`
+- `uv run python ops/scripts/run_m10_live_multi_bot_acceptance.py --mode init-manifest --project-id <project_id>`
+- `uv run python ops/scripts/run_m10_live_multi_bot_acceptance.py --mode init-notes --project-id <project_id>`
+- `uv run python ops/scripts/check_m10_live_acceptance_artifacts.py`

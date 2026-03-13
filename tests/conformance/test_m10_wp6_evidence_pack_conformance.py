@@ -20,6 +20,9 @@ def test_m10_wp6_conformance_evidence_pack_exists_and_maps_exit_criteria() -> No
         "tests/integration/test_m10_wp3_discord_recipient_routing.py",
         "tests/unit/test_m10_wp5_discord_delivery_hardening.py",
         "tests/conformance/test_m10_wp6_evidence_pack_conformance.py",
+        "tests/unit/test_m10_wp6_live_acceptance_artifact_checks.py",
+        "ops/scripts/run_m10_live_multi_bot_acceptance.py",
+        "ops/scripts/check_m10_live_acceptance_artifacts.py",
         "M10LiveAcceptanceChecklist-v1.md",
         "M10MultiBotOperatorRunbook-v1.md",
     ):

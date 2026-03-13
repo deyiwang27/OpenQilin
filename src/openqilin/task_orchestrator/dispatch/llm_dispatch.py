@@ -3,11 +3,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+import json
 import re
 from threading import Lock
-from typing import Protocol, cast
+from typing import Mapping, Protocol, cast
 from uuid import uuid4
 
+from openqilin.execution_sandbox.tools.contracts import ToolCallContext, ToolResult
+from openqilin.execution_sandbox.tools.invocation_adapter import invoke_tool_command
+from openqilin.execution_sandbox.tools.read_tools import GovernedReadToolService
+from openqilin.execution_sandbox.tools.registry_resolver import ToolServiceRegistry
+from openqilin.execution_sandbox.tools.skill_binding_resolver import resolve_tool_skill_binding
+from openqilin.execution_sandbox.tools.write_tools import GovernedWriteToolService
 from openqilin.llm_gateway.schemas.requests import (
     AllocationMode,
     LlmBudgetContext,
@@ -15,7 +22,13 @@ from openqilin.llm_gateway.schemas.requests import (
     LlmModelClass,
     LlmPolicyContext,
 )
-from openqilin.llm_gateway.schemas.responses import LlmGatewayResponse
+from openqilin.llm_gateway.schemas.responses import (
+    LlmBudgetContextEffective,
+    LlmBudgetUsage,
+    LlmCost,
+    LlmGatewayResponse,
+    LlmUsage,
+)
 from openqilin.llm_gateway.service import LlmGatewayService
 from openqilin.retrieval_runtime.models import RetrievalQueryRequest, RetrievalQueryResult
 from openqilin.shared_kernel.config import RuntimeSettings
@@ -44,6 +57,8 @@ class GroundingEvidence:
     source_id: str
     source_kind: str
     content: str
+    source_version: str | None = None
+    source_updated_at: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,12 +139,18 @@ class LlmGatewayDispatchAdapter:
         *,
         retrieval_query_service: RetrievalGroundingService | None = None,
         governance_project_reader: GovernanceProjectReader | None = None,
+        read_tool_service: GovernedReadToolService | None = None,
+        write_tool_service: GovernedWriteToolService | None = None,
     ) -> None:
         self._llm_gateway_service = llm_gateway_service
         self._settings = settings or RuntimeSettings()
         self._conversation_store = InMemoryConversationStore(max_turns=6)
         self._retrieval_query_service = retrieval_query_service
         self._governance_project_reader = governance_project_reader
+        self._tool_registry = ToolServiceRegistry(
+            read_tools=read_tool_service,
+            write_tools=write_tool_service,
+        )
 
     def dispatch(self, payload: LlmDispatchRequest) -> LlmDispatchReceipt:
         """Dispatch llm task and map gateway decision to dispatch receipt."""
@@ -137,6 +158,31 @@ class LlmGatewayDispatchAdapter:
         raw_user_prompt = self._build_user_prompt(payload)
         recipient_role = _normalize_recipient_role(payload.recipient_role)
         recipient_id = _normalize_recipient_id(payload.recipient_id)
+        normalized_command = payload.command.strip().lower()
+        tool_context = ToolCallContext(
+            task_id=payload.task_id,
+            request_id=payload.request_id,
+            trace_id=payload.trace_id,
+            principal_id=payload.principal_id,
+            recipient_role=recipient_role,
+            recipient_id=recipient_id,
+            project_id=payload.project_id,
+        )
+
+        explicit_tool_result = invoke_tool_command(
+            command=normalized_command,
+            args=payload.args,
+            context=tool_context,
+            registry=self._tool_registry,
+        )
+        if explicit_tool_result is not None:
+            return self._tool_result_to_receipt(
+                payload=payload,
+                result=explicit_tool_result,
+                recipient_role=recipient_role,
+                recipient_id=recipient_id,
+            )
+
         if _contains_role_injection_attempt(raw_user_prompt):
             return LlmDispatchReceipt(
                 accepted=False,
@@ -147,11 +193,29 @@ class LlmGatewayDispatchAdapter:
                 recipient_role=recipient_role,
                 recipient_id=recipient_id,
             )
+        skill_binding = resolve_tool_skill_binding(recipient_role)
+        if (
+            normalized_command == "llm_reason"
+            and skill_binding.mutation_via_tools_only
+            and _prompt_requests_mutation(raw_user_prompt)
+        ):
+            return LlmDispatchReceipt(
+                accepted=False,
+                dispatch_id=None,
+                error_code="llm_mutation_requires_tool_write",
+                message="mutation intents must use governed tool_write contracts",
+                gateway_response=None,
+                recipient_role=recipient_role,
+                recipient_id=recipient_id,
+            )
 
         grounding_evidence: tuple[GroundingEvidence, ...] = ()
         if _requires_strict_grounding(payload.command):
             grounding = self._resolve_grounding_context(
-                payload=payload, user_prompt=raw_user_prompt
+                payload=payload,
+                user_prompt=raw_user_prompt,
+                context=tool_context,
+                tool_first_factual=skill_binding.tool_first_factual,
             )
             if grounding.error_code is not None:
                 return LlmDispatchReceipt(
@@ -163,6 +227,7 @@ class LlmGatewayDispatchAdapter:
                     gateway_response=None,
                     recipient_role=recipient_role,
                     recipient_id=recipient_id,
+                    grounding_source_ids=tuple(item.source_id for item in grounding.evidence),
                 )
             grounding_evidence = grounding.evidence
 
@@ -204,10 +269,11 @@ class LlmGatewayDispatchAdapter:
                 rule_ids=payload.rule_ids,
             ),
         )
+
         response = self._llm_gateway_service.complete(request)
         if response.decision in {"served", "fallback_served"}:
             role_aligned_text = _enforce_role_fidelity(response.generated_text, recipient_role)
-            if grounding_evidence:
+            if grounding_evidence and skill_binding.citation_required:
                 grounded_text, grounding_error = _validate_grounded_response(
                     generated_text=role_aligned_text,
                     grounding_evidence=grounding_evidence,
@@ -253,11 +319,50 @@ class LlmGatewayDispatchAdapter:
             grounding_source_ids=tuple(item.source_id for item in grounding_evidence),
         )
 
+    def _tool_result_to_receipt(
+        self,
+        *,
+        payload: LlmDispatchRequest,
+        result: ToolResult,
+        recipient_role: str,
+        recipient_id: str | None,
+    ) -> LlmDispatchReceipt:
+        if result.decision != "ok":
+            return LlmDispatchReceipt(
+                accepted=False,
+                dispatch_id=None,
+                error_code=result.error_code or "tool_denied",
+                message=result.message or "governed tool denied request",
+                gateway_response=None,
+                recipient_role=recipient_role,
+                recipient_id=recipient_id,
+                grounding_source_ids=tuple(source.source_id for source in result.sources),
+            )
+        generated_text = _format_tool_result_text(result)
+        role_aligned_text = _enforce_role_fidelity(generated_text, recipient_role) or generated_text
+        synthetic_response = _build_synthetic_gateway_response(
+            payload=payload,
+            generated_text=role_aligned_text,
+            route_reason="tool_orchestration",
+        )
+        return LlmDispatchReceipt(
+            accepted=True,
+            dispatch_id=f"tool-{uuid4()}",
+            error_code=None,
+            message="tool orchestration dispatch accepted",
+            gateway_response=synthetic_response,
+            recipient_role=recipient_role,
+            recipient_id=recipient_id,
+            grounding_source_ids=tuple(source.source_id for source in result.sources),
+        )
+
     def _resolve_grounding_context(
         self,
         *,
         payload: LlmDispatchRequest,
         user_prompt: str,
+        context: ToolCallContext,
+        tool_first_factual: bool,
     ) -> GroundingResolution:
         if (payload.project_id or "").strip() == "":
             return GroundingResolution(
@@ -265,18 +370,118 @@ class LlmGatewayDispatchAdapter:
                 error_code="llm_grounding_project_scope_required",
                 error_message="project_id is required for grounded llm_reason execution",
             )
+        if tool_first_factual and self._tool_registry.read_tools is not None:
+            return self._resolve_grounding_context_tool_first(
+                payload=payload,
+                user_prompt=user_prompt,
+                context=context,
+            )
+        return self._resolve_grounding_context_legacy(payload=payload, user_prompt=user_prompt)
+
+    def _resolve_grounding_context_tool_first(
+        self,
+        *,
+        payload: LlmDispatchRequest,
+        user_prompt: str,
+        context: ToolCallContext,
+    ) -> GroundingResolution:
+        read_tools = self._tool_registry.read_tools
+        if read_tools is None:
+            return self._resolve_grounding_context_legacy(payload=payload, user_prompt=user_prompt)
 
         project_id = (payload.project_id or "").strip()
+        tool_plan = _select_read_tool_plan(user_prompt=user_prompt, project_id=project_id)
+        if len(tool_plan) == 0:
+            tool_plan = (
+                (
+                    "search_project_docs",
+                    {"project_id": project_id, "query": user_prompt, "limit": 4},
+                ),
+                ("get_project_lifecycle_state", {"project_id": project_id}),
+            )
+
+        evidence_by_source: dict[str, GroundingEvidence] = {}
+        first_denial: ToolResult | None = None
+        for tool_name, tool_arguments in tool_plan:
+            result = read_tools.call_tool(
+                tool_name=tool_name,
+                arguments=tool_arguments,
+                context=context,
+            )
+            if result.decision != "ok":
+                if first_denial is None:
+                    first_denial = result
+                continue
+            for source in result.sources:
+                source_id = source.source_id.strip()
+                if not source_id:
+                    continue
+                content = (
+                    f"tool={result.tool_name}; summary={read_tools.summarize_for_grounding(result)}"
+                )
+                evidence_by_source[source_id] = GroundingEvidence(
+                    source_id=source_id,
+                    source_kind=source.source_kind,
+                    source_version=source.version,
+                    source_updated_at=source.updated_at,
+                    content=content,
+                )
+
+        if not evidence_by_source:
+            if first_denial is not None:
+                if first_denial.error_code in {
+                    "tool_project_missing",
+                    "tool_artifact_missing",
+                    "tool_task_missing",
+                }:
+                    return GroundingResolution(
+                        evidence=(),
+                        error_code="llm_grounding_insufficient_evidence",
+                        error_message=(
+                            "no project-doc or DB evidence found for this request; "
+                            "llm_reason denied fail-closed"
+                        ),
+                    )
+                return GroundingResolution(
+                    evidence=(),
+                    error_code=first_denial.error_code or "llm_grounding_tool_denied",
+                    error_message=first_denial.message,
+                )
+            return GroundingResolution(
+                evidence=(),
+                error_code="llm_grounding_insufficient_evidence",
+                error_message=(
+                    "tool-first grounding returned no evidence; llm_reason denied fail-closed"
+                ),
+            )
+
+        ordered_sources = tuple(
+            evidence_by_source[key] for key in sorted(evidence_by_source.keys())[:8]
+        )
+        return GroundingResolution(evidence=ordered_sources)
+
+    def _resolve_grounding_context_legacy(
+        self,
+        *,
+        payload: LlmDispatchRequest,
+        user_prompt: str,
+    ) -> GroundingResolution:
+        project_id = (payload.project_id or "").strip()
+
         evidence_by_source: dict[str, GroundingEvidence] = {}
 
         if self._governance_project_reader is not None:
             project_record = self._governance_project_reader.get_project(project_id)
             if project_record is not None:
                 source_id = f"project:{project_id}"
+                updated_at_value = getattr(project_record, "updated_at", None)
+                isoformat_func = getattr(updated_at_value, "isoformat", None)
                 evidence_by_source[source_id] = GroundingEvidence(
                     source_id=source_id,
                     source_kind="project_record",
                     content=_format_project_record_evidence(project_record),
+                    source_version=f"status:{getattr(project_record, 'status', 'unknown')}",
+                    source_updated_at=isoformat_func() if callable(isoformat_func) else None,
                 )
             if _prompt_requests_project_portfolio(user_prompt):
                 project_records = self._governance_project_reader.list_projects()
@@ -286,6 +491,7 @@ class LlmGatewayDispatchAdapter:
                         source_id=source_id,
                         source_kind="project_portfolio",
                         content=_format_project_portfolio_evidence(project_records),
+                        source_version=f"count:{len(project_records)}",
                     )
 
         if self._retrieval_query_service is not None:
@@ -302,6 +508,7 @@ class LlmGatewayDispatchAdapter:
                     evidence_by_source[source_id] = GroundingEvidence(
                         source_id=source_id,
                         source_kind="project_artifact",
+                        source_version=f"score:{hit.score}",
                         content=(
                             f"title={hit.title}; type={hit.artifact_type}; "
                             f"source_ref={hit.source_ref}; snippet={hit.snippet}"
@@ -417,7 +624,12 @@ def _grounding_contract_block(grounding_evidence: tuple[GroundingEvidence, ...])
     if not grounding_evidence:
         return "Grounding contract: no strict grounding required for this command."
     evidence_lines = [
-        f"- [source:{item.source_id}] {item.content}"
+        (
+            f"- [source:{item.source_id}] "
+            f"(kind={item.source_kind}; version={item.source_version or 'n/a'}; "
+            f"updated_at={item.source_updated_at or 'n/a'}) "
+            f"{item.content}"
+        )
         for item in grounding_evidence
         if item.content.strip()
     ]
@@ -537,6 +749,154 @@ def _prompt_requests_project_portfolio(user_prompt: str) -> bool:
         "project portfolio",
     )
     return any(marker in normalized for marker in markers)
+
+
+def _prompt_requests_mutation(user_prompt: str) -> bool:
+    normalized = " ".join(user_prompt.strip().lower().split())
+    markers = (
+        "update ",
+        "set project",
+        "change status",
+        "modify ",
+        "write ",
+        "append ",
+        "archive project",
+        "terminate project",
+        "pause project",
+        "resume project",
+    )
+    return any(marker in normalized for marker in markers)
+
+
+def _select_read_tool_plan(
+    *,
+    user_prompt: str,
+    project_id: str,
+) -> tuple[tuple[str, Mapping[str, object]], ...]:
+    normalized = " ".join(user_prompt.strip().lower().split())
+    calls: list[tuple[str, Mapping[str, object]]] = []
+
+    def add(tool_name: str, arguments: Mapping[str, object]) -> None:
+        if any(existing[0] == tool_name for existing in calls):
+            return
+        calls.append((tool_name, arguments))
+
+    if any(marker in normalized for marker in ("lifecycle", "state", "transition", "status")):
+        add("get_project_lifecycle_state", {"project_id": project_id})
+    if any(marker in normalized for marker in ("budget", "burn", "cost", "quota", "risk")):
+        add("get_project_budget_snapshot", {"project_id": project_id})
+    if any(marker in normalized for marker in ("milestone", "timeline", "delivery progress")):
+        add("get_project_milestone_status", {"project_id": project_id})
+    if any(marker in normalized for marker in ("task", "board", "queue", "blocked")):
+        add("get_project_task_board", {"project_id": project_id, "limit": 20})
+    if any(marker in normalized for marker in ("completion", "complete", "approval")):
+        add("get_completion_gate_status", {"project_id": project_id})
+    if any(marker in normalized for marker in ("workforce", "staff", "team", "resource")):
+        add("get_project_workforce_snapshot", {"project_id": project_id})
+    if any(marker in normalized for marker in ("audit", "compliance", "evidence", "trace")):
+        add("get_audit_event_stream", {"project_id": project_id, "limit": 20})
+    if any(
+        marker in normalized for marker in ("denied", "blocked", "failure reason", "why denied")
+    ):
+        task_match = re.search(r"(task[-_][a-z0-9-]+|[0-9a-f]{8}-[0-9a-f-]{27})", normalized)
+        if task_match is not None:
+            add("get_dispatch_denial_evidence", {"task_id": task_match.group(1)})
+    if any(marker in normalized for marker in ("doc", "document", "artifact", "report", "plan")):
+        artifact_type = _extract_artifact_type_from_prompt(normalized)
+        if artifact_type is not None:
+            add(
+                "get_project_doc_latest",
+                {"project_id": project_id, "artifact_type": artifact_type},
+            )
+        add(
+            "search_project_docs",
+            {"project_id": project_id, "query": user_prompt, "limit": 4},
+        )
+    if "retrieval" in normalized:
+        add(
+            "search_project_docs",
+            {"project_id": project_id, "query": user_prompt, "limit": 4},
+        )
+
+    if len(calls) == 0:
+        add("search_project_docs", {"project_id": project_id, "query": user_prompt, "limit": 4})
+        add("get_project_lifecycle_state", {"project_id": project_id})
+    else:
+        add("search_project_docs", {"project_id": project_id, "query": user_prompt, "limit": 4})
+    return tuple(calls)
+
+
+def _extract_artifact_type_from_prompt(normalized_prompt: str) -> str | None:
+    mapping = {
+        "charter": "project_charter",
+        "scope statement": "scope_statement",
+        "budget plan": "budget_plan",
+        "success metrics": "success_metrics",
+        "workforce plan": "workforce_plan",
+        "execution plan": "execution_plan",
+        "decision log": "decision_log",
+        "risk register": "risk_register",
+        "progress report": "progress_report",
+        "completion report": "completion_report",
+    }
+    for marker, artifact_type in mapping.items():
+        if marker in normalized_prompt:
+            return artifact_type
+    return None
+
+
+def _format_tool_result_text(result: ToolResult) -> str:
+    payload = json.dumps(result.data or {}, sort_keys=True, ensure_ascii=True)
+    citations = " ".join(f"[source:{source.source_id}]" for source in result.sources).strip()
+    citation_block = citations if citations else "[source:tool:none]"
+    return f"tool={result.tool_name} decision={result.decision} data={payload} {citation_block}"
+
+
+def _build_synthetic_gateway_response(
+    *,
+    payload: LlmDispatchRequest,
+    generated_text: str,
+    route_reason: str,
+) -> LlmGatewayResponse:
+    return LlmGatewayResponse(
+        request_id=payload.request_id,
+        trace_id=payload.trace_id,
+        decision="served",
+        model_selected="tool-runtime/openqilin",
+        usage=LlmUsage(
+            input_tokens=0,
+            output_tokens=0,
+            total_tokens=0,
+            request_units=0,
+        ),
+        cost=LlmCost(
+            estimated_cost_usd=0.0,
+            actual_cost_usd=0.0,
+            cost_source="none",
+        ),
+        budget_usage=LlmBudgetUsage(
+            currency_delta_usd=0.0,
+            request_units=0,
+            token_units=0,
+        ),
+        budget_context_effective=LlmBudgetContextEffective(
+            allocation_mode=_normalize_allocation_mode("hybrid"),
+            project_share_ratio=None,
+            effective_budget="tool_runtime",
+        ),
+        quota_limit_source="policy_guardrail",
+        latency_ms=0,
+        policy_context=LlmPolicyContext(
+            policy_version=payload.policy_version,
+            policy_hash=payload.policy_hash,
+            rule_ids=payload.rule_ids,
+        ),
+        route_metadata={"routing_profile": "tool_runtime", "route_reason": route_reason},
+        error_code=None,
+        error_message=None,
+        retryable=False,
+        generated_text=generated_text,
+    )
 
 
 def _format_project_record_evidence(project_record: object) -> str:

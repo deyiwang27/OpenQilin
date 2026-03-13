@@ -14,6 +14,8 @@ def select_dispatch_target(task: TaskRecord) -> DispatchTarget:
 
     if task.command.startswith("llm_"):
         return "llm"
+    if task.command.startswith("tool_"):
+        return "llm"
     if task.command.startswith("msg_"):
         return "communication"
     return "sandbox"

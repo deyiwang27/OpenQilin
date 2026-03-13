@@ -17,6 +17,11 @@ WP closeout issue: `#67` (`M10-WP6`)
 - `uv run pytest tests/component/test_m10_wp2_multi_bot_runtime.py tests/integration/test_m10_wp3_discord_recipient_routing.py`
 - `uv run pytest tests/unit/test_m2_wp2_llm_dispatch_role_lock.py tests/unit/test_m1_wp5_dispatch_lifecycle.py`
 - `uv run pytest tests/unit/test_m10_wp5_discord_delivery_hardening.py tests/conformance/test_m9_wp2_discord_runtime_conformance.py`
+- `uv run pytest tests/unit/test_m10_wp6_live_acceptance_artifact_checks.py tests/conformance/test_m10_wp6_evidence_pack_conformance.py`
+- `uv run python ops/scripts/run_m10_live_multi_bot_acceptance.py --mode preflight`
+- `uv run python ops/scripts/run_m10_live_multi_bot_acceptance.py --mode init-manifest --project-id <project_id>`
+- `uv run python ops/scripts/run_m10_live_multi_bot_acceptance.py --mode init-notes --project-id <project_id>`
+- `uv run python ops/scripts/check_m10_live_acceptance_artifacts.py`
 - `uv run ruff check .`
 - `uv run mypy .`
 
@@ -71,15 +76,48 @@ WP closeout issue: `#67` (`M10-WP6`)
   - `implementation/v1/planning/M10LiveAcceptanceChecklist-v1.md`
   - `implementation/v1/planning/M10MultiBotOperatorRunbook-v1.md`
 - Artifact targets:
+  - `implementation/v1/planning/artifacts/m10_live_preflight_latest.json`
   - `implementation/v1/planning/artifacts/m10_live_acceptance_notes.md`
   - `implementation/v1/planning/artifacts/m10_live_discord_worker_logs_latest.txt`
   - `implementation/v1/planning/artifacts/m10_live_api_app_logs_latest.txt`
   - `implementation/v1/planning/artifacts/m10_live_docker_compose_ps_latest.txt`
   - `implementation/v1/planning/artifacts/m10_live_scenarios_manifest_latest.json`
+- Automation scripts:
+  - `ops/scripts/run_m10_live_multi_bot_acceptance.py`
+  - `ops/scripts/check_m10_live_acceptance_artifacts.py`
+- Tests:
+  - `tests/unit/test_m10_wp6_live_acceptance_artifact_checks.py`
 - Current status:
   - pending operator live execution and evidence attachment.
 
-## 4. Acceptance Criteria Mapping (`#67`)
+### 3.7 Intent-level read tools for grounded factual responses
+- Runtime/services:
+  - `src/openqilin/execution_sandbox/tools/contracts.py`
+  - `src/openqilin/execution_sandbox/tools/access_policy.py`
+  - `src/openqilin/execution_sandbox/tools/read_tools.py`
+  - `src/openqilin/task_orchestrator/dispatch/llm_dispatch.py`
+- Tests:
+  - `tests/unit/test_m10_wp7_read_tools.py`
+  - `tests/unit/test_m10_wp9_tool_orchestration.py`
+
+### 3.8 Governed write-action tools for project/runtime mutations
+- Runtime/services:
+  - `src/openqilin/execution_sandbox/tools/write_tools.py`
+  - `src/openqilin/task_orchestrator/dispatch/target_selector.py`
+  - `src/openqilin/task_orchestrator/services/task_service.py`
+- Tests:
+  - `tests/integration/test_m10_wp8_wp9_tool_governance.py`
+
+### 3.9 Tool orchestration policy and role access control
+- Runtime/services:
+  - `src/openqilin/execution_sandbox/tools/invocation_adapter.py`
+  - `src/openqilin/execution_sandbox/tools/skill_binding_resolver.py`
+  - `src/openqilin/task_orchestrator/dispatch/llm_dispatch.py`
+- Tests:
+  - `tests/unit/test_m10_wp9_tool_orchestration.py`
+  - `tests/integration/test_m10_wp8_wp9_tool_governance.py`
+
+## 4. Acceptance Criteria Mapping (`#61`, `#67`, `#69`, `#70`, `#71`)
 
 1. Live Discord evidence proves DM interaction for each role bot.  
 - Covered by checklist Section 4.1 and artifact targets in Section 3.6.
@@ -92,6 +130,9 @@ WP closeout issue: `#67` (`M10-WP6`)
 
 4. Conformance checks pass for evidence-pack integrity.  
 - Covered by `tests/conformance/test_m10_wp6_evidence_pack_conformance.py`.
+
+5. Role agents use governed read/write tools with citation-ready sources and role/scope fail-closed denial.  
+- Covered by Sections 3.7 to 3.9 and tests `test_m10_wp7_read_tools.py`, `test_m10_wp8_wp9_tool_governance.py`, `test_m10_wp9_tool_orchestration.py`.
 
 ## 5. Milestone Closeout Workflow
 

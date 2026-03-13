@@ -12,18 +12,24 @@ from openqilin.communication_gateway.storage.idempotency_store import (
     InMemoryCommunicationIdempotencyStore,
 )
 from openqilin.communication_gateway.storage.message_ledger import InMemoryMessageLedger
+from openqilin.budget_runtime.client import InMemoryBudgetRuntimeClient
 from openqilin.data_access.cache.idempotency_store import InMemoryIdempotencyCacheStore
+from openqilin.data_access.repositories.artifacts import InMemoryProjectArtifactRepository
 from openqilin.data_access.repositories.communication import (
     CommunicationDeadLetterRecord,
     CommunicationMessageRecord,
     InMemoryCommunicationRepository,
 )
+from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
 from openqilin.data_access.repositories.runtime_state import TaskRecord
+from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
+from openqilin.execution_sandbox.tools.read_tools import GovernedReadToolService
+from openqilin.execution_sandbox.tools.write_tools import GovernedWriteToolService
 from openqilin.llm_gateway.schemas.responses import LlmGatewayResponse
 from openqilin.llm_gateway.service import build_llm_gateway_service
 from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
 from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
-from openqilin.retrieval_runtime.service import RetrievalQueryService
+from openqilin.retrieval_runtime.service import RetrievalQueryService, build_retrieval_query_service
 from openqilin.task_orchestrator.dispatch.llm_dispatch import (
     GovernanceProjectReader,
     LlmDispatchAdapter,
@@ -451,10 +457,42 @@ def build_task_dispatch_service(
     idempotency_cache_store: InMemoryIdempotencyCacheStore | None = None,
     retrieval_query_service: RetrievalGroundingService | RetrievalQueryService | None = None,
     governance_project_reader: GovernanceProjectReader | None = None,
+    governance_repository: InMemoryGovernanceRepository | None = None,
+    project_artifact_repository: InMemoryProjectArtifactRepository | None = None,
+    runtime_state_repository: InMemoryRuntimeStateRepository | None = None,
+    budget_runtime_client: InMemoryBudgetRuntimeClient | None = None,
 ) -> TaskDispatchService:
     """Build task-dispatch service with default sandbox and llm adapters."""
 
     communication_repository = communication_repository or InMemoryCommunicationRepository()
+    runtime_state_repository = runtime_state_repository or InMemoryRuntimeStateRepository()
+    governance_repository = governance_repository or (
+        governance_project_reader
+        if isinstance(governance_project_reader, InMemoryGovernanceRepository)
+        else None
+    )
+    if governance_repository is None:
+        governance_repository = InMemoryGovernanceRepository()
+    project_artifact_repository = project_artifact_repository or InMemoryProjectArtifactRepository()
+    retrieval_service_for_tools = (
+        retrieval_query_service
+        if isinstance(retrieval_query_service, RetrievalQueryService)
+        else build_retrieval_query_service()
+    )
+    read_tool_service = GovernedReadToolService(
+        governance_repository=governance_repository,
+        project_artifact_repository=project_artifact_repository,
+        runtime_state_repository=runtime_state_repository,
+        retrieval_query_service=retrieval_service_for_tools,
+        audit_writer=audit_writer or InMemoryAuditWriter(),
+        communication_repository=communication_repository,
+    )
+    write_tool_service = GovernedWriteToolService(
+        governance_repository=governance_repository,
+        project_artifact_repository=project_artifact_repository,
+        audit_writer=audit_writer or InMemoryAuditWriter(),
+        budget_runtime_client=budget_runtime_client,
+    )
     message_ledger = InMemoryMessageLedger(repository=communication_repository)
     dead_letter_writer = InMemoryDeadLetterWriter(
         repository=communication_repository,
@@ -474,7 +512,9 @@ def build_task_dispatch_service(
         llm_dispatch_adapter=LlmGatewayDispatchAdapter(
             llm_gateway_service=build_llm_gateway_service(),
             retrieval_query_service=retrieval_query_service,
-            governance_project_reader=governance_project_reader,
+            governance_project_reader=governance_repository,
+            read_tool_service=read_tool_service,
+            write_tool_service=write_tool_service,
         ),
         communication_dispatch_adapter=InMemoryCommunicationDispatchAdapter(
             publisher=communication_publisher,

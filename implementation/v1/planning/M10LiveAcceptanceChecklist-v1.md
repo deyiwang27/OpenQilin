@@ -62,7 +62,28 @@ For each role bot (`administrator`, `auditor`, `ceo`, `cwo`, `project_manager`):
    - no silent truncation
    - chunk labels are visible (`[role i/n]`)
 
+### 4.4 Tool Governance Path
+1. In DM with `@CEO`, send tool-read command:
+   - `/oq {"action":"tool_read","target":"llm","args":["{\"tool\":\"get_project_lifecycle_state\",\"arguments\":{\"project_id\":\"project_alpha\"}}"],"project_id":"project_alpha","priority":"normal"}`
+2. Verify:
+   - response includes governed tool result with source citation tags
+   - response role label matches `ceo`
+3. In DM with `@ProjectManager`, send disallowed read-tool command:
+   - `/oq {"action":"tool_read","target":"llm","args":["{\"tool\":\"get_audit_event_stream\",\"arguments\":{\"project_id\":\"project_alpha\"}}"],"project_id":"project_alpha","priority":"normal"}`
+4. Verify:
+   - fail-closed denial (`tool_access_denied`)
+5. Send raw mutation write command:
+   - `/oq {"action":"tool_write","target":"llm","args":["{\"tool\":\"raw_sql_update\",\"arguments\":{\"project_id\":\"project_alpha\"}}"],"project_id":"project_alpha","priority":"normal"}`
+6. Verify:
+   - fail-closed denial (`tool_raw_db_mutation_denied`)
+
 ## 5. Evidence Artifacts
+
+Recommended command sequence:
+- `uv run python ops/scripts/run_m10_live_multi_bot_acceptance.py --mode preflight`
+- `uv run python ops/scripts/run_m10_live_multi_bot_acceptance.py --mode init-manifest --project-id <project_id>`
+- `uv run python ops/scripts/run_m10_live_multi_bot_acceptance.py --mode init-notes --project-id <project_id>`
+- `uv run python ops/scripts/check_m10_live_acceptance_artifacts.py`
 
 Required capture set:
 - `docker compose ps` snapshot
@@ -72,6 +93,7 @@ Required capture set:
 - Notes file with command payloads and observed trace/task IDs
 
 Output targets:
+- `implementation/v1/planning/artifacts/m10_live_preflight_latest.json`
 - `implementation/v1/planning/artifacts/m10_live_acceptance_notes.md`
 - `implementation/v1/planning/artifacts/m10_live_discord_worker_logs_latest.txt`
 - `implementation/v1/planning/artifacts/m10_live_api_app_logs_latest.txt`
@@ -83,4 +105,5 @@ Output targets:
 - DM to each role bot is validated with role-consistent governed response.
 - Mention-group scenario is validated for explicit-role fan-out only.
 - Long-response chunking behavior is validated with no silent truncation.
+- Tool-read/tool-write governance behavior is validated for allow + deny paths.
 - Evidence artifacts are attached for M10 closeout.
