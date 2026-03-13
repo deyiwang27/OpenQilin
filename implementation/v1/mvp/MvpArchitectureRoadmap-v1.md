@@ -35,8 +35,6 @@ Still missing or placeholder-heavy for MVP v0.1:
 - MVP control-plane surfaces:
   - owner discussion/governance routers are placeholders
   - project creation and project/agent/budget status contracts are not yet exposed as stable MVP API set
-- Docker runtime surface:
-  - `compose` `full` profile still runs placeholder containers for `api_app`, `orchestrator_worker`, and `communication_worker`
 - Discord adapter:
   - transport assumptions exist, but adapter boundary that maps Discord payloads to canonical owner envelope is not yet a first-class runtime service
 - External provider activation:

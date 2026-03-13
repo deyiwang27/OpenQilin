@@ -15,6 +15,19 @@ def create_control_plane_app() -> FastAPI:
     """Create the control-plane API app and register M1 ingress routes."""
 
     app = FastAPI(title="OpenQilin Control Plane", version="0.1.0")
+
+    @app.get("/health/live", tags=["health"])
+    def health_live() -> dict[str, str]:
+        """Liveness probe for container orchestration health checks."""
+
+        return {"status": "live"}
+
+    @app.get("/health/ready", tags=["health"])
+    def health_ready() -> dict[str, str]:
+        """Readiness probe once runtime services are initialized."""
+
+        return {"status": "ready"}
+
     app.state.runtime_services = build_runtime_services()
     app.include_router(owner_commands_router)
     app.include_router(queries_router)

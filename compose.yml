@@ -47,6 +47,17 @@ services:
     command: ["python", "-m", "http.server", "4000"]
     ports:
       - "4000:4000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4000', timeout=2)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
 
   otel_collector:
     image: otel/opentelemetry-collector-contrib:0.102.0
@@ -101,19 +112,70 @@ services:
   api_app:
     image: python:3.12-slim
     profiles: ["full"]
-    command: ["sh", "-lc", "echo 'api_app placeholder container'; sleep infinity"]
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - openqilin_system:/var/lib/openqilin
+    command:
+      [
+        "sh",
+        "-lc",
+        "python -m pip install --disable-pip-version-check --quiet -e /workspace && uvicorn openqilin.apps.api_app:app --host 0.0.0.0 --port 8000",
+      ]
+    ports:
+      - "8000:8000"
+    environment:
+      OPENQILIN_DATABASE_URL: postgresql+psycopg://openqilin:openqilin@postgres:5432/openqilin
+      OPENQILIN_RUNTIME_PERSISTENCE_ENABLED: "true"
+      OPENQILIN_SYSTEM_ROOT: /var/lib/openqilin
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live', timeout=2)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
       opa:
+        condition: service_healthy
+      litellm:
         condition: service_healthy
 
   orchestrator_worker:
     image: python:3.12-slim
     profiles: ["full"]
-    command: ["sh", "-lc", "echo 'orchestrator_worker placeholder container'; sleep infinity"]
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - openqilin_system:/var/lib/openqilin
+    command:
+      [
+        "sh",
+        "-lc",
+        "python -m pip install --disable-pip-version-check --quiet -e /workspace && python -m openqilin.apps.orchestrator_worker",
+      ]
+    environment:
+      OPENQILIN_RUNTIME_PERSISTENCE_ENABLED: "true"
+      OPENQILIN_SYSTEM_ROOT: /var/lib/openqilin
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "from pathlib import Path; raise SystemExit(0 if Path('/tmp/openqilin.orchestrator_worker.ready').exists() else 1)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
     depends_on:
       postgres:
         condition: service_healthy
@@ -121,15 +183,42 @@ services:
         condition: service_healthy
       opa:
         condition: service_healthy
+      api_app:
+        condition: service_healthy
 
   communication_worker:
     image: python:3.12-slim
     profiles: ["full"]
-    command: ["sh", "-lc", "echo 'communication_worker placeholder container'; sleep infinity"]
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - openqilin_system:/var/lib/openqilin
+    command:
+      [
+        "sh",
+        "-lc",
+        "python -m pip install --disable-pip-version-check --quiet -e /workspace && python -m openqilin.apps.communication_worker",
+      ]
+    environment:
+      OPENQILIN_RUNTIME_PERSISTENCE_ENABLED: "true"
+      OPENQILIN_SYSTEM_ROOT: /var/lib/openqilin
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "from pathlib import Path; raise SystemExit(0 if Path('/tmp/openqilin.communication_worker.ready').exists() else 1)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      api_app:
         condition: service_healthy
 
   admin:
@@ -152,3 +241,4 @@ services:
 
 volumes:
   postgres_data:
+  openqilin_system:
