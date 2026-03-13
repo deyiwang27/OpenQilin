@@ -52,7 +52,6 @@ def test_m9_wp1_build_worker_config_requires_token(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.delenv("OPENQILIN_DISCORD_BOT_TOKEN", raising=False)
-    monkeypatch.delenv("DISCORD_BOT_TOKEN", raising=False)
     settings = RuntimeSettings(discord_bot_token=None)
 
     with pytest.raises(RuntimeError) as error:

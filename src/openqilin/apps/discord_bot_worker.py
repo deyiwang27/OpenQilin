@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -215,7 +214,7 @@ class OpenQilinDiscordClient(discord.Client):
 def build_worker_config(settings: RuntimeSettings) -> DiscordBotWorkerConfig:
     """Resolve Discord worker runtime config from settings and env fallbacks."""
 
-    token = settings.discord_bot_token or os.getenv("DISCORD_BOT_TOKEN")
+    token = settings.discord_bot_token
     if token is None or not token.strip():
         raise RuntimeError("discord bot token is required for discord_bot_worker")
     return DiscordBotWorkerConfig(
