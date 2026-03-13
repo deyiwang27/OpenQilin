@@ -121,6 +121,12 @@ Exit criteria:
 Objective:
 - run an actually connected Discord instance in Docker and validate live MVP use cases
 
+Current progress:
+- `M9-WP1` completed: real `discord_bot_worker` runtime now bridges gateway messages to `/v1/connectors/discord/messages` and relays governed responses back to Discord.
+- `M9-WP2` completed: `compose` full profile now runs `discord_bot_worker` with readiness checks, Discord runtime settings are env-wired, and non-local startup fails closed for unsafe default connector secret.
+- `M9-WP3` completed: live Discord ingress command path is verified (`/oq run_task ping` accepted), and acceptance lifecycle branches executed successfully with deterministic execution artifact capture.
+- `M9-WP4` completed: milestone evidence pack finalized with live-run artifacts (preflight/manifest/notes, compose ps/log snapshots, governance execution JSON) and artifact-integrity checks passing.
+
 Work packages:
 1. `M9-WP1`: implement real Discord bot worker runtime (`discord gateway -> /v1/connectors/discord/messages -> governed response bridge`)
 2. `M9-WP2`: integrate Discord worker into Docker `full` profile and enforce non-local secret hardening

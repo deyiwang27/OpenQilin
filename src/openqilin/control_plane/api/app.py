@@ -10,11 +10,14 @@ from openqilin.control_plane.routers.owner_discussions import (
     router as owner_discussions_router,
 )
 from openqilin.control_plane.routers.queries import router as queries_router
+from openqilin.shared_kernel.config import RuntimeSettings
+from openqilin.shared_kernel.startup_validation import enforce_connector_secret_hardening
 
 
 def create_control_plane_app() -> FastAPI:
     """Create the control-plane API app and register M1 ingress routes."""
 
+    enforce_connector_secret_hardening(RuntimeSettings())
     app = FastAPI(title="OpenQilin Control Plane", version="0.1.0")
 
     @app.get("/health/live", tags=["health"])

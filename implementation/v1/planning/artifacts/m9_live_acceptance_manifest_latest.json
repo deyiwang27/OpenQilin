@@ -1,0 +1,22 @@
+{
+  "generated_at": "2026-03-13T05:55:54.450373+00:00",
+  "project_id": "project_m9_live",
+  "required_artifacts": [
+    "discord_screenshots",
+    "docker_compose_ps_output",
+    "api_app_logs",
+    "discord_bot_worker_logs",
+    "trace_and_task_correlation_notes"
+  ],
+  "scenarios": [
+    {
+      "name": "completed_archive_branch",
+      "path": "proposed->approved->active->paused->active->completed->archived"
+    },
+    {
+      "name": "terminated_archive_branch",
+      "path": "proposed->approved->active->terminated->archived"
+    }
+  ],
+  "status": "pending_manual_execution"
+}

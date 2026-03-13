@@ -20,6 +20,7 @@ dependencies = [
   "typer>=0.16,<1",
   "tenacity>=9,<10",
   "structlog>=25,<26",
+  "discord.py>=2.4,<3",
   "opentelemetry-api>=1.35,<2",
   "opentelemetry-sdk>=1.35,<2",
 ]

@@ -15,7 +15,7 @@ Status legend:
 - `done`
 
 Current context:
-- Active branch: `feat/48-m8-governance-hardening-kickoff`
+- Active branch: `feat/49-m9-real-discord-runtime-kickoff`
 - Current scope: MVP v0.1 runnable-instance gap closure (`M8` + `M9`)
 - Baseline roadmap: `implementation/v1/mvp/MvpArchitectureRoadmap-v1.md`
 
@@ -23,9 +23,9 @@ Milestone summary:
 - `M0`..`M4`: `done` (see `implementation/v1/planning/ImplementationProgress-v1.md` and evidence packs)
 - `M5`: `done`
 - `M6`: `done`
-- `M7`: `in_progress`
+- `M7`: `done`
 - `M8`: `done`
-- `M9`: `not_started`
+- `M9`: `in_progress`
 
 Checklist:
 1) `M5 MVP Proposal and Governance Activation` (`issue #29`) - `done`
@@ -45,7 +45,7 @@ Checklist:
 - M6 remediation batch (specialist spoof hardening, six baseline activation docs, role/stage write authorization) - `done`
 - milestone closeout PR + parent issue close for `#35` - `done` (`PR #40`)
 
-3) `M7 MVP Persistence, Adapter, and Acceptance` (`issue #41`) - `in_progress`
+3) `M7 MVP Persistence, Adapter, and Acceptance` (`issue #41`) - `done`
 - kickoff/decomposition complete with child work packages (`#42`..`#47`) - `done`
 - `M7-WP1` persistent runtime-state adapters + startup recovery hardening - `done` (`issue #42`)
 - `M7-WP2` Discord ingress context + identity/channel mapping baseline (`guild_id`/`channel_id`/`channel_type`; allowlist states `pending|verified|revoked`) - `done` (`issue #43`)
@@ -54,7 +54,7 @@ Checklist:
 - `M7-WP5` Gemini Flash free-tier provider-path activation + quota telemetry validation - `done` (`issue #46`)
 - `M7-WP6` MVP acceptance matrix + evidence pack closeout - `done` (`issue #47`)
 - M7 post-review remediation: governed project creation API, completion-governance chain enforcement, and Discord connector-ingress adapter path - `done`
-- M7 closeout is gated by M9 completion - `todo`
+- M7 closeout status synchronized in docs/issues (M9 tracked separately) - `done`
 
 4) `M8 MVP Governance Surface Hardening` (`issue #48`) - `done`
 - kickoff/decomposition complete with child work packages (`#50`..`#52`) - `done`
@@ -62,12 +62,12 @@ Checklist:
 - `M8-WP2` governed lifecycle APIs for `pause|resume|terminate|archive` - `done` (`issue #51`)
 - `M8-WP3` API-only acceptance lifecycle refactor + planning doc alignment - `done` (`issue #52`)
 
-5) `M9 MVP Real Discord Runtime and Live Validation` (`issue #49`) - `not_started`
+5) `M9 MVP Real Discord Runtime and Live Validation` (`issue #49`) - `done`
 - kickoff/decomposition complete with child work packages (`#53`..`#56`) - `done`
-- `M9-WP1` real Discord bot worker runtime (ingress + response bridge) - `todo` (`issue #53`)
-- `M9-WP2` Docker `full` profile integration + non-local secret hardening - `todo` (`issue #54`)
-- `M9-WP3` live Discord end-to-end MVP acceptance validation - `todo` (`issue #55`)
-- `M9-WP4` live-instance evidence pack and closeout - `todo` (`issue #56`)
+- `M9-WP1` real Discord bot worker runtime (ingress + response bridge) - `done` (`issue #53`)
+- `M9-WP2` Docker `full` profile integration + non-local secret hardening - `done` (`issue #54`)
+- `M9-WP3` live Discord end-to-end MVP acceptance validation - `done` (`issue #55`, live Discord ingress verified with accepted command response, and both lifecycle acceptance branches executed under live runtime with deterministic evidence artifacts)
+- `M9-WP4` live-instance evidence pack and closeout - `done` (`issue #56`, evidence pack finalized with preflight/manifest/notes plus runtime ps/log snapshots and governance execution artifact)
 
 Carryover follow-ups:
 - enforce non-default connector shared secret in non-local environments at runtime validation layer - `todo`

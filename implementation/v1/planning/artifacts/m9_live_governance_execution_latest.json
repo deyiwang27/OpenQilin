@@ -1,0 +1,516 @@
+{
+  "base_url": "http://localhost:8000",
+  "completed_project_id": "project_m9_live_completed_063256",
+  "generated_at": "2026-03-13T06:32:56.782686+00:00",
+  "steps": [
+    {
+      "actor_id": "owner_m9_live",
+      "actor_role": "owner",
+      "body": {
+        "data": {
+          "metadata": {
+            "branch": "completed",
+            "created_by_actor_id": "owner_m9_live",
+            "created_by_actor_role": "owner",
+            "created_trace_id": "trace-m9-live-create-project_m9_live_completed_063256",
+            "suite": "m9_live"
+          },
+          "name": "M9 Live Completed Branch",
+          "objective": "Validate completed->archived branch under live runtime.",
+          "project_id": "project_m9_live_completed_063256",
+          "status": "proposed"
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-create-project_m9_live_completed_063256"
+      },
+      "label": "completed.create_project",
+      "ok": true,
+      "path": "/v1/governance/projects",
+      "status_code": 201
+    },
+    {
+      "actor_id": "owner_m9_live",
+      "actor_role": "owner",
+      "body": {
+        "data": {
+          "actor_id": "owner_m9_live",
+          "actor_role": "owner",
+          "message_id": "05aa78d6-ae10-4be8-b7c2-fb4923c0d1f4",
+          "project_id": "project_m9_live_completed_063256",
+          "status": "proposed"
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-discuss-project_m9_live_completed_063256"
+      },
+      "label": "completed.proposal_message",
+      "ok": true,
+      "path": "/v1/governance/projects/project_m9_live_completed_063256/proposal/messages",
+      "status_code": 201
+    },
+    {
+      "actor_id": "owner_m9_live",
+      "actor_role": "owner",
+      "body": {
+        "data": {
+          "approval_recorded": true,
+          "approval_roles": [
+            "owner"
+          ],
+          "project_id": "project_m9_live_completed_063256",
+          "status": "proposed"
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-approve-owner-project_m9_live_completed_063256"
+      },
+      "label": "completed.approve.owner",
+      "ok": true,
+      "path": "/v1/governance/projects/project_m9_live_completed_063256/proposal/approve",
+      "status_code": 200
+    },
+    {
+      "actor_id": "ceo_m9_live",
+      "actor_role": "ceo",
+      "body": {
+        "data": {
+          "approval_recorded": true,
+          "approval_roles": [
+            "ceo",
+            "owner"
+          ],
+          "project_id": "project_m9_live_completed_063256",
+          "status": "proposed"
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-approve-ceo-project_m9_live_completed_063256"
+      },
+      "label": "completed.approve.ceo",
+      "ok": true,
+      "path": "/v1/governance/projects/project_m9_live_completed_063256/proposal/approve",
+      "status_code": 200
+    },
+    {
+      "actor_id": "cwo_m9_live",
+      "actor_role": "cwo",
+      "body": {
+        "data": {
+          "approval_recorded": true,
+          "approval_roles": [
+            "ceo",
+            "cwo",
+            "owner"
+          ],
+          "project_id": "project_m9_live_completed_063256",
+          "status": "approved"
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-approve-cwo-project_m9_live_completed_063256"
+      },
+      "label": "completed.approve.cwo",
+      "ok": true,
+      "path": "/v1/governance/projects/project_m9_live_completed_063256/proposal/approve",
+      "status_code": 200
+    },
+    {
+      "actor_id": "cwo_m9_live",
+      "actor_role": "cwo",
+      "body": {
+        "data": {
+          "budget_currency_total": 100.0,
+          "budget_plan_content_hash": "de6082b4dbe04e3a6d04ef77dc3d938c4836a9e019e90cfc93a1b0f72e2e662c",
+          "budget_plan_storage_uri": "/var/lib/openqilin/projects/project_m9_live_completed_063256/docs/budget_plan/budget_plan--v001.md",
+          "budget_quota_total": 1000.0,
+          "charter_content_hash": "91e615359bc38573dc6450d8a31657b55506eb7f999269f45477177abdef2da5",
+          "charter_storage_uri": "/var/lib/openqilin/projects/project_m9_live_completed_063256/docs/project_charter/project_charter--v001.md",
+          "execution_plan_content_hash": "7bc04e04e737657aa8df92b719c6dbddc61a35833b36c15a0dc1471269424376",
+          "execution_plan_storage_uri": "/var/lib/openqilin/projects/project_m9_live_completed_063256/docs/execution_plan/execution_plan--v001.md",
+          "metric_plan": {
+            "mvp": "pass"
+          },
+          "metric_plan_content_hash": "0726a393d3c7d892496bbd66924bf68afc7358621df44f2ec4ad849ed148b4cb",
+          "metric_plan_storage_uri": "/var/lib/openqilin/projects/project_m9_live_completed_063256/docs/success_metrics/success_metrics--v001.md",
+          "objective": "Execute live completed branch.",
+          "project_id": "project_m9_live_completed_063256",
+          "scope_statement_content_hash": "014166f191a6f3d274e1fac4c0639d06ba7631a7f3b3b12e312b8b317d6977f9",
+          "scope_statement_storage_uri": "/var/lib/openqilin/projects/project_m9_live_completed_063256/docs/scope_statement/scope_statement--v001.md",
+          "status": "active",
+          "workforce_plan": {
+            "project_manager": "1",
+            "specialist": "2"
+          },
+          "workforce_plan_content_hash": "ea6ffde05ee80253e02ca02933e28db032448770016f9ba98e232a8aa92db390",
+          "workforce_plan_storage_uri": "/var/lib/openqilin/projects/project_m9_live_completed_063256/docs/workforce_plan/workforce_plan--v001.md"
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-init-project_m9_live_completed_063256"
+      },
+      "label": "completed.initialize",
+      "ok": true,
+      "path": "/v1/governance/projects/project_m9_live_completed_063256/initialize",
+      "status_code": 200
+    },
+    {
+      "actor_id": "cwo_m9_live",
+      "actor_role": "cwo",
+      "body": {
+        "data": {
+          "binding_status": "active",
+          "llm_routing_profile": "dev_gemini_free",
+          "mandatory_operations": [
+            "milestone_planning",
+            "progress_reporting",
+            "task_assignment",
+            "task_decomposition"
+          ],
+          "project_id": "project_m9_live_completed_063256",
+          "role": "project_manager",
+          "status": "active",
+          "system_prompt_hash": "0279b48eb758962705e0bcf111034332ca811ca7b687c3c30d610c9666d41816",
+          "template_id": "project_manager_template_v1"
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-bind-project_m9_live_completed_063256"
+      },
+      "label": "completed.bind_pm",
+      "ok": true,
+      "path": "/v1/governance/projects/project_m9_live_completed_063256/workforce/bind",
+      "status_code": 200
+    },
+    {
+      "actor_id": "pm_m9_live",
+      "actor_role": "project_manager",
+      "body": {
+        "data": {
+          "previous_status": "active",
+          "project_id": "project_m9_live_completed_063256",
+          "reason_code": "pm_status_report_replan",
+          "status": "paused"
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-pause-project_m9_live_completed_063256"
+      },
+      "label": "completed.pause",
+      "ok": true,
+      "path": "/v1/governance/projects/project_m9_live_completed_063256/lifecycle/pause",
+      "status_code": 200
+    },
+    {
+      "actor_id": "pm_m9_live",
+      "actor_role": "project_manager",
+      "body": {
+        "data": {
+          "previous_status": "paused",
+          "project_id": "project_m9_live_completed_063256",
+          "reason_code": "pm_resume_after_replan",
+          "status": "active"
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-resume-project_m9_live_completed_063256"
+      },
+      "label": "completed.resume",
+      "ok": true,
+      "path": "/v1/governance/projects/project_m9_live_completed_063256/lifecycle/resume",
+      "status_code": 200
+    },
+    {
+      "actor_id": "pm_m9_live",
+      "actor_role": "project_manager",
+      "body": {
+        "data": {
+          "completion_report_content_hash": "2b1bbc5c402c0ae952bf93a2416ca359f67dc9c8ec441b714fb881895902e5c4",
+          "completion_report_storage_uri": "/var/lib/openqilin/projects/project_m9_live_completed_063256/docs/completion_report/completion_report--v001.md",
+          "project_id": "project_m9_live_completed_063256",
+          "report_id": "668d9903-3428-4b65-b0d2-6cfa3a2a66cc",
+          "status": "active",
+          "summary": "Completed live branch execution."
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-completion-report-project_m9_live_completed_063256"
+      },
+      "label": "completed.completion_report",
+      "ok": true,
+      "path": "/v1/governance/projects/project_m9_live_completed_063256/completion/report",
+      "status_code": 201
+    },
+    {
+      "actor_id": "cwo_m9_live",
+      "actor_role": "cwo",
+      "body": {
+        "data": {
+          "approval_recorded": true,
+          "approval_roles": [
+            "cwo"
+          ],
+          "owner_notified": false,
+          "project_id": "project_m9_live_completed_063256",
+          "status": "active"
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-completion-approve-cwo-project_m9_live_completed_063256"
+      },
+      "label": "completed.completion_approve.cwo",
+      "ok": true,
+      "path": "/v1/governance/projects/project_m9_live_completed_063256/completion/approve",
+      "status_code": 200
+    },
+    {
+      "actor_id": "ceo_m9_live",
+      "actor_role": "ceo",
+      "body": {
+        "data": {
+          "approval_recorded": true,
+          "approval_roles": [
+            "ceo",
+            "cwo"
+          ],
+          "owner_notified": true,
+          "project_id": "project_m9_live_completed_063256",
+          "status": "active"
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-completion-approve-ceo-project_m9_live_completed_063256"
+      },
+      "label": "completed.completion_approve.ceo",
+      "ok": true,
+      "path": "/v1/governance/projects/project_m9_live_completed_063256/completion/approve",
+      "status_code": 200
+    },
+    {
+      "actor_id": "cwo_m9_live",
+      "actor_role": "cwo",
+      "body": {
+        "data": {
+          "project_id": "project_m9_live_completed_063256",
+          "status": "completed"
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-completion-finalize-project_m9_live_completed_063256"
+      },
+      "label": "completed.completion_finalize",
+      "ok": true,
+      "path": "/v1/governance/projects/project_m9_live_completed_063256/completion/finalize",
+      "status_code": 200
+    },
+    {
+      "actor_id": "cwo_m9_live",
+      "actor_role": "cwo",
+      "body": {
+        "data": null,
+        "error": {
+          "code": "project_invalid_transition",
+          "details": {},
+          "message": "invalid project transition: completed -> terminated",
+          "retryable": false,
+          "source_component": "governance_repository"
+        },
+        "status": "denied",
+        "trace_id": "trace-m9-live-invalid-terminate-project_m9_live_completed_063256"
+      },
+      "label": "completed.invalid_terminate_after_completed",
+      "ok": true,
+      "path": "/v1/governance/projects/project_m9_live_completed_063256/lifecycle/terminate",
+      "status_code": 409
+    },
+    {
+      "actor_id": "ceo_m9_live",
+      "actor_role": "ceo",
+      "body": {
+        "data": {
+          "previous_status": "completed",
+          "project_id": "project_m9_live_completed_063256",
+          "reason_code": "archive_after_completion",
+          "status": "archived"
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-archive-project_m9_live_completed_063256"
+      },
+      "label": "completed.archive",
+      "ok": true,
+      "path": "/v1/governance/projects/project_m9_live_completed_063256/lifecycle/archive",
+      "status_code": 200
+    },
+    {
+      "actor_id": "owner_m9_live",
+      "actor_role": "owner",
+      "body": {
+        "data": {
+          "metadata": {
+            "branch": "terminated",
+            "created_by_actor_id": "owner_m9_live",
+            "created_by_actor_role": "owner",
+            "created_trace_id": "trace-m9-live-create-project_m9_live_terminated_063256",
+            "suite": "m9_live"
+          },
+          "name": "M9 Live Terminated Branch",
+          "objective": "Validate terminated->archived branch under live runtime.",
+          "project_id": "project_m9_live_terminated_063256",
+          "status": "proposed"
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-create-project_m9_live_terminated_063256"
+      },
+      "label": "terminated.create_project",
+      "ok": true,
+      "path": "/v1/governance/projects",
+      "status_code": 201
+    },
+    {
+      "actor_id": "owner_m9_live",
+      "actor_role": "owner",
+      "body": {
+        "data": {
+          "approval_recorded": true,
+          "approval_roles": [
+            "owner"
+          ],
+          "project_id": "project_m9_live_terminated_063256",
+          "status": "proposed"
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-approve-owner-project_m9_live_terminated_063256"
+      },
+      "label": "terminated.approve.owner",
+      "ok": true,
+      "path": "/v1/governance/projects/project_m9_live_terminated_063256/proposal/approve",
+      "status_code": 200
+    },
+    {
+      "actor_id": "ceo_m9_live",
+      "actor_role": "ceo",
+      "body": {
+        "data": {
+          "approval_recorded": true,
+          "approval_roles": [
+            "ceo",
+            "owner"
+          ],
+          "project_id": "project_m9_live_terminated_063256",
+          "status": "proposed"
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-approve-ceo-project_m9_live_terminated_063256"
+      },
+      "label": "terminated.approve.ceo",
+      "ok": true,
+      "path": "/v1/governance/projects/project_m9_live_terminated_063256/proposal/approve",
+      "status_code": 200
+    },
+    {
+      "actor_id": "cwo_m9_live",
+      "actor_role": "cwo",
+      "body": {
+        "data": {
+          "approval_recorded": true,
+          "approval_roles": [
+            "ceo",
+            "cwo",
+            "owner"
+          ],
+          "project_id": "project_m9_live_terminated_063256",
+          "status": "approved"
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-approve-cwo-project_m9_live_terminated_063256"
+      },
+      "label": "terminated.approve.cwo",
+      "ok": true,
+      "path": "/v1/governance/projects/project_m9_live_terminated_063256/proposal/approve",
+      "status_code": 200
+    },
+    {
+      "actor_id": "cwo_m9_live",
+      "actor_role": "cwo",
+      "body": {
+        "data": {
+          "budget_currency_total": 80.0,
+          "budget_plan_content_hash": "b048bc9ed8257dd030bdf2bea11575e84ad754d6ca26db4d9db1fec3870c218e",
+          "budget_plan_storage_uri": "/var/lib/openqilin/projects/project_m9_live_terminated_063256/docs/budget_plan/budget_plan--v001.md",
+          "budget_quota_total": 800.0,
+          "charter_content_hash": "4723b0dd415a8776808e66531954dacd88ff7f0a9eac94f127881f07ded2626b",
+          "charter_storage_uri": "/var/lib/openqilin/projects/project_m9_live_terminated_063256/docs/project_charter/project_charter--v001.md",
+          "execution_plan_content_hash": "58e6d5ce0b035a754047c95a7ab5d9178be444f67378261df329a7fa5113e11d",
+          "execution_plan_storage_uri": "/var/lib/openqilin/projects/project_m9_live_terminated_063256/docs/execution_plan/execution_plan--v001.md",
+          "metric_plan": {
+            "mvp": "terminated_branch_pass"
+          },
+          "metric_plan_content_hash": "fe55903f76f04cc336153f41532677e9eb342cb8a274c484bd9a5a2cd05602e5",
+          "metric_plan_storage_uri": "/var/lib/openqilin/projects/project_m9_live_terminated_063256/docs/success_metrics/success_metrics--v001.md",
+          "objective": "Execute live terminated branch.",
+          "project_id": "project_m9_live_terminated_063256",
+          "scope_statement_content_hash": "c31fb3a5a40b65710734a00c8b17d0f16f1795a63e507c51b3df081a53a49e3b",
+          "scope_statement_storage_uri": "/var/lib/openqilin/projects/project_m9_live_terminated_063256/docs/scope_statement/scope_statement--v001.md",
+          "status": "active",
+          "workforce_plan": {
+            "project_manager": "1",
+            "specialist": "1"
+          },
+          "workforce_plan_content_hash": "b1dbfb8459b8d601fe98217fabf1dcebda22ddf2365d507f0012a4c5bb605ce6",
+          "workforce_plan_storage_uri": "/var/lib/openqilin/projects/project_m9_live_terminated_063256/docs/workforce_plan/workforce_plan--v001.md"
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-init-project_m9_live_terminated_063256"
+      },
+      "label": "terminated.initialize",
+      "ok": true,
+      "path": "/v1/governance/projects/project_m9_live_terminated_063256/initialize",
+      "status_code": 200
+    },
+    {
+      "actor_id": "cwo_m9_live",
+      "actor_role": "cwo",
+      "body": {
+        "data": {
+          "previous_status": "active",
+          "project_id": "project_m9_live_terminated_063256",
+          "reason_code": "terminate_branch_execution",
+          "status": "terminated"
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-terminate-project_m9_live_terminated_063256"
+      },
+      "label": "terminated.terminate",
+      "ok": true,
+      "path": "/v1/governance/projects/project_m9_live_terminated_063256/lifecycle/terminate",
+      "status_code": 200
+    },
+    {
+      "actor_id": "ceo_m9_live",
+      "actor_role": "ceo",
+      "body": {
+        "data": {
+          "previous_status": "terminated",
+          "project_id": "project_m9_live_terminated_063256",
+          "reason_code": "archive_after_termination",
+          "status": "archived"
+        },
+        "error": null,
+        "status": "ok",
+        "trace_id": "trace-m9-live-archive-project_m9_live_terminated_063256"
+      },
+      "label": "terminated.archive",
+      "ok": true,
+      "path": "/v1/governance/projects/project_m9_live_terminated_063256/lifecycle/archive",
+      "status_code": 200
+    }
+  ],
+  "terminated_project_id": "project_m9_live_terminated_063256"
+}
