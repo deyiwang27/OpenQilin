@@ -1,14 +1,28 @@
+from typing import Mapping
+
 from fastapi.testclient import TestClient
 
 from openqilin.control_plane.api.app import create_control_plane_app
+from openqilin.testing.governance_api import build_governance_headers
 
 
-def _headers(*, actor_id: str, actor_role: str) -> dict[str, str]:
-    return {
-        "X-External-Channel": "discord",
-        "X-External-Actor-Id": actor_id,
-        "X-OpenQilin-Actor-Role": actor_role,
-    }
+def _post_governance(
+    *,
+    client: TestClient,
+    path: str,
+    actor_id: str,
+    actor_role: str,
+    payload: Mapping[str, object],
+):
+    return client.post(
+        path,
+        headers=build_governance_headers(
+            payload=payload,
+            actor_id=actor_id,
+            actor_role=actor_role,
+        ),
+        json=dict(payload),
+    )
 
 
 def _seed_active_project() -> TestClient:
@@ -43,19 +57,22 @@ def _seed_active_project() -> TestClient:
 def test_bind_project_manager_template_as_cwo_returns_active_binding() -> None:
     client = _seed_active_project()
 
-    response = client.post(
-        "/v1/governance/projects/project_m5_wp4/workforce/bind",
-        headers=_headers(actor_id="cwo_1", actor_role="cwo"),
-        json={
-            "trace_id": "trace-m5-wp4-bind-project-manager",
-            "role": "project_manager",
-            "template_id": "project_manager_template_v1",
-            "llm_routing_profile": "dev_gemini_free",
-            "system_prompt": (
-                "You are Project Manager. Mandatory operations: milestone planning, "
-                "task decomposition, task assignment, progress reporting."
-            ),
-        },
+    payload = {
+        "trace_id": "trace-m5-wp4-bind-project-manager",
+        "role": "project_manager",
+        "template_id": "project_manager_template_v1",
+        "llm_routing_profile": "dev_gemini_free",
+        "system_prompt": (
+            "You are Project Manager. Mandatory operations: milestone planning, "
+            "task decomposition, task assignment, progress reporting."
+        ),
+    }
+    response = _post_governance(
+        client=client,
+        path="/v1/governance/projects/project_m5_wp4/workforce/bind",
+        actor_id="cwo_1",
+        actor_role="cwo",
+        payload=payload,
     )
 
     body = response.json()
@@ -75,16 +92,19 @@ def test_bind_project_manager_template_as_cwo_returns_active_binding() -> None:
 def test_bind_domain_leader_template_stays_declared_disabled() -> None:
     client = _seed_active_project()
 
-    response = client.post(
-        "/v1/governance/projects/project_m5_wp4/workforce/bind",
-        headers=_headers(actor_id="cwo_1", actor_role="cwo"),
-        json={
-            "trace_id": "trace-m5-wp4-bind-dl",
-            "role": "domain_leader",
-            "template_id": "domain_leader_template_v1",
-            "llm_routing_profile": "dev_gemini_free",
-            "system_prompt": "You are Domain Leader.",
-        },
+    payload = {
+        "trace_id": "trace-m5-wp4-bind-dl",
+        "role": "domain_leader",
+        "template_id": "domain_leader_template_v1",
+        "llm_routing_profile": "dev_gemini_free",
+        "system_prompt": "You are Domain Leader.",
+    }
+    response = _post_governance(
+        client=client,
+        path="/v1/governance/projects/project_m5_wp4/workforce/bind",
+        actor_id="cwo_1",
+        actor_role="cwo",
+        payload=payload,
     )
 
     body = response.json()
@@ -97,19 +117,22 @@ def test_bind_domain_leader_template_stays_declared_disabled() -> None:
 def test_bind_workforce_template_rejects_non_cwo_role() -> None:
     client = _seed_active_project()
 
-    response = client.post(
-        "/v1/governance/projects/project_m5_wp4/workforce/bind",
-        headers=_headers(actor_id="owner_1", actor_role="owner"),
-        json={
-            "trace_id": "trace-m5-wp4-bind-denied",
-            "role": "project_manager",
-            "template_id": "project_manager_template_v1",
-            "llm_routing_profile": "dev_gemini_free",
-            "system_prompt": (
-                "You are Project Manager. Mandatory operations: milestone planning, "
-                "task decomposition, task assignment, progress reporting."
-            ),
-        },
+    payload = {
+        "trace_id": "trace-m5-wp4-bind-denied",
+        "role": "project_manager",
+        "template_id": "project_manager_template_v1",
+        "llm_routing_profile": "dev_gemini_free",
+        "system_prompt": (
+            "You are Project Manager. Mandatory operations: milestone planning, "
+            "task decomposition, task assignment, progress reporting."
+        ),
+    }
+    response = _post_governance(
+        client=client,
+        path="/v1/governance/projects/project_m5_wp4/workforce/bind",
+        actor_id="owner_1",
+        actor_role="owner",
+        payload=payload,
     )
 
     body = response.json()
@@ -121,16 +144,19 @@ def test_bind_workforce_template_rejects_non_cwo_role() -> None:
 def test_bind_project_manager_template_rejects_missing_mandatory_operations() -> None:
     client = _seed_active_project()
 
-    response = client.post(
-        "/v1/governance/projects/project_m5_wp4/workforce/bind",
-        headers=_headers(actor_id="cwo_1", actor_role="cwo"),
-        json={
-            "trace_id": "trace-m6-wp4-bind-missing-ops-router",
-            "role": "project_manager",
-            "template_id": "project_manager_template_v1",
-            "llm_routing_profile": "dev_gemini_free",
-            "system_prompt": "You are Project Manager.",
-        },
+    payload = {
+        "trace_id": "trace-m6-wp4-bind-missing-ops-router",
+        "role": "project_manager",
+        "template_id": "project_manager_template_v1",
+        "llm_routing_profile": "dev_gemini_free",
+        "system_prompt": "You are Project Manager.",
+    }
+    response = _post_governance(
+        client=client,
+        path="/v1/governance/projects/project_m5_wp4/workforce/bind",
+        actor_id="cwo_1",
+        actor_role="cwo",
+        payload=payload,
     )
 
     body = response.json()

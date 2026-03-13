@@ -1,62 +1,81 @@
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Mapping, cast
 
-import pytest
 from fastapi.testclient import TestClient
 
 from openqilin.control_plane.api.app import create_control_plane_app
-from openqilin.data_access.repositories.governance import GovernanceRepositoryError
+from openqilin.testing.governance_api import build_governance_headers
 from openqilin.testing.owner_command import (
     build_owner_command_headers,
     build_owner_command_request_dict,
 )
 
 
-def _governance_headers(*, actor_id: str, actor_role: str) -> dict[str, str]:
-    return {
-        "X-External-Channel": "discord",
-        "X-External-Actor-Id": actor_id,
-        "X-OpenQilin-Actor-Role": actor_role,
-    }
+def _post_governance(
+    *,
+    client: TestClient,
+    path: str,
+    actor_id: str,
+    actor_role: str,
+    payload: Mapping[str, object],
+):
+    return client.post(
+        path,
+        headers=build_governance_headers(
+            payload=payload,
+            actor_id=actor_id,
+            actor_role=actor_role,
+        ),
+        json=dict(payload),
+    )
 
 
 def _approve_project_by_triad(*, client: TestClient, project_id: str) -> None:
     for actor_role in ("owner", "ceo", "cwo"):
-        response = client.post(
-            f"/v1/governance/projects/{project_id}/proposal/approve",
-            headers=_governance_headers(actor_id=f"{actor_role}_m7_wp6", actor_role=actor_role),
-            json={"trace_id": f"trace-m7-wp6-approve-{actor_role}-{project_id}"},
+        payload = {"trace_id": f"trace-m7-wp6-approve-{actor_role}-{project_id}"}
+        response = _post_governance(
+            client=client,
+            path=f"/v1/governance/projects/{project_id}/proposal/approve",
+            actor_id=f"{actor_role}_m7_wp6",
+            actor_role=actor_role,
+            payload=payload,
         )
         assert response.status_code == 200
 
 
 def _create_project(*, client: TestClient, project_id: str, name: str, objective: str) -> None:
-    response = client.post(
-        "/v1/governance/projects",
-        headers=_governance_headers(actor_id="owner_m7_wp6", actor_role="owner"),
-        json={
-            "trace_id": f"trace-m7-wp6-create-{project_id}",
-            "project_id": project_id,
-            "name": name,
-            "objective": objective,
-            "metadata": {"suite": "m7_wp6_acceptance"},
-        },
+    payload = {
+        "trace_id": f"trace-m7-wp6-create-{project_id}",
+        "project_id": project_id,
+        "name": name,
+        "objective": objective,
+        "metadata": {"suite": "m7_wp6_acceptance"},
+    }
+    response = _post_governance(
+        client=client,
+        path="/v1/governance/projects",
+        actor_id="owner_m7_wp6",
+        actor_role="owner",
+        payload=payload,
     )
     assert response.status_code == 201
 
 
 def _initialize_active_project(*, client: TestClient, project_id: str) -> dict[str, object]:
-    response = client.post(
-        f"/v1/governance/projects/{project_id}/initialize",
-        headers=_governance_headers(actor_id="cwo_m7_wp6", actor_role="cwo"),
-        json={
-            "trace_id": f"trace-m7-wp6-init-{project_id}",
-            "objective": "Deliver governed MVP acceptance scenario",
-            "budget_currency_total": 100.0,
-            "budget_quota_total": 1000.0,
-            "metric_plan": {"delivery": "all_acceptance_checks_green"},
-            "workforce_plan": {"project_manager": "1", "specialist": "2"},
-        },
+    payload = {
+        "trace_id": f"trace-m7-wp6-init-{project_id}",
+        "objective": "Deliver governed MVP acceptance scenario",
+        "budget_currency_total": 100.0,
+        "budget_quota_total": 1000.0,
+        "metric_plan": {"delivery": "all_acceptance_checks_green"},
+        "workforce_plan": {"project_manager": "1", "specialist": "2"},
+    }
+    response = _post_governance(
+        client=client,
+        path=f"/v1/governance/projects/{project_id}/initialize",
+        actor_id="cwo_m7_wp6",
+        actor_role="cwo",
+        payload=payload,
     )
     assert response.status_code == 200
     body = response.json()
@@ -66,19 +85,22 @@ def _initialize_active_project(*, client: TestClient, project_id: str) -> dict[s
 
 
 def _bind_project_manager(*, client: TestClient, project_id: str) -> None:
-    response = client.post(
-        f"/v1/governance/projects/{project_id}/workforce/bind",
-        headers=_governance_headers(actor_id="cwo_m7_wp6", actor_role="cwo"),
-        json={
-            "trace_id": f"trace-m7-wp6-bind-{project_id}",
-            "role": "project_manager",
-            "template_id": "project_manager_template_v1",
-            "llm_routing_profile": "dev_gemini_free",
-            "system_prompt": (
-                "You are Project Manager. Mandatory operations: milestone planning, "
-                "task decomposition, task assignment, progress reporting."
-            ),
-        },
+    payload = {
+        "trace_id": f"trace-m7-wp6-bind-{project_id}",
+        "role": "project_manager",
+        "template_id": "project_manager_template_v1",
+        "llm_routing_profile": "dev_gemini_free",
+        "system_prompt": (
+            "You are Project Manager. Mandatory operations: milestone planning, "
+            "task decomposition, task assignment, progress reporting."
+        ),
+    }
+    response = _post_governance(
+        client=client,
+        path=f"/v1/governance/projects/{project_id}/workforce/bind",
+        actor_id="cwo_m7_wp6",
+        actor_role="cwo",
+        payload=payload,
     )
     assert response.status_code == 200
     body = response.json()
@@ -87,35 +109,70 @@ def _bind_project_manager(*, client: TestClient, project_id: str) -> None:
 
 
 def _complete_project_via_governance_chain(*, client: TestClient, project_id: str) -> None:
-    report = client.post(
-        f"/v1/governance/projects/{project_id}/completion/report",
-        headers=_governance_headers(actor_id="pm_m7_wp6", actor_role="project_manager"),
-        json={
-            "trace_id": f"trace-m7-wp6-completion-report-{project_id}",
-            "summary": "All acceptance checks are complete.",
-            "metric_results": {"mvp_acceptance": "passed"},
-        },
+    report_payload = {
+        "trace_id": f"trace-m7-wp6-completion-report-{project_id}",
+        "summary": "All acceptance checks are complete.",
+        "metric_results": {"mvp_acceptance": "passed"},
+    }
+    report = _post_governance(
+        client=client,
+        path=f"/v1/governance/projects/{project_id}/completion/report",
+        actor_id="pm_m7_wp6",
+        actor_role="project_manager",
+        payload=report_payload,
     )
     assert report.status_code == 201
-    cwo_approval = client.post(
-        f"/v1/governance/projects/{project_id}/completion/approve",
-        headers=_governance_headers(actor_id="cwo_m7_wp6", actor_role="cwo"),
-        json={"trace_id": f"trace-m7-wp6-completion-approval-cwo-{project_id}"},
+    cwo_approval_payload = {"trace_id": f"trace-m7-wp6-completion-approval-cwo-{project_id}"}
+    cwo_approval = _post_governance(
+        client=client,
+        path=f"/v1/governance/projects/{project_id}/completion/approve",
+        actor_id="cwo_m7_wp6",
+        actor_role="cwo",
+        payload=cwo_approval_payload,
     )
     assert cwo_approval.status_code == 200
-    ceo_approval = client.post(
-        f"/v1/governance/projects/{project_id}/completion/approve",
-        headers=_governance_headers(actor_id="ceo_m7_wp6", actor_role="ceo"),
-        json={"trace_id": f"trace-m7-wp6-completion-approval-ceo-{project_id}"},
+    ceo_approval_payload = {"trace_id": f"trace-m7-wp6-completion-approval-ceo-{project_id}"}
+    ceo_approval = _post_governance(
+        client=client,
+        path=f"/v1/governance/projects/{project_id}/completion/approve",
+        actor_id="ceo_m7_wp6",
+        actor_role="ceo",
+        payload=ceo_approval_payload,
     )
     assert ceo_approval.status_code == 200
-    finalize = client.post(
-        f"/v1/governance/projects/{project_id}/completion/finalize",
-        headers=_governance_headers(actor_id="cwo_m7_wp6", actor_role="cwo"),
-        json={"trace_id": f"trace-m7-wp6-completion-finalize-{project_id}"},
+    finalize_payload = {"trace_id": f"trace-m7-wp6-completion-finalize-{project_id}"}
+    finalize = _post_governance(
+        client=client,
+        path=f"/v1/governance/projects/{project_id}/completion/finalize",
+        actor_id="cwo_m7_wp6",
+        actor_role="cwo",
+        payload=finalize_payload,
     )
     assert finalize.status_code == 200
     assert finalize.json()["data"]["status"] == "completed"
+
+
+def _transition_project_lifecycle(
+    *,
+    client: TestClient,
+    project_id: str,
+    action: str,
+    actor_id: str,
+    actor_role: str,
+    trace_id: str,
+    reason_code: str,
+):
+    payload = {
+        "trace_id": trace_id,
+        "reason_code": reason_code,
+    }
+    return _post_governance(
+        client=client,
+        path=f"/v1/governance/projects/{project_id}/lifecycle/{action}",
+        actor_id=actor_id,
+        actor_role=actor_role,
+        payload=payload,
+    )
 
 
 def _verify_discord_mapping(*, client: TestClient, actor_external_id: str, channel_id: str) -> None:
@@ -161,7 +218,6 @@ def test_m7_wp6_acceptance_completed_archive_path_and_discord_read_controls(
 ) -> None:
     monkeypatch.setenv("OPENQILIN_SYSTEM_ROOT", str(tmp_path / "openqilin-system"))
     app = create_control_plane_app()
-    repo = app.state.runtime_services.governance_repo
     client = TestClient(app)
     _create_project(
         client=client,
@@ -170,13 +226,16 @@ def test_m7_wp6_acceptance_completed_archive_path_and_discord_read_controls(
         objective="Validate completed->archived acceptance branch",
     )
 
-    discussion = client.post(
-        "/v1/governance/projects/project_m7_wp6_completed/proposal/messages",
-        headers=_governance_headers(actor_id="owner_m7_wp6", actor_role="owner"),
-        json={
-            "trace_id": "trace-m7-wp6-discussion-completed",
-            "content": "Propose MVP acceptance project and delivery criteria.",
-        },
+    discussion_payload = {
+        "trace_id": "trace-m7-wp6-discussion-completed",
+        "content": "Propose MVP acceptance project and delivery criteria.",
+    }
+    discussion = _post_governance(
+        client=client,
+        path="/v1/governance/projects/project_m7_wp6_completed/proposal/messages",
+        actor_id="owner_m7_wp6",
+        actor_role="owner",
+        payload=discussion_payload,
     )
     assert discussion.status_code == 201
 
@@ -206,20 +265,29 @@ def test_m7_wp6_acceptance_completed_archive_path_and_discord_read_controls(
     assert active_response.status_code == 202
     assert active_response.json()["status"] == "accepted"
 
-    repo.transition_project_status(
+    pause_response = _transition_project_lifecycle(
+        client=client,
         project_id="project_m7_wp6_completed",
-        next_status="paused",
-        reason_code="pm_status_report_replan",
+        action="pause",
+        actor_id="pm_m7_wp6",
         actor_role="project_manager",
         trace_id="trace-m7-wp6-pause",
+        reason_code="pm_status_report_replan",
     )
-    repo.transition_project_status(
+    assert pause_response.status_code == 200
+    assert pause_response.json()["data"]["status"] == "paused"
+
+    resume_response = _transition_project_lifecycle(
+        client=client,
         project_id="project_m7_wp6_completed",
-        next_status="active",
-        reason_code="pm_resume_after_replan",
+        action="resume",
+        actor_id="pm_m7_wp6",
         actor_role="project_manager",
         trace_id="trace-m7-wp6-resume",
+        reason_code="pm_resume_after_replan",
     )
+    assert resume_response.status_code == 200
+    assert resume_response.json()["data"]["status"] == "active"
     _complete_project_via_governance_chain(client=client, project_id="project_m7_wp6_completed")
 
     readonly_payload = _build_project_chat_payload(
@@ -248,14 +316,17 @@ def test_m7_wp6_acceptance_completed_archive_path_and_discord_read_controls(
     assert query_response.status_code == 202
     assert query_response.json()["status"] == "accepted"
 
-    archived_project = repo.transition_project_status(
+    archive_response = _transition_project_lifecycle(
+        client=client,
         project_id="project_m7_wp6_completed",
-        next_status="archived",
-        reason_code="archive_after_completion",
+        action="archive",
+        actor_id="ceo_m7_wp6",
         actor_role="ceo",
         trace_id="trace-m7-wp6-archive",
+        reason_code="archive_after_completion",
     )
-    assert archived_project.status == "archived"
+    assert archive_response.status_code == 200
+    assert archive_response.json()["data"]["status"] == "archived"
 
     archived_query_payload = _build_project_chat_payload(
         project_id="project_m7_wp6_completed",
@@ -275,9 +346,7 @@ def test_m7_wp6_acceptance_terminated_archive_branch_and_transition_guard(
     tmp_path: Path, monkeypatch
 ) -> None:
     monkeypatch.setenv("OPENQILIN_SYSTEM_ROOT", str(tmp_path / "openqilin-system"))
-    app = create_control_plane_app()
-    repo = app.state.runtime_services.governance_repo
-    client = TestClient(app)
+    client = TestClient(create_control_plane_app())
 
     _create_project(
         client=client,
@@ -288,23 +357,29 @@ def test_m7_wp6_acceptance_terminated_archive_branch_and_transition_guard(
     _approve_project_by_triad(client=client, project_id="project_m7_wp6_terminated")
     _initialize_active_project(client=client, project_id="project_m7_wp6_terminated")
 
-    terminated_project = repo.transition_project_status(
+    terminate_response = _transition_project_lifecycle(
+        client=client,
         project_id="project_m7_wp6_terminated",
-        next_status="terminated",
-        reason_code="terminated_by_cwo_decision",
+        action="terminate",
+        actor_id="cwo_m7_wp6",
         actor_role="cwo",
         trace_id="trace-m7-wp6-terminate",
+        reason_code="terminated_by_cwo_decision",
     )
-    assert terminated_project.status == "terminated"
+    assert terminate_response.status_code == 200
+    assert terminate_response.json()["data"]["status"] == "terminated"
 
-    archived_project = repo.transition_project_status(
+    archived_response = _transition_project_lifecycle(
+        client=client,
         project_id="project_m7_wp6_terminated",
-        next_status="archived",
-        reason_code="archive_after_termination",
+        action="archive",
+        actor_id="ceo_m7_wp6",
         actor_role="ceo",
         trace_id="trace-m7-wp6-terminated-archive",
+        reason_code="archive_after_termination",
     )
-    assert archived_project.status == "archived"
+    assert archived_response.status_code == 200
+    assert archived_response.json()["data"]["status"] == "archived"
 
     _create_project(
         client=client,
@@ -317,12 +392,14 @@ def test_m7_wp6_acceptance_terminated_archive_branch_and_transition_guard(
     _complete_project_via_governance_chain(
         client=client, project_id="project_m7_wp6_invalid_transition"
     )
-    with pytest.raises(GovernanceRepositoryError) as error:
-        repo.transition_project_status(
-            project_id="project_m7_wp6_invalid_transition",
-            next_status="terminated",
-            reason_code="invalid_completed_to_terminated",
-            actor_role="ceo",
-            trace_id="trace-m7-wp6-invalid-transition-attempt",
-        )
-    assert error.value.code == "project_invalid_transition"
+    invalid_transition_response = _transition_project_lifecycle(
+        client=client,
+        project_id="project_m7_wp6_invalid_transition",
+        action="terminate",
+        actor_id="ceo_m7_wp6",
+        actor_role="ceo",
+        trace_id="trace-m7-wp6-invalid-transition-attempt",
+        reason_code="invalid_completed_to_terminated",
+    )
+    assert invalid_transition_response.status_code == 409
+    assert invalid_transition_response.json()["error"]["code"] == "project_invalid_transition"

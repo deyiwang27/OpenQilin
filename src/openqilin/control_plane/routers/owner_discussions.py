@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from string import hexdigits
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Header, status
@@ -14,6 +15,10 @@ from openqilin.control_plane.api.dependencies import (
 from openqilin.control_plane.handlers.governance_handler import (
     GovernanceHandlerError,
     submit_proposal_message,
+)
+from openqilin.control_plane.identity.connector_security import (
+    ConnectorSecurityError,
+    validate_connector_auth,
 )
 from openqilin.control_plane.identity.principal_resolver import (
     PrincipalResolutionError,
@@ -72,6 +77,95 @@ def _resolve_principal(
             details={},
         )
     return principal.principal_id, principal.principal_role
+
+
+def _validate_connector_headers(
+    *,
+    external_channel_header: str | None,
+    external_actor_id_header: str | None,
+    actor_external_id_header: str | None,
+    idempotency_key_header: str | None,
+    signature_header: str | None,
+    raw_payload_hash_header: str | None,
+) -> GovernanceApiError | None:
+    if external_channel_header is None or not external_channel_header.strip():
+        return GovernanceApiError(
+            code="connector_missing_header",
+            message="missing required header: X-External-Channel",
+            retryable=False,
+            source_component="connector_security",
+            details={"required_header": "X-External-Channel"},
+        )
+    if external_actor_id_header is None or not external_actor_id_header.strip():
+        return GovernanceApiError(
+            code="connector_missing_header",
+            message="missing required header: X-External-Actor-Id",
+            retryable=False,
+            source_component="connector_security",
+            details={"required_header": "X-External-Actor-Id"},
+        )
+    if idempotency_key_header is None or not idempotency_key_header.strip():
+        return GovernanceApiError(
+            code="idempotency_missing_header",
+            message="missing required header: X-Idempotency-Key",
+            retryable=False,
+            source_component="connector_security",
+            details={"required_header": "X-Idempotency-Key"},
+        )
+    if raw_payload_hash_header is None or not raw_payload_hash_header.strip():
+        return GovernanceApiError(
+            code="connector_missing_header",
+            message="missing required header: X-OpenQilin-Raw-Payload-Hash",
+            retryable=False,
+            source_component="connector_security",
+            details={"required_header": "X-OpenQilin-Raw-Payload-Hash"},
+        )
+    normalized_hash = raw_payload_hash_header.strip().lower()
+    if (
+        len(normalized_hash) < 64
+        or len(normalized_hash) > 128
+        or any(character not in hexdigits for character in normalized_hash)
+    ):
+        return GovernanceApiError(
+            code="connector_payload_hash_invalid",
+            message="invalid raw payload hash header format",
+            retryable=False,
+            source_component="connector_security",
+            details={"required_header": "X-OpenQilin-Raw-Payload-Hash"},
+        )
+    if signature_header is None or not signature_header.strip():
+        return GovernanceApiError(
+            code="connector_signature_missing",
+            message="missing required header: X-OpenQilin-Signature",
+            retryable=False,
+            source_component="connector_security",
+            details={"required_header": "X-OpenQilin-Signature"},
+        )
+    payload_actor_external_id = (
+        actor_external_id_header.strip()
+        if actor_external_id_header is not None and actor_external_id_header.strip()
+        else external_actor_id_header.strip()
+    )
+    try:
+        validate_connector_auth(
+            header_channel=external_channel_header,
+            header_actor_external_id=external_actor_id_header,
+            header_idempotency_key=idempotency_key_header,
+            header_signature=signature_header,
+            payload_channel=external_channel_header.strip(),
+            payload_actor_external_id=payload_actor_external_id,
+            payload_idempotency_key=idempotency_key_header.strip(),
+            payload_raw_payload_hash=normalized_hash,
+        )
+    except ConnectorSecurityError as error:
+        return GovernanceApiError(
+            code=error.code,
+            message=error.message,
+            retryable=False,
+            source_component="connector_security",
+            details={},
+        )
+    return None
 
 
 def _map_handler_error(
@@ -141,8 +235,29 @@ def post_proposal_discussion_message(
         str | None, Header(alias="X-OpenQilin-Actor-External-Id")
     ] = None,
     actor_role_header: Annotated[str | None, Header(alias="X-OpenQilin-Actor-Role")] = None,
+    idempotency_key_header: Annotated[str | None, Header(alias="X-Idempotency-Key")] = None,
+    signature_header: Annotated[str | None, Header(alias="X-OpenQilin-Signature")] = None,
+    raw_payload_hash_header: Annotated[
+        str | None, Header(alias="X-OpenQilin-Raw-Payload-Hash")
+    ] = None,
 ) -> JSONResponse:
     """Persist one proposal-stage discussion message for triad roles."""
+
+    connector_error = _validate_connector_headers(
+        external_channel_header=external_channel_header,
+        external_actor_id_header=external_actor_id_header,
+        actor_external_id_header=actor_external_id_header,
+        idempotency_key_header=idempotency_key_header,
+        signature_header=signature_header,
+        raw_payload_hash_header=raw_payload_hash_header,
+    )
+    if connector_error is not None:
+        return _governance_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            trace_id=payload.trace_id,
+            status_value="error",
+            error=connector_error,
+        )
 
     resolved = _resolve_principal(
         external_channel_header=external_channel_header,

@@ -1,6 +1,6 @@
 # OpenQilin MVP v0.1 - Architecture Roadmap
 
-Status: re-baselined for MVP runability gap closure (`M8`/`M9` planned and issued)
+Status: governance hardening complete (`M8`), real Discord runtime validation pending (`M9`)
 Last updated: 2026-03-12
 
 ## 1. Goal
@@ -28,13 +28,10 @@ M5..M7 implementation status:
 - MVP acceptance matrix and evidence pack are implemented
 
 Blocking gaps before MVP closeout:
-1. Governance mutation routes (`governance` + `owner_discussions`) do not yet enforce connector signature/idempotency parity, leaving header-spoof risk.
-2. Lifecycle APIs are incomplete (`pause`, `resume`, `terminate`, `archive` are not governed API endpoints yet) and acceptance still uses direct repository lifecycle mutation.
-3. Real Discord runtime connection is not yet implemented as a live bot worker in Docker `full` profile.
-4. Planning docs still contain residual DB-authoritative wording that conflicts with runtime-authoritative MVP persistence model.
+1. Real Discord runtime connection is not yet implemented as a live bot worker in Docker `full` profile.
 
 Gap-to-milestone mapping:
-- `M8` (issues `#48`..`#52`): governance hardening, lifecycle API completion, acceptance/doc alignment.
+- `M8` (issues `#48`..`#52`): completed governance hardening, lifecycle API completion, and acceptance/doc alignment.
 - `M9` (issues `#49`, `#53`..`#56`): real Discord bot runtime, Docker integration + secret hardening, live end-to-end acceptance evidence.
 
 ## 4. Target MVP Runtime Shape
@@ -105,7 +102,7 @@ Exit criteria:
 - full project lifecycle (`proposed -> approved -> active -> paused -> completed -> terminated -> archived`) is validated via governed acceptance scenarios
 - MVP v0.1 evidence pack is complete and traceable
 
-## M8 - Governance Surface Hardening
+## M8 - Governance Surface Hardening (Completed)
 Objective:
 - close governance-critical MVP gaps exposed by post-M7 review
 

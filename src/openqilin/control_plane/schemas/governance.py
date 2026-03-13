@@ -116,6 +116,19 @@ class ProjectCompletionFinalizeRequest(BaseModel):
     )
 
 
+class ProjectLifecycleActionRequest(BaseModel):
+    """Governed lifecycle action payload for pause/resume/terminate/archive APIs."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str = Field(min_length=1, max_length=128)
+    reason_code: str = Field(
+        default="governance_lifecycle_transition",
+        min_length=1,
+        max_length=128,
+    )
+
+
 class ProjectInitializationRequest(BaseModel):
     """CWO project initialization payload."""
 
