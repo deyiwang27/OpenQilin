@@ -1,6 +1,6 @@
 # OpenQilin v1 - M9 Evidence Pack
 
-Date: `2026-03-12`  
+Date: `2026-03-13`  
 Milestone: `M9 MVP Real Discord Runtime and Live Validation`  
 Primary issue: `#49` (`M9 kickoff: real Discord runtime integration and live MVP instance validation`)  
 WP closeout issue: `#56` (`M9-WP4: MVP live-instance evidence pack and closeout`)
@@ -58,18 +58,16 @@ WP closeout issue: `#56` (`M9-WP4: MVP live-instance evidence pack and closeout`
   - `implementation/v1/planning/artifacts/m9_live_acceptance_notes.md`
 
 ### 3.4 Live-run execution status and current blocker evidence
-- Current status: `pending_manual_execution` in this environment.
-- Blocking prerequisites:
-  - Docker CLI is unavailable.
-  - `OPENQILIN_DISCORD_BOT_TOKEN` is unset.
-  - `OPENQILIN_GEMINI_API_KEY` is unset.
-  - `OPENQILIN_CONNECTOR_SHARED_SECRET` is unset.
+- Current status: `blocked_on_discord_privileged_intents` in this environment.
+- Environment prerequisites now pass (`docker` + required env keys set) and `docker compose --profile full up -d --build` boots the full stack.
+- Current blocking prerequisite:
+  - Discord Developer Portal privileged intents are not fully enabled for the bot application; `discord_bot_worker` exits with `discord.errors.PrivilegedIntentsRequired`.
 - Most recent local preflight output:
-  - `[FAIL] command_docker: not found`
-  - `[FAIL] env_OPENQILIN_DISCORD_BOT_TOKEN: missing`
-  - `[FAIL] env_OPENQILIN_GEMINI_API_KEY: missing`
-  - `[FAIL] env_OPENQILIN_CONNECTOR_SHARED_SECRET: missing`
-  - `[ERROR] M9 live acceptance preflight failed.`
+  - `[OK] command_docker: /opt/homebrew/bin/docker`
+  - `[OK] env_OPENQILIN_DISCORD_BOT_TOKEN: set`
+  - `[OK] env_OPENQILIN_GEMINI_API_KEY: set`
+  - `[OK] env_OPENQILIN_CONNECTOR_SHARED_SECRET: set`
+  - `[INFO] M9 live acceptance preflight passed.`
 
 ## 4. Acceptance Criteria Mapping (`#56`)
 1. Publish live-instance MVP evidence pack with command matrix and runtime mapping.

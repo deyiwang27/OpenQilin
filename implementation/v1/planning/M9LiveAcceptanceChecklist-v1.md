@@ -12,6 +12,7 @@ Execute real Discord end-to-end MVP validation on Docker `full` runtime and capt
 
 - Docker CLI and daemon available on operator machine.
 - Discord bot token configured (`OPENQILIN_DISCORD_BOT_TOKEN`).
+- Discord application privileged intents required by runtime are enabled in Developer Portal (at minimum Message Content Intent).
 - Gemini API key configured (`OPENQILIN_GEMINI_API_KEY`) for LLM dispatch path validation.
 - Connector secret is non-default for non-local validation (`OPENQILIN_CONNECTOR_SHARED_SECRET`).
 - Discord guild/channels created and mapped for:
