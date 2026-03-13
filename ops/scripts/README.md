@@ -11,4 +11,5 @@ Current baseline scripts:
 - `check_release_gate_matrix.py`: validates matrix/workflow/compose/doc alignment for release-gate hardening.
 - `run_release_artifact_packager.py`: generates release-candidate artifact bundle JSON and rendered promotion checklist markdown.
 - `check_release_artifact_package.py`: validates release artifact package docs and promotion decision/rollback hooks.
-- `run_m9_live_discord_acceptance.py`: runs M9 live-acceptance preflight checks, writes deterministic preflight-report JSON, and initializes evidence-manifest JSON for real Discord validation.
+- `run_m9_live_discord_acceptance.py`: runs M9 live-acceptance preflight checks, writes deterministic preflight-report JSON, and initializes evidence-manifest/notes-template artifacts for real Discord validation.
+- `check_m9_live_acceptance_artifacts.py`: validates deterministic M9 live-acceptance artifact completeness before milestone closeout.

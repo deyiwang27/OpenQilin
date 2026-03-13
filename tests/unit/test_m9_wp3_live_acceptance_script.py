@@ -67,3 +67,33 @@ def test_m9_wp3_live_acceptance_script_initializes_manifest_when_preflight_passe
     payload = json.loads(output.read_text(encoding="utf-8"))
     assert payload["project_id"] == "project_live_001"
     assert payload["status"] == "pending_manual_execution"
+
+
+def test_m9_wp3_live_acceptance_script_initializes_notes_template_when_preflight_passes(
+    tmp_path: Path, monkeypatch
+) -> None:
+    main = _load_script_main()
+    monkeypatch.setenv("OPENQILIN_DISCORD_BOT_TOKEN", "token")
+    monkeypatch.setenv("OPENQILIN_GEMINI_API_KEY", "gemini")
+    monkeypatch.setenv("OPENQILIN_CONNECTOR_SHARED_SECRET", "secret")
+    monkeypatch.setattr("shutil.which", lambda _: "/usr/bin/docker")
+    notes_output = tmp_path / "notes.md"
+    preflight_report = tmp_path / "preflight.json"
+
+    code = main(
+        [
+            "--mode",
+            "init-notes",
+            "--project-id",
+            "project_live_002",
+            "--notes-output",
+            str(notes_output),
+            "--preflight-report",
+            str(preflight_report),
+        ]
+    )
+
+    assert code == 0
+    notes_text = notes_output.read_text(encoding="utf-8")
+    assert "project_live_002" in notes_text
+    assert "## Execution Summary" in notes_text

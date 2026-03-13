@@ -16,6 +16,8 @@ def test_m9_wp4_conformance_evidence_pack_exists_and_maps_exit_criteria() -> Non
         "tests/unit/test_m9_wp1_discord_bridge.py",
         "tests/conformance/test_m9_wp2_discord_runtime_conformance.py",
         "tests/unit/test_m9_wp3_live_acceptance_script.py",
+        "tests/unit/test_m9_wp4_live_acceptance_artifact_checks.py",
+        "ops/scripts/check_m9_live_acceptance_artifacts.py",
         "m9_live_preflight_latest.json",
     ):
         assert snippet in evidence_pack

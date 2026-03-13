@@ -14,8 +14,11 @@ WP closeout issue: `#56` (`M9-WP4: MVP live-instance evidence pack and closeout`
 - `uv run pytest -q tests/unit/test_m9_wp1_discord_bridge.py tests/unit/test_m9_wp1_discord_worker_entrypoint.py`
 - `uv run pytest -q tests/unit/test_m9_wp2_startup_validation.py tests/conformance/test_m9_wp2_discord_runtime_conformance.py tests/conformance/test_m7_wp4_runtime_cutover_conformance.py`
 - `uv run pytest -q tests/unit/test_m9_wp3_live_acceptance_script.py`
+- `uv run pytest -q tests/unit/test_m9_wp4_live_acceptance_artifact_checks.py tests/conformance/test_m9_wp4_evidence_pack_conformance.py`
 - `uv run python ops/scripts/run_m9_live_discord_acceptance.py --mode preflight`
 - `uv run python ops/scripts/run_m9_live_discord_acceptance.py --mode init-manifest --project-id <project_id>`
+- `uv run python ops/scripts/run_m9_live_discord_acceptance.py --mode init-notes --project-id <project_id>`
+- `uv run python ops/scripts/check_m9_live_acceptance_artifacts.py`
 - `uv run ruff check .`
 - `uv run mypy .`
 
@@ -45,8 +48,10 @@ WP closeout issue: `#56` (`M9-WP4: MVP live-instance evidence pack and closeout`
 - Runtime/scripts:
   - `implementation/v1/planning/M9LiveAcceptanceChecklist-v1.md`
   - `ops/scripts/run_m9_live_discord_acceptance.py`
+  - `ops/scripts/check_m9_live_acceptance_artifacts.py`
 - Tests:
   - `tests/unit/test_m9_wp3_live_acceptance_script.py`
+  - `tests/unit/test_m9_wp4_live_acceptance_artifact_checks.py`
 - Artifact targets:
   - `implementation/v1/planning/artifacts/m9_live_preflight_latest.json`
   - `implementation/v1/planning/artifacts/m9_live_acceptance_manifest_latest.json`

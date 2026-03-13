@@ -26,6 +26,9 @@ DEFAULT_OUTPUT: Final[Path] = Path(
 DEFAULT_PREFLIGHT_REPORT: Final[Path] = Path(
     "implementation/v1/planning/artifacts/m9_live_preflight_latest.json"
 )
+DEFAULT_NOTES_OUTPUT: Final[Path] = Path(
+    "implementation/v1/planning/artifacts/m9_live_acceptance_notes.md"
+)
 
 
 def _check_command(name: str) -> PreflightCheck:
@@ -113,13 +116,39 @@ def _write_preflight_report(
     return output_path
 
 
+def _write_notes_template(*, output_path: Path, project_id: str) -> Path:
+    template = (
+        "# M9 Live Acceptance Notes\n\n"
+        f"- project_id: `{project_id}`\n"
+        "- execution_date_utc: `<fill>`\n"
+        "- operator: `<fill>`\n\n"
+        "## Execution Summary\n"
+        "- overall_result: `<pass|fail>`\n"
+        "- blockers_or_anomalies: `<fill>`\n\n"
+        "## Scenario Evidence\n"
+        "### completed_archive_branch\n"
+        "- evidence_links: `<discord screenshots / trace ids / log excerpts>`\n\n"
+        "### terminated_archive_branch\n"
+        "- evidence_links: `<discord screenshots / trace ids / log excerpts>`\n\n"
+        "## Command Outputs\n"
+        "- docker_compose_ps: `<paste/link>`\n"
+        "- api_app_logs: `<paste/link>`\n"
+        "- discord_bot_worker_logs: `<paste/link>`\n\n"
+        "## Trace Correlation\n"
+        "- task_trace_mapping: `<task_id -> trace_id -> discord message evidence>`\n"
+    )
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(template, encoding="utf-8")
+    return output_path
+
+
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run M9 live Discord acceptance preflight and initialize evidence manifest.",
     )
     parser.add_argument(
         "--mode",
-        choices=("preflight", "init-manifest"),
+        choices=("preflight", "init-manifest", "init-notes"),
         default="preflight",
         help="Execution mode.",
     )
@@ -140,6 +169,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         default=DEFAULT_PREFLIGHT_REPORT,
         help="Path to write deterministic preflight report JSON.",
     )
+    parser.add_argument(
+        "--notes-output",
+        type=Path,
+        default=DEFAULT_NOTES_OUTPUT,
+        help="Path to write notes template markdown for live acceptance.",
+    )
     return parser.parse_args(argv)
 
 
@@ -156,6 +191,12 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     if args.mode == "preflight":
         print("[INFO] M9 live acceptance preflight passed.")
+        return 0
+    if args.mode == "init-notes":
+        notes_output_path = _write_notes_template(
+            output_path=args.notes_output, project_id=args.project_id
+        )
+        print(f"[INFO] notes_template_initialized: {notes_output_path}")
         return 0
     output_path = _write_manifest(output_path=args.output, project_id=args.project_id)
     print(f"[INFO] manifest_initialized: {output_path}")

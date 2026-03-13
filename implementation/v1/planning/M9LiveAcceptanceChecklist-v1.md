@@ -52,6 +52,8 @@ Execute real Discord end-to-end MVP validation on Docker `full` runtime and capt
 Required capture set:
 - Preflight report:
   - `python ops/scripts/run_m9_live_discord_acceptance.py --mode preflight`
+- Notes template initialization:
+  - `python ops/scripts/run_m9_live_discord_acceptance.py --mode init-notes --project-id <project_id>`
 - Discord screenshots for each lifecycle phase and denial case.
 - API + Discord worker logs with trace/correlation IDs.
 - Command output snapshots:
@@ -60,6 +62,8 @@ Required capture set:
   - `docker compose logs discord_bot_worker --tail=400`
 - Generated manifest JSON from:
   - `python ops/scripts/run_m9_live_discord_acceptance.py --mode init-manifest`
+- Artifact integrity check:
+  - `python ops/scripts/check_m9_live_acceptance_artifacts.py`
 
 Output targets:
 - `implementation/v1/planning/artifacts/m9_live_preflight_latest.json`

@@ -125,7 +125,7 @@ Current progress:
 - `M9-WP1` completed: real `discord_bot_worker` runtime now bridges gateway messages to `/v1/connectors/discord/messages` and relays governed responses back to Discord.
 - `M9-WP2` completed: `compose` full profile now runs `discord_bot_worker` with readiness checks, Discord runtime settings are env-wired, and non-local startup fails closed for unsafe default connector secret.
 - `M9-WP3` checklist/scaffolding completed: live acceptance contract and preflight/evidence-manifest tooling are in place, and preflight now emits deterministic JSON blocker evidence (`m9_live_preflight_latest.json`); live run execution remains pending on operator environment prerequisites.
-- `M9-WP4` started: milestone evidence-pack skeleton is published with command matrix, issue linkage, and explicit live-run blocker tracking.
+- `M9-WP4` started: milestone evidence-pack skeleton is published with command matrix, issue linkage, and explicit live-run blocker tracking; deterministic artifact-integrity checker is added for closeout gating.
 
 Work packages:
 1. `M9-WP1`: implement real Discord bot worker runtime (`discord gateway -> /v1/connectors/discord/messages -> governed response bridge`)
