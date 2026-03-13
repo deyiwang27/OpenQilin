@@ -128,6 +128,10 @@ services:
       OPENQILIN_DATABASE_URL: postgresql+psycopg://openqilin:openqilin@postgres:5432/openqilin
       OPENQILIN_RUNTIME_PERSISTENCE_ENABLED: "true"
       OPENQILIN_SYSTEM_ROOT: /var/lib/openqilin
+      OPENQILIN_LLM_PROVIDER_BACKEND: ${OPENQILIN_LLM_PROVIDER_BACKEND:-gemini_flash_free}
+      OPENQILIN_GEMINI_API_KEY: ${OPENQILIN_GEMINI_API_KEY:-}
+      OPENQILIN_GEMINI_FREE_PRIMARY_MODEL: ${OPENQILIN_GEMINI_FREE_PRIMARY_MODEL:-gemini-2.0-flash}
+      OPENQILIN_GEMINI_FREE_FALLBACK_MODEL: ${OPENQILIN_GEMINI_FREE_FALLBACK_MODEL:-gemini-2.0-flash}
     healthcheck:
       test:
         [

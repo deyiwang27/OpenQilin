@@ -21,6 +21,12 @@ class RuntimeSettings(BaseSettings):
     llm_default_allocation_mode: str = "hybrid"
     llm_default_project_share_ratio: float = 0.1
     llm_default_budget_window: str = "daily"
+    llm_provider_backend: str = "in_memory"
+    gemini_api_key: str | None = None
+    gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
+    gemini_request_timeout_seconds: float = 20.0
+    gemini_free_primary_model: str = "gemini-2.0-flash"
+    gemini_free_fallback_model: str = "gemini-2.0-flash"
 
     @property
     def system_root_path(self) -> Path:

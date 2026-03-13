@@ -37,8 +37,6 @@ Still missing or placeholder-heavy for MVP v0.1:
   - project creation and project/agent/budget status contracts are not yet exposed as stable MVP API set
 - Discord adapter:
   - transport assumptions exist, but adapter boundary that maps Discord payloads to canonical owner envelope is not yet a first-class runtime service
-- External provider activation:
-  - Gemini routing profile exists, but provider path is still in-memory deterministic adapter for local/test and not yet validated as real free-tier runtime path
 - Project proposal and approval governance flow:
   - explicit proposal revision/approval lifecycle contracts are not yet implemented end-to-end
 - Project rich-text documentation policy:

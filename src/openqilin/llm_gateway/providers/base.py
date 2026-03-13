@@ -27,6 +27,7 @@ class LiteLLMProviderResult:
     input_tokens: int
     output_tokens: int
     provider_cost_usd: float | None
+    quota_limit_source: str = "policy_guardrail"
 
 
 class LiteLLMProviderError(RuntimeError):

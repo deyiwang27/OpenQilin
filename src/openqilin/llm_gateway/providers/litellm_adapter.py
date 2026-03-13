@@ -45,4 +45,5 @@ class InMemoryLiteLLMAdapter(LiteLLMProvider):
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             provider_cost_usd=None,
+            quota_limit_source="policy_guardrail",
         )
