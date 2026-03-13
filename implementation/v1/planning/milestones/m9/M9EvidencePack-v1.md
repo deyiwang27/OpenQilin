@@ -46,7 +46,7 @@ WP closeout issue: `#56` (`M9-WP4: MVP live-instance evidence pack and closeout`
 
 ### 3.3 Live Discord acceptance scenarios are executable with deterministic artifact outputs
 - Runtime/scripts:
-  - `implementation/v1/planning/M9LiveAcceptanceChecklist-v1.md`
+  - `implementation/v1/planning/milestones/m9/M9LiveAcceptanceChecklist-v1.md`
   - `ops/scripts/run_m9_live_discord_acceptance.py`
   - `ops/scripts/check_m9_live_acceptance_artifacts.py`
 - Tests:

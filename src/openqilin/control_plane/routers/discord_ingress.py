@@ -104,6 +104,9 @@ def submit_discord_message(
                 channel_id=payload.channel_id,
                 channel_type=payload.channel_type,
                 chat_class=payload.chat_class,
+                bot_role=payload.bot_role,
+                bot_id=payload.bot_id,
+                bot_user_id=payload.bot_user_id,
             ),
         ),
         command=OwnerCommandResolution(

@@ -129,6 +129,12 @@ def build_runtime_services() -> RuntimeServices:
         metric_recorder=metric_recorder,
         communication_repository=communication_repo,
         idempotency_cache_store=idempotency_cache_store,
+        retrieval_query_service=retrieval_query_service,
+        governance_project_reader=governance_repo,
+        governance_repository=governance_repo,
+        project_artifact_repository=project_artifact_repo,
+        runtime_state_repository=runtime_state_repo,
+        budget_runtime_client=budget_runtime_client,
     )
     reconstructed_ingress_claims = 0
     for task in runtime_state_repo.list_tasks():

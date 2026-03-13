@@ -1,5 +1,5 @@
 OpenQilin Implementation TODO Tracker
-Date: 2026-03-12
+Date: 2026-03-13
 Stage: implementation/v1
 Archive status: active
 
@@ -15,8 +15,8 @@ Status legend:
 - `done`
 
 Current context:
-- Active branch: `feat/49-m9-real-discord-runtime-kickoff`
-- Current scope: MVP v0.1 runnable-instance gap closure (`M8` + `M9`)
+- Active branch: `feat/mvp-1-validation`
+- Current scope: MVP closeout packaging (documentation wrap-up + planning folder cleanup) after M10 completion
 - Baseline roadmap: `implementation/v1/mvp/MvpArchitectureRoadmap-v1.md`
 
 Milestone summary:
@@ -25,7 +25,8 @@ Milestone summary:
 - `M6`: `done`
 - `M7`: `done`
 - `M8`: `done`
-- `M9`: `in_progress`
+- `M9`: `done`
+- `M10`: `in_progress`
 
 Checklist:
 1) `M5 MVP Proposal and Governance Activation` (`issue #29`) - `done`
@@ -68,6 +69,27 @@ Checklist:
 - `M9-WP2` Docker `full` profile integration + non-local secret hardening - `done` (`issue #54`)
 - `M9-WP3` live Discord end-to-end MVP acceptance validation - `done` (`issue #55`, live Discord ingress verified with accepted command response, and both lifecycle acceptance branches executed under live runtime with deterministic evidence artifacts)
 - `M9-WP4` live-instance evidence pack and closeout - `done` (`issue #56`, evidence pack finalized with preflight/manifest/notes plus runtime ps/log snapshots and governance execution artifact)
+- post-closeout remediation for Discord role-fidelity and LLM role-lock hardening - `done` (`issue #60`, recipient role-id mismatch fail-closed guard + role-labeled Discord replies + role-locked prompt/injection denial + per-recipient conversation memory tests)
+- issue `#60` follow-up resilience hardening - `done` (Gemini transient `429`/`5xx` retry-backoff path, compose env wiring for LLM token/retry settings, larger Discord response cap, and runtime restart verification)
+
+6) `M10 Multi-Bot Discord Role UI` (`issue #61`) - `done`
+- kickoff/decomposition complete with child work packages (`#62`..`#67`, `#69`..`#71`) - `done`
+- architecture design doc published (`implementation/v1/mvp/MultiBotDiscordArchitecture-v1.md`) - `done`
+- `M10-WP1` role-bot identity registry + token/config hardening - `done` (`issue #62`)
+- `M10-WP2` multi-bot worker runtime + event fan-in - `done` (`issue #63`)
+- `M10-WP3` DM + mention group-chat recipient resolver + governed routing - `done` (`issue #64`)
+- `M10-WP4` role-locked prompts + per-role memory isolation - `done` (`issue #65`)
+- `M10-WP4` grounding follow-up: `llm_reason` grounded-only enforcement (DB/project-doc source of truth + citation fail-closed contract) - `done` (`issue #68`)
+- `M10-WP5` outbound delivery hardening (chunking + sequencing) - `done` (`issue #66`)
+- `M10-WP6` live acceptance evidence pack + operator runbook - `done` (`issue #67`, live Discord DM matrix and PM remediation validated; artifact pack captured under `implementation/v1/planning/artifacts/m10_live_*`)
+- `M10-WP7` intent-level read tool surface for grounded answers - `done` (`issue #69`)
+- `M10-WP8` governed write-action tools for project/runtime mutations - `done` (`issue #70`)
+- `M10-WP9` tool orchestration policy + role access control + acceptance - `done` (`issue #71`)
+
+7) `MVP Wrap-Up and Planning Cleanup` - `done`
+- publish consolidated MVP accomplishment/progress summary - `done` (`implementation/v1/planning/MvpWrapUp-v1.md`)
+- clean planning folder layout for latest milestone docs (`M9`/`M10`) - `done` (`implementation/v1/planning/milestones/m9`, `implementation/v1/planning/milestones/m10`)
+- update progress/todo/test references to milestone subfolder paths - `done`
 
 Carryover follow-ups:
 - enforce non-default connector shared secret in non-local environments at runtime validation layer - `todo`

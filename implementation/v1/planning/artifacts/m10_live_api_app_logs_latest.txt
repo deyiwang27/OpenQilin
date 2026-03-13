@@ -1,0 +1,52 @@
+api_app-1  | WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+api_app-1  | INFO:     Started server process [29]
+api_app-1  | INFO:     Waiting for application startup.
+api_app-1  | INFO:     Application startup complete.
+api_app-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+api_app-1  | INFO:     127.0.0.1:45626 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:44624 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:41946 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:42774 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:35242 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:43136 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:53112 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:35642 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:39698 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:56368 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:37334 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:34438 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:55712 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:34742 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:48136 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:49426 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:45066 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:46584 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:59518 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:53582 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:35070 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:36898 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:35482 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:59476 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:59606 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:36652 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:38612 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:48648 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     172.18.0.13:35778 - "POST /v1/connectors/discord/messages HTTP/1.1" 403 Forbidden
+api_app-1  | INFO:     127.0.0.1:49060 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:36510 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:46422 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:46886 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:55686 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:36802 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:41082 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:35758 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     162.159.130.234:45400 - "POST /v1/governance/projects HTTP/1.1" 201 Created
+api_app-1  | INFO:     162.159.130.234:37934 - "POST /v1/connectors/discord/messages HTTP/1.1" 202 Accepted
+api_app-1  | INFO:     127.0.0.1:53356 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:39538 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:50848 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     172.18.0.13:40522 - "POST /v1/connectors/discord/messages HTTP/1.1" 202 Accepted
+api_app-1  | INFO:     127.0.0.1:56790 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:60654 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:40888 - "GET /health/live HTTP/1.1" 200 OK
+api_app-1  | INFO:     127.0.0.1:42364 - "GET /health/live HTTP/1.1" 200 OK

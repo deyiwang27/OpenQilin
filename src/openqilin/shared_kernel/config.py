@@ -18,6 +18,7 @@ class RuntimeSettings(BaseSettings):
     llm_default_routing_profile: str = "dev_gemini_free"
     llm_default_quota_request_cap: int = 1_000
     llm_default_quota_token_cap: int = 100_000
+    llm_default_max_tokens: int = 1024
     llm_default_allocation_mode: str = "hybrid"
     llm_default_project_share_ratio: float = 0.1
     llm_default_budget_window: str = "daily"
@@ -25,9 +26,17 @@ class RuntimeSettings(BaseSettings):
     gemini_api_key: str | None = None
     gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
     gemini_request_timeout_seconds: float = 20.0
+    gemini_max_retries: int = 2
+    gemini_retry_base_delay_seconds: float = 1.0
+    gemini_retry_max_delay_seconds: float = 8.0
     gemini_free_primary_model: str = "gemini-2.0-flash"
     gemini_free_fallback_model: str = "gemini-2.0-flash"
     discord_bot_token: str | None = None
+    discord_multi_bot_enabled: bool = False
+    discord_worker_role: str = "runtime_agent"
+    discord_role_bot_tokens_file: str | None = None
+    discord_role_bot_tokens_json: str = "{}"
+    discord_required_role_bots_csv: str = "administrator,auditor,ceo,cwo,project_manager"
     discord_control_plane_base_url: str = "http://127.0.0.1:8000"
     discord_command_prefix: str = "/oq"
     discord_actor_role_default: str = "owner"
@@ -35,6 +44,9 @@ class RuntimeSettings(BaseSettings):
     discord_allowed_guild_ids_csv: str = ""
     discord_allowed_channel_ids_csv: str = ""
     discord_request_timeout_seconds: float = 20.0
+    discord_response_chunk_size_chars: int = 1900
+    discord_response_retry_attempts: int = 2
+    discord_response_retry_base_delay_seconds: float = 0.5
 
     @property
     def system_root_path(self) -> Path:

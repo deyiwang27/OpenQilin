@@ -1,0 +1,36 @@
+{
+  "checks": [
+    {
+      "details": "/opt/homebrew/bin/docker",
+      "name": "command_docker",
+      "success": true
+    },
+    {
+      "details": "set",
+      "name": "env_OPENQILIN_DISCORD_MULTI_BOT_ENABLED",
+      "success": true
+    },
+    {
+      "details": "OPENQILIN_DISCORD_ROLE_BOT_TOKENS_FILE=set",
+      "name": "env_OPENQILIN_DISCORD_ROLE_BOT_TOKENS_FILE_OR_JSON",
+      "success": true
+    },
+    {
+      "details": "set",
+      "name": "env_OPENQILIN_DISCORD_REQUIRED_ROLE_BOTS_CSV",
+      "success": true
+    },
+    {
+      "details": "set",
+      "name": "env_OPENQILIN_GEMINI_API_KEY",
+      "success": true
+    },
+    {
+      "details": "set",
+      "name": "env_OPENQILIN_CONNECTOR_SHARED_SECRET",
+      "success": true
+    }
+  ],
+  "generated_at": "2026-03-13T21:16:02.251706+00:00",
+  "preflight_ok": true
+}

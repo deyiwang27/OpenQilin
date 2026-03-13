@@ -33,3 +33,6 @@ class DiscordIngressRequest(BaseModel):
     channel_id: str = Field(min_length=1, max_length=128)
     channel_type: Literal["dm", "group", "text", "thread"]
     chat_class: Literal["direct", "leadership_council", "governance", "executive", "project"]
+    bot_role: str | None = Field(default=None, min_length=1, max_length=64)
+    bot_id: str | None = Field(default=None, min_length=1, max_length=128)
+    bot_user_id: str | None = Field(default=None, min_length=1, max_length=128)

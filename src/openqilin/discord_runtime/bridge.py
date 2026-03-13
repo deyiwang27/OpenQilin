@@ -137,6 +137,9 @@ def build_discord_ingress_payload(
     connector_shared_secret: str,
     project_id: str | None = None,
     timestamp: datetime | None = None,
+    bot_role: str | None = None,
+    bot_id: str | None = None,
+    bot_user_id: str | None = None,
 ) -> tuple[dict[str, object], str]:
     """Build signed payload for POST /v1/connectors/discord/messages."""
 
@@ -163,6 +166,9 @@ def build_discord_ingress_payload(
         "channel_id": channel_id,
         "channel_type": channel_type,
         "chat_class": chat_class,
+        "bot_role": bot_role,
+        "bot_id": bot_id,
+        "bot_user_id": bot_user_id,
     }
     raw_payload_hash = hashlib.sha256(_serialize_for_hash(payload_without_hash)).hexdigest()
     payload = dict(payload_without_hash)
@@ -182,9 +188,19 @@ def format_governed_response(*, status_code: int, body: Mapping[str, object]) ->
             task_id = str(data.get("task_id", "task-unknown"))
             command = str(data.get("command", "command-unknown"))
             replayed = str(data.get("replayed", "false"))
-            return (
+            summary = (
                 f"[accepted] trace={trace_id} task={task_id} command={command} replayed={replayed}"
             )
+            llm_execution = data.get("llm_execution")
+            if isinstance(llm_execution, dict):
+                generated_text = llm_execution.get("generated_text")
+                if isinstance(generated_text, str) and generated_text.strip():
+                    normalized = generated_text.strip().replace("\n", " ")
+                    recipient_role = str(llm_execution.get("recipient_role", "")).strip().lower()
+                    role_label = recipient_role or "llm"
+                    role_prefix = f"\n[{role_label}] "
+                    return f"{summary}{role_prefix}{normalized}"
+            return summary
         return f"[accepted] trace={trace_id}"
     if status_value in {"denied", "error"}:
         error = body.get("error")

@@ -145,3 +145,28 @@ def test_owner_command_denied_when_pending_role_is_addressed() -> None:
     assert response.status_code == 403
     assert body["status"] == "denied"
     assert body["error"]["code"] == "governance_chat_role_pending_activation"
+
+
+def test_owner_command_allows_direct_dm_to_project_manager() -> None:
+    payload = build_owner_command_request_dict(
+        action="msg_notify",
+        args=["provide status update"],
+        actor_id="owner_m10_pm_dm_001",
+        idempotency_key="idem-m10-pm-dm-001",
+        trace_id="trace-m10-pm-dm-001",
+        target="communication",
+        recipients=[{"recipient_id": "project_manager_core", "recipient_type": "project_manager"}],
+        discord_channel_type="dm",
+        discord_chat_class="direct",
+    )
+
+    response = TestClient(create_control_plane_app()).post(
+        "/v1/owner/commands",
+        headers=build_owner_command_headers(payload),
+        json=payload,
+    )
+    body = response.json()
+
+    assert response.status_code == 202
+    assert body["status"] == "accepted"
+    assert body["data"]["dispatch_target"] == "communication"

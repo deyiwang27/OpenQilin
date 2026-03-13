@@ -99,6 +99,29 @@ def test_submit_owner_command_errors_on_sender_mismatch() -> None:
     assert body["error"]["code"] == "connector_actor_mismatch"
 
 
+def test_submit_owner_command_errors_on_recipient_role_mismatch() -> None:
+    client = TestClient(create_control_plane_app())
+    payload = build_owner_command_request_dict(
+        action="llm_reason",
+        args=["Who are you?"],
+        actor_id="owner_123",
+        idempotency_key="idem-recipient-mismatch-component-12345",
+        target="llm",
+        recipients=[{"recipient_id": "cwo_core", "recipient_type": "ceo"}],
+    )
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers=build_owner_command_headers(payload),
+        json=payload,
+    )
+
+    body = response.json()
+    assert response.status_code == 400
+    assert body["status"] == "error"
+    assert body["error"]["code"] == "envelope_recipient_role_mismatch"
+
+
 def test_submit_owner_command_replay_returns_same_task() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
@@ -289,6 +312,7 @@ def test_submit_owner_command_accepts_llm_target_with_usage_cost_metadata() -> N
         args=["project_1"],
         actor_id="owner_llm_target",
         idempotency_key="idem-llm-target-component-12345",
+        recipients=[{"recipient_id": "ceo_core", "recipient_type": "ceo"}],
     )
 
     response = client.post(
@@ -310,6 +334,8 @@ def test_submit_owner_command_accepts_llm_target_with_usage_cost_metadata() -> N
         "catalog_estimated",
         "provider_reported",
     }
+    assert body["data"]["llm_execution"]["recipient_role"] == "ceo"
+    assert body["data"]["llm_execution"]["recipient_id"] == "ceo_core"
 
 
 def test_submit_owner_command_denies_llm_gateway_runtime_failure() -> None:

@@ -285,3 +285,53 @@ def test_governed_ingress_fail_closed_on_llm_gateway_runtime_error() -> None:
         labels={"outcome": "denied", "source": "dispatch_llm_gateway"},
     )
     assert after_metric_value == before_metric_value + 1
+
+
+def test_governed_ingress_llm_reason_denies_without_grounding_evidence() -> None:
+    client = TestClient(app)
+    payload = build_owner_command_request_dict(
+        action="llm_reason",
+        target="llm",
+        args=["Summarize budget risk for a non-existent project scope."],
+        actor_id="owner_llm_grounding_missing_integration",
+        idempotency_key="idem-integration-llm-grounding-missing-12345",
+        project_id="project_unknown_scope",
+        recipients=[{"recipient_id": "ceo_core", "recipient_type": "ceo"}],
+    )
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers=build_owner_command_headers(payload),
+        json=payload,
+    )
+
+    body = response.json()
+    assert response.status_code == 403
+    assert body["status"] == "denied"
+    assert body["error"]["code"] == "llm_grounding_insufficient_evidence"
+    assert body["error"]["details"]["source"] == "dispatch_llm_gateway"
+
+
+def test_governed_ingress_llm_reason_denies_when_citations_missing() -> None:
+    client = TestClient(app)
+    payload = build_owner_command_request_dict(
+        action="llm_reason",
+        target="llm",
+        args=["Summarize retrieval status rollout for project 1."],
+        actor_id="owner_llm_grounding_citation_integration",
+        idempotency_key="idem-integration-llm-grounding-citation-12345",
+        project_id="project_1",
+        recipients=[{"recipient_id": "ceo_core", "recipient_type": "ceo"}],
+    )
+
+    response = client.post(
+        "/v1/owner/commands",
+        headers=build_owner_command_headers(payload),
+        json=payload,
+    )
+
+    body = response.json()
+    assert response.status_code == 403
+    assert body["status"] == "denied"
+    assert body["error"]["code"] == "llm_grounding_citation_missing"
+    assert body["error"]["details"]["source"] == "dispatch_llm_gateway"

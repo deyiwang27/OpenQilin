@@ -68,3 +68,4 @@ class LlmGatewayResponse:
     error_code: str | None = None
     error_message: str | None = None
     retryable: bool = False
+    generated_text: str | None = None

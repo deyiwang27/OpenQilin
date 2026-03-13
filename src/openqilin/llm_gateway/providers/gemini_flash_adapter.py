@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from time import sleep
 from typing import Any, Mapping
 
 import httpx
@@ -24,6 +25,9 @@ class GeminiFlashProviderConfig:
     base_url: str
     timeout_seconds: float
     model_alias_map: Mapping[str, str]
+    max_retries: int = 2
+    retry_base_delay_seconds: float = 1.0
+    retry_max_delay_seconds: float = 8.0
 
 
 class GeminiFlashFreeAdapter(LiteLLMProvider):
@@ -56,6 +60,9 @@ class GeminiFlashFreeAdapter(LiteLLMProvider):
                     "google_gemini_free_primary": settings.gemini_free_primary_model,
                     "google_gemini_free_fallback": settings.gemini_free_fallback_model,
                 },
+                max_retries=max(0, settings.gemini_max_retries),
+                retry_base_delay_seconds=max(0.0, settings.gemini_retry_base_delay_seconds),
+                retry_max_delay_seconds=max(0.0, settings.gemini_retry_max_delay_seconds),
             ),
             http_client=http_client,
         )
@@ -87,30 +94,55 @@ class GeminiFlashFreeAdapter(LiteLLMProvider):
             },
         }
         endpoint = f"{self._config.base_url}/models/{model_id}:generateContent"
-        try:
-            response = self._client.post(
-                endpoint,
-                params={"key": api_key},
-                json=payload,
-            )
-        except httpx.RequestError as error:
-            raise LiteLLMProviderError(
-                code="llm_provider_unavailable",
-                message=f"gemini request failed: {error}",
-                retryable=True,
-            ) from error
+        response: httpx.Response | None = None
+        for attempt in range(self._config.max_retries + 1):
+            try:
+                response = self._client.post(
+                    endpoint,
+                    params={"key": api_key},
+                    json=payload,
+                )
+            except httpx.RequestError as error:
+                if attempt < self._config.max_retries:
+                    sleep(
+                        _compute_retry_delay_seconds(
+                            config=self._config, response=None, attempt=attempt
+                        )
+                    )
+                    continue
+                raise LiteLLMProviderError(
+                    code="llm_provider_unavailable",
+                    message=f"gemini request failed: {error}",
+                    retryable=True,
+                ) from error
 
-        if response.status_code == 429 or response.status_code >= 500:
+            if response.status_code == 429 or response.status_code >= 500:
+                if attempt < self._config.max_retries:
+                    sleep(
+                        _compute_retry_delay_seconds(
+                            config=self._config,
+                            response=response,
+                            attempt=attempt,
+                        )
+                    )
+                    continue
+                raise LiteLLMProviderError(
+                    code="llm_provider_unavailable",
+                    message=f"gemini transient failure: http {response.status_code}",
+                    retryable=True,
+                )
+            if response.status_code >= 400:
+                raise LiteLLMProviderError(
+                    code="llm_provider_rejected",
+                    message=f"gemini rejected request: http {response.status_code}",
+                    retryable=False,
+                )
+            break
+        if response is None:
             raise LiteLLMProviderError(
                 code="llm_provider_unavailable",
-                message=f"gemini transient failure: http {response.status_code}",
+                message="gemini request failed without response",
                 retryable=True,
-            )
-        if response.status_code >= 400:
-            raise LiteLLMProviderError(
-                code="llm_provider_rejected",
-                message=f"gemini rejected request: http {response.status_code}",
-                retryable=False,
             )
 
         try:
@@ -207,3 +239,32 @@ def _as_nonnegative_int(value: Any) -> int | None:
     if value < 0:
         return None
     return value
+
+
+def _compute_retry_delay_seconds(
+    *,
+    config: GeminiFlashProviderConfig,
+    response: httpx.Response | None,
+    attempt: int,
+) -> float:
+    retry_after_delay = _parse_retry_after_seconds(response)
+    if retry_after_delay is not None:
+        return min(max(0.0, retry_after_delay), config.retry_max_delay_seconds)
+
+    exponential_delay = config.retry_base_delay_seconds * (2**attempt)
+    return min(max(0.0, exponential_delay), config.retry_max_delay_seconds)
+
+
+def _parse_retry_after_seconds(response: httpx.Response | None) -> float | None:
+    if response is None:
+        return None
+    value = response.headers.get("Retry-After")
+    if value is None:
+        return None
+    try:
+        seconds = float(value.strip())
+    except ValueError:
+        return None
+    if seconds < 0:
+        return None
+    return seconds

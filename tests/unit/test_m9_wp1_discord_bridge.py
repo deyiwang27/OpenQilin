@@ -67,11 +67,17 @@ def test_build_discord_ingress_payload_generates_valid_signature_headers(monkeyp
         connector_shared_secret="test-discord-secret",
         project_id="project-alpha",
         timestamp=datetime(2026, 3, 12, 10, 0, 0, tzinfo=UTC),
+        bot_role="ceo",
+        bot_id="ceo_core",
+        bot_user_id="9001",
     )
 
     assert payload["raw_payload_hash"]
     assert len(str(payload["raw_payload_hash"])) == 64
     assert signature.startswith("sha256=")
+    assert payload["bot_role"] == "ceo"
+    assert payload["bot_id"] == "ceo_core"
+    assert payload["bot_user_id"] == "9001"
     validate_connector_auth(
         header_channel="discord",
         header_actor_external_id=str(payload["actor_external_id"]),
@@ -105,6 +111,27 @@ def test_format_governed_response_renders_accepted_and_denied_paths() -> None:
     assert "task=task_123" in accepted
     assert "[denied]" in denied
     assert "code=policy_denied" in denied
+
+
+def test_format_governed_response_includes_llm_generated_text_when_available() -> None:
+    rendered = format_governed_response(
+        status_code=202,
+        body={
+            "status": "accepted",
+            "trace_id": "trace-llm",
+            "data": {
+                "task_id": "task_llm_1",
+                "command": "llm_reason",
+                "replayed": False,
+                "llm_execution": {
+                    "generated_text": "As CEO: Approved. Keep risk under control and report daily.",
+                    "recipient_role": "ceo",
+                },
+            },
+        },
+    )
+    assert "[accepted]" in rendered
+    assert "[ceo] As CEO: Approved. Keep risk under control and report daily." in rendered
 
 
 def test_parse_actor_role_map_ignores_invalid_json() -> None:

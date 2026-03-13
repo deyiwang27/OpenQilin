@@ -12,21 +12,30 @@ from openqilin.communication_gateway.storage.idempotency_store import (
     InMemoryCommunicationIdempotencyStore,
 )
 from openqilin.communication_gateway.storage.message_ledger import InMemoryMessageLedger
+from openqilin.budget_runtime.client import InMemoryBudgetRuntimeClient
 from openqilin.data_access.cache.idempotency_store import InMemoryIdempotencyCacheStore
+from openqilin.data_access.repositories.artifacts import InMemoryProjectArtifactRepository
 from openqilin.data_access.repositories.communication import (
     CommunicationDeadLetterRecord,
     CommunicationMessageRecord,
     InMemoryCommunicationRepository,
 )
+from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
 from openqilin.data_access.repositories.runtime_state import TaskRecord
+from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
+from openqilin.execution_sandbox.tools.read_tools import GovernedReadToolService
+from openqilin.execution_sandbox.tools.write_tools import GovernedWriteToolService
 from openqilin.llm_gateway.schemas.responses import LlmGatewayResponse
 from openqilin.llm_gateway.service import build_llm_gateway_service
 from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
 from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
+from openqilin.retrieval_runtime.service import RetrievalQueryService, build_retrieval_query_service
 from openqilin.task_orchestrator.dispatch.llm_dispatch import (
+    GovernanceProjectReader,
     LlmDispatchAdapter,
     LlmDispatchRequest,
     LlmGatewayDispatchAdapter,
+    RetrievalGroundingService,
 )
 from openqilin.task_orchestrator.dispatch.communication_dispatch import (
     CommunicationDispatchAdapter,
@@ -62,6 +71,10 @@ class TaskDispatchLlmMetadata:
     cost_source: str
     currency_delta_usd: float
     quota_token_units: int
+    generated_text: str | None
+    recipient_role: str
+    recipient_id: str | None
+    grounding_source_ids: tuple[str, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -197,6 +210,12 @@ class TaskDispatchService:
                     llm_metadata=None,
                 )
         elif target == "llm":
+            recipient_role, recipient_id = _extract_primary_recipient(task)
+            (
+                conversation_guild_id,
+                conversation_channel_id,
+                conversation_thread_id,
+            ) = _extract_discord_conversation_scope(task)
             try:
                 llm_receipt = self._llm_dispatch_adapter.dispatch(
                     LlmDispatchRequest(
@@ -207,9 +226,14 @@ class TaskDispatchService:
                         project_id=task.project_id,
                         command=task.command,
                         args=task.args,
+                        recipient_role=recipient_role,
+                        recipient_id=recipient_id,
                         policy_version=policy_version,
                         policy_hash=policy_hash,
                         rule_ids=rule_ids,
+                        conversation_guild_id=conversation_guild_id,
+                        conversation_channel_id=conversation_channel_id,
+                        conversation_thread_id=conversation_thread_id,
                     )
                 )
             except Exception:
@@ -252,7 +276,12 @@ class TaskDispatchService:
                     source="dispatch_llm_gateway",
                     retryable=False,
                     dead_letter_id=None,
-                    llm_metadata=_extract_llm_metadata(llm_receipt.gateway_response),
+                    llm_metadata=_extract_llm_metadata(
+                        llm_receipt.gateway_response,
+                        recipient_role=llm_receipt.recipient_role,
+                        recipient_id=llm_receipt.recipient_id,
+                        grounding_source_ids=llm_receipt.grounding_source_ids,
+                    ),
                 )
             else:
                 self._lifecycle_service.mark_blocked_dispatch(
@@ -276,7 +305,12 @@ class TaskDispatchService:
                         else False
                     ),
                     dead_letter_id=None,
-                    llm_metadata=_extract_llm_metadata(llm_receipt.gateway_response),
+                    llm_metadata=_extract_llm_metadata(
+                        llm_receipt.gateway_response,
+                        recipient_role=llm_receipt.recipient_role,
+                        recipient_id=llm_receipt.recipient_id,
+                        grounding_source_ids=llm_receipt.grounding_source_ids,
+                    ),
                 )
         elif target == "communication":
             try:
@@ -421,10 +455,44 @@ def build_task_dispatch_service(
     metric_recorder: InMemoryMetricRecorder | None = None,
     communication_repository: InMemoryCommunicationRepository | None = None,
     idempotency_cache_store: InMemoryIdempotencyCacheStore | None = None,
+    retrieval_query_service: RetrievalGroundingService | RetrievalQueryService | None = None,
+    governance_project_reader: GovernanceProjectReader | None = None,
+    governance_repository: InMemoryGovernanceRepository | None = None,
+    project_artifact_repository: InMemoryProjectArtifactRepository | None = None,
+    runtime_state_repository: InMemoryRuntimeStateRepository | None = None,
+    budget_runtime_client: InMemoryBudgetRuntimeClient | None = None,
 ) -> TaskDispatchService:
     """Build task-dispatch service with default sandbox and llm adapters."""
 
     communication_repository = communication_repository or InMemoryCommunicationRepository()
+    runtime_state_repository = runtime_state_repository or InMemoryRuntimeStateRepository()
+    governance_repository = governance_repository or (
+        governance_project_reader
+        if isinstance(governance_project_reader, InMemoryGovernanceRepository)
+        else None
+    )
+    if governance_repository is None:
+        governance_repository = InMemoryGovernanceRepository()
+    project_artifact_repository = project_artifact_repository or InMemoryProjectArtifactRepository()
+    retrieval_service_for_tools = (
+        retrieval_query_service
+        if isinstance(retrieval_query_service, RetrievalQueryService)
+        else build_retrieval_query_service()
+    )
+    read_tool_service = GovernedReadToolService(
+        governance_repository=governance_repository,
+        project_artifact_repository=project_artifact_repository,
+        runtime_state_repository=runtime_state_repository,
+        retrieval_query_service=retrieval_service_for_tools,
+        audit_writer=audit_writer or InMemoryAuditWriter(),
+        communication_repository=communication_repository,
+    )
+    write_tool_service = GovernedWriteToolService(
+        governance_repository=governance_repository,
+        project_artifact_repository=project_artifact_repository,
+        audit_writer=audit_writer or InMemoryAuditWriter(),
+        budget_runtime_client=budget_runtime_client,
+    )
     message_ledger = InMemoryMessageLedger(repository=communication_repository)
     dead_letter_writer = InMemoryDeadLetterWriter(
         repository=communication_repository,
@@ -443,6 +511,10 @@ def build_task_dispatch_service(
         sandbox_execution_adapter=InMemorySandboxExecutionAdapter(),
         llm_dispatch_adapter=LlmGatewayDispatchAdapter(
             llm_gateway_service=build_llm_gateway_service(),
+            retrieval_query_service=retrieval_query_service,
+            governance_project_reader=governance_repository,
+            read_tool_service=read_tool_service,
+            write_tool_service=write_tool_service,
         ),
         communication_dispatch_adapter=InMemoryCommunicationDispatchAdapter(
             publisher=communication_publisher,
@@ -450,7 +522,13 @@ def build_task_dispatch_service(
     )
 
 
-def _extract_llm_metadata(response: LlmGatewayResponse | None) -> TaskDispatchLlmMetadata | None:
+def _extract_llm_metadata(
+    response: LlmGatewayResponse | None,
+    *,
+    recipient_role: str | None,
+    recipient_id: str | None,
+    grounding_source_ids: tuple[str, ...],
+) -> TaskDispatchLlmMetadata | None:
     """Extract llm metadata from gateway response when available."""
 
     if (
@@ -474,4 +552,39 @@ def _extract_llm_metadata(response: LlmGatewayResponse | None) -> TaskDispatchLl
         cost_source=response.cost.cost_source,
         currency_delta_usd=response.budget_usage.currency_delta_usd,
         quota_token_units=response.budget_usage.token_units,
+        generated_text=response.generated_text,
+        recipient_role=(recipient_role or "").strip().lower() or "runtime_agent",
+        recipient_id=(recipient_id or "").strip() or None,
+        grounding_source_ids=grounding_source_ids,
     )
+
+
+def _extract_primary_recipient(task: TaskRecord) -> tuple[str | None, str | None]:
+    metadata = dict(task.metadata)
+    primary_role = (metadata.get("primary_recipient_role") or "").strip().lower() or None
+    primary_id = (metadata.get("primary_recipient_id") or "").strip() or None
+    if primary_role is not None or primary_id is not None:
+        return primary_role, primary_id
+
+    recipient_roles = _split_csv_values(metadata.get("recipient_types"))
+    recipient_ids = _split_csv_values(metadata.get("recipient_ids"))
+    role = recipient_roles[0] if recipient_roles else None
+    recipient_id = recipient_ids[0] if recipient_ids else None
+    return role, recipient_id
+
+
+def _extract_discord_conversation_scope(
+    task: TaskRecord,
+) -> tuple[str | None, str | None, str | None]:
+    metadata = dict(task.metadata)
+    guild_id = (metadata.get("discord_guild_id") or "").strip() or None
+    channel_id = (metadata.get("discord_channel_id") or "").strip() or None
+    thread_id = (metadata.get("discord_thread_id") or "").strip() or None
+    return guild_id, channel_id, thread_id
+
+
+def _split_csv_values(value: str | None) -> tuple[str, ...]:
+    if value is None:
+        return ()
+    values = tuple(item.strip() for item in value.split(",") if item.strip())
+    return values

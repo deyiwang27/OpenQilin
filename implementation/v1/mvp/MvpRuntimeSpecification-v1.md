@@ -289,6 +289,9 @@ Allowed operations through owner ingress:
 - status query commands (`query_project_status`, `query_agent_status`, `query_budget_status`)
 - proposal discussion messages routed to governance discussion contracts (`owner`, `ceo`, `cwo`)
 
+Intent-level read tool catalog reference:
+- `implementation/v1/mvp/IntentReadToolCatalog-v1.md`
+
 Adapter behavior:
 - maps Discord message metadata to canonical owner-command envelope
 - submits only through governed owner ingress endpoint

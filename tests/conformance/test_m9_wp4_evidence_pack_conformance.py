@@ -3,9 +3,9 @@ from pathlib import Path
 
 def test_m9_wp4_conformance_evidence_pack_exists_and_maps_exit_criteria() -> None:
     project_root = Path(__file__).resolve().parents[2]
-    evidence_pack = (project_root / "implementation/v1/planning/M9EvidencePack-v1.md").read_text(
-        encoding="utf-8"
-    )
+    evidence_pack = (
+        project_root / "implementation/v1/planning/milestones/m9/M9EvidencePack-v1.md"
+    ).read_text(encoding="utf-8")
 
     for snippet in (
         "## 3. Evidence Map by M9 Exit Checklist",
@@ -25,9 +25,9 @@ def test_m9_wp4_conformance_evidence_pack_exists_and_maps_exit_criteria() -> Non
 
 def test_m9_wp4_conformance_evidence_pack_contains_closeout_workflow_and_links() -> None:
     project_root = Path(__file__).resolve().parents[2]
-    evidence_pack = (project_root / "implementation/v1/planning/M9EvidencePack-v1.md").read_text(
-        encoding="utf-8"
-    )
+    evidence_pack = (
+        project_root / "implementation/v1/planning/milestones/m9/M9EvidencePack-v1.md"
+    ).read_text(encoding="utf-8")
 
     for snippet in (
         "Open milestone closeout PR from `feat/49-m9-real-discord-runtime-kickoff` to `main`.",

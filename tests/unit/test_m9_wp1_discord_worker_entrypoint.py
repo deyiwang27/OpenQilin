@@ -38,6 +38,8 @@ def test_m9_wp1_build_worker_config_uses_runtime_settings(
 
     config = build_worker_config(settings)
 
+    assert config.bot_role == "runtime_agent"
+    assert config.bot_id == "runtime_agent"
     assert config.token == "token-from-env"
     assert config.control_plane_base_url == "http://api_app:8000"
     assert config.command_prefix == "/oq"
@@ -48,13 +50,57 @@ def test_m9_wp1_build_worker_config_uses_runtime_settings(
     assert config.connector_shared_secret == "secret-1"
 
 
-def test_m9_wp1_build_worker_config_requires_token(
+def test_m9_wp1_build_worker_config_multi_bot_resolves_worker_role_identity(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.delenv("OPENQILIN_DISCORD_BOT_TOKEN", raising=False)
-    settings = RuntimeSettings(discord_bot_token=None)
+    settings = RuntimeSettings(
+        discord_multi_bot_enabled=True,
+        discord_worker_role="ceo",
+        discord_required_role_bots_csv="ceo",
+        discord_role_bot_tokens_json=(
+            '{"ceo":{"token":"ceo-token","bot_id":"ceo_core","guild_allowlist":["1","2"]}}'
+        ),
+        discord_allowed_guild_ids_csv="2,3",
+        connector_shared_secret="secret-1",
+    )
+
+    config = build_worker_config(settings)
+
+    assert config.bot_role == "ceo"
+    assert config.bot_id == "ceo_core"
+    assert config.token == "ceo-token"
+    assert config.allowed_guild_ids == frozenset({"2"})
+
+
+def test_m9_wp1_build_worker_config_rejects_missing_worker_role_identity(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("OPENQILIN_DISCORD_BOT_TOKEN", raising=False)
+    settings = RuntimeSettings(
+        discord_multi_bot_enabled=True,
+        discord_worker_role="ceo",
+        discord_required_role_bots_csv="ceo",
+        discord_role_bot_tokens_json='{"administrator":"admin-token"}',
+    )
 
     with pytest.raises(RuntimeError) as error:
         build_worker_config(settings)
 
-    assert "discord bot token is required" in str(error.value)
+    assert "missing required role-bot tokens: ceo" in str(error.value)
+
+
+def test_m9_wp1_build_worker_config_rejects_empty_single_bot_registry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("OPENQILIN_DISCORD_BOT_TOKEN", raising=False)
+    settings = RuntimeSettings(
+        discord_multi_bot_enabled=False,
+        discord_bot_token=None,
+        discord_role_bot_tokens_json="{}",
+    )
+
+    with pytest.raises(RuntimeError) as error:
+        build_worker_config(settings)
+
+    assert "discord_role_bot_registry_empty" in str(error.value)

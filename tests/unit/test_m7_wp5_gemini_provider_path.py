@@ -53,6 +53,9 @@ def _build_service(
                 "google_gemini_free_primary": "gemini-2.0-flash",
                 "google_gemini_free_fallback": "gemini-2.0-flash-lite",
             },
+            max_retries=0,
+            retry_base_delay_seconds=0.0,
+            retry_max_delay_seconds=0.0,
         ),
         http_client=httpx.Client(transport=transport, timeout=10.0),
     )
@@ -152,3 +155,49 @@ def test_m7_wp5_build_gateway_service_uses_configured_gemini_backend(monkeypatch
 
     assert response.decision == "denied"
     assert response.error_code == "llm_provider_misconfigured"
+
+
+def test_m7_wp5_gemini_provider_retries_transient_429_then_serves() -> None:
+    call_count = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal call_count
+        call_count += 1
+        assert request.url.path.endswith("/models/gemini-2.0-flash:generateContent")
+        if call_count == 1:
+            return httpx.Response(429, headers={"Retry-After": "0"})
+        return httpx.Response(
+            200,
+            json={
+                "modelVersion": "gemini-2.0-flash",
+                "candidates": [{"content": {"parts": [{"text": "retry-ok"}]}}],
+                "usageMetadata": {
+                    "promptTokenCount": 10,
+                    "candidatesTokenCount": 14,
+                    "totalTokenCount": 24,
+                },
+            },
+        )
+
+    provider = GeminiFlashFreeAdapter(
+        config=GeminiFlashProviderConfig(
+            api_key="test-key",
+            base_url="https://generativelanguage.googleapis.com/v1beta",
+            timeout_seconds=10.0,
+            model_alias_map={
+                "google_gemini_free_primary": "gemini-2.0-flash",
+                "google_gemini_free_fallback": "gemini-2.0-flash-lite",
+            },
+            max_retries=1,
+            retry_base_delay_seconds=0.0,
+            retry_max_delay_seconds=0.0,
+        ),
+        http_client=httpx.Client(transport=httpx.MockTransport(handler), timeout=10.0),
+    )
+    service = LlmGatewayService(provider=provider)
+
+    response = service.complete(_build_request(prompt="retry transient 429"))
+
+    assert response.decision == "served"
+    assert response.model_selected == "gemini/gemini-2.0-flash"
+    assert call_count == 2

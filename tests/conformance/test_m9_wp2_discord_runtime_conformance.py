@@ -22,9 +22,17 @@ def test_m9_wp2_discord_worker_is_wired_in_full_profile_compose() -> None:
     assert 'profiles: ["full"]' in discord_block
     assert "python -m openqilin.apps.discord_bot_worker" in discord_block
     assert "OPENQILIN_DISCORD_BOT_TOKEN" in discord_block
+    assert "OPENQILIN_DISCORD_MULTI_BOT_ENABLED" in discord_block
+    assert "OPENQILIN_DISCORD_WORKER_ROLE" in discord_block
+    assert "OPENQILIN_DISCORD_ROLE_BOT_TOKENS_FILE" in discord_block
+    assert "OPENQILIN_DISCORD_ROLE_BOT_TOKENS_JSON" in discord_block
+    assert "OPENQILIN_DISCORD_REQUIRED_ROLE_BOTS_CSV" in discord_block
     assert "OPENQILIN_DISCORD_CONTROL_PLANE_BASE_URL" in discord_block
     assert "OPENQILIN_DISCORD_ALLOWED_GUILD_IDS_CSV" in discord_block
     assert "OPENQILIN_DISCORD_ALLOWED_CHANNEL_IDS_CSV" in discord_block
+    assert "OPENQILIN_DISCORD_RESPONSE_CHUNK_SIZE_CHARS" in discord_block
+    assert "OPENQILIN_DISCORD_RESPONSE_RETRY_ATTEMPTS" in discord_block
+    assert "OPENQILIN_DISCORD_RESPONSE_RETRY_BASE_DELAY_SECONDS" in discord_block
     assert "OPENQILIN_CONNECTOR_SHARED_SECRET" in discord_block
     assert "openqilin.discord_bot_worker.ready" in discord_block
 
@@ -33,8 +41,16 @@ def test_m9_wp2_env_template_exposes_discord_runtime_settings() -> None:
     project_root = Path(__file__).resolve().parents[2]
     env_text = (project_root / ".env.example").read_text(encoding="utf-8")
     assert "OPENQILIN_DISCORD_BOT_TOKEN" in env_text
+    assert "OPENQILIN_DISCORD_MULTI_BOT_ENABLED" in env_text
+    assert "OPENQILIN_DISCORD_WORKER_ROLE" in env_text
+    assert "OPENQILIN_DISCORD_ROLE_BOT_TOKENS_FILE" in env_text
+    assert "OPENQILIN_DISCORD_ROLE_BOT_TOKENS_JSON" in env_text
+    assert "OPENQILIN_DISCORD_REQUIRED_ROLE_BOTS_CSV" in env_text
     assert "OPENQILIN_DISCORD_CONTROL_PLANE_BASE_URL" in env_text
     assert "OPENQILIN_DISCORD_COMMAND_PREFIX" in env_text
     assert "OPENQILIN_DISCORD_ACTOR_ROLE_MAP_JSON" in env_text
     assert "OPENQILIN_DISCORD_ALLOWED_GUILD_IDS_CSV" in env_text
     assert "OPENQILIN_DISCORD_ALLOWED_CHANNEL_IDS_CSV" in env_text
+    assert "OPENQILIN_DISCORD_RESPONSE_CHUNK_SIZE_CHARS" in env_text
+    assert "OPENQILIN_DISCORD_RESPONSE_RETRY_ATTEMPTS" in env_text
+    assert "OPENQILIN_DISCORD_RESPONSE_RETRY_BASE_DELAY_SECONDS" in env_text

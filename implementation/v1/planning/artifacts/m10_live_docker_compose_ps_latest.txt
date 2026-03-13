@@ -1,0 +1,13 @@
+NAME                               IMAGE                                          COMMAND                  SERVICE                CREATED         STATUS                   PORTS
+openqilin-api_app-1                python:3.12-slim                               "sh -lc 'python -m p…"   api_app                7 minutes ago   Up 7 minutes (healthy)   0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
+openqilin-communication_worker-1   python:3.12-slim                               "sh -lc 'python -m p…"   communication_worker   7 minutes ago   Up 7 minutes (healthy)   
+openqilin-discord_bot_worker-1     python:3.12-slim                               "sh -lc 'python -m p…"   discord_bot_worker     7 minutes ago   Up 7 minutes (healthy)   
+openqilin-grafana-1                grafana/grafana:11.1.4                         "/run.sh"                grafana                16 hours ago    Up 16 hours              0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
+openqilin-litellm-1                python:3.12-slim                               "python -m http.serv…"   litellm                16 hours ago    Up 16 hours (healthy)    0.0.0.0:4000->4000/tcp, [::]:4000->4000/tcp
+openqilin-opa-1                    openpolicyagent/opa:0.69.0-static              "/opa run --server -…"   opa                    16 hours ago    Up 16 hours (healthy)    0.0.0.0:8181->8181/tcp, [::]:8181->8181/tcp
+openqilin-orchestrator_worker-1    python:3.12-slim                               "sh -lc 'python -m p…"   orchestrator_worker    7 minutes ago   Up 7 minutes (healthy)   
+openqilin-otel_collector-1         otel/opentelemetry-collector-contrib:0.102.0   "/otelcol-contrib --…"   otel_collector         16 hours ago    Up 16 hours              0.0.0.0:4317-4318->4317-4318/tcp, [::]:4317-4318->4317-4318/tcp
+openqilin-postgres-1               pgvector/pgvector:pg16                         "docker-entrypoint.s…"   postgres               16 hours ago    Up 16 hours (healthy)    0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+openqilin-prometheus-1             prom/prometheus:v2.53.2                        "/bin/prometheus --c…"   prometheus             16 hours ago    Up 16 hours              0.0.0.0:9090->9090/tcp, [::]:9090->9090/tcp
+openqilin-redis-1                  redis:7-alpine                                 "docker-entrypoint.s…"   redis                  16 hours ago    Up 16 hours (healthy)    0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
+openqilin-tempo-1                  grafana/tempo:2.5.0                            "/tempo -config.file…"   tempo                  16 hours ago    Up 16 hours              0.0.0.0:3200->3200/tcp, [::]:3200->3200/tcp

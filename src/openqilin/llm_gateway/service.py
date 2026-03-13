@@ -66,6 +66,7 @@ class LlmGatewayService:
                 error_code=error.code,
                 error_message=error.message,
                 retryable=False,
+                generated_text=None,
             )
 
         fallback_limit = min(len(aliases) - 1, profile.max_fallback_hops)
@@ -111,6 +112,7 @@ class LlmGatewayService:
                     error_code=error.code,
                     error_message=error.message,
                     retryable=error.retryable,
+                    generated_text=None,
                 )
 
             usage = normalize_usage(provider_result)
@@ -152,6 +154,7 @@ class LlmGatewayService:
                 error_code=None,
                 error_message=None,
                 retryable=False,
+                generated_text=provider_result.content,
             )
 
         return LlmGatewayResponse(
@@ -175,6 +178,7 @@ class LlmGatewayService:
             error_code="llm_route_exhausted",
             error_message="all configured llm routes exhausted",
             retryable=False,
+            generated_text=None,
         )
 
     @staticmethod

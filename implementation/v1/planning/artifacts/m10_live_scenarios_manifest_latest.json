@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-03-13T21:16:02.211046+00:00",
+  "project_id": "project_alpha",
+  "required_artifacts": [
+    "discord_screenshots",
+    "docker_compose_ps_output",
+    "api_app_logs",
+    "discord_bot_worker_logs",
+    "trace_and_task_correlation_notes"
+  ],
+  "scenarios": [
+    {
+      "name": "role_dm_matrix"
+    },
+    {
+      "name": "mention_group_chat"
+    },
+    {
+      "name": "long_response_chunking"
+    },
+    {
+      "name": "tool_read_write_governance"
+    }
+  ],
+  "status": "pending_manual_execution"
+}
