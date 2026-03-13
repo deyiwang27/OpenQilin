@@ -67,11 +67,17 @@ def test_build_discord_ingress_payload_generates_valid_signature_headers(monkeyp
         connector_shared_secret="test-discord-secret",
         project_id="project-alpha",
         timestamp=datetime(2026, 3, 12, 10, 0, 0, tzinfo=UTC),
+        bot_role="ceo",
+        bot_id="ceo_core",
+        bot_user_id="9001",
     )
 
     assert payload["raw_payload_hash"]
     assert len(str(payload["raw_payload_hash"])) == 64
     assert signature.startswith("sha256=")
+    assert payload["bot_role"] == "ceo"
+    assert payload["bot_id"] == "ceo_core"
+    assert payload["bot_user_id"] == "9001"
     validate_connector_auth(
         header_channel="discord",
         header_actor_external_id=str(payload["actor_external_id"]),

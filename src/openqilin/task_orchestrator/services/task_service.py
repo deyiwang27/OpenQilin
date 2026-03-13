@@ -23,10 +23,13 @@ from openqilin.llm_gateway.schemas.responses import LlmGatewayResponse
 from openqilin.llm_gateway.service import build_llm_gateway_service
 from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
 from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
+from openqilin.retrieval_runtime.service import RetrievalQueryService
 from openqilin.task_orchestrator.dispatch.llm_dispatch import (
+    GovernanceProjectReader,
     LlmDispatchAdapter,
     LlmDispatchRequest,
     LlmGatewayDispatchAdapter,
+    RetrievalGroundingService,
 )
 from openqilin.task_orchestrator.dispatch.communication_dispatch import (
     CommunicationDispatchAdapter,
@@ -65,6 +68,7 @@ class TaskDispatchLlmMetadata:
     generated_text: str | None
     recipient_role: str
     recipient_id: str | None
+    grounding_source_ids: tuple[str, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -201,6 +205,11 @@ class TaskDispatchService:
                 )
         elif target == "llm":
             recipient_role, recipient_id = _extract_primary_recipient(task)
+            (
+                conversation_guild_id,
+                conversation_channel_id,
+                conversation_thread_id,
+            ) = _extract_discord_conversation_scope(task)
             try:
                 llm_receipt = self._llm_dispatch_adapter.dispatch(
                     LlmDispatchRequest(
@@ -216,6 +225,9 @@ class TaskDispatchService:
                         policy_version=policy_version,
                         policy_hash=policy_hash,
                         rule_ids=rule_ids,
+                        conversation_guild_id=conversation_guild_id,
+                        conversation_channel_id=conversation_channel_id,
+                        conversation_thread_id=conversation_thread_id,
                     )
                 )
             except Exception:
@@ -262,6 +274,7 @@ class TaskDispatchService:
                         llm_receipt.gateway_response,
                         recipient_role=llm_receipt.recipient_role,
                         recipient_id=llm_receipt.recipient_id,
+                        grounding_source_ids=llm_receipt.grounding_source_ids,
                     ),
                 )
             else:
@@ -290,6 +303,7 @@ class TaskDispatchService:
                         llm_receipt.gateway_response,
                         recipient_role=llm_receipt.recipient_role,
                         recipient_id=llm_receipt.recipient_id,
+                        grounding_source_ids=llm_receipt.grounding_source_ids,
                     ),
                 )
         elif target == "communication":
@@ -435,6 +449,8 @@ def build_task_dispatch_service(
     metric_recorder: InMemoryMetricRecorder | None = None,
     communication_repository: InMemoryCommunicationRepository | None = None,
     idempotency_cache_store: InMemoryIdempotencyCacheStore | None = None,
+    retrieval_query_service: RetrievalGroundingService | RetrievalQueryService | None = None,
+    governance_project_reader: GovernanceProjectReader | None = None,
 ) -> TaskDispatchService:
     """Build task-dispatch service with default sandbox and llm adapters."""
 
@@ -457,6 +473,8 @@ def build_task_dispatch_service(
         sandbox_execution_adapter=InMemorySandboxExecutionAdapter(),
         llm_dispatch_adapter=LlmGatewayDispatchAdapter(
             llm_gateway_service=build_llm_gateway_service(),
+            retrieval_query_service=retrieval_query_service,
+            governance_project_reader=governance_project_reader,
         ),
         communication_dispatch_adapter=InMemoryCommunicationDispatchAdapter(
             publisher=communication_publisher,
@@ -469,6 +487,7 @@ def _extract_llm_metadata(
     *,
     recipient_role: str | None,
     recipient_id: str | None,
+    grounding_source_ids: tuple[str, ...],
 ) -> TaskDispatchLlmMetadata | None:
     """Extract llm metadata from gateway response when available."""
 
@@ -496,6 +515,7 @@ def _extract_llm_metadata(
         generated_text=response.generated_text,
         recipient_role=(recipient_role or "").strip().lower() or "runtime_agent",
         recipient_id=(recipient_id or "").strip() or None,
+        grounding_source_ids=grounding_source_ids,
     )
 
 
@@ -511,6 +531,16 @@ def _extract_primary_recipient(task: TaskRecord) -> tuple[str | None, str | None
     role = recipient_roles[0] if recipient_roles else None
     recipient_id = recipient_ids[0] if recipient_ids else None
     return role, recipient_id
+
+
+def _extract_discord_conversation_scope(
+    task: TaskRecord,
+) -> tuple[str | None, str | None, str | None]:
+    metadata = dict(task.metadata)
+    guild_id = (metadata.get("discord_guild_id") or "").strip() or None
+    channel_id = (metadata.get("discord_channel_id") or "").strip() or None
+    thread_id = (metadata.get("discord_thread_id") or "").strip() or None
+    return guild_id, channel_id, thread_id
 
 
 def _split_csv_values(value: str | None) -> tuple[str, ...]:

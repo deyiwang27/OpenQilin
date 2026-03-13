@@ -136,6 +136,15 @@ def validate_owner_command_envelope(
         primary = payload.recipients[0]
         primary_recipient_role = primary.recipient_type.strip().lower()
         primary_recipient_id = primary.recipient_id.strip()
+    discord_context = payload.connector.discord_context
+    discord_guild_id = ""
+    discord_channel_id = ""
+    discord_thread_id = ""
+    if discord_context is not None:
+        discord_guild_id = discord_context.guild_id.strip()
+        discord_channel_id = discord_context.channel_id.strip()
+        if discord_context.channel_type == "thread":
+            discord_thread_id = discord_context.channel_id.strip()
 
     return AdmissionEnvelope(
         request_id=str(uuid4()),
@@ -160,6 +169,9 @@ def validate_owner_command_envelope(
                     "recipient_ids": ",".join(normalized_recipient_ids),
                     "primary_recipient_role": primary_recipient_role,
                     "primary_recipient_id": primary_recipient_id,
+                    "discord_guild_id": discord_guild_id,
+                    "discord_channel_id": discord_channel_id,
+                    "discord_thread_id": discord_thread_id,
                 }.items()
             )
         ),

@@ -158,6 +158,36 @@ Exit:
 - non-local runtime fails closed for unsafe/missing connector secret config
 - live acceptance evidence demonstrates proposal-to-completion lifecycle via real Discord
 
+### M10 Multi-Bot Discord Role UI
+Scope:
+- deliver separate Discord bot identities for institutional roles (`administrator`, `auditor`, `ceo`, `cwo`, `project_manager`)
+- support direct-message interaction per role bot and mention-driven group chat in governed channels
+- preserve role-locked prompting, injection denial, and per-role memory isolation under multi-bot runtime
+- enforce grounded-only `llm_reason` behavior where DB/project docs are the source of truth
+- implement intent-level read tools and governed write-action tools aligned to MVP use cases
+- harden outbound delivery for long multi-bot responses to avoid truncation and timeline confusion
+
+WP decomposition:
+1. `M10-WP1`: role-bot identity registry + token/config hardening
+2. `M10-WP2`: multi-bot Discord worker runtime + event fan-in
+3. `M10-WP3`: DM + mention recipient resolution + governed routing
+4. `M10-WP4`: role-locked prompt assembly + per-role memory isolation
+5. `M10-WP5`: outbound delivery hardening (chunking, sequencing, retry)
+6. `M10-WP6`: live acceptance matrix + evidence-pack closeout + runbook update
+7. `M10-WP7`: intent-level read tool surface for grounded answers
+8. `M10-WP8`: governed write-action tools for project/runtime mutations
+9. `M10-WP9`: tool orchestration policy + role access control + acceptance
+
+Exit:
+- each institutional role bot is online and independently addressable in Discord
+- DM to a role bot resolves deterministically to the correct governed recipient role/id
+- group-chat role fan-out is driven only by explicit mentions and is deterministic
+- user input cannot override role/system setup for any role bot
+- role memory is isolated across bot identities in shared channels
+- factual `llm_reason` responses are denied fail-closed without governed evidence or valid source citations
+- role agents use governed read/write tool contracts instead of direct DB or prompt-only mutation behavior
+- live evidence pack demonstrates DM + mention-group behavior and closeout checks
+
 ## 4. First Executable Slice Detail
 Recommended implementation order inside `M1`:
 1. schema, migrations, and idempotency primitives
@@ -173,3 +203,4 @@ Recommended implementation order inside `M1`:
 - Do not start M6 recovery hardening before M5 domain persistence contracts are merged.
 - Do not close MVP milestone (M7) before Docker full-profile runtime cutover, Gemini free-tier provider-path validation, Discord round-trip validation, and end-to-end acceptance evidence are all complete.
 - Do not close MVP v0.1 implementation before M8 governance hardening and M9 real Discord runtime/live-instance validation are completed.
+- Do not close post-MVP Discord UX expansion before M10 multi-bot role UI acceptance evidence is complete.

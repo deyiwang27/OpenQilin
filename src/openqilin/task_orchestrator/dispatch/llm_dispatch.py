@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+import re
 from threading import Lock
 from typing import Protocol, cast
 from uuid import uuid4
@@ -16,6 +17,7 @@ from openqilin.llm_gateway.schemas.requests import (
 )
 from openqilin.llm_gateway.schemas.responses import LlmGatewayResponse
 from openqilin.llm_gateway.service import LlmGatewayService
+from openqilin.retrieval_runtime.models import RetrievalQueryRequest, RetrievalQueryResult
 from openqilin.shared_kernel.config import RuntimeSettings
 
 _RECIPIENT_ROLE_ALIASES: dict[str, str] = {
@@ -31,6 +33,26 @@ _ROLE_DIRECTIVES: dict[str, str] = {
     "project_manager": "Focus on scope, milestones, owners, and actionable next-step sequencing.",
     "runtime_agent": "Focus on deterministic execution support and constrained operational guidance.",
 }
+
+_CITATION_PATTERN = re.compile(r"\[source:([A-Za-z0-9_.:-]+)\]")
+
+
+@dataclass(frozen=True, slots=True)
+class GroundingEvidence:
+    """Governed grounding evidence record attached to one llm_reason request."""
+
+    source_id: str
+    source_kind: str
+    content: str
+
+
+@dataclass(frozen=True, slots=True)
+class GroundingResolution:
+    """Grounding resolution result for strict llm_reason execution."""
+
+    evidence: tuple[GroundingEvidence, ...]
+    error_code: str | None = None
+    error_message: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +71,9 @@ class LlmDispatchRequest:
     policy_version: str
     policy_hash: str
     rule_ids: tuple[str, ...]
+    conversation_guild_id: str | None = None
+    conversation_channel_id: str | None = None
+    conversation_thread_id: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,6 +87,7 @@ class LlmDispatchReceipt:
     gateway_response: LlmGatewayResponse | None
     recipient_role: str | None
     recipient_id: str | None
+    grounding_source_ids: tuple[str, ...] = ()
 
 
 class LlmDispatchAdapter(Protocol):
@@ -71,6 +97,23 @@ class LlmDispatchAdapter(Protocol):
         """Dispatch admitted llm task through gateway boundary."""
 
 
+class RetrievalGroundingService(Protocol):
+    """Retrieval service contract for llm_reason grounding context."""
+
+    def search_project_artifacts(self, request: RetrievalQueryRequest) -> RetrievalQueryResult:
+        """Return retrieval hits for one project-scoped query."""
+
+
+class GovernanceProjectReader(Protocol):
+    """Governance read contract used for DB-backed grounding context."""
+
+    def get_project(self, project_id: str) -> object | None:
+        """Return one project record by identifier when present."""
+
+    def list_projects(self) -> tuple[object, ...]:
+        """Return known projects from runtime DB snapshot."""
+
+
 class LlmGatewayDispatchAdapter:
     """Adapter that forwards dispatch payloads into llm_gateway service."""
 
@@ -78,15 +121,22 @@ class LlmGatewayDispatchAdapter:
         self,
         llm_gateway_service: LlmGatewayService,
         settings: RuntimeSettings | None = None,
+        *,
+        retrieval_query_service: RetrievalGroundingService | None = None,
+        governance_project_reader: GovernanceProjectReader | None = None,
     ) -> None:
         self._llm_gateway_service = llm_gateway_service
         self._settings = settings or RuntimeSettings()
         self._conversation_store = InMemoryConversationStore(max_turns=6)
+        self._retrieval_query_service = retrieval_query_service
+        self._governance_project_reader = governance_project_reader
 
     def dispatch(self, payload: LlmDispatchRequest) -> LlmDispatchReceipt:
         """Dispatch llm task and map gateway decision to dispatch receipt."""
 
         raw_user_prompt = self._build_user_prompt(payload)
+        recipient_role = _normalize_recipient_role(payload.recipient_role)
+        recipient_id = _normalize_recipient_id(payload.recipient_id)
         if _contains_role_injection_attempt(raw_user_prompt):
             return LlmDispatchReceipt(
                 accepted=False,
@@ -94,15 +144,34 @@ class LlmGatewayDispatchAdapter:
                 error_code="llm_role_prompt_injection_denied",
                 message="prompt attempts to override governed role/system setup",
                 gateway_response=None,
-                recipient_role=_normalize_recipient_role(payload.recipient_role),
-                recipient_id=_normalize_recipient_id(payload.recipient_id),
+                recipient_role=recipient_role,
+                recipient_id=recipient_id,
             )
+
+        grounding_evidence: tuple[GroundingEvidence, ...] = ()
+        if _requires_strict_grounding(payload.command):
+            grounding = self._resolve_grounding_context(
+                payload=payload, user_prompt=raw_user_prompt
+            )
+            if grounding.error_code is not None:
+                return LlmDispatchReceipt(
+                    accepted=False,
+                    dispatch_id=None,
+                    error_code=grounding.error_code,
+                    message=grounding.error_message
+                    or "grounding evidence is required for llm_reason",
+                    gateway_response=None,
+                    recipient_role=recipient_role,
+                    recipient_id=recipient_id,
+                )
+            grounding_evidence = grounding.evidence
+
         conversation_scope = self._conversation_scope(payload)
-        recipient_role = _normalize_recipient_role(payload.recipient_role)
         composed_prompt = _compose_role_locked_prompt(
             recipient_role=recipient_role,
             history=self._conversation_store.list_turns(conversation_scope),
             user_prompt=raw_user_prompt,
+            grounding_evidence=grounding_evidence,
         )
         model_class: LlmModelClass = (
             "reasoning_general" if payload.command.startswith("llm_reason") else "interactive_fast"
@@ -138,6 +207,23 @@ class LlmGatewayDispatchAdapter:
         response = self._llm_gateway_service.complete(request)
         if response.decision in {"served", "fallback_served"}:
             role_aligned_text = _enforce_role_fidelity(response.generated_text, recipient_role)
+            if grounding_evidence:
+                grounded_text, grounding_error = _validate_grounded_response(
+                    generated_text=role_aligned_text,
+                    grounding_evidence=grounding_evidence,
+                )
+                if grounding_error is not None:
+                    return LlmDispatchReceipt(
+                        accepted=False,
+                        dispatch_id=None,
+                        error_code=grounding_error,
+                        message="grounded response must cite governed evidence sources",
+                        gateway_response=response,
+                        recipient_role=recipient_role,
+                        recipient_id=recipient_id,
+                        grounding_source_ids=tuple(item.source_id for item in grounding_evidence),
+                    )
+                role_aligned_text = grounded_text
             if role_aligned_text != response.generated_text:
                 response = replace(response, generated_text=role_aligned_text)
             if response.generated_text is not None:
@@ -153,7 +239,8 @@ class LlmGatewayDispatchAdapter:
                 message="llm gateway dispatch accepted",
                 gateway_response=response,
                 recipient_role=recipient_role,
-                recipient_id=_normalize_recipient_id(payload.recipient_id),
+                recipient_id=recipient_id,
+                grounding_source_ids=tuple(item.source_id for item in grounding_evidence),
             )
         return LlmDispatchReceipt(
             accepted=False,
@@ -162,8 +249,79 @@ class LlmGatewayDispatchAdapter:
             message=response.error_message or "llm gateway denied request",
             gateway_response=response,
             recipient_role=recipient_role,
-            recipient_id=_normalize_recipient_id(payload.recipient_id),
+            recipient_id=recipient_id,
+            grounding_source_ids=tuple(item.source_id for item in grounding_evidence),
         )
+
+    def _resolve_grounding_context(
+        self,
+        *,
+        payload: LlmDispatchRequest,
+        user_prompt: str,
+    ) -> GroundingResolution:
+        if (payload.project_id or "").strip() == "":
+            return GroundingResolution(
+                evidence=(),
+                error_code="llm_grounding_project_scope_required",
+                error_message="project_id is required for grounded llm_reason execution",
+            )
+
+        project_id = (payload.project_id or "").strip()
+        evidence_by_source: dict[str, GroundingEvidence] = {}
+
+        if self._governance_project_reader is not None:
+            project_record = self._governance_project_reader.get_project(project_id)
+            if project_record is not None:
+                source_id = f"project:{project_id}"
+                evidence_by_source[source_id] = GroundingEvidence(
+                    source_id=source_id,
+                    source_kind="project_record",
+                    content=_format_project_record_evidence(project_record),
+                )
+            if _prompt_requests_project_portfolio(user_prompt):
+                project_records = self._governance_project_reader.list_projects()
+                if project_records:
+                    source_id = "portfolio:projects"
+                    evidence_by_source[source_id] = GroundingEvidence(
+                        source_id=source_id,
+                        source_kind="project_portfolio",
+                        content=_format_project_portfolio_evidence(project_records),
+                    )
+
+        if self._retrieval_query_service is not None:
+            retrieval_result = self._retrieval_query_service.search_project_artifacts(
+                RetrievalQueryRequest(
+                    project_id=project_id,
+                    query=user_prompt,
+                    limit=4,
+                )
+            )
+            if retrieval_result.decision == "ok":
+                for hit in retrieval_result.hits:
+                    source_id = f"artifact:{_sanitize_source_id(hit.artifact_id)}"
+                    evidence_by_source[source_id] = GroundingEvidence(
+                        source_id=source_id,
+                        source_kind="project_artifact",
+                        content=(
+                            f"title={hit.title}; type={hit.artifact_type}; "
+                            f"source_ref={hit.source_ref}; snippet={hit.snippet}"
+                        ),
+                    )
+
+        if not evidence_by_source:
+            return GroundingResolution(
+                evidence=(),
+                error_code="llm_grounding_insufficient_evidence",
+                error_message=(
+                    "no project-doc or DB evidence found for this request; "
+                    "llm_reason denied fail-closed"
+                ),
+            )
+
+        ordered_sources = tuple(
+            evidence_by_source[key] for key in sorted(evidence_by_source.keys())[:6]
+        )
+        return GroundingResolution(evidence=ordered_sources)
 
     @staticmethod
     def _build_user_prompt(payload: LlmDispatchRequest) -> str:
@@ -180,9 +338,15 @@ class LlmGatewayDispatchAdapter:
     @staticmethod
     def _conversation_scope(payload: LlmDispatchRequest) -> str:
         project_scope = (payload.project_id or "project-default").strip() or "project-default"
+        guild_scope = (payload.conversation_guild_id or "").strip() or "guild-unspecified"
+        channel_scope = (payload.conversation_channel_id or "").strip() or "channel-unspecified"
+        thread_scope = (payload.conversation_thread_id or "").strip() or "thread-none"
         recipient_id = _normalize_recipient_id(payload.recipient_id) or "recipient-unspecified"
         recipient_role = _normalize_recipient_role(payload.recipient_role)
-        return f"{project_scope}::{recipient_role}::{recipient_id}"
+        return (
+            f"{project_scope}::{guild_scope}::{channel_scope}::{thread_scope}::"
+            f"{recipient_role}::{recipient_id}"
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -230,6 +394,7 @@ def _compose_role_locked_prompt(
     recipient_role: str,
     history: tuple[ConversationTurn, ...],
     user_prompt: str,
+    grounding_evidence: tuple[GroundingEvidence, ...],
 ) -> str:
     system_prompt = _role_system_prompt(recipient_role)
     history_lines = [
@@ -240,7 +405,30 @@ def _compose_role_locked_prompt(
     history_block = (
         "Conversation history:\n" + "\n".join(history_lines) + "\n\n" if history_lines else ""
     )
-    return f"{system_prompt}\n\n{history_block}User request:\n{user_prompt.strip()}"
+    grounding_block = _grounding_contract_block(grounding_evidence)
+    return (
+        f"{system_prompt}\n\n"
+        f"{grounding_block}\n\n"
+        f"{history_block}User request:\n{user_prompt.strip()}"
+    )
+
+
+def _grounding_contract_block(grounding_evidence: tuple[GroundingEvidence, ...]) -> str:
+    if not grounding_evidence:
+        return "Grounding contract: no strict grounding required for this command."
+    evidence_lines = [
+        f"- [source:{item.source_id}] {item.content}"
+        for item in grounding_evidence
+        if item.content.strip()
+    ]
+    return (
+        "Grounding contract (mandatory):\n"
+        "- Use only the evidence sources listed below; treat DB/project-doc evidence as the source of truth.\n"
+        "- Do not invent projects, metrics, statuses, or facts not present in evidence.\n"
+        "- For every factual statement, include at least one citation tag in format [source:<id>].\n"
+        "- If evidence is insufficient, reply exactly: INSUFFICIENT_EVIDENCE [source:<id>].\n"
+        "Evidence sources:\n" + "\n".join(evidence_lines)
+    )
 
 
 def _role_system_prompt(recipient_role: str) -> str:
@@ -300,8 +488,70 @@ def _enforce_role_fidelity(generated_text: str | None, recipient_role: str) -> s
     return f"I am the {canonical_role} agent in OpenQilin. {normalized}"
 
 
+def _validate_grounded_response(
+    *,
+    generated_text: str | None,
+    grounding_evidence: tuple[GroundingEvidence, ...],
+) -> tuple[str | None, str | None]:
+    normalized = (generated_text or "").strip()
+    if not normalized:
+        return None, "llm_grounding_empty_response"
+
+    allowed_sources = {item.source_id for item in grounding_evidence}
+    normalized_upper = normalized.upper()
+    if "INSUFFICIENT_EVIDENCE" in normalized_upper and not _CITATION_PATTERN.search(normalized):
+        fallback_source_id = grounding_evidence[0].source_id
+        return f"INSUFFICIENT_EVIDENCE [source:{fallback_source_id}]", None
+
+    cited_sources = tuple(_CITATION_PATTERN.findall(normalized))
+    if not cited_sources:
+        return None, "llm_grounding_citation_missing"
+    if any(source_id not in allowed_sources for source_id in cited_sources):
+        return None, "llm_grounding_citation_invalid"
+    return normalized, None
+
+
 def _normalize_allocation_mode(value: str) -> AllocationMode:
     normalized = value.strip().lower()
     if normalized in {"absolute", "ratio", "hybrid"}:
         return cast(AllocationMode, normalized)
     return "hybrid"
+
+
+def _requires_strict_grounding(command: str) -> bool:
+    return command.strip().lower().startswith("llm_reason")
+
+
+def _sanitize_source_id(value: str) -> str:
+    normalized = value.strip().lower().replace(" ", "_")
+    normalized = re.sub(r"[^a-z0-9_.:-]", "_", normalized)
+    return normalized or "evidence"
+
+
+def _prompt_requests_project_portfolio(user_prompt: str) -> bool:
+    normalized = " ".join(user_prompt.strip().lower().split())
+    markers = (
+        "current projects",
+        "all projects",
+        "what are the projects",
+        "project portfolio",
+    )
+    return any(marker in normalized for marker in markers)
+
+
+def _format_project_record_evidence(project_record: object) -> str:
+    project_id = str(getattr(project_record, "project_id", "project-unknown"))
+    name = str(getattr(project_record, "name", "name-unknown"))
+    status = str(getattr(project_record, "status", "status-unknown"))
+    objective = str(getattr(project_record, "objective", "objective-unknown"))
+    return f"project_id={project_id}; name={name}; status={status}; objective={objective}"
+
+
+def _format_project_portfolio_evidence(project_records: tuple[object, ...]) -> str:
+    entries = []
+    for project in project_records[:12]:
+        project_id = str(getattr(project, "project_id", "project-unknown"))
+        status = str(getattr(project, "status", "status-unknown"))
+        name = str(getattr(project, "name", "name-unknown"))
+        entries.append(f"{project_id}:{status}:{name}")
+    return "projects=" + ", ".join(entries)

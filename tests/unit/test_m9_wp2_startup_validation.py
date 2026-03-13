@@ -7,7 +7,10 @@ import pytest
 from openqilin.apps.discord_bot_worker import main as discord_worker_main
 from openqilin.control_plane.api.app import create_control_plane_app
 from openqilin.shared_kernel.config import RuntimeSettings
-from openqilin.shared_kernel.startup_validation import enforce_connector_secret_hardening
+from openqilin.shared_kernel.startup_validation import (
+    enforce_connector_secret_hardening,
+    enforce_discord_role_bot_registry,
+)
 
 
 def test_m9_wp2_startup_validation_allows_local_default_secret() -> None:
@@ -54,3 +57,23 @@ def test_m9_wp2_discord_worker_run_once_fails_closed_for_non_local_default_secre
     with pytest.raises(RuntimeError) as error:
         asyncio.run(discord_worker_main(run_once=True))
     assert "non-local runtime requires non-default" in str(error.value)
+
+
+def test_m9_wp2_discord_role_bot_registry_validation_allows_single_bot_mode() -> None:
+    settings = RuntimeSettings(
+        discord_multi_bot_enabled=False,
+        discord_bot_token=None,
+        discord_role_bot_tokens_json="{}",
+    )
+    enforce_discord_role_bot_registry(settings)
+
+
+def test_m9_wp2_discord_role_bot_registry_validation_rejects_missing_required_role() -> None:
+    settings = RuntimeSettings(
+        discord_multi_bot_enabled=True,
+        discord_required_role_bots_csv="ceo,auditor",
+        discord_role_bot_tokens_json='{"ceo":"ceo-token"}',
+    )
+    with pytest.raises(RuntimeError) as error:
+        enforce_discord_role_bot_registry(settings)
+    assert "discord_role_bot_required_missing" in str(error.value)

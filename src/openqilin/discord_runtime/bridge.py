@@ -137,6 +137,9 @@ def build_discord_ingress_payload(
     connector_shared_secret: str,
     project_id: str | None = None,
     timestamp: datetime | None = None,
+    bot_role: str | None = None,
+    bot_id: str | None = None,
+    bot_user_id: str | None = None,
 ) -> tuple[dict[str, object], str]:
     """Build signed payload for POST /v1/connectors/discord/messages."""
 
@@ -163,6 +166,9 @@ def build_discord_ingress_payload(
         "channel_id": channel_id,
         "channel_type": channel_type,
         "chat_class": chat_class,
+        "bot_role": bot_role,
+        "bot_id": bot_id,
+        "bot_user_id": bot_user_id,
     }
     raw_payload_hash = hashlib.sha256(_serialize_for_hash(payload_without_hash)).hexdigest()
     payload = dict(payload_without_hash)
@@ -193,12 +199,6 @@ def format_governed_response(*, status_code: int, body: Mapping[str, object]) ->
                     recipient_role = str(llm_execution.get("recipient_role", "")).strip().lower()
                     role_label = recipient_role or "llm"
                     role_prefix = f"\n[{role_label}] "
-                    max_message_length = 1990
-                    max_generated_length = max(
-                        120, max_message_length - len(summary) - len(role_prefix)
-                    )
-                    if len(normalized) > max_generated_length:
-                        normalized = f"{normalized[: max_generated_length - 3]}..."
                     return f"{summary}{role_prefix}{normalized}"
             return summary
         return f"[accepted] trace={trace_id}"

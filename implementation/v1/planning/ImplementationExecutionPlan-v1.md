@@ -25,6 +25,7 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 | `M7 MVP Persistence, Adapter, and Acceptance` | close MVP with recovery hardening and constrained Discord adapter | persistent runtime recovery path, Discord adapter with role/channel constraints, MVP acceptance matrix and evidence pack | restart invariants and Discord-governed ingress constraints pass end-to-end acceptance evidence |
 | `M8 MVP Governance Surface Hardening` | close governance-critical MVP gaps from post-M7 review | connector-auth parity for governance routes, governed lifecycle API completion, API-only lifecycle acceptance flow, planning doc alignment | governance mutation spoofing is fail-closed and lifecycle transitions are API-governed end-to-end |
 | `M9 MVP Real Discord Runtime and Live Validation` | deliver real Discord-connected runtime and live MVP evidence | Discord bot worker runtime, Docker full-profile integration + secret hardening, live acceptance checklist, closeout evidence pack | real Discord use cases run on Docker runtime with traceable live acceptance evidence |
+| `M10 Multi-Bot Discord Role UI` | deliver real per-role Discord bot identities and mention-driven group chat UX | role-bot identity registry, multi-bot worker runtime, DM + mention recipient resolver, role-isolated prompt/memory, grounded-only LLM evidence contract, intent-level read tools, governed write-action tools, outbound delivery hardening, live acceptance evidence | institutional role bots are independently addressable by DM/mentions with governed role fidelity and complete live evidence |
 
 ## 4. M1 Implementation Workplan (Kickoff on Issue `#4`)
 ### 4.1 Objective and Boundary
@@ -184,7 +185,7 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
   - runnable Docker `full` profile runtime with non-placeholder app/worker services
   - governance/executive runtime validated through Gemini Flash free-tier provider path with quota accounting
   - Discord-originated owner command flows validated through the same governed ingress path
-- Keep delivery incremental and evidence-driven across `M5`..`M9`.
+- Keep delivery incremental and evidence-driven across `M5`..`M10`.
 - Preserve fail-closed behavior while adding persistent governance/project contracts.
 
 ### 8.2 Ordered Milestone Work Packages
@@ -275,6 +276,43 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 - Target modules: MVP evidence-pack docs and progress closeout tracking.
 - Deliverables: consolidated live-instance evidence pack mapped to MVP exit criteria and closeout linkage (issue/PR/merge evidence).
 
+22. `M10-WP1` Role-bot identity registry + token/config hardening (`issue #62`)
+- Target modules: runtime settings, startup validation, Discord identity registry contracts.
+- Deliverables: one-to-one role-to-bot mapping with fail-closed startup checks for missing/duplicate/invalid role-bot bindings.
+
+23. `M10-WP2` Multi-bot Discord worker runtime + event fan-in (`issue #63`)
+- Target modules: Discord worker app/runtime lifecycle, event normalization/fan-in pipeline, readiness probes.
+- Deliverables: concurrent managed role-bot sessions with normalized ingress events and aggregate health/readiness reporting.
+
+24. `M10-WP3` DM + mention group-chat recipient resolver and governed routing (`issue #64`)
+- Target modules: Discord ingress adapter parser, recipient normalizer, governance recipient validation path.
+- Deliverables: DM recipient inference by bot identity, mention-derived recipient fan-out in channels, and fail-closed denial for unresolved or mismatched recipients.
+
+25. `M10-WP4` Role-locked prompts + per-role memory isolation (`issue #65`)
+- Target modules: llm dispatch prompt builder, prompt injection guard, conversation-memory partitioning.
+- Deliverables: server-owned role prompts bound to bot role identity and memory scoped by role/channel/project boundaries with isolation tests.
+- Follow-up enforcement (`issue #68`): `llm_reason` responses must be grounded in governed DB/project-doc evidence with fail-closed denial on insufficient evidence or missing/invalid source citations.
+
+26. `M10-WP5` Discord outbound delivery hardening (chunking + sequencing) (`issue #66`)
+- Target modules: Discord response bridge/delivery pipeline, retry/backoff controls.
+- Deliverables: long-response chunking without truncation, deterministic multi-bot reply ordering, and bounded retries for transient Discord/API failures.
+
+27. `M10-WP6` Live multi-bot acceptance matrix + evidence pack closeout (`issue #67`)
+- Target modules: ops acceptance scripts/checklists, evidence-pack docs, conformance checks.
+- Deliverables: live DM plus mention-group scenarios validated for all role bots, with linked artifacts and closeout evidence.
+
+28. `M10-WP7` MVP intent-level read tool surface for grounded answers (`issue #69`)
+- Target modules: retrieval/data-access read services, control-plane read-tool adapters, source citation metadata contracts.
+- Deliverables: prioritized MVP read-tool set implemented with role/scope fail-closed checks and citation-ready source metadata for grounded factual responses.
+
+29. `M10-WP8` Governed write-action tools for project/runtime mutations (`issue #70`)
+- Target modules: governance handlers/services, project artifact mutation boundaries, idempotency/audit integration points.
+- Deliverables: intent-level mutation tools (not raw DB writes) with authority/lifecycle/policy/budget guard enforcement and immutable decision evidence.
+
+30. `M10-WP9` Tool orchestration policy, role access control, and acceptance (`issue #71`)
+- Target modules: role skill/tool policy contracts, tool allowlist enforcement, live acceptance/evidence docs.
+- Deliverables: role-scoped tool orchestration rules (tool-first factual path + citation-required responses + governed mutation controls) validated in DM and mention-group acceptance scenarios.
+
 ### 8.3 MVP Exit Evidence Checklist
 - Proposal lifecycle and approval gates are enforced with canonical state transitions.
 - CWO initialization produces governed project charter/workforce evidence.
@@ -288,13 +326,18 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 - Non-local runtime enforces non-default connector secret configuration.
 - Gemini Flash free-tier provider path is validated with quota accounting evidence.
 - Discord round-trip owner command path is validated with governed access constraints.
+- Separate institutional role bots are online and independently addressable in Discord.
+- DM and mention-driven group chat recipient resolution are deterministic and policy-governed.
+- Multi-bot outbound responses are complete (non-truncated) and deterministically ordered.
+- Intent-level read tools provide governed, citation-ready ground truth for factual answers.
+- Governed write-action tools enforce fail-closed role/lifecycle/policy/budget controls for mutations.
 - Full project lifecycle scenario is validated end-to-end with completion governance chain evidence.
 - MVP evidence pack maps all exit criteria to deterministic test/ops evidence.
 
 ## 9. Tracking Interfaces
 ### 9.1 Issue Contract Fields
 Each implementation issue must contain:
-- `Milestone`: one of `M0`..`M9`
+- `Milestone`: one of `M0`..`M10`
 - `Goal`: outcome statement tied to milestone intent
 - `Scope`: explicit in/out implementation boundaries
 - `Acceptance Criteria`: testable completion conditions
@@ -321,6 +364,7 @@ Required label groups:
 - `implementation/v1/planning/ImplementationMilestones-v1.md`
 - `implementation/v1/planning/ImplementationProgress-v1.md`
 - `implementation/v1/mvp/MvpArchitectureRoadmap-v1.md`
+- `implementation/v1/mvp/MultiBotDiscordArchitecture-v1.md`
 - `implementation/v1/mvp/MvpCoreGovernance-v1.md`
 - `implementation/v1/mvp/MvpRuntimeSpecification-v1.md`
 - `implementation/v1/workflow/GitHubOperationsManagementGuide-v1.md`

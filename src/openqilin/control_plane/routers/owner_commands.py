@@ -1101,6 +1101,9 @@ def submit_owner_command(
                         "generated_text": dispatch_outcome.llm_metadata.generated_text,
                         "recipient_role": dispatch_outcome.llm_metadata.recipient_role,
                         "recipient_id": dispatch_outcome.llm_metadata.recipient_id,
+                        "grounding_sources": list(
+                            dispatch_outcome.llm_metadata.grounding_source_ids
+                        ),
                     }
                     if dispatch_outcome.llm_metadata is not None
                     else None

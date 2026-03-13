@@ -1,7 +1,7 @@
 # OpenQilin MVP v0.1 - Architecture Roadmap
 
-Status: governance hardening complete (`M8`), real Discord runtime validation pending (`M9`)
-Last updated: 2026-03-12
+Status: MVP v0.1 closeout complete (`M5`..`M9`); post-MVP Discord multi-bot UX planned (`M10`)
+Last updated: 2026-03-13
 
 ## 1. Goal
 
@@ -28,11 +28,17 @@ M5..M7 implementation status:
 - MVP acceptance matrix and evidence pack are implemented
 
 Blocking gaps before MVP closeout:
-1. Real Discord runtime connection is not yet implemented as a live bot worker in Docker `full` profile.
+- none (MVP v0.1 closeout criteria are met in `M9`)
+
+Post-MVP UX gap:
+1. Discord currently runs as a single bot identity; role bots are routed internally but not presented as independent Discord bot accounts in UI.
 
 Gap-to-milestone mapping:
 - `M8` (issues `#48`..`#52`): completed governance hardening, lifecycle API completion, and acceptance/doc alignment.
-- `M9` (issues `#49`, `#53`..`#56`): real Discord bot runtime, Docker integration + secret hardening, live end-to-end acceptance evidence.
+- `M9` (issues `#49`, `#53`..`#56`): completed real Discord bot runtime, Docker integration + secret hardening, live end-to-end acceptance evidence.
+- `M10` (issues `#61`, `#62`..`#67`, `#69`..`#71`): planned multi-bot Discord role UI with DM + mention-driven group chat semantics plus governed read/write tool surfaces.
+- Design reference: `implementation/v1/mvp/MultiBotDiscordArchitecture-v1.md`.
+- Read-tool reference: `implementation/v1/mvp/IntentReadToolCatalog-v1.md`.
 
 ## 4. Target MVP Runtime Shape
 
@@ -138,6 +144,30 @@ Exit criteria:
 - Docker `full` profile runs API + workers + Discord bot together
 - non-local runtime denies unsafe/missing connector secret configuration
 - live evidence demonstrates MVP lifecycle use cases through real Discord
+
+## M10 - Multi-Bot Discord Role UI and Group Chat
+Objective:
+- implement real per-role Discord bot identities so users can directly DM each institutional role and mention specific role bots in group channels
+
+Planned work packages:
+1. `M10-WP1`: role-bot identity registry + token/config hardening (`#62`)
+2. `M10-WP2`: multi-bot worker runtime + event fan-in (`#63`)
+3. `M10-WP3`: DM + mention recipient resolver + governed routing (`#64`)
+4. `M10-WP4`: role-locked prompt builder + per-role memory isolation (`#65`)
+5. `M10-WP5`: outbound delivery chunking + sequencing hardening (`#66`)
+6. `M10-WP6`: live acceptance evidence pack + runbook closeout (`#67`)
+7. `M10-WP4` grounding follow-up delivered: `llm_reason` grounded-only enforcement (`#68`)
+8. `M10-WP7`: intent-level read tool surface for grounded answers (`#69`)
+9. `M10-WP8`: governed write-action tools for project/runtime mutations (`#70`)
+10. `M10-WP9`: tool orchestration policy + role access control + acceptance (`#71`)
+
+Exit criteria:
+- institutional role bots (`administrator`, `auditor`, `ceo`, `cwo`, `project_manager`) are independently addressable in Discord
+- DM and mention-group flows are deterministic and policy-governed
+- role lock and injection resistance hold for each role bot identity
+- multi-bot responses are complete (non-truncated) and evidence-backed
+- factual responses are tool-grounded from governed DB/project-doc sources with citations
+- governed mutation actions run through intent-level write tools with fail-closed authorization/policy controls
 
 ## 6. Design Decisions Locked for MVP v0.1
 

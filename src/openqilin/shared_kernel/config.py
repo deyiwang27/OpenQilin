@@ -32,6 +32,10 @@ class RuntimeSettings(BaseSettings):
     gemini_free_primary_model: str = "gemini-2.0-flash"
     gemini_free_fallback_model: str = "gemini-2.0-flash"
     discord_bot_token: str | None = None
+    discord_multi_bot_enabled: bool = False
+    discord_worker_role: str = "runtime_agent"
+    discord_role_bot_tokens_json: str = "{}"
+    discord_required_role_bots_csv: str = "administrator,auditor,ceo,cwo,project_manager"
     discord_control_plane_base_url: str = "http://127.0.0.1:8000"
     discord_command_prefix: str = "/oq"
     discord_actor_role_default: str = "owner"
@@ -39,6 +43,9 @@ class RuntimeSettings(BaseSettings):
     discord_allowed_guild_ids_csv: str = ""
     discord_allowed_channel_ids_csv: str = ""
     discord_request_timeout_seconds: float = 20.0
+    discord_response_chunk_size_chars: int = 1900
+    discord_response_retry_attempts: int = 2
+    discord_response_retry_base_delay_seconds: float = 0.5
 
     @property
     def system_root_path(self) -> Path:
