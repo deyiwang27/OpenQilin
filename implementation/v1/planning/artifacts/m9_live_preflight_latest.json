@@ -1,0 +1,26 @@
+{
+  "checks": [
+    {
+      "details": "/opt/homebrew/bin/docker",
+      "name": "command_docker",
+      "success": true
+    },
+    {
+      "details": "set",
+      "name": "env_OPENQILIN_DISCORD_BOT_TOKEN",
+      "success": true
+    },
+    {
+      "details": "set",
+      "name": "env_OPENQILIN_GEMINI_API_KEY",
+      "success": true
+    },
+    {
+      "details": "set",
+      "name": "env_OPENQILIN_CONNECTOR_SHARED_SECRET",
+      "success": true
+    }
+  ],
+  "generated_at": "2026-03-13T05:55:54.511619+00:00",
+  "preflight_ok": true
+}

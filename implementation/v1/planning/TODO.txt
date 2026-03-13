@@ -62,12 +62,12 @@ Checklist:
 - `M8-WP2` governed lifecycle APIs for `pause|resume|terminate|archive` - `done` (`issue #51`)
 - `M8-WP3` API-only acceptance lifecycle refactor + planning doc alignment - `done` (`issue #52`)
 
-5) `M9 MVP Real Discord Runtime and Live Validation` (`issue #49`) - `in_progress`
+5) `M9 MVP Real Discord Runtime and Live Validation` (`issue #49`) - `done`
 - kickoff/decomposition complete with child work packages (`#53`..`#56`) - `done`
 - `M9-WP1` real Discord bot worker runtime (ingress + response bridge) - `done` (`issue #53`)
 - `M9-WP2` Docker `full` profile integration + non-local secret hardening - `done` (`issue #54`)
-- `M9-WP3` live Discord end-to-end MVP acceptance validation - `in_progress` (`issue #55`, Discord privileged intents were enabled and runtime verification now shows `discord_bot_worker` healthy; live lifecycle scenario evidence capture remains`)
-- `M9-WP4` live-instance evidence pack and closeout - `in_progress` (`issue #56`, evidence pack + artifact-integrity checker drafted; awaiting live-run artifacts)
+- `M9-WP3` live Discord end-to-end MVP acceptance validation - `done` (`issue #55`, live Discord ingress verified with accepted command response, and both lifecycle acceptance branches executed under live runtime with deterministic evidence artifacts)
+- `M9-WP4` live-instance evidence pack and closeout - `done` (`issue #56`, evidence pack finalized with preflight/manifest/notes plus runtime ps/log snapshots and governance execution artifact)
 
 Carryover follow-ups:
 - enforce non-default connector shared secret in non-local environments at runtime validation layer - `todo`

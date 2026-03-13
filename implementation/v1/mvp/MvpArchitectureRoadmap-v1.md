@@ -124,8 +124,8 @@ Objective:
 Current progress:
 - `M9-WP1` completed: real `discord_bot_worker` runtime now bridges gateway messages to `/v1/connectors/discord/messages` and relays governed responses back to Discord.
 - `M9-WP2` completed: `compose` full profile now runs `discord_bot_worker` with readiness checks, Discord runtime settings are env-wired, and non-local startup fails closed for unsafe default connector secret.
-- `M9-WP3` execution is now in progress: live acceptance contract and preflight/evidence-manifest tooling are in place, preflight emits deterministic JSON evidence (`m9_live_preflight_latest.json`), Docker `full` runtime boot is revalidated, and `discord_bot_worker` reaches ready state after privileged-intents configuration; remaining work is end-to-end lifecycle evidence capture.
-- `M9-WP4` started: milestone evidence-pack skeleton is published with command matrix, issue linkage, and explicit live-run blocker tracking; deterministic artifact-integrity checker is added for closeout gating.
+- `M9-WP3` completed: live Discord ingress command path is verified (`/oq run_task ping` accepted), and acceptance lifecycle branches executed successfully with deterministic execution artifact capture.
+- `M9-WP4` completed: milestone evidence pack finalized with live-run artifacts (preflight/manifest/notes, compose ps/log snapshots, governance execution JSON) and artifact-integrity checks passing.
 
 Work packages:
 1. `M9-WP1`: implement real Discord bot worker runtime (`discord gateway -> /v1/connectors/discord/messages -> governed response bridge`)
