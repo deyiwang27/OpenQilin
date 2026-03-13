@@ -6,14 +6,7 @@ from openqilin.data_access.repositories.artifacts import (
     ProjectDocumentPolicy,
 )
 from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
-
-
-def _headers(*, actor_id: str, actor_role: str) -> dict[str, str]:
-    return {
-        "X-External-Channel": "discord",
-        "X-External-Actor-Id": actor_id,
-        "X-OpenQilin-Actor-Role": actor_role,
-    }
+from openqilin.testing.governance_api import build_governance_headers
 
 
 def test_initialize_project_returns_governed_denial_for_artifact_policy_violation() -> None:
@@ -40,17 +33,22 @@ def test_initialize_project_returns_governed_denial_for_artifact_policy_violatio
     )
     client = TestClient(app)
 
+    payload = {
+        "trace_id": "trace-m6-wp2-init-router",
+        "objective": "Initialize MVP governance project",
+        "budget_currency_total": 250.0,
+        "budget_quota_total": 10000.0,
+        "metric_plan": {"completion": "all_wp_passed"},
+        "workforce_plan": {"project_manager": "1"},
+    }
     response = client.post(
         "/v1/governance/projects/project_m6_wp2/initialize",
-        headers=_headers(actor_id="cwo_1", actor_role="cwo"),
-        json={
-            "trace_id": "trace-m6-wp2-init-router",
-            "objective": "Initialize MVP governance project",
-            "budget_currency_total": 250.0,
-            "budget_quota_total": 10000.0,
-            "metric_plan": {"completion": "all_wp_passed"},
-            "workforce_plan": {"project_manager": "1"},
-        },
+        headers=build_governance_headers(
+            payload=payload,
+            actor_id="cwo_1",
+            actor_role="cwo",
+        ),
+        json=payload,
     )
 
     body = response.json()

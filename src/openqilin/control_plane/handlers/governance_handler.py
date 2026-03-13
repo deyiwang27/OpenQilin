@@ -92,6 +92,15 @@ class ProjectCompletionFinalizeOutcome:
     project: ProjectRecord
 
 
+@dataclass(frozen=True, slots=True)
+class ProjectLifecycleTransitionOutcome:
+    """Outcome returned by governed lifecycle transition actions."""
+
+    project: ProjectRecord
+    previous_status: str
+    reason_code: str
+
+
 def submit_proposal_message(
     *,
     repository: InMemoryGovernanceRepository,
@@ -343,6 +352,138 @@ def finalize_project_completion_by_c_suite(
     except GovernanceRepositoryError as error:
         raise GovernanceHandlerError(code=error.code, message=error.message) from error
     return ProjectCompletionFinalizeOutcome(project=project)
+
+
+def _transition_project_lifecycle(
+    *,
+    repository: InMemoryGovernanceRepository,
+    project_id: str,
+    actor_role: str,
+    trace_id: str,
+    reason_code: str,
+    next_status: str,
+    allowed_actor_roles: frozenset[str],
+    action_name: str,
+) -> ProjectLifecycleTransitionOutcome:
+    """Apply one lifecycle transition with explicit actor-role guardrails."""
+
+    normalized_role = actor_role.strip().lower()
+    if normalized_role not in allowed_actor_roles:
+        allowed_roles = ",".join(sorted(allowed_actor_roles))
+        raise GovernanceHandlerError(
+            code="governance_project_lifecycle_role_forbidden",
+            message=f"{action_name} is limited to roles: {allowed_roles}",
+        )
+    project = repository.get_project(project_id)
+    if project is None:
+        raise GovernanceHandlerError(
+            code="governance_project_missing",
+            message=f"project not found: {project_id}",
+        )
+    previous_status = project.status
+    try:
+        updated = repository.transition_project_status(
+            project_id=project_id,
+            next_status=next_status,
+            reason_code=reason_code,
+            actor_role=normalized_role,
+            trace_id=trace_id,
+        )
+    except GovernanceRepositoryError as error:
+        raise GovernanceHandlerError(code=error.code, message=error.message) from error
+    return ProjectLifecycleTransitionOutcome(
+        project=updated,
+        previous_status=previous_status,
+        reason_code=reason_code,
+    )
+
+
+def pause_project_by_governance(
+    *,
+    repository: InMemoryGovernanceRepository,
+    project_id: str,
+    actor_role: str,
+    trace_id: str,
+    reason_code: str,
+) -> ProjectLifecycleTransitionOutcome:
+    """Pause one active project under governed role matrix."""
+
+    return _transition_project_lifecycle(
+        repository=repository,
+        project_id=project_id,
+        actor_role=actor_role,
+        trace_id=trace_id,
+        reason_code=reason_code,
+        next_status="paused",
+        allowed_actor_roles=frozenset({"project_manager", "cwo", "ceo"}),
+        action_name="project pause",
+    )
+
+
+def resume_project_by_governance(
+    *,
+    repository: InMemoryGovernanceRepository,
+    project_id: str,
+    actor_role: str,
+    trace_id: str,
+    reason_code: str,
+) -> ProjectLifecycleTransitionOutcome:
+    """Resume one paused project under governed role matrix."""
+
+    return _transition_project_lifecycle(
+        repository=repository,
+        project_id=project_id,
+        actor_role=actor_role,
+        trace_id=trace_id,
+        reason_code=reason_code,
+        next_status="active",
+        allowed_actor_roles=frozenset({"project_manager", "cwo", "ceo"}),
+        action_name="project resume",
+    )
+
+
+def terminate_project_by_governance(
+    *,
+    repository: InMemoryGovernanceRepository,
+    project_id: str,
+    actor_role: str,
+    trace_id: str,
+    reason_code: str,
+) -> ProjectLifecycleTransitionOutcome:
+    """Terminate one project from active or paused state under governed role matrix."""
+
+    return _transition_project_lifecycle(
+        repository=repository,
+        project_id=project_id,
+        actor_role=actor_role,
+        trace_id=trace_id,
+        reason_code=reason_code,
+        next_status="terminated",
+        allowed_actor_roles=frozenset({"cwo", "ceo"}),
+        action_name="project termination",
+    )
+
+
+def archive_project_by_governance(
+    *,
+    repository: InMemoryGovernanceRepository,
+    project_id: str,
+    actor_role: str,
+    trace_id: str,
+    reason_code: str,
+) -> ProjectLifecycleTransitionOutcome:
+    """Archive one completed or terminated project under governed role matrix."""
+
+    return _transition_project_lifecycle(
+        repository=repository,
+        project_id=project_id,
+        actor_role=actor_role,
+        trace_id=trace_id,
+        reason_code=reason_code,
+        next_status="archived",
+        allowed_actor_roles=frozenset({"cwo", "ceo"}),
+        action_name="project archive",
+    )
 
 
 def bind_workforce_template_by_cwo(
