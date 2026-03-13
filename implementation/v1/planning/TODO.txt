@@ -16,7 +16,7 @@ Status legend:
 
 Current context:
 - Active branch: `feat/41-m7-persistence-adapter-acceptance-kickoff`
-- Current scope: MVP v0.1 closeout roadmap (`M7`)
+- Current scope: MVP v0.1 runnable-instance gap closure (`M8` + `M9`)
 - Baseline roadmap: `implementation/v1/mvp/MvpArchitectureRoadmap-v1.md`
 
 Milestone summary:
@@ -24,6 +24,8 @@ Milestone summary:
 - `M5`: `done`
 - `M6`: `done`
 - `M7`: `in_progress`
+- `M8`: `in_progress`
+- `M9`: `not_started`
 
 Checklist:
 1) `M5 MVP Proposal and Governance Activation` (`issue #29`) - `done`
@@ -52,6 +54,20 @@ Checklist:
 - `M7-WP5` Gemini Flash free-tier provider-path activation + quota telemetry validation - `done` (`issue #46`)
 - `M7-WP6` MVP acceptance matrix + evidence pack closeout - `done` (`issue #47`)
 - M7 post-review remediation: governed project creation API, completion-governance chain enforcement, and Discord connector-ingress adapter path - `done`
+- M7 closeout is gated by M8 + M9 completion - `todo`
+
+4) `M8 MVP Governance Surface Hardening` (`issue #48`) - `in_progress`
+- kickoff/decomposition complete with child work packages (`#50`..`#52`) - `done`
+- `M8-WP1` connector-auth enforcement on governance/discussion routes - `todo` (`issue #50`)
+- `M8-WP2` governed lifecycle APIs for `pause|resume|terminate|archive` - `todo` (`issue #51`)
+- `M8-WP3` API-only acceptance lifecycle refactor + planning doc alignment - `todo` (`issue #52`)
+
+5) `M9 MVP Real Discord Runtime and Live Validation` (`issue #49`) - `not_started`
+- kickoff/decomposition complete with child work packages (`#53`..`#56`) - `done`
+- `M9-WP1` real Discord bot worker runtime (ingress + response bridge) - `todo` (`issue #53`)
+- `M9-WP2` Docker `full` profile integration + non-local secret hardening - `todo` (`issue #54`)
+- `M9-WP3` live Discord end-to-end MVP acceptance validation - `todo` (`issue #55`)
+- `M9-WP4` live-instance evidence pack and closeout - `todo` (`issue #56`)
 
 Carryover follow-ups:
 - enforce non-default connector shared secret in non-local environments at runtime validation layer - `todo`
