@@ -24,6 +24,7 @@ from sqlalchemy import text
 
 from openqilin.apps.api_app import create_app
 from openqilin.apps.communication_worker import main as communication_worker_main
+from openqilin.apps.discord_bot_worker import main as discord_bot_worker_main
 from openqilin.apps.orchestrator_worker import main as orchestrator_worker_main
 from openqilin.control_plane.identity.connector_security import sign_payload_hash
 from openqilin.data_access.db.engine import (
@@ -33,6 +34,7 @@ from openqilin.data_access.db.engine import (
     resolve_database_url,
 )
 from openqilin.shared_kernel.config import RuntimeSettings
+from openqilin.shared_kernel.startup_validation import enforce_connector_secret_hardening
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_ALEMBIC_INI = PROJECT_ROOT / "alembic.ini"
@@ -476,8 +478,15 @@ def run_diagnostics_checks(
         CheckResult("diagnostics_owner_command_route", route_present, OWNER_COMMAND_ROUTE),
         CheckResult(
             "diagnostics_worker_entrypoints",
-            callable(orchestrator_worker_main) and callable(communication_worker_main),
+            callable(orchestrator_worker_main)
+            and callable(communication_worker_main)
+            and callable(discord_bot_worker_main),
             "worker entrypoints importable",
+        ),
+        CheckResult(
+            "diagnostics_connector_secret_hardening",
+            _validate_connector_secret_hardening(settings),
+            "non-local runtime requires non-default connector secret",
         ),
         CheckResult(
             "diagnostics_database_url",
@@ -491,6 +500,16 @@ def run_diagnostics_checks(
         results.append(CheckResult("diagnostics_database_ping", db_ok, db_message))
 
     return results
+
+
+def _validate_connector_secret_hardening(settings: RuntimeSettings) -> bool:
+    """Return whether startup secret-hardening contract is satisfied."""
+
+    try:
+        enforce_connector_secret_hardening(settings)
+    except RuntimeError:
+        return False
+    return True
 
 
 def _render_and_exit(results: list[CheckResult]) -> None:

@@ -19,22 +19,27 @@ def test_m7_wp4_conformance_full_profile_runtime_services_use_real_entrypoints()
     api_block = _extract_compose_service_block(compose_text, "api_app")
     orchestrator_block = _extract_compose_service_block(compose_text, "orchestrator_worker")
     communication_block = _extract_compose_service_block(compose_text, "communication_worker")
+    discord_block = _extract_compose_service_block(compose_text, "discord_bot_worker")
 
     assert api_block is not None
     assert orchestrator_block is not None
     assert communication_block is not None
+    assert discord_block is not None
 
     assert 'profiles: ["full"]' in api_block
     assert 'profiles: ["full"]' in orchestrator_block
     assert 'profiles: ["full"]' in communication_block
+    assert 'profiles: ["full"]' in discord_block
 
     assert "placeholder container" not in api_block
     assert "placeholder container" not in orchestrator_block
     assert "placeholder container" not in communication_block
+    assert "placeholder container" not in discord_block
 
     assert "uvicorn openqilin.apps.api_app:app --host 0.0.0.0 --port 8000" in api_block
     assert "python -m openqilin.apps.orchestrator_worker" in orchestrator_block
     assert "python -m openqilin.apps.communication_worker" in communication_block
+    assert "python -m openqilin.apps.discord_bot_worker" in discord_block
 
 
 def test_m7_wp4_conformance_startup_health_dependencies_are_declared() -> None:
@@ -44,10 +49,12 @@ def test_m7_wp4_conformance_startup_health_dependencies_are_declared() -> None:
     api_block = _extract_compose_service_block(compose_text, "api_app")
     orchestrator_block = _extract_compose_service_block(compose_text, "orchestrator_worker")
     communication_block = _extract_compose_service_block(compose_text, "communication_worker")
+    discord_block = _extract_compose_service_block(compose_text, "discord_bot_worker")
 
     assert api_block is not None
     assert orchestrator_block is not None
     assert communication_block is not None
+    assert discord_block is not None
 
     assert "/health/live" in api_block
     assert "litellm:" in api_block
@@ -60,3 +67,7 @@ def test_m7_wp4_conformance_startup_health_dependencies_are_declared() -> None:
     assert "api_app:" in communication_block
     assert "condition: service_healthy" in communication_block
     assert "openqilin.communication_worker.ready" in communication_block
+
+    assert "api_app:" in discord_block
+    assert "condition: service_healthy" in discord_block
+    assert "openqilin.discord_bot_worker.ready" in discord_block

@@ -128,6 +128,7 @@ services:
       OPENQILIN_DATABASE_URL: postgresql+psycopg://openqilin:openqilin@postgres:5432/openqilin
       OPENQILIN_RUNTIME_PERSISTENCE_ENABLED: "true"
       OPENQILIN_SYSTEM_ROOT: /var/lib/openqilin
+      OPENQILIN_CONNECTOR_SHARED_SECRET: ${OPENQILIN_CONNECTOR_SHARED_SECRET:-dev-openqilin-secret}
       OPENQILIN_LLM_PROVIDER_BACKEND: ${OPENQILIN_LLM_PROVIDER_BACKEND:-gemini_flash_free}
       OPENQILIN_GEMINI_API_KEY: ${OPENQILIN_GEMINI_API_KEY:-}
       OPENQILIN_GEMINI_FREE_PRIMARY_MODEL: ${OPENQILIN_GEMINI_FREE_PRIMARY_MODEL:-gemini-2.0-flash}
@@ -169,6 +170,7 @@ services:
     environment:
       OPENQILIN_RUNTIME_PERSISTENCE_ENABLED: "true"
       OPENQILIN_SYSTEM_ROOT: /var/lib/openqilin
+      OPENQILIN_CONNECTOR_SHARED_SECRET: ${OPENQILIN_CONNECTOR_SHARED_SECRET:-dev-openqilin-secret}
     healthcheck:
       test:
         [
@@ -206,6 +208,7 @@ services:
     environment:
       OPENQILIN_RUNTIME_PERSISTENCE_ENABLED: "true"
       OPENQILIN_SYSTEM_ROOT: /var/lib/openqilin
+      OPENQILIN_CONNECTOR_SHARED_SECRET: ${OPENQILIN_CONNECTOR_SHARED_SECRET:-dev-openqilin-secret}
     healthcheck:
       test:
         [
@@ -222,6 +225,46 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      api_app:
+        condition: service_healthy
+
+  discord_bot_worker:
+    image: python:3.12-slim
+    profiles: ["full"]
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - openqilin_system:/var/lib/openqilin
+    command:
+      [
+        "sh",
+        "-lc",
+        "python -m pip install --disable-pip-version-check --quiet -e /workspace && python -m openqilin.apps.discord_bot_worker",
+      ]
+    environment:
+      OPENQILIN_RUNTIME_PERSISTENCE_ENABLED: "true"
+      OPENQILIN_SYSTEM_ROOT: /var/lib/openqilin
+      OPENQILIN_CONNECTOR_SHARED_SECRET: ${OPENQILIN_CONNECTOR_SHARED_SECRET:-dev-openqilin-secret}
+      OPENQILIN_DISCORD_BOT_TOKEN: ${OPENQILIN_DISCORD_BOT_TOKEN:-}
+      OPENQILIN_DISCORD_CONTROL_PLANE_BASE_URL: ${OPENQILIN_DISCORD_CONTROL_PLANE_BASE_URL:-http://api_app:8000}
+      OPENQILIN_DISCORD_COMMAND_PREFIX: ${OPENQILIN_DISCORD_COMMAND_PREFIX:-/oq}
+      OPENQILIN_DISCORD_ACTOR_ROLE_DEFAULT: ${OPENQILIN_DISCORD_ACTOR_ROLE_DEFAULT:-owner}
+      OPENQILIN_DISCORD_ACTOR_ROLE_MAP_JSON: ${OPENQILIN_DISCORD_ACTOR_ROLE_MAP_JSON:-{}}
+      OPENQILIN_DISCORD_ALLOWED_GUILD_IDS_CSV: ${OPENQILIN_DISCORD_ALLOWED_GUILD_IDS_CSV:-}
+      OPENQILIN_DISCORD_ALLOWED_CHANNEL_IDS_CSV: ${OPENQILIN_DISCORD_ALLOWED_CHANNEL_IDS_CSV:-}
+      OPENQILIN_DISCORD_REQUEST_TIMEOUT_SECONDS: ${OPENQILIN_DISCORD_REQUEST_TIMEOUT_SECONDS:-20}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "from pathlib import Path; raise SystemExit(0 if Path('/tmp/openqilin.discord_bot_worker.ready').exists() else 1)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    depends_on:
       api_app:
         condition: service_healthy
 

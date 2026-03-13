@@ -27,6 +27,14 @@ class RuntimeSettings(BaseSettings):
     gemini_request_timeout_seconds: float = 20.0
     gemini_free_primary_model: str = "gemini-2.0-flash"
     gemini_free_fallback_model: str = "gemini-2.0-flash"
+    discord_bot_token: str | None = None
+    discord_control_plane_base_url: str = "http://127.0.0.1:8000"
+    discord_command_prefix: str = "/oq"
+    discord_actor_role_default: str = "owner"
+    discord_actor_role_map_json: str = "{}"
+    discord_allowed_guild_ids_csv: str = ""
+    discord_allowed_channel_ids_csv: str = ""
+    discord_request_timeout_seconds: float = 20.0
 
     @property
     def system_root_path(self) -> Path:

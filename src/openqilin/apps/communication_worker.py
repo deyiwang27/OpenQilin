@@ -5,6 +5,9 @@ from pathlib import Path
 
 import structlog
 
+from openqilin.shared_kernel.config import RuntimeSettings
+from openqilin.shared_kernel.startup_validation import enforce_connector_secret_hardening
+
 LOGGER = structlog.get_logger(__name__)
 READY_MARKER_PATH = Path("/tmp/openqilin.communication_worker.ready")
 
@@ -18,6 +21,7 @@ def _mark_ready() -> None:
 async def main(*, run_once: bool = False) -> None:
     """Run communication worker bootstrap and optional steady-state loop."""
 
+    enforce_connector_secret_hardening(RuntimeSettings())
     LOGGER.info("worker.bootstrap", worker="communication_worker")
     _mark_ready()
     if run_once:
