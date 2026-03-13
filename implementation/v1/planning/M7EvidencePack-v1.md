@@ -13,9 +13,11 @@ WP closeout issue: `#47` (`M7-WP6: MVP acceptance matrix and closeout evidence`)
 ## 2. Validation Commands
 - `uv run pytest -q tests/unit/test_m7_wp1_runtime_recovery.py tests/unit/test_m7_wp1_communication_repository_persistence.py tests/unit/test_m7_wp1_idempotency_cache_persistence.py`
 - `uv run pytest -q tests/component/test_m7_wp2_wp3_discord_governance_router.py tests/unit/test_m7_wp2_identity_channel_repository.py`
+- `uv run pytest -q tests/component/test_m7_discord_ingress_adapter_router.py`
 - `uv run pytest -q tests/unit/test_m7_wp4_runtime_entrypoints.py tests/conformance/test_m7_wp4_runtime_cutover_conformance.py`
 - `uv run pytest -q tests/unit/test_m7_wp5_gemini_provider_path.py tests/unit/test_m2_wp2_llm_gateway.py`
 - `uv run pytest -q tests/integration/test_m7_wp6_mvp_acceptance_path.py`
+- `uv run pytest -q tests/component/test_m7_completion_governance_router.py tests/unit/test_m7_completion_governance_repository.py`
 - `uv run ruff check .`
 - `uv run mypy .`
 - Note: `docker compose config` validation is environment-dependent and was unavailable in this execution environment because `docker` CLI was not installed.
@@ -36,11 +38,14 @@ WP closeout issue: `#47` (`M7-WP6: MVP acceptance matrix and closeout evidence`)
 ### 3.2 Discord-origin ingress is governed by fixed chat classes and identity/channel mapping policy
 - Runtime/services:
   - `src/openqilin/control_plane/schemas/owner_commands.py`
+  - `src/openqilin/control_plane/schemas/discord_ingress.py`
   - `src/openqilin/data_access/repositories/identity_channels.py`
   - `src/openqilin/control_plane/identity/discord_governance.py`
   - `src/openqilin/control_plane/routers/owner_commands.py`
+  - `src/openqilin/control_plane/routers/discord_ingress.py`
 - Tests:
   - `tests/component/test_m7_wp2_wp3_discord_governance_router.py`
+  - `tests/component/test_m7_discord_ingress_adapter_router.py`
   - `tests/unit/test_m7_wp2_identity_channel_repository.py`
   - `tests/integration/test_m7_wp6_mvp_acceptance_path.py`
 
@@ -71,9 +76,12 @@ WP closeout issue: `#47` (`M7-WP6: MVP acceptance matrix and closeout evidence`)
   - `src/openqilin/control_plane/routers/owner_discussions.py`
   - `src/openqilin/data_access/repositories/governance.py`
 - Tests:
+  - `tests/component/test_m7_completion_governance_router.py`
+  - `tests/unit/test_m7_completion_governance_repository.py`
   - `tests/integration/test_m7_wp6_mvp_acceptance_path.py`
     - proposal discussion and triad approvals
     - initialization and Project Manager workforce binding
+    - completion governance chain (`completion/report`, `completion/approve`, `completion/finalize`) before completed
     - active -> paused -> active -> completed -> archived path
     - active -> terminated -> archived path
     - completed read-only channel policy and archived channel lock

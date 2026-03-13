@@ -3,6 +3,7 @@
 from fastapi import FastAPI
 
 from openqilin.control_plane.api.dependencies import build_runtime_services
+from openqilin.control_plane.routers.discord_ingress import router as discord_ingress_router
 from openqilin.control_plane.routers.governance import router as governance_router
 from openqilin.control_plane.routers.owner_commands import router as owner_commands_router
 from openqilin.control_plane.routers.owner_discussions import (
@@ -33,6 +34,7 @@ def create_control_plane_app() -> FastAPI:
     app.include_router(queries_router)
     app.include_router(owner_discussions_router)
     app.include_router(governance_router)
+    app.include_router(discord_ingress_router)
     return app
 
 

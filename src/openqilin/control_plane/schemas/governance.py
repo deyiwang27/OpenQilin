@@ -65,12 +65,55 @@ class ProposalDiscussionRequest(BaseModel):
     content: str = Field(min_length=1, max_length=4000)
 
 
+class ProjectCreateRequest(BaseModel):
+    """Project creation payload for proposal-stage governance kickoff."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str = Field(min_length=1, max_length=128)
+    name: str = Field(min_length=1, max_length=256)
+    objective: str = Field(min_length=1, max_length=4000)
+    project_id: str | None = Field(default=None, min_length=1, max_length=128)
+    metadata: dict[str, str] = Field(default_factory=dict)
+
+
 class ProposalApprovalRequest(BaseModel):
     """Proposal approval payload."""
 
     model_config = ConfigDict(extra="forbid")
 
     trace_id: str = Field(min_length=1, max_length=128)
+
+
+class ProjectCompletionReportRequest(BaseModel):
+    """Project Manager completion report payload."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str = Field(min_length=1, max_length=128)
+    summary: str = Field(min_length=1, max_length=8000)
+    metric_results: dict[str, str] = Field(default_factory=dict)
+
+
+class ProjectCompletionApprovalRequest(BaseModel):
+    """C-suite completion approval payload."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str = Field(min_length=1, max_length=128)
+
+
+class ProjectCompletionFinalizeRequest(BaseModel):
+    """Completion finalization payload once governance chain is satisfied."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str = Field(min_length=1, max_length=128)
+    reason_code: str = Field(
+        default="completion_approved_by_cwo_ceo",
+        min_length=1,
+        max_length=128,
+    )
 
 
 class ProjectInitializationRequest(BaseModel):

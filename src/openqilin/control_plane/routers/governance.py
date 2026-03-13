@@ -15,7 +15,11 @@ from openqilin.control_plane.handlers.governance_handler import (
     GovernanceHandlerError,
     approve_project_proposal,
     bind_workforce_template_by_cwo,
+    create_project_proposal,
+    finalize_project_completion_by_c_suite,
     initialize_project_by_cwo,
+    record_completion_approval_by_c_suite,
+    submit_completion_report_by_project_manager,
 )
 from openqilin.control_plane.identity.principal_resolver import (
     PrincipalResolutionError,
@@ -24,6 +28,10 @@ from openqilin.control_plane.identity.principal_resolver import (
 from openqilin.control_plane.schemas.governance import (
     GovernanceApiError,
     GovernanceApiResponse,
+    ProjectCompletionApprovalRequest,
+    ProjectCompletionFinalizeRequest,
+    ProjectCompletionReportRequest,
+    ProjectCreateRequest,
     ProjectInitializationRequest,
     ProposalApprovalRequest,
     WorkforceTemplateBindingRequest,
@@ -81,7 +89,9 @@ def _resolve_principal(
 def _map_handler_error(
     error: GovernanceHandlerError,
 ) -> tuple[int, GovernanceApiError, Literal["denied", "error"]]:
-    if error.code in {"governance_approval_role_forbidden", "governance_role_forbidden"}:
+    if error.code in {"governance_approval_role_forbidden", "governance_role_forbidden"} or (
+        error.code.endswith("_role_forbidden")
+    ):
         return (
             status.HTTP_403_FORBIDDEN,
             GovernanceApiError(
@@ -119,6 +129,13 @@ def _map_handler_error(
         "governance_project_artifact_policy_denied",
         "governance_project_manager_template_invalid",
         "governance_project_manager_template_missing_operations",
+        "governance_project_exists",
+        "governance_project_invalid_create_state",
+        "governance_project_completion_report_exists",
+        "governance_completion_approval_role_conflict",
+        "governance_project_completion_report_missing",
+        "governance_project_completion_approval_missing",
+        "governance_project_completion_owner_notification_missing",
     }:
         return (
             status.HTTP_409_CONFLICT,
@@ -141,6 +158,89 @@ def _map_handler_error(
             details={},
         ),
         "error",
+    )
+
+
+@router.post(
+    "/v1/governance/projects",
+    response_model=GovernanceApiResponse,
+)
+def create_project(
+    payload: ProjectCreateRequest,
+    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
+    audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
+    external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
+    external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
+    actor_external_id_header: Annotated[
+        str | None, Header(alias="X-OpenQilin-Actor-External-Id")
+    ] = None,
+    actor_role_header: Annotated[str | None, Header(alias="X-OpenQilin-Actor-Role")] = None,
+) -> JSONResponse:
+    """Create proposal-stage project record through governed API path."""
+
+    resolved = _resolve_principal(
+        external_channel_header=external_channel_header,
+        external_actor_id_header=external_actor_id_header,
+        actor_external_id_header=actor_external_id_header,
+        actor_role_header=actor_role_header,
+    )
+    if isinstance(resolved, GovernanceApiError):
+        return _governance_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            trace_id=payload.trace_id,
+            status_value="error",
+            error=resolved,
+        )
+    principal_id, principal_role = resolved
+
+    try:
+        outcome = create_project_proposal(
+            repository=governance_repository,
+            actor_id=principal_id,
+            actor_role=principal_role,
+            trace_id=payload.trace_id,
+            name=payload.name,
+            objective=payload.objective,
+            project_id=payload.project_id,
+            metadata=payload.metadata,
+        )
+    except GovernanceHandlerError as error:
+        status_code, response_error, status_value = _map_handler_error(error)
+        return _governance_response(
+            status_code=status_code,
+            trace_id=payload.trace_id,
+            status_value=status_value,
+            error=response_error,
+        )
+
+    audit_writer.write_event(
+        event_type="project.created",
+        outcome="ok",
+        trace_id=payload.trace_id,
+        request_id=None,
+        task_id=None,
+        principal_id=principal_id,
+        principal_role=principal_role,
+        source="governance",
+        reason_code=None,
+        message="proposal-stage project created",
+        payload={
+            "project_id": outcome.project.project_id,
+            "status": outcome.project.status,
+            "creator_role": principal_role,
+        },
+    )
+    return _governance_response(
+        status_code=status.HTTP_201_CREATED,
+        trace_id=payload.trace_id,
+        status_value="ok",
+        data={
+            "project_id": outcome.project.project_id,
+            "name": outcome.project.name,
+            "objective": outcome.project.objective,
+            "status": outcome.project.status,
+            "metadata": dict(outcome.project.metadata),
+        },
     )
 
 
@@ -436,5 +536,242 @@ def bind_workforce_template(
             "llm_routing_profile": outcome.llm_routing_profile,
             "system_prompt_hash": outcome.system_prompt_hash,
             "mandatory_operations": list(outcome.mandatory_operations),
+        },
+    )
+
+
+@router.post(
+    "/v1/governance/projects/{project_id}/completion/report",
+    response_model=GovernanceApiResponse,
+)
+def submit_completion_report(
+    project_id: str,
+    payload: ProjectCompletionReportRequest,
+    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
+    audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
+    external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
+    external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
+    actor_external_id_header: Annotated[
+        str | None, Header(alias="X-OpenQilin-Actor-External-Id")
+    ] = None,
+    actor_role_header: Annotated[str | None, Header(alias="X-OpenQilin-Actor-Role")] = None,
+) -> JSONResponse:
+    """Submit completion report under Project Manager governance contract."""
+
+    resolved = _resolve_principal(
+        external_channel_header=external_channel_header,
+        external_actor_id_header=external_actor_id_header,
+        actor_external_id_header=actor_external_id_header,
+        actor_role_header=actor_role_header,
+    )
+    if isinstance(resolved, GovernanceApiError):
+        return _governance_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            trace_id=payload.trace_id,
+            status_value="error",
+            error=resolved,
+        )
+    principal_id, principal_role = resolved
+    try:
+        outcome = submit_completion_report_by_project_manager(
+            repository=governance_repository,
+            project_id=project_id,
+            actor_id=principal_id,
+            actor_role=principal_role,
+            trace_id=payload.trace_id,
+            summary=payload.summary,
+            metric_results=payload.metric_results,
+        )
+    except GovernanceHandlerError as error:
+        status_code, response_error, status_value = _map_handler_error(error)
+        return _governance_response(
+            status_code=status_code,
+            trace_id=payload.trace_id,
+            status_value=status_value,
+            error=response_error,
+        )
+    audit_writer.write_event(
+        event_type="project.completion_report",
+        outcome="ok",
+        trace_id=payload.trace_id,
+        request_id=None,
+        task_id=None,
+        principal_id=principal_id,
+        principal_role=principal_role,
+        source="governance",
+        reason_code=None,
+        message="project completion report submitted",
+        payload={
+            "project_id": project_id,
+            "report_id": outcome.report.report_id,
+            "status": outcome.project.status,
+        },
+    )
+    return _governance_response(
+        status_code=status.HTTP_201_CREATED,
+        trace_id=payload.trace_id,
+        status_value="ok",
+        data={
+            "project_id": project_id,
+            "status": outcome.project.status,
+            "report_id": outcome.report.report_id,
+            "summary": outcome.report.summary,
+            "completion_report_storage_uri": outcome.report.completion_report_storage_uri,
+            "completion_report_content_hash": outcome.report.completion_report_content_hash,
+        },
+    )
+
+
+@router.post(
+    "/v1/governance/projects/{project_id}/completion/approve",
+    response_model=GovernanceApiResponse,
+)
+def approve_completion(
+    project_id: str,
+    payload: ProjectCompletionApprovalRequest,
+    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
+    audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
+    external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
+    external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
+    actor_external_id_header: Annotated[
+        str | None, Header(alias="X-OpenQilin-Actor-External-Id")
+    ] = None,
+    actor_role_header: Annotated[str | None, Header(alias="X-OpenQilin-Actor-Role")] = None,
+) -> JSONResponse:
+    """Record CWO/CEO completion approval and owner-notification evidence."""
+
+    resolved = _resolve_principal(
+        external_channel_header=external_channel_header,
+        external_actor_id_header=external_actor_id_header,
+        actor_external_id_header=actor_external_id_header,
+        actor_role_header=actor_role_header,
+    )
+    if isinstance(resolved, GovernanceApiError):
+        return _governance_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            trace_id=payload.trace_id,
+            status_value="error",
+            error=resolved,
+        )
+    principal_id, principal_role = resolved
+    try:
+        outcome = record_completion_approval_by_c_suite(
+            repository=governance_repository,
+            project_id=project_id,
+            actor_id=principal_id,
+            actor_role=principal_role,
+            trace_id=payload.trace_id,
+        )
+    except GovernanceHandlerError as error:
+        status_code, response_error, status_value = _map_handler_error(error)
+        return _governance_response(
+            status_code=status_code,
+            trace_id=payload.trace_id,
+            status_value=status_value,
+            error=response_error,
+        )
+    audit_writer.write_event(
+        event_type="project.completion_approval",
+        outcome="ok",
+        trace_id=payload.trace_id,
+        request_id=None,
+        task_id=None,
+        principal_id=principal_id,
+        principal_role=principal_role,
+        source="governance",
+        reason_code=None,
+        message="project completion approval recorded",
+        payload={
+            "project_id": project_id,
+            "approval_recorded": str(outcome.approval_recorded).lower(),
+            "approval_roles": ",".join(outcome.approval_roles),
+            "owner_notified": str(outcome.owner_notified).lower(),
+        },
+    )
+    return _governance_response(
+        status_code=status.HTTP_200_OK,
+        trace_id=payload.trace_id,
+        status_value="ok",
+        data={
+            "project_id": project_id,
+            "status": outcome.project.status,
+            "approval_recorded": outcome.approval_recorded,
+            "approval_roles": list(outcome.approval_roles),
+            "owner_notified": outcome.owner_notified,
+        },
+    )
+
+
+@router.post(
+    "/v1/governance/projects/{project_id}/completion/finalize",
+    response_model=GovernanceApiResponse,
+)
+def finalize_completion(
+    project_id: str,
+    payload: ProjectCompletionFinalizeRequest,
+    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
+    audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
+    external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
+    external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
+    actor_external_id_header: Annotated[
+        str | None, Header(alias="X-OpenQilin-Actor-External-Id")
+    ] = None,
+    actor_role_header: Annotated[str | None, Header(alias="X-OpenQilin-Actor-Role")] = None,
+) -> JSONResponse:
+    """Finalize project completion transition after report and approvals are in place."""
+
+    resolved = _resolve_principal(
+        external_channel_header=external_channel_header,
+        external_actor_id_header=external_actor_id_header,
+        actor_external_id_header=actor_external_id_header,
+        actor_role_header=actor_role_header,
+    )
+    if isinstance(resolved, GovernanceApiError):
+        return _governance_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            trace_id=payload.trace_id,
+            status_value="error",
+            error=resolved,
+        )
+    principal_id, principal_role = resolved
+    try:
+        outcome = finalize_project_completion_by_c_suite(
+            repository=governance_repository,
+            project_id=project_id,
+            actor_role=principal_role,
+            trace_id=payload.trace_id,
+            reason_code=payload.reason_code,
+        )
+    except GovernanceHandlerError as error:
+        status_code, response_error, status_value = _map_handler_error(error)
+        return _governance_response(
+            status_code=status_code,
+            trace_id=payload.trace_id,
+            status_value=status_value,
+            error=response_error,
+        )
+    audit_writer.write_event(
+        event_type="project.completed",
+        outcome="ok",
+        trace_id=payload.trace_id,
+        request_id=None,
+        task_id=None,
+        principal_id=principal_id,
+        principal_role=principal_role,
+        source="governance",
+        reason_code=payload.reason_code,
+        message="project completion finalized",
+        payload={
+            "project_id": project_id,
+            "status": outcome.project.status,
+        },
+    )
+    return _governance_response(
+        status_code=status.HTTP_200_OK,
+        trace_id=payload.trace_id,
+        status_value="ok",
+        data={
+            "project_id": project_id,
+            "status": outcome.project.status,
         },
     )

@@ -95,9 +95,9 @@ def test_owner_command_denied_when_project_chat_is_read_only() -> None:
     )
     services.governance_repo.transition_project_status(
         project_id=project.project_id,
-        next_status="completed",
-        reason_code="complete",
-        actor_role="project_manager",
+        next_status="terminated",
+        reason_code="terminate_for_read_only_guard",
+        actor_role="cwo",
         trace_id="trace-m7-wp3-003",
     )
     payload = build_owner_command_request_dict(

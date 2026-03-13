@@ -36,7 +36,7 @@ Checklist:
 2) `M6 MVP Documentation and Access Governance` (`issue #35`) - `done`
 - kickoff/decomposition complete with child work packages (`#36`..`#39`) - `done`
 - MVP policy decisions locked (doc-type enum, per-type + total caps, stage/role write matrix, hybrid mutability, pointer/hash integrity semantics) - `done`
-- `M6-WP1` canonical project file root (`${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`) + DB pointer/hash model - `done` (`issue #36`)
+- `M6-WP1` canonical project file root (`${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`) + runtime pointer/hash model (DB target deferred) - `done` (`issue #36`)
 - `M6-WP2` project document policy (approved types + per-type caps + fail-closed over-cap) - `done` (`issue #37`)
 - `M6-WP3` specialist touchability enforcement (`project_manager`-only direct path) - `done` (`issue #38`)
 - `M6-WP4` Project Manager mandatory-operations template enforcement - `done` (`issue #39`)
@@ -51,6 +51,7 @@ Checklist:
 - `M7-WP4` Docker `full` profile runtime cutover (`api_app`/workers placeholder replacement) - `done` (`issue #45`)
 - `M7-WP5` Gemini Flash free-tier provider-path activation + quota telemetry validation - `done` (`issue #46`)
 - `M7-WP6` MVP acceptance matrix + evidence pack closeout - `done` (`issue #47`)
+- M7 post-review remediation: governed project creation API, completion-governance chain enforcement, and Discord connector-ingress adapter path - `done`
 
 Carryover follow-ups:
 - enforce non-default connector shared secret in non-local environments at runtime validation layer - `todo`
