@@ -16,6 +16,7 @@ Validate live Discord behavior for multi-bot role UI:
 - Docker CLI/daemon available.
 - Discord role-bot tokens are configured in:
   - `OPENQILIN_DISCORD_MULTI_BOT_ENABLED=true`
+  - `OPENQILIN_DISCORD_ROLE_BOT_TOKENS_FILE` (recommended)
   - `OPENQILIN_DISCORD_ROLE_BOT_TOKENS_JSON`
   - `OPENQILIN_DISCORD_REQUIRED_ROLE_BOTS_CSV`
 - Required role bots are present and invited to target guild:

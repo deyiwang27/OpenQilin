@@ -24,6 +24,7 @@ def test_m9_wp2_discord_worker_is_wired_in_full_profile_compose() -> None:
     assert "OPENQILIN_DISCORD_BOT_TOKEN" in discord_block
     assert "OPENQILIN_DISCORD_MULTI_BOT_ENABLED" in discord_block
     assert "OPENQILIN_DISCORD_WORKER_ROLE" in discord_block
+    assert "OPENQILIN_DISCORD_ROLE_BOT_TOKENS_FILE" in discord_block
     assert "OPENQILIN_DISCORD_ROLE_BOT_TOKENS_JSON" in discord_block
     assert "OPENQILIN_DISCORD_REQUIRED_ROLE_BOTS_CSV" in discord_block
     assert "OPENQILIN_DISCORD_CONTROL_PLANE_BASE_URL" in discord_block
@@ -42,6 +43,7 @@ def test_m9_wp2_env_template_exposes_discord_runtime_settings() -> None:
     assert "OPENQILIN_DISCORD_BOT_TOKEN" in env_text
     assert "OPENQILIN_DISCORD_MULTI_BOT_ENABLED" in env_text
     assert "OPENQILIN_DISCORD_WORKER_ROLE" in env_text
+    assert "OPENQILIN_DISCORD_ROLE_BOT_TOKENS_FILE" in env_text
     assert "OPENQILIN_DISCORD_ROLE_BOT_TOKENS_JSON" in env_text
     assert "OPENQILIN_DISCORD_REQUIRED_ROLE_BOTS_CSV" in env_text
     assert "OPENQILIN_DISCORD_CONTROL_PLANE_BASE_URL" in env_text

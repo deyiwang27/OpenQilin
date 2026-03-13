@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
+from pathlib import Path
 from typing import Any, Mapping
 
 from openqilin.shared_kernel.config import RuntimeSettings
@@ -48,7 +49,7 @@ class RoleBotRegistry:
 def build_role_bot_registry(settings: RuntimeSettings) -> RoleBotRegistry:
     """Resolve role-bot registry from runtime settings with fail-closed validation."""
 
-    configured = _parse_role_identity_map(settings.discord_role_bot_tokens_json)
+    configured = _parse_role_identity_map(_resolve_role_bot_payload(settings))
 
     if not configured and not settings.discord_multi_bot_enabled:
         fallback_token = (settings.discord_bot_token or "").strip()
@@ -90,6 +91,20 @@ def build_role_bot_registry(settings: RuntimeSettings) -> RoleBotRegistry:
     )
 
 
+def _resolve_role_bot_payload(settings: RuntimeSettings) -> str:
+    tokens_file = (settings.discord_role_bot_tokens_file or "").strip()
+    if not tokens_file:
+        return settings.discord_role_bot_tokens_json
+    file_path = Path(tokens_file).expanduser()
+    try:
+        return file_path.read_text(encoding="utf-8")
+    except OSError as error:
+        raise RoleBotRegistryError(
+            code="discord_role_bot_file_unreadable",
+            message=(f"OPENQILIN_DISCORD_ROLE_BOT_TOKENS_FILE could not be read: {file_path}"),
+        ) from error
+
+
 def _parse_role_identity_map(raw_value: str) -> dict[str, RoleBotIdentity]:
     normalized = raw_value.strip()
     if not normalized:
@@ -100,13 +115,21 @@ def _parse_role_identity_map(raw_value: str) -> dict[str, RoleBotIdentity]:
     except json.JSONDecodeError as error:
         raise RoleBotRegistryError(
             code="discord_role_bot_json_invalid",
-            message="OPENQILIN_DISCORD_ROLE_BOT_TOKENS_JSON must be valid JSON object",
+            message=(
+                "role-bot token payload must be valid JSON object "
+                "(OPENQILIN_DISCORD_ROLE_BOT_TOKENS_JSON or "
+                "OPENQILIN_DISCORD_ROLE_BOT_TOKENS_FILE)"
+            ),
         ) from error
 
     if not isinstance(decoded, dict):
         raise RoleBotRegistryError(
             code="discord_role_bot_json_invalid",
-            message="OPENQILIN_DISCORD_ROLE_BOT_TOKENS_JSON must be a JSON object",
+            message=(
+                "role-bot token payload must be a JSON object "
+                "(OPENQILIN_DISCORD_ROLE_BOT_TOKENS_JSON or "
+                "OPENQILIN_DISCORD_ROLE_BOT_TOKENS_FILE)"
+            ),
         )
 
     result: dict[str, RoleBotIdentity] = {}

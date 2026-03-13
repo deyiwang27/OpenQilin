@@ -1,0 +1,27 @@
+{
+  "administrator": {
+    "token": "replace-me-admin-token",
+    "bot_id": "administrator_bot",
+    "status": "active"
+  },
+  "auditor": {
+    "token": "replace-me-auditor-token",
+    "bot_id": "auditor_bot",
+    "status": "active"
+  },
+  "ceo": {
+    "token": "replace-me-ceo-token",
+    "bot_id": "ceo_bot",
+    "status": "active"
+  },
+  "cwo": {
+    "token": "replace-me-cwo-token",
+    "bot_id": "cwo_bot",
+    "status": "active"
+  },
+  "project_manager": {
+    "token": "replace-me-project-manager-token",
+    "bot_id": "project_manager_bot",
+    "status": "active"
+  }
+}

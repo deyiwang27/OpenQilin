@@ -34,6 +34,7 @@ class RuntimeSettings(BaseSettings):
     discord_bot_token: str | None = None
     discord_multi_bot_enabled: bool = False
     discord_worker_role: str = "runtime_agent"
+    discord_role_bot_tokens_file: str | None = None
     discord_role_bot_tokens_json: str = "{}"
     discord_required_role_bots_csv: str = "administrator,auditor,ceo,cwo,project_manager"
     discord_control_plane_base_url: str = "http://127.0.0.1:8000"

@@ -81,7 +81,7 @@ Checklist:
 - `M10-WP4` role-locked prompts + per-role memory isolation - `done` (`issue #65`)
 - `M10-WP4` grounding follow-up: `llm_reason` grounded-only enforcement (DB/project-doc source of truth + citation fail-closed contract) - `done` (`issue #68`)
 - `M10-WP5` outbound delivery hardening (chunking + sequencing) - `done` (`issue #66`)
-- `M10-WP6` live acceptance evidence pack + operator runbook - `in_progress` (`issue #67`, automation/check scripts and artifact conformance delivered; final live Discord evidence capture pending operator run)
+- `M10-WP6` live acceptance evidence pack + operator runbook - `in_progress` (`issue #67`, automation/check scripts and artifact conformance delivered; file-based role-bot token registry config support added via `OPENQILIN_DISCORD_ROLE_BOT_TOKENS_FILE`; final live Discord evidence capture pending operator run)
 - `M10-WP7` intent-level read tool surface for grounded answers - `done` (`issue #69`)
 - `M10-WP8` governed write-action tools for project/runtime mutations - `done` (`issue #70`)
 - `M10-WP9` tool orchestration policy + role access control + acceptance - `done` (`issue #71`)

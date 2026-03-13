@@ -7,7 +7,11 @@ Scope: `M10-WP6` multi-bot operations
 
 Required env settings:
 - `OPENQILIN_DISCORD_MULTI_BOT_ENABLED=true`
+- `OPENQILIN_DISCORD_ROLE_BOT_TOKENS_FILE` (recommended):
+  - path to JSON payload file (for example `.secrets/discord_role_bot_tokens.json`)
+  - bootstrap template: `cp .secrets/discord_role_bot_tokens.example.json .secrets/discord_role_bot_tokens.json`
 - `OPENQILIN_DISCORD_ROLE_BOT_TOKENS_JSON`:
+  - fallback when file path is not set
   - JSON object keyed by role (`administrator`, `auditor`, `ceo`, `cwo`, `project_manager`)
   - each entry may be string token or rich object:
     - `token`
@@ -29,6 +33,7 @@ Fail-closed startup checks:
 - required role-bot mappings must exist and be active
 - duplicate tokens are rejected
 - duplicate `bot_id` values are rejected
+- unreadable token file path is rejected
 - invalid registry JSON is rejected
 
 Runtime readiness:

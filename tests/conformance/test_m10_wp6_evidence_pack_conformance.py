@@ -46,6 +46,7 @@ def test_m10_wp6_conformance_checklist_and_runbook_exist() -> None:
         assert snippet in checklist
 
     for snippet in (
+        "OPENQILIN_DISCORD_ROLE_BOT_TOKENS_FILE",
         "OPENQILIN_DISCORD_ROLE_BOT_TOKENS_JSON",
         "OPENQILIN_DISCORD_REQUIRED_ROLE_BOTS_CSV",
         "OPENQILIN_DISCORD_RESPONSE_CHUNK_SIZE_CHARS",

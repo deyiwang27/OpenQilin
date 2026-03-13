@@ -49,11 +49,31 @@ def _check_env(name: str) -> PreflightCheck:
     )
 
 
+def _check_any_env(name: str, *candidates: str) -> PreflightCheck:
+    for candidate in candidates:
+        value = os.getenv(candidate)
+        if value and value.strip():
+            return PreflightCheck(
+                name=name,
+                success=True,
+                details=f"{candidate}=set",
+            )
+    return PreflightCheck(
+        name=name,
+        success=False,
+        details="missing",
+    )
+
+
 def _build_preflight_results() -> tuple[PreflightCheck, ...]:
     return (
         _check_command("docker"),
         _check_env("OPENQILIN_DISCORD_MULTI_BOT_ENABLED"),
-        _check_env("OPENQILIN_DISCORD_ROLE_BOT_TOKENS_JSON"),
+        _check_any_env(
+            "env_OPENQILIN_DISCORD_ROLE_BOT_TOKENS_FILE_OR_JSON",
+            "OPENQILIN_DISCORD_ROLE_BOT_TOKENS_FILE",
+            "OPENQILIN_DISCORD_ROLE_BOT_TOKENS_JSON",
+        ),
         _check_env("OPENQILIN_DISCORD_REQUIRED_ROLE_BOTS_CSV"),
         _check_env("OPENQILIN_GEMINI_API_KEY"),
         _check_env("OPENQILIN_CONNECTOR_SHARED_SECRET"),
