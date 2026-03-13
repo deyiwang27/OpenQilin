@@ -57,17 +57,19 @@ WP closeout issue: `#56` (`M9-WP4: MVP live-instance evidence pack and closeout`
   - `implementation/v1/planning/artifacts/m9_live_acceptance_manifest_latest.json`
   - `implementation/v1/planning/artifacts/m9_live_acceptance_notes.md`
 
-### 3.4 Live-run execution status and current blocker evidence
-- Current status: `blocked_on_discord_privileged_intents` in this environment.
-- Environment prerequisites now pass (`docker` + required env keys set) and `docker compose --profile full up -d --build` boots the full stack.
-- Current blocking prerequisite:
-  - Discord Developer Portal privileged intents are not fully enabled for the bot application; `discord_bot_worker` exits with `discord.errors.PrivilegedIntentsRequired`.
+### 3.4 Live-run execution status and current execution evidence
+- Current status: `in_progress_live_scenarios`.
+- Environment prerequisites pass (`docker` + required env keys set) and `docker compose --profile full up -d --build` boots the full stack.
+- Discord runtime unblock verified:
+  - `discord_bot_worker` now stays healthy and logs `discord.worker.ready` after privileged-intents configuration.
 - Most recent local preflight output:
   - `[OK] command_docker: /opt/homebrew/bin/docker`
   - `[OK] env_OPENQILIN_DISCORD_BOT_TOKEN: set`
   - `[OK] env_OPENQILIN_GEMINI_API_KEY: set`
   - `[OK] env_OPENQILIN_CONNECTOR_SHARED_SECRET: set`
   - `[INFO] M9 live acceptance preflight passed.`
+- Remaining gap:
+  - complete operator-run Discord lifecycle scenarios and capture screenshots/log trace correlation artifacts for both acceptance branches.
 
 ## 4. Acceptance Criteria Mapping (`#56`)
 1. Publish live-instance MVP evidence pack with command matrix and runtime mapping.
