@@ -22,6 +22,9 @@ from openqilin.data_access.repositories.agent_registry import (
 from openqilin.data_access.repositories.artifacts import InMemoryProjectArtifactRepository
 from openqilin.data_access.repositories.communication import InMemoryCommunicationRepository
 from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
+from openqilin.data_access.repositories.identity_channels import (
+    InMemoryIdentityChannelRepository,
+)
 from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
 from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
 from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
@@ -52,6 +55,7 @@ class RuntimeServices:
     communication_repo: InMemoryCommunicationRepository
     idempotency_cache_store: InMemoryIdempotencyCacheStore
     agent_registry_repo: InMemoryAgentRegistryRepository
+    identity_channel_repo: InMemoryIdentityChannelRepository
     project_artifact_repo: InMemoryProjectArtifactRepository
     governance_repo: InMemoryGovernanceRepository
     admission_service: AdmissionService
@@ -91,6 +95,11 @@ def build_runtime_services() -> RuntimeServices:
     idempotency_cache_store = InMemoryIdempotencyCacheStore(snapshot_path=idempotency_snapshot_path)
     agent_registry_repo = InMemoryAgentRegistryRepository(
         snapshot_path=agent_registry_snapshot_path
+    )
+    identity_channel_repo = InMemoryIdentityChannelRepository(
+        snapshot_path=settings.identity_channel_snapshot_path
+        if settings.runtime_persistence_enabled
+        else None
     )
     project_artifact_repo = InMemoryProjectArtifactRepository(system_root=settings.system_root_path)
     governance_repo = InMemoryGovernanceRepository(artifact_repository=project_artifact_repo)
@@ -159,6 +168,7 @@ def build_runtime_services() -> RuntimeServices:
         communication_repo=communication_repo,
         idempotency_cache_store=idempotency_cache_store,
         agent_registry_repo=agent_registry_repo,
+        identity_channel_repo=identity_channel_repo,
         project_artifact_repo=project_artifact_repo,
         governance_repo=governance_repo,
         admission_service=admission_service,
@@ -215,6 +225,12 @@ def get_governance_repository(request: Request) -> InMemoryGovernanceRepository:
     """Provide governance repository for project lifecycle and proposal contracts."""
 
     return get_runtime_services(request).governance_repo
+
+
+def get_identity_channel_repository(request: Request) -> InMemoryIdentityChannelRepository:
+    """Provide connector identity/channel mapping repository for Discord ingress checks."""
+
+    return get_runtime_services(request).identity_channel_repo
 
 
 def get_task_dispatch_service(request: Request) -> TaskDispatchService:

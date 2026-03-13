@@ -47,6 +47,12 @@ class RuntimeSettings(BaseSettings):
         return self.system_root_path / "runtime" / "idempotency_cache.json"
 
     @property
+    def identity_channel_snapshot_path(self) -> Path:
+        """Snapshot path for connector identity/channel mapping persistence."""
+
+        return self.system_root_path / "runtime" / "identity_channel_mappings.json"
+
+    @property
     def agent_registry_snapshot_path(self) -> Path:
         """Snapshot path for institutional-agent registry persistence."""
 
