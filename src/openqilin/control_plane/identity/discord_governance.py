@@ -13,7 +13,7 @@ from openqilin.data_access.repositories.identity_channels import (
 
 _PENDING_ROLE_FLAGS = frozenset({"secretary", "cso", "domain_leader"})
 _MEMBERSHIP_BY_CHAT_CLASS: dict[str, frozenset[str]] = {
-    "direct": frozenset({"owner", "administrator", "auditor", "ceo", "cwo"}),
+    "direct": frozenset({"owner", "administrator", "auditor", "ceo", "cwo", "project_manager"}),
     "leadership_council": frozenset({"owner", "administrator", "auditor", "ceo", "cwo"}),
     "governance": frozenset({"owner", "administrator", "auditor"}),
     "executive": frozenset({"owner", "ceo", "cwo"}),

@@ -72,7 +72,7 @@ Checklist:
 - post-closeout remediation for Discord role-fidelity and LLM role-lock hardening - `done` (`issue #60`, recipient role-id mismatch fail-closed guard + role-labeled Discord replies + role-locked prompt/injection denial + per-recipient conversation memory tests)
 - issue `#60` follow-up resilience hardening - `done` (Gemini transient `429`/`5xx` retry-backoff path, compose env wiring for LLM token/retry settings, larger Discord response cap, and runtime restart verification)
 
-6) `M10 Multi-Bot Discord Role UI` (`issue #61`) - `in_progress`
+6) `M10 Multi-Bot Discord Role UI` (`issue #61`) - `done`
 - kickoff/decomposition complete with child work packages (`#62`..`#67`, `#69`..`#71`) - `done`
 - architecture design doc published (`implementation/v1/mvp/MultiBotDiscordArchitecture-v1.md`) - `done`
 - `M10-WP1` role-bot identity registry + token/config hardening - `done` (`issue #62`)
@@ -81,7 +81,7 @@ Checklist:
 - `M10-WP4` role-locked prompts + per-role memory isolation - `done` (`issue #65`)
 - `M10-WP4` grounding follow-up: `llm_reason` grounded-only enforcement (DB/project-doc source of truth + citation fail-closed contract) - `done` (`issue #68`)
 - `M10-WP5` outbound delivery hardening (chunking + sequencing) - `done` (`issue #66`)
-- `M10-WP6` live acceptance evidence pack + operator runbook - `in_progress` (`issue #67`, automation/check scripts and artifact conformance delivered; file-based role-bot token registry config support added via `OPENQILIN_DISCORD_ROLE_BOT_TOKENS_FILE`; final live Discord evidence capture pending operator run)
+- `M10-WP6` live acceptance evidence pack + operator runbook - `done` (`issue #67`, live Discord DM matrix and PM remediation validated; artifact pack captured under `implementation/v1/planning/artifacts/m10_live_*`)
 - `M10-WP7` intent-level read tool surface for grounded answers - `done` (`issue #69`)
 - `M10-WP8` governed write-action tools for project/runtime mutations - `done` (`issue #70`)
 - `M10-WP9` tool orchestration policy + role access control + acceptance - `done` (`issue #71`)

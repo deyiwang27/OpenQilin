@@ -1,0 +1,8 @@
+discord_bot_worker-1  | WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+discord_bot_worker-1  | 2026-03-13 21:51:16 [info     ] worker.bootstrap               worker=discord_bot_worker
+discord_bot_worker-1  | 2026-03-13 21:51:16 [info     ] discord.worker.launch_plan     bot_count=5 bot_roles=['administrator', 'auditor', 'ceo', 'cwo', 'project_manager'] multi_bot=True required_roles=['administrator', 'auditor', 'ceo', 'cwo', 'project_manager']
+discord_bot_worker-1  | 2026-03-13 21:51:20 [info     ] discord.worker.ready           bot_id=project_manager_bot bot_role=project_manager bot_user='OpenQilin PM#2230' control_plane_base_url=http://api_app:8000
+discord_bot_worker-1  | 2026-03-13 21:51:20 [info     ] discord.worker.ready           bot_id=ceo_bot bot_role=ceo bot_user='OpenQilin CEO#4013' control_plane_base_url=http://api_app:8000
+discord_bot_worker-1  | 2026-03-13 21:51:20 [info     ] discord.worker.ready           bot_id=cwo_bot bot_role=cwo bot_user='OpenQilin CWO#7859' control_plane_base_url=http://api_app:8000
+discord_bot_worker-1  | 2026-03-13 21:51:20 [info     ] discord.worker.ready           bot_id=auditor_bot bot_role=auditor bot_user='OpenQilin Auditor#3031' control_plane_base_url=http://api_app:8000
+discord_bot_worker-1  | 2026-03-13 21:51:20 [info     ] discord.worker.ready           bot_id=administrator_bot bot_role=administrator bot_user='OpenQilin Admin#8748' control_plane_base_url=http://api_app:8000
