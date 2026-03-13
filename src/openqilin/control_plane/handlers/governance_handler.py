@@ -11,6 +11,7 @@ from openqilin.control_plane.governance.project_manager_template import (
     validate_project_manager_template,
 )
 from openqilin.data_access.repositories.governance import (
+    CompletionReportRecord,
     GovernanceRepositoryError,
     InMemoryGovernanceRepository,
     ProjectRecord,
@@ -40,6 +41,13 @@ class ProposalApprovalOutcome:
 
 
 @dataclass(frozen=True, slots=True)
+class ProjectCreateOutcome:
+    """Outcome returned by proposal-stage project creation."""
+
+    project: ProjectRecord
+
+
+@dataclass(frozen=True, slots=True)
 class ProjectInitializationOutcome:
     """Outcome returned by CWO project initialization workflow."""
 
@@ -57,6 +65,31 @@ class WorkforceBindingOutcome:
     llm_routing_profile: str
     system_prompt_hash: str
     mandatory_operations: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ProjectCompletionReportOutcome:
+    """Outcome returned when Project Manager submits completion report."""
+
+    project: ProjectRecord
+    report: CompletionReportRecord
+
+
+@dataclass(frozen=True, slots=True)
+class ProjectCompletionApprovalOutcome:
+    """Outcome returned when CEO/CWO records completion approval."""
+
+    project: ProjectRecord
+    approval_recorded: bool
+    approval_roles: tuple[str, ...]
+    owner_notified: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ProjectCompletionFinalizeOutcome:
+    """Outcome returned when completion transition is finalized."""
+
+    project: ProjectRecord
 
 
 def submit_proposal_message(
@@ -86,6 +119,42 @@ def submit_proposal_message(
         )
     except GovernanceRepositoryError as error:
         raise GovernanceHandlerError(code=error.code, message=error.message) from error
+
+
+def create_project_proposal(
+    *,
+    repository: InMemoryGovernanceRepository,
+    actor_id: str,
+    actor_role: str,
+    trace_id: str,
+    name: str,
+    objective: str,
+    project_id: str | None,
+    metadata: Mapping[str, object] | None = None,
+) -> ProjectCreateOutcome:
+    """Create proposal-stage project under triad governance scope."""
+
+    normalized_role = actor_role.strip().lower()
+    if normalized_role not in _TRIAD_ROLES:
+        raise GovernanceHandlerError(
+            code="governance_project_create_role_forbidden",
+            message="project creation is limited to owner, ceo, and cwo",
+        )
+    merged_metadata = dict(metadata or {})
+    merged_metadata.setdefault("created_by_actor_id", actor_id.strip())
+    merged_metadata.setdefault("created_by_actor_role", normalized_role)
+    merged_metadata.setdefault("created_trace_id", trace_id.strip())
+    try:
+        project = repository.create_project(
+            project_id=project_id,
+            name=name,
+            objective=objective,
+            status="proposed",
+            metadata=merged_metadata,
+        )
+    except GovernanceRepositoryError as error:
+        raise GovernanceHandlerError(code=error.code, message=error.message) from error
+    return ProjectCreateOutcome(project=project)
 
 
 def approve_project_proposal(
@@ -171,6 +240,109 @@ def initialize_project_by_cwo(
     except GovernanceRepositoryError as error:
         raise GovernanceHandlerError(code=error.code, message=error.message) from error
     return ProjectInitializationOutcome(project=project)
+
+
+def submit_completion_report_by_project_manager(
+    *,
+    repository: InMemoryGovernanceRepository,
+    project_id: str,
+    actor_id: str,
+    actor_role: str,
+    trace_id: str,
+    summary: str,
+    metric_results: Mapping[str, object] | None,
+) -> ProjectCompletionReportOutcome:
+    """Persist completion report under Project Manager governance contract."""
+
+    normalized_role = actor_role.strip().lower()
+    if normalized_role != "project_manager":
+        raise GovernanceHandlerError(
+            code="governance_project_completion_report_role_forbidden",
+            message="completion report submission is limited to project_manager",
+        )
+    try:
+        report = repository.submit_completion_report(
+            project_id=project_id,
+            actor_id=actor_id,
+            actor_role=normalized_role,
+            summary=summary,
+            metric_results=metric_results,
+            trace_id=trace_id,
+        )
+    except GovernanceRepositoryError as error:
+        raise GovernanceHandlerError(code=error.code, message=error.message) from error
+    project = repository.get_project(project_id)
+    if project is None:
+        raise GovernanceHandlerError(
+            code="governance_project_missing",
+            message=f"project not found: {project_id}",
+        )
+    return ProjectCompletionReportOutcome(project=project, report=report)
+
+
+def record_completion_approval_by_c_suite(
+    *,
+    repository: InMemoryGovernanceRepository,
+    project_id: str,
+    actor_id: str,
+    actor_role: str,
+    trace_id: str,
+) -> ProjectCompletionApprovalOutcome:
+    """Persist completion approval decision under CEO/CWO contract."""
+
+    normalized_role = actor_role.strip().lower()
+    if normalized_role not in {"ceo", "cwo"}:
+        raise GovernanceHandlerError(
+            code="governance_project_completion_approval_role_forbidden",
+            message="completion approval is limited to ceo or cwo",
+        )
+    try:
+        project, approval_recorded = repository.record_completion_approval(
+            project_id=project_id,
+            actor_id=actor_id,
+            actor_role=normalized_role,
+            trace_id=trace_id,
+        )
+    except GovernanceRepositoryError as error:
+        raise GovernanceHandlerError(code=error.code, message=error.message) from error
+    approval_roles = tuple(
+        sorted({approval.actor_role for approval in project.completion_approvals})
+    )
+    return ProjectCompletionApprovalOutcome(
+        project=project,
+        approval_recorded=approval_recorded,
+        approval_roles=approval_roles,
+        owner_notified=project.completion_owner_notified_at is not None,
+    )
+
+
+def finalize_project_completion_by_c_suite(
+    *,
+    repository: InMemoryGovernanceRepository,
+    project_id: str,
+    actor_role: str,
+    trace_id: str,
+    reason_code: str,
+) -> ProjectCompletionFinalizeOutcome:
+    """Finalize project completion after completion governance prerequisites are met."""
+
+    normalized_role = actor_role.strip().lower()
+    if normalized_role not in {"ceo", "cwo"}:
+        raise GovernanceHandlerError(
+            code="governance_project_completion_finalize_role_forbidden",
+            message="completion finalization is limited to ceo or cwo",
+        )
+    try:
+        project = repository.transition_project_status(
+            project_id=project_id,
+            next_status="completed",
+            reason_code=reason_code,
+            actor_role=normalized_role,
+            trace_id=trace_id,
+        )
+    except GovernanceRepositoryError as error:
+        raise GovernanceHandlerError(code=error.code, message=error.message) from error
+    return ProjectCompletionFinalizeOutcome(project=project)
 
 
 def bind_workforce_template_by_cwo(

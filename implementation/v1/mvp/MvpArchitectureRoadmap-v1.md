@@ -1,6 +1,6 @@
 # OpenQilin MVP v0.1 - Architecture Roadmap
 
-Status: planning baseline
+Status: re-baselined for MVP runability gap closure (`M8`/`M9` planned and issued)
 Last updated: 2026-03-12
 
 ## 1. Goal
@@ -21,32 +21,21 @@ Implemented and validated:
 
 ## 3. MVP Gap Assessment
 
-Still missing or placeholder-heavy for MVP v0.1:
-- Persistent governance domain model:
-  - `data_access/repositories/governance.py` is placeholder
-  - no concrete persistent agent/project registries with lifecycle constraints
-- Runtime-state persistence:
-  - task and communication repositories are primarily in-memory
-  - restart recovery does not yet hydrate full runtime state from persistent storage
-- Governance path guard enforcement:
-  - policy exists in docs, but centralized runtime write-guard service is not yet implemented
-- Append-only log enforcement at persistence boundary:
-  - append-only behavior exists in runtime APIs, but DB-level roles/policies are not yet codified
-- MVP control-plane surfaces:
-  - owner discussion/governance routers are placeholders
-  - project creation and project/agent/budget status contracts are not yet exposed as stable MVP API set
-- Docker runtime surface:
-  - `compose` `full` profile still runs placeholder containers for `api_app`, `orchestrator_worker`, and `communication_worker`
-- Discord adapter:
-  - transport assumptions exist, but adapter boundary that maps Discord payloads to canonical owner envelope is not yet a first-class runtime service
-- External provider activation:
-  - Gemini routing profile exists, but provider path is still in-memory deterministic adapter for local/test and not yet validated as real free-tier runtime path
-- Project proposal and approval governance flow:
-  - explicit proposal revision/approval lifecycle contracts are not yet implemented end-to-end
-- Project rich-text documentation policy:
-  - canonical system root + file type/cap enforcement is not implemented yet
-- Project Manager template and workforce bootstrapping contracts:
-  - CWO-driven template/llm/system-prompt binding path is not implemented as governed runtime flow
+M5..M7 implementation status:
+- proposal/approval/initialization/workforce governance path is implemented
+- project-document policy and specialist-touchability constraints are implemented
+- runtime recovery, Discord ingress governance, Docker full-profile runtime cutover, and Gemini provider-path activation are implemented
+- MVP acceptance matrix and evidence pack are implemented
+
+Blocking gaps before MVP closeout:
+1. Governance mutation routes (`governance` + `owner_discussions`) do not yet enforce connector signature/idempotency parity, leaving header-spoof risk.
+2. Lifecycle APIs are incomplete (`pause`, `resume`, `terminate`, `archive` are not governed API endpoints yet) and acceptance still uses direct repository lifecycle mutation.
+3. Real Discord runtime connection is not yet implemented as a live bot worker in Docker `full` profile.
+4. Planning docs still contain residual DB-authoritative wording that conflicts with runtime-authoritative MVP persistence model.
+
+Gap-to-milestone mapping:
+- `M8` (issues `#48`..`#52`): governance hardening, lifecycle API completion, acceptance/doc alignment.
+- `M9` (issues `#49`, `#53`..`#56`): real Discord bot runtime, Docker integration + secret hardening, live end-to-end acceptance evidence.
 
 ## 4. Target MVP Runtime Shape
 
@@ -59,7 +48,7 @@ Core persistent domains:
 - `projects`: lifecycle, objective, budget caps and usage counters
 - `tasks`: governed execution records and terminal outcomes
 - `execution_logs`: append-only governed audit records
-- `project_artifact*`: file-backed rich-text docs with DB pointer/hash metadata
+- `project_artifact*`: file-backed rich-text docs with runtime pointer/hash metadata
 
 ## 5. Post-M4 Milestone Plan for MVP v0.1
 
@@ -80,10 +69,10 @@ Exit criteria:
 
 ## M6 - Project Documentation and Access Governance
 Objective:
-- implement hybrid DB+file project documentation model and role-touchability rules
+- implement hybrid runtime-metadata + file project documentation model and role-touchability rules
 
 Work packages:
-1. `M6-WP1`: implement canonical project file root under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/` with DB pointer/hash synchronization
+1. `M6-WP1`: implement canonical project file root under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/` with runtime pointer/hash synchronization
 2. `M6-WP2`: enforce approved doc types, mixed per-type + project-total caps, and lifecycle/role write-governance policy
 3. `M6-WP3`: enforce specialist touchability policy (Project Manager-only in first MVP)
 4. `M6-WP4`: enforce Project Manager mandatory-operations template contract
@@ -115,6 +104,37 @@ Exit criteria:
 - Discord adapter enforces fixed chat classes (`direct`, `leadership_council`, `governance`, `executive`, `project`) and lifecycle-driven project-channel membership constraints, including deferred/pending `secretary` participation profile handling
 - full project lifecycle (`proposed -> approved -> active -> paused -> completed -> terminated -> archived`) is validated via governed acceptance scenarios
 - MVP v0.1 evidence pack is complete and traceable
+
+## M8 - Governance Surface Hardening
+Objective:
+- close governance-critical MVP gaps exposed by post-M7 review
+
+Work packages:
+1. `M8-WP1`: enforce connector signature/idempotency/actor parity on governance and proposal-discussion routes
+2. `M8-WP2`: add governed lifecycle APIs for `pause`, `resume`, `terminate`, `archive` with audit evidence
+3. `M8-WP3`: refactor acceptance to API-only lifecycle transitions and align planning docs to runtime-authoritative persistence wording
+
+Exit criteria:
+- header spoofing is fail-closed on governance mutation routes
+- lifecycle transitions are API-driven and audited end-to-end
+- acceptance/conformance paths no longer mutate lifecycle via repository internals
+- milestone/spec/planning persistence semantics are consistent
+
+## M9 - Real Discord Runtime and Live MVP Validation
+Objective:
+- run an actually connected Discord instance in Docker and validate live MVP use cases
+
+Work packages:
+1. `M9-WP1`: implement real Discord bot worker runtime (`discord gateway -> /v1/connectors/discord/messages -> governed response bridge`)
+2. `M9-WP2`: integrate Discord worker into Docker `full` profile and enforce non-local secret hardening
+3. `M9-WP3`: execute live Discord acceptance checklist across proposal/approval/activation/execution/completion flows
+4. `M9-WP4`: publish live-instance MVP evidence pack and closeout checklist
+
+Exit criteria:
+- real Discord bot receives and replies through governed runtime paths
+- Docker `full` profile runs API + workers + Discord bot together
+- non-local runtime denies unsafe/missing connector secret configuration
+- live evidence demonstrates MVP lifecycle use cases through real Discord
 
 ## 6. Design Decisions Locked for MVP v0.1
 

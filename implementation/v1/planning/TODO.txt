@@ -15,15 +15,17 @@ Status legend:
 - `done`
 
 Current context:
-- Active branch: `feat/35-m6-documentation-access-governance-kickoff`
-- Current scope: MVP v0.1 post-M4 roadmap (`M6`..`M7`)
+- Active branch: `feat/41-m7-persistence-adapter-acceptance-kickoff`
+- Current scope: MVP v0.1 runnable-instance gap closure (`M8` + `M9`)
 - Baseline roadmap: `implementation/v1/mvp/MvpArchitectureRoadmap-v1.md`
 
 Milestone summary:
 - `M0`..`M4`: `done` (see `implementation/v1/planning/ImplementationProgress-v1.md` and evidence packs)
 - `M5`: `done`
 - `M6`: `done`
-- `M7`: `todo`
+- `M7`: `in_progress`
+- `M8`: `in_progress`
+- `M9`: `not_started`
 
 Checklist:
 1) `M5 MVP Proposal and Governance Activation` (`issue #29`) - `done`
@@ -36,20 +38,36 @@ Checklist:
 2) `M6 MVP Documentation and Access Governance` (`issue #35`) - `done`
 - kickoff/decomposition complete with child work packages (`#36`..`#39`) - `done`
 - MVP policy decisions locked (doc-type enum, per-type + total caps, stage/role write matrix, hybrid mutability, pointer/hash integrity semantics) - `done`
-- `M6-WP1` canonical project file root (`${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`) + DB pointer/hash model - `done` (`issue #36`)
+- `M6-WP1` canonical project file root (`${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`) + runtime pointer/hash model (DB target deferred) - `done` (`issue #36`)
 - `M6-WP2` project document policy (approved types + per-type caps + fail-closed over-cap) - `done` (`issue #37`)
 - `M6-WP3` specialist touchability enforcement (`project_manager`-only direct path) - `done` (`issue #38`)
 - `M6-WP4` Project Manager mandatory-operations template enforcement - `done` (`issue #39`)
 - M6 remediation batch (specialist spoof hardening, six baseline activation docs, role/stage write authorization) - `done`
 - milestone closeout PR + parent issue close for `#35` - `done` (`PR #40`)
 
-3) `M7 MVP Persistence, Adapter, and Acceptance` - `todo`
-- `M7-WP1` persistent runtime-state adapters + startup recovery hardening - `todo`
-- `M7-WP2` Discord ingress context + identity/channel mapping baseline (`guild_id`/`channel_id`/`channel_type`; allowlist states `pending|verified|revoked`) - `todo`
-- `M7-WP3` Discord chat-governance enforcement (`direct|leadership_council|governance|executive|project`) + lifecycle membership resolver + specialist access constraints + pending-role profile flags (`secretary`, `cso`, `domain_leader`) - `todo`
-- `M7-WP4` Docker `full` profile runtime cutover (`api_app`/workers placeholder replacement) - `todo`
-- `M7-WP5` Gemini Flash free-tier provider-path activation + quota telemetry validation - `todo`
-- `M7-WP6` MVP acceptance matrix + evidence pack closeout - `todo`
+3) `M7 MVP Persistence, Adapter, and Acceptance` (`issue #41`) - `in_progress`
+- kickoff/decomposition complete with child work packages (`#42`..`#47`) - `done`
+- `M7-WP1` persistent runtime-state adapters + startup recovery hardening - `done` (`issue #42`)
+- `M7-WP2` Discord ingress context + identity/channel mapping baseline (`guild_id`/`channel_id`/`channel_type`; allowlist states `pending|verified|revoked`) - `done` (`issue #43`)
+- `M7-WP3` Discord chat-governance enforcement (`direct|leadership_council|governance|executive|project`) + lifecycle membership resolver + specialist access constraints + pending-role profile flags (`secretary`, `cso`, `domain_leader`) - `done` (`issue #44`)
+- `M7-WP4` Docker `full` profile runtime cutover (`api_app`/workers placeholder replacement) - `done` (`issue #45`)
+- `M7-WP5` Gemini Flash free-tier provider-path activation + quota telemetry validation - `done` (`issue #46`)
+- `M7-WP6` MVP acceptance matrix + evidence pack closeout - `done` (`issue #47`)
+- M7 post-review remediation: governed project creation API, completion-governance chain enforcement, and Discord connector-ingress adapter path - `done`
+- M7 closeout is gated by M8 + M9 completion - `todo`
+
+4) `M8 MVP Governance Surface Hardening` (`issue #48`) - `in_progress`
+- kickoff/decomposition complete with child work packages (`#50`..`#52`) - `done`
+- `M8-WP1` connector-auth enforcement on governance/discussion routes - `todo` (`issue #50`)
+- `M8-WP2` governed lifecycle APIs for `pause|resume|terminate|archive` - `todo` (`issue #51`)
+- `M8-WP3` API-only acceptance lifecycle refactor + planning doc alignment - `todo` (`issue #52`)
+
+5) `M9 MVP Real Discord Runtime and Live Validation` (`issue #49`) - `not_started`
+- kickoff/decomposition complete with child work packages (`#53`..`#56`) - `done`
+- `M9-WP1` real Discord bot worker runtime (ingress + response bridge) - `todo` (`issue #53`)
+- `M9-WP2` Docker `full` profile integration + non-local secret hardening - `todo` (`issue #54`)
+- `M9-WP3` live Discord end-to-end MVP acceptance validation - `todo` (`issue #55`)
+- `M9-WP4` live-instance evidence pack and closeout - `todo` (`issue #56`)
 
 Carryover follow-ups:
 - enforce non-default connector shared secret in non-local environments at runtime validation layer - `todo`

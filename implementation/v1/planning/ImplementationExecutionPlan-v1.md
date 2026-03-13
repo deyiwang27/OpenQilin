@@ -21,8 +21,10 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 | `M3 Communication Reliability` | harden delivery lifecycle | A2A validation, ACP send/ack/nack, retries, dead-letter flow, orchestrator callback integration | deterministic at-least-once behavior, duplicate safety, and dead-letter alert/audit evidence |
 | `M4 Hardening and Release Readiness` | complete release hardening gates | dashboards/alerts, migration and rollback validation, conformance+smoke suites, release artifact prep | `full` profile passes smoke and conformance gates and release candidate is promotable |
 | `M5 MVP Proposal and Governance Activation` | implement proposal-to-activation governance contracts | project lifecycle lock, proposal/approval APIs, CWO initialization flow, workforce templating with declared-disabled `domain_leader` | proposal/approval/activation workflow is enforced with deterministic lifecycle guards and audit evidence |
-| `M6 MVP Documentation and Access Governance` | implement hybrid project-doc governance and role-touchability controls | canonical system-root project docs, file type/cap policy, DB pointer/hash integrity, Project Manager-only specialist touchability policy | project-document writes are policy-governed and specialist access constraints are enforced fail-closed |
+| `M6 MVP Documentation and Access Governance` | implement hybrid project-doc governance and role-touchability controls | canonical system-root project docs, file type/cap policy, runtime pointer/hash integrity, Project Manager-only specialist touchability policy | project-document writes are policy-governed and specialist access constraints are enforced fail-closed |
 | `M7 MVP Persistence, Adapter, and Acceptance` | close MVP with recovery hardening and constrained Discord adapter | persistent runtime recovery path, Discord adapter with role/channel constraints, MVP acceptance matrix and evidence pack | restart invariants and Discord-governed ingress constraints pass end-to-end acceptance evidence |
+| `M8 MVP Governance Surface Hardening` | close governance-critical MVP gaps from post-M7 review | connector-auth parity for governance routes, governed lifecycle API completion, API-only lifecycle acceptance flow, planning doc alignment | governance mutation spoofing is fail-closed and lifecycle transitions are API-governed end-to-end |
+| `M9 MVP Real Discord Runtime and Live Validation` | deliver real Discord-connected runtime and live MVP evidence | Discord bot worker runtime, Docker full-profile integration + secret hardening, live acceptance checklist, closeout evidence pack | real Discord use cases run on Docker runtime with traceable live acceptance evidence |
 
 ## 4. M1 Implementation Workplan (Kickoff on Issue `#4`)
 ### 4.1 Objective and Boundary
@@ -182,7 +184,7 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
   - runnable Docker `full` profile runtime with non-placeholder app/worker services
   - governance/executive runtime validated through Gemini Flash free-tier provider path with quota accounting
   - Discord-originated owner command flows validated through the same governed ingress path
-- Keep delivery incremental and evidence-driven across `M5`..`M7`.
+- Keep delivery incremental and evidence-driven across `M5`..`M9`.
 - Preserve fail-closed behavior while adding persistent governance/project contracts.
 
 ### 8.2 Ordered Milestone Work Packages
@@ -207,7 +209,7 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 
 5. `M6-WP1` Canonical project file root and pointer/hash model
 - Target modules: `data_access/repositories/artifacts.py`, storage policy services, environment config.
-- Deliverables: project docs stored under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/` with DB `storage_uri` + `content_hash`.
+- Deliverables: project docs stored under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/` with runtime `storage_uri` + `content_hash`.
 
 6. `M6-WP2` Project document policy and volume cap enforcement
 - Target modules: project artifact policy validators + governance middleware.
@@ -245,13 +247,45 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 - Target modules: `tests/contract`, `tests/conformance`, MVP evidence docs.
 - Deliverables: end-to-end acceptance across proposal, activation, Project Manager-managed execution, completion approval, owner notification, full project lifecycle progression evidence, and Discord round-trip validation against governed chat classes.
 
+15. `M8-WP1` Governance/discussion connector-auth parity hardening
+- Target modules: `control_plane/routers/governance.py`, `control_plane/routers/owner_discussions.py`, connector-auth helpers/tests.
+- Deliverables: governance mutation/discussion routes enforce connector signature + actor/idempotency parity with fail-closed denial evidence.
+
+16. `M8-WP2` Governed lifecycle API surface completion
+- Target modules: governance routers/handlers/schemas/repository + lifecycle tests.
+- Deliverables: explicit `pause`, `resume`, `terminate`, and `archive` APIs with role/state transition guards and immutable audit events.
+
+17. `M8-WP3` API-only lifecycle acceptance refactor + planning doc alignment
+- Target modules: acceptance/integration tests and planning docs (`Milestones`, `ExecutionPlan`, `Roadmap`, `TODO`, `Progress`).
+- Deliverables: remove direct repository lifecycle mutation from acceptance path and align planning wording with runtime-authoritative persistence model.
+
+18. `M9-WP1` Real Discord bot worker runtime
+- Target modules: new Discord worker app/service, connector adapter integration, response bridge handlers.
+- Deliverables: real Discord gateway-connected bot that maps inbound events to `POST /v1/connectors/discord/messages` and posts governed responses back to Discord.
+
+19. `M9-WP2` Docker full-profile Discord integration + secret hardening
+- Target modules: `compose.yml`, runtime settings/startup validation, operator env docs.
+- Deliverables: Discord worker is first-class in Docker `full` profile; non-local startup fails closed on unsafe/missing connector secret configuration.
+
+20. `M9-WP3` Live Discord MVP acceptance validation
+- Target modules: ops acceptance checklist, live-run evidence capture scripts/docs, conformance gates.
+- Deliverables: live Discord E2E execution evidence for proposal/approval/activation/execution/completion/termination paths with governed chat constraints.
+
+21. `M9-WP4` Live-instance evidence pack and closeout
+- Target modules: MVP evidence-pack docs and progress closeout tracking.
+- Deliverables: consolidated live-instance evidence pack mapped to MVP exit criteria and closeout linkage (issue/PR/merge evidence).
+
 ### 8.3 MVP Exit Evidence Checklist
 - Proposal lifecycle and approval gates are enforced with canonical state transitions.
 - CWO initialization produces governed project charter/workforce evidence.
 - Project docs persist under canonical system root with type/cap/pointer-hash policy enforcement.
 - Specialist touchability restrictions are enforced (`project_manager`-only in first MVP).
 - Recovery path preserves governance/idempotency invariants and restores institutional agents.
+- Governance/discussion mutation routes enforce connector-auth parity and deny spoofed requests fail-closed.
+- Lifecycle pause/resume/terminate/archive transitions are executed through governed APIs (no repository-internal mutation in acceptance evidence).
 - Docker `full` profile runtime is runnable with non-placeholder app/worker services.
+- Real Discord bot runtime is connected and operational in Docker `full` profile.
+- Non-local runtime enforces non-default connector secret configuration.
 - Gemini Flash free-tier provider path is validated with quota accounting evidence.
 - Discord round-trip owner command path is validated with governed access constraints.
 - Full project lifecycle scenario is validated end-to-end with completion governance chain evidence.
@@ -260,7 +294,7 @@ Milestone names and ordering match `implementation/v1/planning/ImplementationMil
 ## 9. Tracking Interfaces
 ### 9.1 Issue Contract Fields
 Each implementation issue must contain:
-- `Milestone`: one of `M0`..`M7`
+- `Milestone`: one of `M0`..`M9`
 - `Goal`: outcome statement tied to milestone intent
 - `Scope`: explicit in/out implementation boundaries
 - `Acceptance Criteria`: testable completion conditions

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from time import perf_counter
+from typing import cast
 
 from openqilin.llm_gateway.accounting.cost_estimator import estimate_cost
 from openqilin.llm_gateway.accounting.usage_recorder import derive_budget_usage, normalize_usage
@@ -13,6 +14,7 @@ from openqilin.llm_gateway.providers.base import (
     LiteLLMProviderError,
     LiteLLMProviderRequest,
 )
+from openqilin.llm_gateway.providers.gemini_flash_adapter import GeminiFlashFreeAdapter
 from openqilin.llm_gateway.providers.litellm_adapter import InMemoryLiteLLMAdapter
 from openqilin.llm_gateway.routing.model_selector import select_model_aliases
 from openqilin.llm_gateway.routing.profile_resolver import (
@@ -23,7 +25,9 @@ from openqilin.llm_gateway.schemas.requests import LlmGatewayRequest
 from openqilin.llm_gateway.schemas.responses import (
     LlmBudgetContextEffective,
     LlmGatewayResponse,
+    QuotaLimitSource,
 )
+from openqilin.shared_kernel.config import RuntimeSettings
 
 
 @dataclass(frozen=True, slots=True)
@@ -135,7 +139,9 @@ class LlmGatewayService:
                     effective_budget=request.budget_context.effective_budget_window
                     or "window-unspecified",
                 ),
-                quota_limit_source="policy_guardrail",
+                quota_limit_source=_normalize_quota_limit_source(
+                    provider_result.quota_limit_source
+                ),
                 latency_ms=self._elapsed_ms(started_at),
                 policy_context=request.policy_context,
                 route_metadata={
@@ -177,6 +183,18 @@ class LlmGatewayService:
 
 
 def build_llm_gateway_service() -> LlmGatewayService:
-    """Build gateway service with default deterministic LiteLLM adapter."""
+    """Build gateway service with configured provider backend."""
 
-    return LlmGatewayService(provider=InMemoryLiteLLMAdapter())
+    settings = RuntimeSettings()
+    backend = settings.llm_provider_backend.strip().lower()
+    if backend == "gemini_flash_free":
+        provider: LiteLLMProvider = GeminiFlashFreeAdapter.from_settings(settings)
+    else:
+        provider = InMemoryLiteLLMAdapter()
+    return LlmGatewayService(provider=provider)
+
+
+def _normalize_quota_limit_source(value: str) -> QuotaLimitSource:
+    if value in {"policy_guardrail", "provider_config", "provider_signal"}:
+        return cast(QuotaLimitSource, value)
+    return "policy_guardrail"

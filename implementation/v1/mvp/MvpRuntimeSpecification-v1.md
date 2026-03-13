@@ -31,6 +31,9 @@ Budget thresholds are configurable per environment, but these are the MVP defaul
 
 ## 3. Data Model Contracts
 
+MVP v0.1 authoritative storage is the runtime in-memory repositories with optional snapshot persistence under `${OPENQILIN_SYSTEM_ROOT}/runtime/`.
+The schemas below are logical model contracts for implementation consistency and forward relational persistence, not mandatory physical DB tables in MVP runtime.
+
 ## 3.1 `agents`
 
 Columns:
@@ -128,6 +131,9 @@ Minimum `project_artifact_version` fields:
 Primary endpoint:
 - `POST /v1/owner/commands`
 
+Discord adapter endpoint:
+- `POST /v1/connectors/discord/messages` (connector payload mapped to canonical owner-command envelope)
+
 Envelope requirements:
 - canonical sender/recipient metadata
 - connector metadata (idempotency key, signature payload hash, external message id)
@@ -186,6 +192,13 @@ Project state contracts:
   - Project Manager completion report persisted
   - `cwo` + `ceo` approval evidence persisted
   - owner notification event emitted
+  - guarded completion finalization transition (`active -> completed`) is denied until all three prerequisites are present
+
+Governed lifecycle API contracts:
+- `POST /v1/governance/projects` creates proposal-stage project records (`owner|ceo|cwo`).
+- `POST /v1/governance/projects/{project_id}/completion/report` persists Project Manager completion report.
+- `POST /v1/governance/projects/{project_id}/completion/approve` records `ceo|cwo` completion approvals and owner-notification evidence.
+- `POST /v1/governance/projects/{project_id}/completion/finalize` applies guarded `active -> completed` transition.
 
 Task state contracts:
 - admission creates `queued`

@@ -86,7 +86,7 @@ Exit:
 ### M6 MVP Documentation and Access Governance
 Scope:
 - hybrid project-document model:
-  - DB-authoritative lifecycle/control fields
+  - runtime-authoritative lifecycle/control fields
   - file-backed rich-text docs under canonical system root
 - document type policy and per-type document caps
 - specialist touchability governance (`project_manager`-only direct command path)
@@ -120,6 +120,44 @@ Exit:
 - full project lifecycle (`proposed -> approved -> active -> paused -> completed -> terminated -> archived`) is validated via governed end-to-end acceptance scenario
 - MVP v0.1 evidence pack and closeout checklist are complete
 
+### M8 MVP Governance Surface Hardening
+Scope:
+- close post-M7 governance critical findings that still block MVP closeout
+- enforce connector-auth/signature parity on governance mutation and proposal-discussion routes
+- complete governed lifecycle API surface (`pause`, `resume`, `terminate`, `archive`)
+- remove direct lifecycle repository mutation from acceptance paths
+- align planning docs to runtime-authoritative persistence wording
+
+WP decomposition:
+1. `M8-WP1`: connector-auth enforcement for governance/discussion routes
+2. `M8-WP2`: governed lifecycle APIs for `pause|resume|terminate|archive`
+3. `M8-WP3`: acceptance API-only lifecycle refactor + planning-doc alignment
+
+Exit:
+- governance mutation routes deny unsigned/spoofed requests fail-closed
+- full project lifecycle transitions are executable through governed APIs only
+- acceptance and evidence paths use API contracts (no direct repository lifecycle mutation)
+- milestone/spec/planning persistence wording is internally consistent
+
+### M9 MVP Real Discord Runtime and Live Instance Validation
+Scope:
+- implement and run real Discord bot runtime in Docker `full` profile
+- provide live Discord-to-governed-ingress round-trip behavior for MVP use cases
+- enforce runtime secret hardening for non-local deployment
+- publish live-instance acceptance evidence for MVP closeout
+
+WP decomposition:
+1. `M9-WP1`: real Discord bot worker runtime (`discord` ingress + response bridge)
+2. `M9-WP2`: Docker `full` profile integration + non-local secret hardening
+3. `M9-WP3`: live Discord end-to-end MVP acceptance validation
+4. `M9-WP4`: live-instance evidence pack and milestone closeout
+
+Exit:
+- real Discord bot receives and responds in governed channels/DMs
+- Docker `full` profile runs API + workers + Discord bot as one operational runtime
+- non-local runtime fails closed for unsafe/missing connector secret config
+- live acceptance evidence demonstrates proposal-to-completion lifecycle via real Discord
+
 ## 4. First Executable Slice Detail
 Recommended implementation order inside `M1`:
 1. schema, migrations, and idempotency primitives
@@ -134,3 +172,4 @@ Recommended implementation order inside `M1`:
 - Do not start release hardening before M2 and M3 produce runnable end-to-end evidence.
 - Do not start M6 recovery hardening before M5 domain persistence contracts are merged.
 - Do not close MVP milestone (M7) before Docker full-profile runtime cutover, Gemini free-tier provider-path validation, Discord round-trip validation, and end-to-end acceptance evidence are all complete.
+- Do not close MVP v0.1 implementation before M8 governance hardening and M9 real Discord runtime/live-instance validation are completed.

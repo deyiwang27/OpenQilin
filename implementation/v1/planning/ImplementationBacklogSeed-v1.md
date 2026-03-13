@@ -68,7 +68,7 @@
 ### 3.11 Project Documentation Governance
 - store runtime-generated project docs under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/`
 - enforce allowed document types and per-type document caps
-- persist DB pointer/hash metadata and fail closed on mismatch
+- persist runtime pointer/hash metadata and fail closed on mismatch
 
 ### 3.12 Project Manager/Specialist Operating Constraints
 - codify Project Manager mandatory operations template (milestones/tasks/assignment/reporting)
@@ -79,7 +79,7 @@
 1. lock project lifecycle/transition guards (`proposed -> approved -> active -> paused -> completed -> terminated -> archived`)
 2. implement proposal discussion + approval governance APIs (`owner`, `ceo`, `cwo`)
 3. implement CWO project initialization and workforce templating contracts
-4. implement canonical system-root project file storage and DB pointer/hash synchronization
+4. implement canonical system-root project file storage and runtime pointer/hash synchronization
 5. enforce approved document types + per-type caps (fail-closed)
 6. enforce specialist touchability (`project_manager`-only direct path) and owner non-direct-specialist policy
 7. implement Project Manager mandatory-operations template enforcement

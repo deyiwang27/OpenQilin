@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, Header, Request, status
@@ -13,6 +13,8 @@ from openqilin.control_plane.api.dependencies import (
     get_admission_service,
     get_audit_writer,
     get_budget_reservation_service,
+    get_governance_repository,
+    get_identity_channel_repository,
     get_metric_recorder,
     get_policy_runtime_client,
     get_runtime_state_repository,
@@ -23,9 +25,17 @@ from openqilin.control_plane.identity.connector_security import (
     ConnectorSecurityError,
     validate_connector_auth,
 )
+from openqilin.control_plane.identity.discord_governance import (
+    DiscordGovernanceError,
+    validate_discord_governance,
+)
 from openqilin.control_plane.identity.principal_resolver import (
     PrincipalResolutionError,
     resolve_principal,
+)
+from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
+from openqilin.data_access.repositories.identity_channels import (
+    InMemoryIdentityChannelRepository,
 )
 from openqilin.control_plane.schemas.owner_commands import (
     OwnerCommandAcceptedData,
@@ -410,6 +420,10 @@ def submit_owner_command(
     tracer: InMemoryTracer = Depends(get_tracer),
     audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
     metric_recorder: InMemoryMetricRecorder = Depends(get_metric_recorder),
+    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
+    identity_channel_repository: InMemoryIdentityChannelRepository = Depends(
+        get_identity_channel_repository
+    ),
     x_openqilin_trace_id: Annotated[str | None, Header(alias="X-OpenQilin-Trace-Id")] = None,
     x_external_channel: Annotated[str | None, Header(alias="X-External-Channel")] = None,
     x_external_actor_id: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
@@ -581,6 +595,57 @@ def submit_owner_command(
                 retryable=False,
                 source_component="api",
                 details={"source": "payload"},
+            )
+
+        try:
+            discord_decision = validate_discord_governance(
+                payload=payload,
+                principal_role=principal.principal_role,
+                identity_channel_repository=identity_channel_repository,
+                governance_repository=governance_repository,
+            )
+            if discord_decision is not None:
+                span.set_attribute("discord.chat_class", discord_decision.chat_class)
+                span.set_attribute("discord.mapping_status", discord_decision.mapping.status)
+                if discord_decision.project_status is not None:
+                    span.set_attribute("discord.project_status", discord_decision.project_status)
+        except DiscordGovernanceError as error:
+            span.set_status("error")
+            span.set_attribute("outcome", "denied")
+            span.set_attribute("source", "discord_governance")
+            denial_details = dict(error.details)
+            denial_details.setdefault("source", "discord_governance")
+            source_component = (
+                "policy_engine"
+                if error.code == "governance_specialist_direct_command_denied"
+                else "governance"
+            )
+            _emit_outcome_observability(
+                tracer=tracer,
+                audit_writer=audit_writer,
+                metric_recorder=metric_recorder,
+                trace_id=trace_id,
+                request_id=None,
+                task_id=None,
+                principal_id=principal_id,
+                principal_role=principal.principal_role,
+                source="discord_governance",
+                outcome="denied",
+                error_code=error.code,
+                message=error.message,
+                attributes=cast(dict[str, object], denial_details),
+            )
+            return _denied_response(
+                status_code=status.HTTP_403_FORBIDDEN,
+                trace_id=trace_id,
+                code=error.code,
+                error_class="authorization_error",
+                message=error.message,
+                source_component=source_component,
+                details=denial_details,
+                policy_version=None,
+                policy_hash=None,
+                rule_ids=[],
             )
 
         request_id = envelope.request_id

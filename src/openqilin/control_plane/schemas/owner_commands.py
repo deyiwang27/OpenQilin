@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class OwnerCommandSender(BaseModel):
@@ -26,6 +26,17 @@ class OwnerCommandRecipient(BaseModel):
     recipient_type: str = Field(min_length=1, max_length=64)
 
 
+class OwnerCommandDiscordContext(BaseModel):
+    """Discord-origin context metadata used for governed channel checks."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    guild_id: str = Field(min_length=1, max_length=128)
+    channel_id: str = Field(min_length=1, max_length=128)
+    channel_type: Literal["dm", "group", "text", "thread"]
+    chat_class: Literal["direct", "leadership_council", "governance", "executive", "project"]
+
+
 class OwnerCommandConnectorMetadata(BaseModel):
     """Connector metadata required for ingress authenticity and replay control."""
 
@@ -36,6 +47,15 @@ class OwnerCommandConnectorMetadata(BaseModel):
     actor_external_id: str = Field(min_length=1, max_length=256)
     idempotency_key: str = Field(min_length=8, max_length=128)
     raw_payload_hash: str = Field(min_length=64, max_length=128)
+    discord_context: OwnerCommandDiscordContext | None = None
+
+    @model_validator(mode="after")
+    def _validate_discord_context(self) -> "OwnerCommandConnectorMetadata":
+        if self.channel == "discord" and self.discord_context is None:
+            raise ValueError("discord connector requires discord_context")
+        if self.channel != "discord" and self.discord_context is not None:
+            raise ValueError("discord_context is allowed only for discord channel")
+        return self
 
 
 class OwnerCommandResolution(BaseModel):

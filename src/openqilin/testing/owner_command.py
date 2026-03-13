@@ -25,6 +25,10 @@ def build_owner_command_request_dict(
     trace_id: str | None = None,
     project_id: str | None = "project_1",
     connector_channel: str = "discord",
+    discord_guild_id: str = "guild-test",
+    discord_channel_id: str | None = None,
+    discord_channel_type: str = "text",
+    discord_chat_class: str = "project",
     target: str = "sandbox",
     content: str = "owner command",
     recipients: list[dict[str, str]] | None = None,
@@ -48,6 +52,14 @@ def build_owner_command_request_dict(
             "external_message_id": f"ext-test-{uuid4()}",
             "actor_external_id": actor_id,
             "idempotency_key": idempotency_key,
+            "discord_context": {
+                "guild_id": discord_guild_id,
+                "channel_id": discord_channel_id or f"channel-test-{uuid4()}",
+                "channel_type": discord_channel_type,
+                "chat_class": discord_chat_class,
+            }
+            if connector_channel == "discord"
+            else None,
         },
         "command": {
             "action": action,

@@ -13,12 +13,65 @@ def _governance_headers(*, actor_id: str, actor_role: str) -> dict[str, str]:
 
 def _seed_project(app_project_id: str = "project_m5_wp2") -> TestClient:
     app = create_control_plane_app()
-    app.state.runtime_services.governance_repo.create_project(
-        project_id=app_project_id,
-        name="M5 Governance APIs",
-        objective="Validate proposal discussion and approval routes.",
+    client = TestClient(app)
+    response = client.post(
+        "/v1/governance/projects",
+        headers=_governance_headers(actor_id="owner_1", actor_role="owner"),
+        json={
+            "trace_id": f"trace-m5-wp2-create-{app_project_id}",
+            "project_id": app_project_id,
+            "name": "M5 Governance APIs",
+            "objective": "Validate proposal discussion and approval routes.",
+            "metadata": {"suite": "component"},
+        },
     )
-    return TestClient(app)
+    assert response.status_code == 201
+    return client
+
+
+def test_create_project_accepts_owner_and_sets_proposed_status() -> None:
+    app = create_control_plane_app()
+    client = TestClient(app)
+
+    response = client.post(
+        "/v1/governance/projects",
+        headers=_governance_headers(actor_id="owner_1", actor_role="owner"),
+        json={
+            "trace_id": "trace-m5-wp2-create",
+            "project_id": "project_m5_wp2_create",
+            "name": "M5 Governance APIs",
+            "objective": "Validate project creation route.",
+            "metadata": {"suite": "component"},
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 201
+    assert body["status"] == "ok"
+    assert body["data"]["project_id"] == "project_m5_wp2_create"
+    assert body["data"]["status"] == "proposed"
+
+
+def test_create_project_rejects_non_triad_role() -> None:
+    app = create_control_plane_app()
+    client = TestClient(app)
+
+    response = client.post(
+        "/v1/governance/projects",
+        headers=_governance_headers(actor_id="admin_1", actor_role="administrator"),
+        json={
+            "trace_id": "trace-m5-wp2-create-denied",
+            "project_id": "project_m5_wp2_create_denied",
+            "name": "M5 Governance APIs",
+            "objective": "Validate project creation route.",
+            "metadata": {"suite": "component"},
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 403
+    assert body["status"] == "denied"
+    assert body["error"]["code"] == "governance_project_create_role_forbidden"
 
 
 def test_post_proposal_discussion_message_accepts_owner() -> None:

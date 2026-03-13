@@ -21,7 +21,7 @@ Included:
 - Institutional agents: `ceo`, `cwo`, `auditor`, `administrator`
 - Project roles: `project_manager` plus up to 2 `specialist` agents per project
 - `domain_leader` role declared in schema but disabled in first MVP runtime
-- Hybrid runtime: in-memory workers plus PostgreSQL authoritative state
+- Hybrid runtime: in-memory services with snapshot-backed persistence adapters under `${OPENQILIN_SYSTEM_ROOT}/runtime`
 - Dual budget control: currency (`usd`) and quota (`units`)
 - Discord as owner-facing command adapter
 - Tool execution only through governed dispatch boundaries
@@ -120,6 +120,7 @@ Project completion governance chain:
 - Project Manager submits completion report to `cwo`.
 - `cwo` and `ceo` co-approve completion decision.
 - owner is notified after completion decision is recorded.
+- `active -> completed` is fail-closed unless report + co-approvals + owner-notification evidence are present.
 
 Task/runtime lifecycle states (canonical in current implementation):
 - `queued -> authorized -> dispatched`
@@ -150,6 +151,7 @@ Owner interaction constraints:
   - `executive`: `owner`, `ceo`, `cwo`
   - `project` (`<project_name>`): `proposed` (`owner`, `ceo`, `cwo`), `approved|active|paused` (+`project_manager`), `completed|terminated` read-only, `archived` locked
 - System-level target (deferred in MVP): add `secretary` to owner direct messages and all group chat classes.
+- Discord connector adapter ingress is exposed via `POST /v1/connectors/discord/messages` and is mapped into canonical `POST /v1/owner/commands` governance flow.
 
 ## 8. Governance Boundaries
 
@@ -166,7 +168,7 @@ Any unauthorized modification attempt is blocked and audited.
 
 Storage strategy:
 - Rich-text project docs live under `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/` (outside repo tree).
-- DB remains authoritative for state/control metadata and file pointer/hash references.
+- MVP runtime repositories remain authoritative for state/control metadata and file pointer/hash references; relational DB persistence is deferred beyond MVP.
 - Deterministic file path convention:
   - `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/docs/<artifact_type>/<artifact_type>--v<revision_no>.md`
 

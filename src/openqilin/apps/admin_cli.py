@@ -315,6 +315,12 @@ def _smoke_payload() -> tuple[dict[str, Any], str]:
             "external_message_id": f"ext-admin-smoke-{uuid4()}",
             "actor_external_id": "owner_admin_smoke",
             "idempotency_key": idempotency_key,
+            "discord_context": {
+                "guild_id": "guild-admin-smoke",
+                "channel_id": "channel-admin-smoke",
+                "channel_type": "text",
+                "chat_class": "project",
+            },
         },
         "command": {
             "action": "run_task",
