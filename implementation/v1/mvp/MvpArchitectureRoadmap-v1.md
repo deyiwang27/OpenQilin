@@ -1,6 +1,6 @@
 # OpenQilin MVP v0.1 - Architecture Roadmap
 
-Status: planning baseline
+Status: execution closeout (`M7-WP6 complete; milestone closeout pending`)
 Last updated: 2026-03-12
 
 ## 1. Goal
@@ -21,28 +21,16 @@ Implemented and validated:
 
 ## 3. MVP Gap Assessment
 
-Still missing or placeholder-heavy for MVP v0.1:
-- Persistent governance domain model:
-  - `data_access/repositories/governance.py` is placeholder
-  - no concrete persistent agent/project registries with lifecycle constraints
-- Runtime-state persistence:
-  - task and communication repositories are primarily in-memory
-  - restart recovery does not yet hydrate full runtime state from persistent storage
-- Governance path guard enforcement:
-  - policy exists in docs, but centralized runtime write-guard service is not yet implemented
-- Append-only log enforcement at persistence boundary:
-  - append-only behavior exists in runtime APIs, but DB-level roles/policies are not yet codified
-- MVP control-plane surfaces:
-  - owner discussion/governance routers are placeholders
-  - project creation and project/agent/budget status contracts are not yet exposed as stable MVP API set
-- Discord adapter:
-  - transport assumptions exist, but adapter boundary that maps Discord payloads to canonical owner envelope is not yet a first-class runtime service
-- Project proposal and approval governance flow:
-  - explicit proposal revision/approval lifecycle contracts are not yet implemented end-to-end
-- Project rich-text documentation policy:
-  - canonical system root + file type/cap enforcement is not implemented yet
-- Project Manager template and workforce bootstrapping contracts:
-  - CWO-driven template/llm/system-prompt binding path is not implemented as governed runtime flow
+M5..M7 implementation status:
+- proposal/approval/initialization/workforce governance path is implemented
+- project-document policy and specialist-touchability constraints are implemented
+- runtime recovery, Discord ingress governance, Docker full-profile runtime cutover, and Gemini provider-path activation are implemented
+- MVP acceptance matrix and evidence pack are implemented
+
+Remaining closeout actions before milestone closure:
+- run milestone-closeout gate set in a Docker-capable host environment
+- open and merge the M7 closeout PR to `main`
+- close parent issue `#41` with final evidence links
 
 ## 4. Target MVP Runtime Shape
 

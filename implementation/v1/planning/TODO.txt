@@ -50,7 +50,7 @@ Checklist:
 - `M7-WP3` Discord chat-governance enforcement (`direct|leadership_council|governance|executive|project`) + lifecycle membership resolver + specialist access constraints + pending-role profile flags (`secretary`, `cso`, `domain_leader`) - `done` (`issue #44`)
 - `M7-WP4` Docker `full` profile runtime cutover (`api_app`/workers placeholder replacement) - `done` (`issue #45`)
 - `M7-WP5` Gemini Flash free-tier provider-path activation + quota telemetry validation - `done` (`issue #46`)
-- `M7-WP6` MVP acceptance matrix + evidence pack closeout - `todo`
+- `M7-WP6` MVP acceptance matrix + evidence pack closeout - `done` (`issue #47`)
 
 Carryover follow-ups:
 - enforce non-default connector shared secret in non-local environments at runtime validation layer - `todo`
