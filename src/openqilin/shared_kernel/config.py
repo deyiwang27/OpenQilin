@@ -18,6 +18,7 @@ class RuntimeSettings(BaseSettings):
     llm_default_routing_profile: str = "dev_gemini_free"
     llm_default_quota_request_cap: int = 1_000
     llm_default_quota_token_cap: int = 100_000
+    llm_default_max_tokens: int = 1024
     llm_default_allocation_mode: str = "hybrid"
     llm_default_project_share_ratio: float = 0.1
     llm_default_budget_window: str = "daily"
@@ -25,6 +26,9 @@ class RuntimeSettings(BaseSettings):
     gemini_api_key: str | None = None
     gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
     gemini_request_timeout_seconds: float = 20.0
+    gemini_max_retries: int = 2
+    gemini_retry_base_delay_seconds: float = 1.0
+    gemini_retry_max_delay_seconds: float = 8.0
     gemini_free_primary_model: str = "gemini-2.0-flash"
     gemini_free_fallback_model: str = "gemini-2.0-flash"
     discord_bot_token: str | None = None

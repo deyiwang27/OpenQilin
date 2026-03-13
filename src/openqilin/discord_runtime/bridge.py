@@ -182,9 +182,25 @@ def format_governed_response(*, status_code: int, body: Mapping[str, object]) ->
             task_id = str(data.get("task_id", "task-unknown"))
             command = str(data.get("command", "command-unknown"))
             replayed = str(data.get("replayed", "false"))
-            return (
+            summary = (
                 f"[accepted] trace={trace_id} task={task_id} command={command} replayed={replayed}"
             )
+            llm_execution = data.get("llm_execution")
+            if isinstance(llm_execution, dict):
+                generated_text = llm_execution.get("generated_text")
+                if isinstance(generated_text, str) and generated_text.strip():
+                    normalized = generated_text.strip().replace("\n", " ")
+                    recipient_role = str(llm_execution.get("recipient_role", "")).strip().lower()
+                    role_label = recipient_role or "llm"
+                    role_prefix = f"\n[{role_label}] "
+                    max_message_length = 1990
+                    max_generated_length = max(
+                        120, max_message_length - len(summary) - len(role_prefix)
+                    )
+                    if len(normalized) > max_generated_length:
+                        normalized = f"{normalized[: max_generated_length - 3]}..."
+                    return f"{summary}{role_prefix}{normalized}"
+            return summary
         return f"[accepted] trace={trace_id}"
     if status_value in {"denied", "error"}:
         error = body.get("error")

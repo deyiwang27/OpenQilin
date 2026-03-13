@@ -62,6 +62,9 @@ class TaskDispatchLlmMetadata:
     cost_source: str
     currency_delta_usd: float
     quota_token_units: int
+    generated_text: str | None
+    recipient_role: str
+    recipient_id: str | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -197,6 +200,7 @@ class TaskDispatchService:
                     llm_metadata=None,
                 )
         elif target == "llm":
+            recipient_role, recipient_id = _extract_primary_recipient(task)
             try:
                 llm_receipt = self._llm_dispatch_adapter.dispatch(
                     LlmDispatchRequest(
@@ -207,6 +211,8 @@ class TaskDispatchService:
                         project_id=task.project_id,
                         command=task.command,
                         args=task.args,
+                        recipient_role=recipient_role,
+                        recipient_id=recipient_id,
                         policy_version=policy_version,
                         policy_hash=policy_hash,
                         rule_ids=rule_ids,
@@ -252,7 +258,11 @@ class TaskDispatchService:
                     source="dispatch_llm_gateway",
                     retryable=False,
                     dead_letter_id=None,
-                    llm_metadata=_extract_llm_metadata(llm_receipt.gateway_response),
+                    llm_metadata=_extract_llm_metadata(
+                        llm_receipt.gateway_response,
+                        recipient_role=llm_receipt.recipient_role,
+                        recipient_id=llm_receipt.recipient_id,
+                    ),
                 )
             else:
                 self._lifecycle_service.mark_blocked_dispatch(
@@ -276,7 +286,11 @@ class TaskDispatchService:
                         else False
                     ),
                     dead_letter_id=None,
-                    llm_metadata=_extract_llm_metadata(llm_receipt.gateway_response),
+                    llm_metadata=_extract_llm_metadata(
+                        llm_receipt.gateway_response,
+                        recipient_role=llm_receipt.recipient_role,
+                        recipient_id=llm_receipt.recipient_id,
+                    ),
                 )
         elif target == "communication":
             try:
@@ -450,7 +464,12 @@ def build_task_dispatch_service(
     )
 
 
-def _extract_llm_metadata(response: LlmGatewayResponse | None) -> TaskDispatchLlmMetadata | None:
+def _extract_llm_metadata(
+    response: LlmGatewayResponse | None,
+    *,
+    recipient_role: str | None,
+    recipient_id: str | None,
+) -> TaskDispatchLlmMetadata | None:
     """Extract llm metadata from gateway response when available."""
 
     if (
@@ -474,4 +493,28 @@ def _extract_llm_metadata(response: LlmGatewayResponse | None) -> TaskDispatchLl
         cost_source=response.cost.cost_source,
         currency_delta_usd=response.budget_usage.currency_delta_usd,
         quota_token_units=response.budget_usage.token_units,
+        generated_text=response.generated_text,
+        recipient_role=(recipient_role or "").strip().lower() or "runtime_agent",
+        recipient_id=(recipient_id or "").strip() or None,
     )
+
+
+def _extract_primary_recipient(task: TaskRecord) -> tuple[str | None, str | None]:
+    metadata = dict(task.metadata)
+    primary_role = (metadata.get("primary_recipient_role") or "").strip().lower() or None
+    primary_id = (metadata.get("primary_recipient_id") or "").strip() or None
+    if primary_role is not None or primary_id is not None:
+        return primary_role, primary_id
+
+    recipient_roles = _split_csv_values(metadata.get("recipient_types"))
+    recipient_ids = _split_csv_values(metadata.get("recipient_ids"))
+    role = recipient_roles[0] if recipient_roles else None
+    recipient_id = recipient_ids[0] if recipient_ids else None
+    return role, recipient_id
+
+
+def _split_csv_values(value: str | None) -> tuple[str, ...]:
+    if value is None:
+        return ()
+    values = tuple(item.strip() for item in value.split(",") if item.strip())
+    return values

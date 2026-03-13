@@ -75,3 +75,26 @@ def test_validate_owner_command_envelope_rejects_blank_args() -> None:
         validate_owner_command_envelope(payload=payload, principal=principal)
 
     assert exc.value.code == "envelope_invalid_args"
+
+
+def test_validate_owner_command_envelope_rejects_recipient_role_mismatch() -> None:
+    payload = build_owner_command_request_model(
+        action="llm_reason",
+        args=["Who are you?"],
+        actor_id="owner_123",
+        idempotency_key="idem-recipient-mismatch-12345",
+        trace_id="trace-recipient-mismatch-1",
+        target="llm",
+        recipients=[{"recipient_id": "cwo_core", "recipient_type": "ceo"}],
+    )
+    principal = resolve_principal(
+        {
+            "x-external-channel": "discord",
+            "x-openqilin-actor-external-id": "owner_123",
+        }
+    )
+
+    with pytest.raises(EnvelopeValidationError) as exc:
+        validate_owner_command_envelope(payload=payload, principal=principal)
+
+    assert exc.value.code == "envelope_recipient_role_mismatch"

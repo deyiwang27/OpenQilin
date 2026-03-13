@@ -107,6 +107,27 @@ def test_format_governed_response_renders_accepted_and_denied_paths() -> None:
     assert "code=policy_denied" in denied
 
 
+def test_format_governed_response_includes_llm_generated_text_when_available() -> None:
+    rendered = format_governed_response(
+        status_code=202,
+        body={
+            "status": "accepted",
+            "trace_id": "trace-llm",
+            "data": {
+                "task_id": "task_llm_1",
+                "command": "llm_reason",
+                "replayed": False,
+                "llm_execution": {
+                    "generated_text": "As CEO: Approved. Keep risk under control and report daily.",
+                    "recipient_role": "ceo",
+                },
+            },
+        },
+    )
+    assert "[accepted]" in rendered
+    assert "[ceo] As CEO: Approved. Keep risk under control and report daily." in rendered
+
+
 def test_parse_actor_role_map_ignores_invalid_json() -> None:
     assert parse_actor_role_map("{not-json}") == {}
     assert parse_actor_role_map('{"123":"ceo","456":" project_manager "}') == {

@@ -8,6 +8,21 @@ from uuid import uuid4
 from openqilin.control_plane.identity.principal_resolver import Principal
 from openqilin.control_plane.schemas.owner_commands import OwnerCommandRequest
 
+_KNOWN_ROLE_SET = frozenset(
+    {
+        "owner",
+        "administrator",
+        "auditor",
+        "ceo",
+        "cwo",
+        "project_manager",
+        "domain_leader",
+        "specialist",
+        "secretary",
+        "cso",
+    }
+)
+
 
 class EnvelopeValidationError(ValueError):
     """Raised when inbound envelope data is semantically invalid."""
@@ -82,6 +97,25 @@ def validate_owner_command_envelope(
             code="envelope_invalid_trace_id",
             message="trace identifier must not be blank",
         )
+
+    for recipient in payload.recipients:
+        normalized_type = recipient.recipient_type.strip().lower()
+        normalized_id = recipient.recipient_id.strip().lower()
+        if not normalized_type or not normalized_id:
+            continue
+        inferred_role = _infer_role_from_recipient_id(normalized_id)
+        if (
+            normalized_type in _KNOWN_ROLE_SET
+            and inferred_role is not None
+            and inferred_role != normalized_type
+        ):
+            raise EnvelopeValidationError(
+                code="envelope_recipient_role_mismatch",
+                message=(
+                    "recipient_id role prefix does not match recipient_type "
+                    f"({normalized_id} vs {normalized_type})"
+                ),
+            )
     normalized_recipient_types = sorted(
         {
             recipient.recipient_type.strip().lower()
@@ -96,6 +130,12 @@ def validate_owner_command_envelope(
             if recipient.recipient_id.strip()
         }
     )
+    primary_recipient_role = ""
+    primary_recipient_id = ""
+    if payload.recipients:
+        primary = payload.recipients[0]
+        primary_recipient_role = primary.recipient_type.strip().lower()
+        primary_recipient_id = primary.recipient_id.strip()
 
     return AdmissionEnvelope(
         request_id=str(uuid4()),
@@ -118,9 +158,23 @@ def validate_owner_command_envelope(
                     "raw_payload_hash": payload.connector.raw_payload_hash,
                     "recipient_types": ",".join(normalized_recipient_types),
                     "recipient_ids": ",".join(normalized_recipient_ids),
+                    "primary_recipient_role": primary_recipient_role,
+                    "primary_recipient_id": primary_recipient_id,
                 }.items()
             )
         ),
         project_id=payload.project_id,
         idempotency_key=payload.connector.idempotency_key,
     )
+
+
+def _infer_role_from_recipient_id(recipient_id: str) -> str | None:
+    """Infer canonical role from recipient id prefix where possible."""
+
+    normalized_id = recipient_id.strip().lower()
+    if not normalized_id:
+        return None
+    for role in sorted(_KNOWN_ROLE_SET, key=len, reverse=True):
+        if normalized_id == role or normalized_id.startswith(f"{role}_"):
+            return role
+    return None

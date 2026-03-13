@@ -1,5 +1,5 @@
 OpenQilin Implementation TODO Tracker
-Date: 2026-03-12
+Date: 2026-03-13
 Stage: implementation/v1
 Archive status: active
 
@@ -15,7 +15,7 @@ Status legend:
 - `done`
 
 Current context:
-- Active branch: `feat/49-m9-real-discord-runtime-kickoff`
+- Active branch: `feat/mvp-1-validation`
 - Current scope: MVP v0.1 runnable-instance gap closure (`M8` + `M9`)
 - Baseline roadmap: `implementation/v1/mvp/MvpArchitectureRoadmap-v1.md`
 
@@ -25,7 +25,7 @@ Milestone summary:
 - `M6`: `done`
 - `M7`: `done`
 - `M8`: `done`
-- `M9`: `in_progress`
+- `M9`: `done`
 
 Checklist:
 1) `M5 MVP Proposal and Governance Activation` (`issue #29`) - `done`
@@ -68,6 +68,8 @@ Checklist:
 - `M9-WP2` Docker `full` profile integration + non-local secret hardening - `done` (`issue #54`)
 - `M9-WP3` live Discord end-to-end MVP acceptance validation - `done` (`issue #55`, live Discord ingress verified with accepted command response, and both lifecycle acceptance branches executed under live runtime with deterministic evidence artifacts)
 - `M9-WP4` live-instance evidence pack and closeout - `done` (`issue #56`, evidence pack finalized with preflight/manifest/notes plus runtime ps/log snapshots and governance execution artifact)
+- post-closeout remediation for Discord role-fidelity and LLM role-lock hardening - `done` (`issue #60`, recipient role-id mismatch fail-closed guard + role-labeled Discord replies + role-locked prompt/injection denial + per-recipient conversation memory tests)
+- issue `#60` follow-up resilience hardening - `done` (Gemini transient `429`/`5xx` retry-backoff path, compose env wiring for LLM token/retry settings, larger Discord response cap, and runtime restart verification)
 
 Carryover follow-ups:
 - enforce non-default connector shared secret in non-local environments at runtime validation layer - `todo`

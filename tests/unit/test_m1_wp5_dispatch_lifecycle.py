@@ -22,6 +22,7 @@ def _build_task(
     *,
     args: list[str] | None = None,
     target: str = "sandbox",
+    recipients: list[dict[str, str]] | None = None,
 ) -> tuple[TaskRecord, InMemoryRuntimeStateRepository]:
     payload = build_owner_command_request_model(
         action=command,
@@ -30,6 +31,7 @@ def _build_task(
         idempotency_key=f"idem-{command}-12345678",
         trace_id="trace-dispatch-test",
         target=target,
+        recipients=recipients,
     )
     principal = resolve_principal(
         {
@@ -125,6 +127,30 @@ def test_dispatch_service_selects_llm_target_stub() -> None:
     assert outcome.llm_metadata is not None
     assert outcome.llm_metadata.total_tokens > 0
     assert outcome.llm_metadata.cost_source in {"none", "catalog_estimated", "provider_reported"}
+
+
+def test_dispatch_service_passes_primary_recipient_context_to_llm_metadata() -> None:
+    task, repository = _build_task(
+        "llm_summarize",
+        target="llm",
+        recipients=[{"recipient_id": "ceo_core", "recipient_type": "ceo"}],
+    )
+    lifecycle = TaskLifecycleService(runtime_state_repo=repository)
+    service = TaskDispatchService(
+        lifecycle_service=lifecycle,
+        sandbox_execution_adapter=InMemorySandboxExecutionAdapter(),
+        llm_dispatch_adapter=LlmGatewayDispatchAdapter(
+            llm_gateway_service=build_llm_gateway_service()
+        ),
+    )
+
+    outcome = service.dispatch_admitted_task(task)
+
+    assert outcome.accepted is True
+    assert outcome.target == "llm"
+    assert outcome.llm_metadata is not None
+    assert outcome.llm_metadata.recipient_role == "ceo"
+    assert outcome.llm_metadata.recipient_id == "ceo_core"
 
 
 def test_dispatch_service_blocks_on_llm_gateway_failure() -> None:

@@ -1098,6 +1098,9 @@ def submit_owner_command(
                             "currency_delta_usd": dispatch_outcome.llm_metadata.currency_delta_usd,
                             "quota_token_units": dispatch_outcome.llm_metadata.quota_token_units,
                         },
+                        "generated_text": dispatch_outcome.llm_metadata.generated_text,
+                        "recipient_role": dispatch_outcome.llm_metadata.recipient_role,
+                        "recipient_id": dispatch_outcome.llm_metadata.recipient_id,
                     }
                     if dispatch_outcome.llm_metadata is not None
                     else None
