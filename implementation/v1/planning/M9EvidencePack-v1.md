@@ -61,7 +61,7 @@ WP closeout issue: `#56` (`M9-WP4: MVP live-instance evidence pack and closeout`
   - `implementation/v1/planning/artifacts/m9_live_api_app_logs_latest.txt`
   - `implementation/v1/planning/artifacts/m9_live_discord_bot_worker_logs_latest.txt`
 
-### 3.4 Live-run execution status and current execution evidence
+### 3.4 Live-run execution status and current blocker evidence
 - Current status: `completed`.
 - Environment prerequisites pass (`docker` + required env keys set) and `docker compose --profile full up -d --build` boots the full stack.
 - Discord runtime unblock verified:
