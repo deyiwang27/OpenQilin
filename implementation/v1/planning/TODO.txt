@@ -16,7 +16,7 @@ Status legend:
 
 Current context:
 - Active branch: `feat/mvp-1-validation`
-- Current scope: post-MVP Discord multi-bot role UI implementation execution (`M10`)
+- Current scope: MVP closeout packaging (documentation wrap-up + planning folder cleanup) after M10 completion
 - Baseline roadmap: `implementation/v1/mvp/MvpArchitectureRoadmap-v1.md`
 
 Milestone summary:
@@ -85,6 +85,11 @@ Checklist:
 - `M10-WP7` intent-level read tool surface for grounded answers - `done` (`issue #69`)
 - `M10-WP8` governed write-action tools for project/runtime mutations - `done` (`issue #70`)
 - `M10-WP9` tool orchestration policy + role access control + acceptance - `done` (`issue #71`)
+
+7) `MVP Wrap-Up and Planning Cleanup` - `done`
+- publish consolidated MVP accomplishment/progress summary - `done` (`implementation/v1/planning/MvpWrapUp-v1.md`)
+- clean planning folder layout for latest milestone docs (`M9`/`M10`) - `done` (`implementation/v1/planning/milestones/m9`, `implementation/v1/planning/milestones/m10`)
+- update progress/todo/test references to milestone subfolder paths - `done`
 
 Carryover follow-ups:
 - enforce non-default connector shared secret in non-local environments at runtime validation layer - `todo`

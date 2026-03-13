@@ -73,8 +73,8 @@ WP closeout issue: `#67` (`M10-WP6`)
 
 ### 3.6 Live multi-bot acceptance + operator runbook
 - Operator docs:
-  - `implementation/v1/planning/M10LiveAcceptanceChecklist-v1.md`
-  - `implementation/v1/planning/M10MultiBotOperatorRunbook-v1.md`
+  - `implementation/v1/planning/milestones/m10/M10LiveAcceptanceChecklist-v1.md`
+  - `implementation/v1/planning/milestones/m10/M10MultiBotOperatorRunbook-v1.md`
 - Artifact targets:
   - `implementation/v1/planning/artifacts/m10_live_preflight_latest.json`
   - `implementation/v1/planning/artifacts/m10_live_acceptance_notes.md`

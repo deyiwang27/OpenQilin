@@ -3,9 +3,9 @@ from pathlib import Path
 
 def test_m10_wp6_conformance_evidence_pack_exists_and_maps_exit_criteria() -> None:
     project_root = Path(__file__).resolve().parents[2]
-    evidence_pack = (project_root / "implementation/v1/planning/M10EvidencePack-v1.md").read_text(
-        encoding="utf-8"
-    )
+    evidence_pack = (
+        project_root / "implementation/v1/planning/milestones/m10/M10EvidencePack-v1.md"
+    ).read_text(encoding="utf-8")
 
     for snippet in (
         "## 3. Evidence Map by M10 Exit Checklist",
@@ -31,8 +31,12 @@ def test_m10_wp6_conformance_evidence_pack_exists_and_maps_exit_criteria() -> No
 
 def test_m10_wp6_conformance_checklist_and_runbook_exist() -> None:
     project_root = Path(__file__).resolve().parents[2]
-    checklist_path = project_root / "implementation/v1/planning/M10LiveAcceptanceChecklist-v1.md"
-    runbook_path = project_root / "implementation/v1/planning/M10MultiBotOperatorRunbook-v1.md"
+    checklist_path = (
+        project_root / "implementation/v1/planning/milestones/m10/M10LiveAcceptanceChecklist-v1.md"
+    )
+    runbook_path = (
+        project_root / "implementation/v1/planning/milestones/m10/M10MultiBotOperatorRunbook-v1.md"
+    )
 
     checklist = checklist_path.read_text(encoding="utf-8")
     runbook = runbook_path.read_text(encoding="utf-8")
