@@ -4,7 +4,11 @@ Scope:
 - Early planning and discussion artifacts for post-v1 / MVP-v2 direction.
 
 Artifact groups:
-- `planning/`: temporary direction plans, milestone drafts, and discussion-stage execution outlines
+- `planning/`: temporary direction plans, milestone drafts, design notes, and comparison/research inputs
+
+Start:
+- Read `planning/README.md`
+- Read `planning/TemporaryMvpPlan-v2.md`
 
 Tracking boundary:
 - This folder is pre-kickoff planning only.
