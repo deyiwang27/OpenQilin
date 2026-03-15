@@ -92,7 +92,13 @@ def validate_discord_governance(
         )
 
     chat_class = context.chat_class
-    allowed_members = _MEMBERSHIP_BY_CHAT_CLASS[chat_class]
+    allowed_members = _MEMBERSHIP_BY_CHAT_CLASS.get(chat_class)
+    if allowed_members is None:
+        raise DiscordGovernanceError(
+            code="governance_chat_class_unknown",
+            message=f"unknown chat_class: {chat_class!r}",
+            details={"chat_class": chat_class},
+        )
     normalized_principal_role = principal_role.strip().lower()
     if normalized_principal_role not in allowed_members:
         raise DiscordGovernanceError(

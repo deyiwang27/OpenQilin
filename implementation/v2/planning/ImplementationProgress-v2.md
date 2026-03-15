@@ -25,10 +25,10 @@ WP document: `05-milestones/M11-WorkPackages-v1.md`
 
 | WP | Title | Status | Issue | PR | Notes |
 |---|---|---|---|---|---|
-| M11-WP1 | Grammar Layer | `pending` | — | — | — |
-| M11-WP2 | C-7 Security Fix: `chat_class` KeyError | `pending` | — | — | — |
-| M11-WP3 | Secretary Agent Activation | `pending` | — | — | — |
-| M11-WP4 | LangSmith Dev-Time Tracing | `pending` | — | — | — |
+| M11-WP1 | Grammar Layer | `pending` | #75 | — | — |
+| M11-WP2 | C-7 Security Fix: `chat_class` KeyError | `done` | #76 | — | Fixed in discord_governance.py; 3 unit tests added |
+| M11-WP3 | Secretary Agent Activation | `pending` | #77 | — | — |
+| M11-WP4 | LangSmith Dev-Time Tracing | `pending` | #78 | — | — |
 
 **M11 Exit criteria:** `pending`
 
@@ -137,7 +137,7 @@ All 20 architectural review findings from `00-direction/ArchitecturalReviewFindi
 | C-3 | In-memory integer budget counter | M14 | M14-WP1 | `pending` |
 | C-5 | OTel export not wired | M12 | M12-WP5 | `pending` |
 | C-6 | Role self-assertion from header | M12 | M12-WP6 | `pending` |
-| C-7 | `chat_class` KeyError → 500 | M11 | M11-WP2 | `pending` |
+| C-7 | `chat_class` KeyError → 500 | M11 | M11-WP2 | `done` |
 | C-8 | Write tool access check inverted | M12 | M12-WP6 | `pending` |
 | C-9 | LangGraph not used; linear HTTP handler | M13 | M13-WP1 | `pending` |
 | C-10 | Sandbox enforcement empty placeholder | M13 | M13-WP6 | `pending` |

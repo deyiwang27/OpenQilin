@@ -54,8 +54,8 @@ Replace JSON-shaped command entry with human-friendly free-text and compact comm
 
 ### Tasks
 
-- [ ] In `src/openqilin/control_plane/identity/discord_governance.py`: replace `_MEMBERSHIP_BY_CHAT_CLASS[chat_class]` with `.get(chat_class)` and raise `GovernanceDenialError` when `None`
-- [ ] Add unit test: unknown `chat_class` → 403 `GovernanceDenialError`, not 500 `KeyError`
+- [x] In `src/openqilin/control_plane/identity/discord_governance.py`: replace `_MEMBERSHIP_BY_CHAT_CLASS[chat_class]` with `.get(chat_class)` and raise `GovernanceDenialError` when `None`
+- [x] Add unit test: unknown `chat_class` → 403 `GovernanceDenialError`, not 500 `KeyError`
 
 ### Outputs
 
@@ -64,8 +64,8 @@ Replace JSON-shaped command entry with human-friendly free-text and compact comm
 
 ### Done criteria
 
-- [ ] Sending unknown `chat_class` returns 403 with `governance_denial` payload
-- [ ] No `KeyError` raised in any code path for unknown `chat_class`
+- [x] Sending unknown `chat_class` returns 403 with `governance_denial` payload
+- [x] No `KeyError` raised in any code path for unknown `chat_class`
 
 ---
 
