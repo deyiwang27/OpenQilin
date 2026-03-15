@@ -60,6 +60,28 @@ Based on pain points seen in adjacent products such as OpenClaw, MVP-v2 should e
 ### 4.5 Discord-first simplicity for MVP, adapter-ready architecture for later
 - MVP-v2 should focus on Discord as the only primary chat surface
 - longer term, OpenQilin should be architected so broader chat adapter support is possible without rewriting governance logic
+- longer term, OpenQilin should also plan for an OpenQilin-owned console as a first-class operator surface rather than remaining permanently dependent on external chat surfaces
+
+### 4.6 Operator visibility and dashboarding
+- MVP-v2 should provide a lightweight operator visibility surface in addition to Discord
+- the visibility surface should cover:
+  - project status and progress
+  - blockers and pending decisions
+  - budget and cost visibility
+  - system/runtime health
+- dashboarding should be treated as a trust and control surface, not as a vanity admin console
+
+### 4.7 Open-source and sponsorship readiness
+- MVP-v2 should explicitly prepare OpenQilin for public introduction, early contributors, and realistic sponsorship/startup-credit outreach
+- this is not a side task; it is one of the project success pillars
+- MVP-v2 should leave behind at least:
+  - a clear public README
+  - a sharp project thesis
+  - a roadmap
+  - MVP-v2 demo assets
+  - contributor entry path
+  - public website and matching contact email
+  - one-page deck and basic sponsorship-readiness materials
 
 ## 5. Core Direction Shift from v1
 
@@ -110,6 +132,10 @@ Behavior:
 - shared channels permit broad visibility and governed interaction
 - default replies should remain narrow and intentional, not “everyone responds”
 - institutional roles reply on direct prompt, explicit mention, or policy-governed escalation
+- `leadership_council` is also the planned shared leadership surface for:
+  - a pinned dashboard link
+  - Secretary-led summaries
+  - severity-based shared alerts
 
 ### 6.4 Project spaces
 Each active project gets one governed project space on Discord.
@@ -197,6 +223,27 @@ This is presentation only; runtime identity remains governed metadata, not Disco
 - OpenQilin should remain architecturally open to broader chat adapters after MVP-v2.
 - Future channel expansion should reuse the same governance, routing, and project-space abstractions rather than create per-channel governance forks.
 
+### 8.3 Longer-term console posture
+- MVP-v2 still uses Discord as the primary interaction surface for implementation speed.
+- Longer term, OpenQilin should plan for an OpenQilin-owned console that can unify:
+  - chat
+  - project views
+  - approvals
+  - budget/cost visibility
+  - system health
+- In that future model, external chat apps should become optional adapters rather than the permanent primary product surface.
+
+### 8.4 Dashboard link placement
+- The dashboard link should be pinned in `leadership_council`.
+- The same link may also be reflected in channel topic/description where useful.
+- The dashboard is a secondary operator surface; Discord remains the primary conversational surface in MVP-v2.
+
+### 8.5 Alert routing posture
+- `leadership_council` should receive only severity-based shared alerts and Secretary summaries.
+- Lower-severity alerts should default to the `owner <-> secretary` DM surface.
+- The owner can manually forward selected alert messages to shared channels or other DMs when broader discussion is needed.
+- This keeps channel noise low while preserving an easy escalation path.
+
 ## 9. Discord Automation Posture
 
 Target operating assumption:
@@ -251,25 +298,35 @@ The following remain intentionally open for follow-up discussion:
 - Should project channels expose optional “review mode” personas for `domain_leader`, or keep all domain feedback synthesized by `project_manager`?
 - What exact routing syntax should be used for virtual project roles (`@pm`, `/oq ask pm`, structured buttons, etc.)?
 - What lifecycle states should create, unlock, archive, or lock project Discord spaces?
+- Should MVP-v2 approvals and interventions happen only in Discord, only in dashboard, or in both?
+- What minimum approval/intervention actions should be supported from dashboard versus Discord in MVP-v2?
 
 ## 13. Suggested First v2 Planning Milestones
 
 Provisional milestone themes for later decomposition:
 
-1. `M11 Discord Surface Refactor`
-- replace project-scoped multi-bot assumptions with fixed institutional bots plus virtual project-role routing
+1. `M11 Discord Surface and Chat UX`
+- replace JSON-shaped daily interaction with free text plus compact commands
+- simplify institutional and project-facing Discord surfaces
 
-2. `M12 Project Space Automation`
-- implement automatic Discord project channel/thread provisioning and lifecycle management
+2. `M12 Project Space Binding and Routing`
+- implement project-space automation, binding persistence, and PM-default routing
+- replace project-scoped multi-bot assumptions with virtual workforce routing
 
-3. `M13 Project Workforce Routing`
-- add project-scoped routing registry for `project_manager`, `domain_leader`, and specialist A2A coordination
+3. `M13 Operator Visibility Surface`
+- introduce the first owner-facing visibility/dashboard layer
+- cover owner inbox, project overview, project detail, and system health
 
-4. `M14 Secretary + CSO Activation`
-- activate `secretary` and `cso` as fully governed institutional Discord surfaces
+4. `M14 Runtime Integrity, Governance, and Budget Strengthening`
+- reduce placeholder/runtime mismatch
+- strengthen constitution/policy/budget paths where they matter on the critical path
+- improve integration truthfulness and test coverage
 
 5. `M15 Onboarding, Diagnostics, and Cost Discipline`
-- reduce setup pain, reduce configuration friction, add guided validation/doctor flows, and tighten token/cost discipline as explicit product goals
+- reduce setup pain, add guided validation/doctor flows, and tighten token/cost discipline
+
+6. `M16 Open-Source and Sponsorship Readiness`
+- prepare README, website, demo, roadmap, contributor path, and sponsorship-ready external materials
 
 ## 14. Next Step
 

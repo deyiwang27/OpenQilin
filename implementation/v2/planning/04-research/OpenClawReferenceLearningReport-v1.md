@@ -48,8 +48,8 @@ OpenClaw sources referenced:
 - https://github.com/openclaw/openclaw/blob/main/docs/start/wizard.md
 
 OpenQilin sources referenced:
-- [TemporaryMvpPlan-v2.md](/Users/deyi/Documents/2.学习/VSCodeProject/OpenQilin/implementation/v2/planning/TemporaryMvpPlan-v2.md)
-- [OpenClawSpikeReport-v1.md](/Users/deyi/Documents/2.学习/VSCodeProject/OpenQilin/implementation/v2/planning/OpenClawSpikeReport-v1.md)
+- [TemporaryMvpPlan-v2.md](/Users/deyi/Documents/2.学习/VSCodeProject/OpenQilin/implementation/v2/planning/00-direction/TemporaryMvpPlan-v2.md)
+- [OpenClawSpikeReport-v1.md](/Users/deyi/Documents/2.学习/VSCodeProject/OpenQilin/implementation/v2/planning/04-research/OpenClawSpikeReport-v1.md)
 - [MvpCoreGovernance-v1.md](/Users/deyi/Documents/2.学习/VSCodeProject/OpenQilin/implementation/v1/mvp/MvpCoreGovernance-v1.md)
 - [MvpWrapUp-v1.md](/Users/deyi/Documents/2.学习/VSCodeProject/OpenQilin/implementation/v1/planning/MvpWrapUp-v1.md)
 - [discord_governance.py](/Users/deyi/Documents/2.学习/VSCodeProject/OpenQilin/src/openqilin/control_plane/identity/discord_governance.py)

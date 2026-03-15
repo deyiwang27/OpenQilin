@@ -24,7 +24,7 @@ Primary OpenClaw sources reviewed:
 Primary OpenQilin sources referenced:
 - [README.md](/Users/deyi/Documents/2.学习/VSCodeProject/OpenQilin/README.md)
 - [MvpWrapUp-v1.md](/Users/deyi/Documents/2.学习/VSCodeProject/OpenQilin/implementation/v1/planning/MvpWrapUp-v1.md)
-- [TemporaryMvpPlan-v2.md](/Users/deyi/Documents/2.学习/VSCodeProject/OpenQilin/implementation/v2/planning/TemporaryMvpPlan-v2.md)
+- [TemporaryMvpPlan-v2.md](/Users/deyi/Documents/2.学习/VSCodeProject/OpenQilin/implementation/v2/planning/00-direction/TemporaryMvpPlan-v2.md)
 - [MvpCoreGovernance-v1.md](/Users/deyi/Documents/2.学习/VSCodeProject/OpenQilin/implementation/v1/mvp/MvpCoreGovernance-v1.md)
 - [discord_governance.py](/Users/deyi/Documents/2.学习/VSCodeProject/OpenQilin/src/openqilin/control_plane/identity/discord_governance.py)
 - [role_bot_registry.py](/Users/deyi/Documents/2.学习/VSCodeProject/OpenQilin/src/openqilin/discord_runtime/role_bot_registry.py)
@@ -456,7 +456,7 @@ This means the short-term product direction should be:
 ## 10. Provisional MVP-v2 Implications
 
 The OpenClaw review reinforces the temporary MVP-v2 plan already captured in:
-- [TemporaryMvpPlan-v2.md](/Users/deyi/Documents/2.学习/VSCodeProject/OpenQilin/implementation/v2/planning/TemporaryMvpPlan-v2.md)
+- [TemporaryMvpPlan-v2.md](/Users/deyi/Documents/2.学习/VSCodeProject/OpenQilin/implementation/v2/planning/00-direction/TemporaryMvpPlan-v2.md)
 
 Specific implications:
 - institutional bot identities should stay fixed and simple
