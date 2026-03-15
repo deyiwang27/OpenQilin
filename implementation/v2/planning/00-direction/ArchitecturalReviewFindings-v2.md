@@ -640,7 +640,99 @@ Reference:
   - restart/recovery preserves budget state correctly when persistence is enabled
 - Make it easy to distinguish between shell accounting behavior and real budget management behavior.
 
-## 17. Potential Discussion Buckets for Later MVP-v2 Design
+## 17. Architectural Review Findings (2026-03-15)
+
+The following specific bugs, security issues, and coupling problems were identified in a full code review of the v1 runtime. Items are tagged with severity (`[Critical]`, `[High]`, `[Medium]`) and mapped to milestones for remediation.
+
+### 17.1 Security Findings
+
+**[Critical] Role self-assertion via HTTP header — `principal_resolver.py:83`**
+Actor role is taken directly from `x-openqilin-actor-role` without cryptographic binding. Any caller with a valid connector secret can claim any role including `owner`. Must be fixed before Secretary and CSO activation. → M12
+
+**[Critical] Write tool access checked against recipient, not principal — `write_tools.py:91`**
+`is_write_tool_allowed` checks `context.recipient_role` (the agent being addressed) instead of `context.principal_role` (the authenticated requester). Authority boundaries for write operations are inverted. → M12
+
+**[Critical] Unknown `chat_class` raises unhandled `KeyError` → 500 — `discord_governance.py:95`**
+`_MEMBERSHIP_BY_CHAT_CLASS[chat_class]` raises `KeyError` for any unexpected value. Should fail-closed with a 403. Trivial fix, do in M11. → M11
+
+**[Medium] `connector_verifier.py` is an empty placeholder**
+Intended for additional connector verification logic. Currently a one-line docstring. → M12
+
+### 17.2 Missing Enforcement Points
+
+**[Critical] OPA is never called — policy enforcement is trigger-string matching — `policy_runtime_integration/client.py`**
+`InMemoryPolicyRuntimeClient` checks if an action string starts with `"deny_"`. It does not contact OPA. The OPA container exists in `compose.yml` but receives no requests. Every rule in `constitution/core/PolicyRules.yaml` is declared `enforced_by: policy_engine` but never evaluated. → M12
+
+**[Critical] Obligation application is an empty placeholder — `obligations.py`**
+`allow_with_obligations` decisions pass through as unconditional allows. `reserve_budget`, `enforce_sandbox_profile`, and `require_owner_approval` obligations are never applied. → M12
+
+**[Critical] Sandbox enforcement is an empty placeholder — `execution_sandbox/profiles/enforcement.py`**
+No process isolation, seccomp, or namespace containment is applied. `SAF-001` has no implementation. → M13
+
+**[High] Unknown dispatch targets silently succeed — `task_service.py:394-415`**
+The fallback dispatch arm marks any unrecognized target as `dispatched` with a fake dispatch ID. Should fail-closed. → M12
+
+**[Medium] Budget check silently skipped when client is `None` — `write_tools.py:404`**
+`if self._budget_runtime_client is None: return None` — skips budget enforcement with no log, error, or governance record. Must fail-closed or raise. → M14
+
+### 17.3 Data Model and State Bugs
+
+**[Critical] LangGraph declared but not present — `task_orchestrator/state/state_machine.py`, `workflow/graph.py`**
+Both files are one-line placeholders. LangGraph is not in `pyproject.toml`. All orchestration is a linear synchronous call chain inside the HTTP request handler. Adding new multi-step role workflows (CSO gates, DL escalations) to this model is unsustainable. → M13
+
+**[High] Task status accepts arbitrary strings with no transition guard — `runtime_state.py:104-143`**
+`update_task_status` accepts any string. Invalid transitions (e.g. `queued → completed`) are not rejected. Intermediate states defined in the spec (`policy_evaluation`, `budget_reservation`) are never written by the current code. → M12
+
+**[High] Snapshot write failure causes in-memory/disk split-brain — `runtime_state.py:172-186`**
+`_flush_snapshot()` raises `RuntimeStateRepositoryError` on `OSError`, which is uncaught by callers. In-memory state is mutated before the flush; a failure leaves disk and memory diverged with no recovery protocol. → M13
+
+**[High] `dispatched` miscounted as terminal during startup recovery — `dependencies.py:156-161`**
+`dispatched` (in-flight) is grouped with terminal states (`completed`, `failed`, `cancelled`) in the recovery counter, inflating the terminal count and causing incorrect recovery decisions. → M12
+
+**[High] Failed/cancelled tasks permanently block their idempotency key — `dependencies.py:139-152`**
+During startup recovery, all tasks are re-claimed in `ingress_dedupe` regardless of status. Failed or cancelled tasks prevent any future request with the same idempotency key from being admitted; legitimate retries are rejected as replays. → M12
+
+**[Medium] Conversation history not persisted — `llm_dispatch.py:147`**
+`InMemoryConversationStore` is created fresh at startup. All conversation context is lost on restart even when `runtime_persistence_enabled=True`. → M15
+
+**[Medium] Agent registry bootstrap overwrites persisted data — `agent_registry.py`**
+`bootstrap_institutional_agents()` runs on every startup with no idempotency check, overwriting persisted agent records. → M14
+
+**[Medium] Idempotency namespaces not separated**
+Ingress-level (`InMemoryIngressDedupe`) and communication-level (`InMemoryCommunicationIdempotencyStore`) stores share the same key space with no namespace prefix; task and delivery keys can silently collide. → M15
+
+### 17.4 Architectural Coupling Problems
+
+**[High] Dual `RuntimeServices` initialization paths — `app.py:35`, `dependencies.py:197-202`**
+`build_runtime_services()` is called eagerly at module load and also has a lazy init path in `get_runtime_services()`. Two separate `RuntimeServices` instances with separate in-memory repositories can exist simultaneously, silently breaking idempotency. → M12
+
+**[Medium] Multiple independent `RuntimeSettings()` instantiations per request**
+At least four separate `RuntimeSettings()` instances can exist within a single request lifecycle (`llm_gateway/service.py`, `task_service.py`, `LlmGatewayDispatchAdapter.__init__`). Settings mutations between instantiations (common in tests) cause inconsistency. → M15
+
+**[Medium] `orchestrator_worker` is a sleep loop with no orchestration**
+The worker process emits a readiness marker and sleeps forever. All orchestration runs inline in the HTTP request handler. Decoupling orchestration from the request path requires LangGraph adoption. → M13
+
+### 17.5 Spec vs. Implementation Gaps (Beyond Runtime Wiring)
+
+**MCP/FastMCP declared, not implemented**
+`ArchitectureBaseline-v1.md` §3.2 specifies MCP/FastMCP as tool connectivity. The execution sandbox uses direct Python function calls. No MCP server or client exists in the codebase. Defer to post-v2 but do not add new spec claims about MCP until implementation is real.
+
+**A2A + ACP transport is in-memory only**
+`a2a_validator.py` and `acp_client.py` exist, but `InMemoryAcpClient` is the only transport. No real ACP wire protocol. A2A envelopes are validated but transported in-memory.
+
+**pgvector declared, not implemented**
+`ArchitectureBaseline-v1.md` §3.3 specifies pgvector for embedding search. `InMemoryArtifactSearchReadModel` contains three hard-coded fixture records; search is substring matching on static content.
+
+### 17.6 Test Coverage Gaps
+
+- No tests for OPA policy evaluation or constitution YAML rule correctness
+- No concurrency tests for budget reservation (`BUD-002` atomicity requirement)
+- No snapshot persistence tests (write → restart → verify state recovery)
+- No database integration tests against PostgreSQL or Redis
+- No test for `chat_class` `KeyError` (security gap, trivial to add)
+- `tests/conformance/` files are scaffolds; actual OPA conformance is entirely absent
+
+## 18. Potential Discussion Buckets for Later MVP-v2 Design
 
 Suggested buckets for refinement:
 

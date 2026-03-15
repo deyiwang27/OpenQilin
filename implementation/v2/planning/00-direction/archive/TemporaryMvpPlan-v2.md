@@ -63,12 +63,18 @@ Based on pain points seen in adjacent products such as OpenClaw, MVP-v2 should e
 - longer term, OpenQilin should also plan for an OpenQilin-owned console as a first-class operator surface rather than remaining permanently dependent on external chat surfaces
 
 ### 4.6 Operator visibility and dashboarding
-- MVP-v2 should provide a lightweight operator visibility surface in addition to Discord
-- the visibility surface should cover:
-  - project status and progress
-  - blockers and pending decisions
-  - budget and cost visibility
-  - system/runtime health
+- MVP-v2 adopts a two-surface model: Discord for all interaction, Grafana for all visualization
+- there is no separate dashboard app, lightweight HTML page, or React console in MVP-v2
+- Grafana is the single dashboard, covering both operator-facing business views and ops/infrastructure observability:
+  - owner inbox (pending decisions, escalations, proposals)
+  - projects overview (status, blockers, lifecycle state)
+  - project detail (per-project activity, cost, and health)
+  - budget and cost visibility (by project, by role, over time)
+  - system and runtime health (agent liveness, LLM latency, error rates)
+  - audit and governance events
+- Grafana pulls business data from PostgreSQL (governed runtime source-of-truth) and telemetry from OpenTelemetry
+- Grafana alerting routes threshold alerts to Discord via webhook, surfacing cost and health issues without requiring the owner to watch the dashboard
+- the dashboard link is pinned in `leadership_council`; the owner acts in Discord and observes in Grafana
 - dashboarding should be treated as a trust and control surface, not as a vanity admin console
 
 ### 4.7 Open-source and sponsorship readiness
@@ -303,27 +309,63 @@ The following remain intentionally open for follow-up discussion:
 
 ## 13. Suggested First v2 Planning Milestones
 
-Provisional milestone themes for later decomposition:
+Provisional milestone themes for later decomposition.
 
-1. `M11 Discord Surface and Chat UX`
+Milestone ordering reflects the principle that operator surfaces must be built on real runtime, not in-memory shells. Infrastructure wiring is pulled forward to M12 so all subsequent milestones build on honest foundations.
+
+1. `M11 Discord Surface, Chat UX, and Secretary Activation`
 - replace JSON-shaped daily interaction with free text plus compact commands
 - simplify institutional and project-facing Discord surfaces
+- activate `secretary` as an advisory front-desk agent: intent disambiguation, daily digest summaries, and routing assistance
+- integrate LangSmith as a dev-time tracing tool (LangGraph native integration via env vars); used for LLM call and chain debugging during development, not as the governance audit source of truth
+- security fix [C-7]: add fail-closed guard for unknown `chat_class` values in `discord_governance.py`; currently raises an unhandled `KeyError` → 500 instead of a governed 403 denial
 
-2. `M12 Project Space Binding and Routing`
+2. `M12 Infrastructure Wiring, Security Hardening, and CSO Activation`
+- wire PostgreSQL as the runtime source of truth: replace all `InMemory*` repositories for runtime state, governance, artifacts, audit events, and agent registry
+- wire OPA as the real policy decision point [C-1]: replace `InMemoryPolicyRuntimeClient` with a live OPA HTTP client that loads and evaluates the constitution bundle (`PolicyManifest.yaml`, `AuthorityMatrix.yaml`, `PolicyRules.yaml`); OPA container is already in `compose.yml` but is never contacted by the application
+- implement obligation application [C-2]: `policy_runtime_integration/obligations.py` is an empty placeholder; `allow_with_obligations` decisions currently pass through as unconditional allows — `reserve_budget`, `enforce_sandbox_profile`, and `require_owner_approval` obligations must be applied
+- wire Redis for idempotency and retry state; replace `InMemoryIdempotencyCacheStore`
+- wire OTel export from audit writer, tracer, and metric recorder [C-5]: currently all three store data in Python lists with no external sink; OTel collector, Prometheus, Tempo, and Grafana containers exist in `compose.yml` but receive nothing from the application; `AUD-001` ("immutable audit events") is not met until this is real
+- security fix [C-6]: fix role self-assertion in `principal_resolver.py`; actor role is currently taken directly from the `x-openqilin-actor-role` HTTP header without cryptographic binding; any caller with a valid connector secret can claim any role including `owner`; this must be fixed before CSO or Secretary activation
+- security fix [C-8]: fix write tool access check in `write_tools.py`; access is currently checked against `context.recipient_role` (the agent being addressed) instead of `context.principal_role` (the authenticated requester); authority boundaries for write operations are currently inverted
+- fix fail-open dispatch fallback [H-1]: unknown dispatch targets in `task_service.py` are silently marked as `dispatched` with a fake dispatch ID; must fail-closed
+- fix task status transition guard [H-2]: `update_task_status` accepts any arbitrary string; invalid transitions are not rejected and intermediate states (`policy_evaluation`, `budget_reservation`) defined in the spec are never written
+- fix dual `RuntimeServices` initialization [H-4]: `build_runtime_services()` is called both eagerly at module load and lazily in `get_runtime_services()`; two separate instances with separate in-memory repositories can exist simultaneously
+- fix idempotency key re-claim [H-5]: during startup recovery, failed and cancelled tasks permanently block their idempotency keys; legitimate retries after failures are rejected as replays
+- fix `dispatched` miscounted as terminal [H-6]: `dispatched` (in-flight) is incorrectly counted as a terminal state in startup recovery
+- connect PostgreSQL as a Grafana data source to enable business-level dashboard panels
+- activate `cso` as a real advisory governance gate after OPA is live and role self-assertion is fixed
+
+3. `M13 Project Space Binding, Routing, and Orchestration Foundation`
+- introduce LangGraph as the real orchestration engine [C-9]: currently the spec declares LangGraph-backed orchestration but LangGraph is not in `pyproject.toml` and is not used anywhere; all orchestration runs as a linear synchronous call chain inside the HTTP request handler; the state machine and workflow graph files are empty placeholders; LangGraph must be adopted before adding new multi-step role workflows (CSO gate, DL escalation, multi-hop approvals)
 - implement project-space automation, binding persistence, and PM-default routing
 - replace project-scoped multi-bot assumptions with virtual workforce routing
+- activate `domain_leader` as a backend-routed virtual agent scoped to project context; DL is not a default project-channel participant and is only surfaced through PM escalation or governed review paths
+- fix snapshot write failure split-brain [H-3]: a filesystem I/O error in `_flush_snapshot()` currently propagates as an unhandled exception after in-memory state has already been mutated, leaving disk and memory diverged with no recovery protocol
+- begin sandbox enforcement implementation [C-10]: `execution_sandbox/profiles/enforcement.py` is an empty placeholder; no process isolation, seccomp, or namespace containment is applied; `SAF-001` has no implementation
 
-3. `M13 Operator Visibility Surface`
-- introduce the first owner-facing visibility/dashboard layer
-- cover owner inbox, project overview, project detail, and system health
+4. `M14 Budget Persistence, Real Cost Model, and Grafana Dashboard`
+- wire budget runtime to PostgreSQL: replace the in-memory integer counter (`_remaining_units = 10_000`) with a persistent budget ledger; budget currently resets on every process restart and violates `BUD-002` (atomic reservation) because there is no lock on the shared counter [C-3]
+- implement a real token-based cost model: current cost estimation is `10 + len(args)*2 + min(len(command), 24)` (character count, not tokens or dollars); replace with actual LLM token usage from response metadata
+- implement obligation enforcement for budget [C-2]: wire `reserve_budget` obligation through the policy path so budget reservation is conditionally triggered by policy decisions, not always applied before dispatch regardless of policy outcome
+- fix budget check silently skipped [M-4]: `GovernedWriteToolService` silently skips budget enforcement when `budget_runtime_client` is `None`; this must fail-closed or raise
+- fix agent registry bootstrap idempotency [M-5]: `bootstrap_institutional_agents()` overwrites persisted agent records on every startup with no idempotency check
+- build the Grafana dashboard as the single operator visibility surface:
+  - owner inbox (pending decisions, escalations, proposals) from PostgreSQL
+  - projects overview (status, blockers, lifecycle state) from PostgreSQL
+  - project detail (per-project activity and cost) from PostgreSQL
+  - budget and cost visibility (by project, by role, over time) from PostgreSQL
+  - system and runtime health (agent liveness, error rates, LLM latency) from OpenTelemetry
+  - audit and governance events from PostgreSQL
+- configure Grafana alerting to route threshold alerts to Discord via webhook (surfaces cost and health issues in Discord without requiring the owner to watch the dashboard)
+- pin the Grafana dashboard link in `leadership_council`
 
-4. `M14 Runtime Integrity, Governance, and Budget Strengthening`
-- reduce placeholder/runtime mismatch
-- strengthen constitution/policy/budget paths where they matter on the critical path
-- improve integration truthfulness and test coverage
-
-5. `M15 Onboarding, Diagnostics, and Cost Discipline`
+5. `M15 Onboarding, Diagnostics, and Runtime Polish`
 - reduce setup pain, add guided validation/doctor flows, and tighten token/cost discipline
+- enforce loop controls and cap unnecessary model invocations
+- fix multiple independent `RuntimeSettings()` instantiations [M-1]: at least four separate `RuntimeSettings()` instances can exist within a single request lifecycle across `llm_gateway/service.py`, `task_service.py`, and `LlmGatewayDispatchAdapter`; consolidate to a single settings instance passed through dependency injection
+- implement conversation history persistence [M-2]: `InMemoryConversationStore` is created fresh at app startup and loses all conversation context on restart even when `runtime_persistence_enabled=True`; wire to PostgreSQL
+- fix idempotency namespace separation [M-3-data]: ingress-level and communication-level idempotency stores share the same key space with no namespace prefix; a task idempotency key can silently collide with a delivery idempotency key
 
 6. `M16 Open-Source and Sponsorship Readiness`
 - prepare README, website, demo, roadmap, contributor path, and sponsorship-ready external materials

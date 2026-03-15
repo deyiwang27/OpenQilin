@@ -66,7 +66,9 @@ From:
 - chat-first with limited operator visibility
 
 To:
-- Discord-first conversation plus lightweight dashboard for visibility, cost, and health
+- Discord-first conversation plus Grafana as the single dashboard for all visualization (business + ops + budget + governance)
+- no separate dashboard app or React console in MVP-v2
+- Grafana reads business data from PostgreSQL and telemetry from OpenTelemetry; Grafana alerting pushes threshold notifications to Discord via webhook
 
 ### 4.5 Runtime truthfulness
 
@@ -140,8 +142,10 @@ To:
 
 ### 6.6 Visibility layer
 
-- dashboard reads from the same governed source-of-truth runtime state
-- alerts and summaries integrate with Secretary and leadership surfaces
+- Grafana is the single dashboard; it reads business data (projects, budget, audit events, governance state) from PostgreSQL and telemetry (agent health, LLM latency, error rates) from OpenTelemetry
+- Grafana alerting routes threshold notifications to Discord via webhook; the owner observes in Grafana and acts in Discord
+- Secretary summaries and severity-based alerts integrate with `leadership_council` as the shared leadership surface
+- no separate React app or lightweight HTML page in MVP-v2; the two surfaces are Discord and Grafana only
 
 ## 7. Major Refactor Streams
 
@@ -162,10 +166,10 @@ To:
 - recovery behavior
 
 ### 7.4 Visibility and dashboard implementation
-- owner inbox
-- projects overview
-- project detail
-- system health
+- Grafana as the single dashboard (no separate app)
+- PostgreSQL data source for business panels: owner inbox, projects overview, project detail, budget/cost, audit log
+- OpenTelemetry data source for ops panels: system health, agent liveness, LLM latency, error rates
+- Grafana alerting → Discord webhook for threshold notifications
 
 ### 7.5 Runtime integration cleanup
 - remove or implement no-op workers
@@ -181,12 +185,14 @@ To:
 
 A reasonable milestone sequence is:
 
-1. interaction and Discord surface simplification
-2. project-space binding and routing
-3. dashboard and visibility
-4. runtime integration cleanup
-5. constitution and budget strengthening
-6. public-readiness and community-facing packaging
+1. M11 — interaction and Discord surface simplification, Secretary activation, LangSmith dev tracing
+2. M12 — infrastructure wiring (PostgreSQL, OPA, Redis) and CSO activation; must precede dashboard and governance work
+3. M13 — project-space binding and routing, Domain Leader virtual activation
+4. M14 — budget persistence and Grafana dashboard (single visibility surface: business + ops)
+5. M15 — onboarding, diagnostics, and cost discipline
+6. M16 — public-readiness and community-facing packaging
+
+Infrastructure wiring (M12) is pulled forward ahead of dashboard and governance milestones because the Grafana business panels and real policy enforcement both depend on PostgreSQL and OPA being live. Building operator visibility on in-memory state would repeat the v1 honesty gap.
 
 ## 9. Architecture Risks
 
@@ -201,6 +207,26 @@ A reasonable milestone sequence is:
 
 ### 9.4 Cost-control regression
 - More flexible routing and richer UI can increase token and complexity overhead if not disciplined.
+
+### 9.5 Governance thesis depends entirely on OPA being real [C-1]
+- Every authority boundary, policy rule, and governance claim in the constitution assumes OPA is the enforcement point.
+- Until OPA is wired (`InMemoryPolicyRuntimeClient` → real OPA HTTP client → `localhost:8181`), the entire governance model is a documentation artifact.
+- New agent roles (CSO, Secretary, Domain Leader) must not be activated until real OPA enforcement is in place; adding roles to a mock policy engine only widens the claim-reality gap.
+
+### 9.6 Grafana dashboard strategy is undermined by missing PostgreSQL [C-3, C-5]
+- The v2 dashboard strategy depends on Grafana reading business data (projects, budget, governance events, audit trail) from PostgreSQL.
+- Until PostgreSQL repositories are wired and OTel export is connected, Grafana can only show infrastructure metrics — not project state, cost, owner inbox, or governance activity.
+- The two-surface model (Discord + Grafana) only delivers its value after the persistence gap is closed.
+
+### 9.7 Adding new agent roles before LangGraph creates unbounded coupling [C-9]
+- Orchestration currently lives entirely within the HTTP request handler as a linear synchronous call chain.
+- As CSO gates, DL escalations, and multi-hop approvals are added, request-coupled orchestration will become unmaintainable and untestable.
+- LangGraph adoption must precede the activation of new multi-step role workflows; wiring more roles into the current imperative path is the wrong direction.
+
+### 9.8 Role self-assertion must be fixed before CSO and Secretary activation [C-6]
+- The actor role is currently taken directly from the `x-openqilin-actor-role` HTTP header with no cryptographic binding.
+- Any caller with a valid connector secret can impersonate any role, including `owner`, `cso`, or `secretary`.
+- Activating new governance roles while this vulnerability exists negates any authority boundary the constitution defines.
 
 ## 10. Implementation Guidance
 

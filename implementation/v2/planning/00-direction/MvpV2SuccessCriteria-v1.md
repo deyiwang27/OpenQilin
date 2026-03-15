@@ -110,13 +110,16 @@ These are the minimum criteria I would use to call MVP-v2 complete.
 
 ### 4.4 Dashboard and visibility criteria
 
-- A lightweight dashboard exists for operator visibility.
-- The dashboard includes at least:
-  - owner inbox
-  - projects overview
-  - project detail
-  - system health
-- The owner can see project state, blockers, budget/cost, and system health without reading long chat history.
+- Grafana is deployed as the single operator dashboard; no separate app or React console is required.
+- The Grafana dashboard covers both business and ops visibility in one place:
+  - owner inbox (pending decisions, escalations, proposals) from PostgreSQL
+  - projects overview (status, blockers, lifecycle state) from PostgreSQL
+  - project detail (per-project activity and cost) from PostgreSQL
+  - budget and cost visibility (by project, by role) from PostgreSQL
+  - system and runtime health (agent liveness, LLM latency, error rates) from OpenTelemetry
+- Grafana alerting routes threshold notifications to Discord via webhook; the owner does not need to watch the dashboard to be alerted.
+- The dashboard link is pinned in `leadership_council`.
+- The owner can identify blocked projects, pending decisions, budget risk, and system health in under 2 minutes from the dashboard.
 
 ### 4.5 Governance criteria
 
@@ -124,6 +127,9 @@ These are the minimum criteria I would use to call MVP-v2 complete.
 - Project lifecycle and role boundaries are enforced in runtime behavior.
 - High-impact mutations require explicit command or confirmation.
 - Denial and escalation behavior is visible and explainable.
+- `secretary` is active as an advisory front-desk agent: handles intent disambiguation, summaries, and routing assistance without execution authority.
+- `cso` is active as a real advisory governance gate, enforced by live OPA policy evaluation (not a placeholder).
+- `domain_leader` is active as a backend-routed virtual agent scoped to project context; surfaced only through PM escalation or governed review paths, not as a default project-channel participant.
 
 ### 4.6 Budget and cost criteria
 
@@ -200,7 +206,9 @@ MVP-v2 should not be considered successful if any of these remain true:
 - budget/cost control is mostly invisible to the owner
 - governance exists mainly in spec/docs rather than runtime behavior
 - runtime architecture claims remain materially ahead of what is actually wired
-- the dashboard exists but does not help the owner decide what matters now
+- the Grafana dashboard exists but does not help the owner decide what matters now
+- the dashboard requires a separate app or React console that adds deployment complexity for the operator
+- `secretary`, `cso`, or `domain_leader` remain inactive placeholders with no runtime behavior
 - the repo is still too internally oriented to present publicly or invite early contributors
 
 ## 7. Recommended Review Method
