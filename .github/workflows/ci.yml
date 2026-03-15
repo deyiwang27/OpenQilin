@@ -6,6 +6,7 @@ on:
       - main
       - "feat/**"
       - "fix/**"
+      - "infra/**"
       - "chore/**"
       - "docs/**"
       - "refactor/**"
@@ -18,6 +19,36 @@ on:
 jobs:
   quality-and-tests:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: openqilin
+          POSTGRES_PASSWORD: openqilin
+          POSTGRES_DB: openqilin
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://openqilin:openqilin@localhost:5432/openqilin
+      REDIS_URL: redis://localhost:6379/0
+      OPA_URL: http://localhost:8181
 
     steps:
       - name: Checkout
@@ -43,6 +74,57 @@ jobs:
       - name: Mypy
         run: uv run mypy .
 
+      - name: InMemory production path check
+        run: |
+          # Block newly introduced InMemory* classes in production code paths.
+          # Pre-existing stubs are tracked as C/H/M-series WP work items and exempt here.
+          # Only scan files changed in this PR or push — not the full tree.
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '\.py$' || true)
+          else
+            CHANGED=$(git diff --name-only HEAD~1...HEAD | grep '\.py$' || true)
+          fi
+
+          if [ -z "$CHANGED" ]; then
+            echo "No Python files changed. InMemory check: PASS"
+            exit 0
+          fi
+
+          HITS=$(echo "$CHANGED" | xargs grep -l "class InMemory" 2>/dev/null \
+              | grep -v "/testing/" \
+              | grep -v "tests/" \
+              | grep -v "test_" || true)
+
+          if [ -n "$HITS" ]; then
+            echo "ERROR: New InMemory* class introduced in production code path:"
+            echo "$HITS"
+            echo "Move stub implementations under a testing/ subpackage."
+            exit 1
+          fi
+          echo "InMemory production path check: PASS"
+
+      - name: Start OPA server
+        run: |
+          # Use the pinned version from compose.yml (0.69.0-static)
+          docker compose up -d opa
+          # Wait for OPA to be ready
+          for i in $(seq 1 15); do
+            if curl -sf http://localhost:8181/health; then
+              echo "OPA ready."
+              break
+            fi
+            echo "Waiting for OPA... ($i)"
+            sleep 2
+          done
+
+      - name: Rego bundle lint
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}/constitution:/constitution" \
+            openpolicyagent/opa:0.69.0-static \
+            check /constitution
+          echo "Rego bundle lint: PASS"
+
       - name: Spec integrity checks
         run: uv run python ops/scripts/check_spec_integrity.py
 
@@ -54,6 +136,12 @@ jobs:
 
       - name: Release artifact package checks
         run: uv run python ops/scripts/check_release_artifact_package.py
+
+      - name: Alembic migration forward-apply
+        run: |
+          # Verify all migrations apply cleanly on a fresh database.
+          uv run alembic upgrade head
+          echo "Alembic migration forward-apply: PASS"
 
       - name: Unit and component tests
         run: uv run pytest tests/unit tests/component

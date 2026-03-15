@@ -37,9 +37,9 @@ System-level target profile:
   - `completed|terminated`: same membership, read-only
   - `archived`: locked for new messages
 
-MVP active profile (simplified first activation):
+MVP v1 active profile (simplified first activation):
 - `cso` and `domain_leader` are schema-declared but runtime-disabled.
-- `secretary` chat participation is system-defined but pending/inactive in first MVP.
+- `secretary` chat participation is system-defined but pending/inactive in v1.
 - Allowed owner direct messages: `administrator`, `auditor`, `ceo`, `cwo`.
 - `leadership_council`: `owner`, `administrator`, `auditor`, `ceo`, `cwo`
 - `governance`: `owner`, `administrator`, `auditor`
@@ -54,8 +54,29 @@ MVP v1 governance posture:
 - Proposal discussion path is `owner <-> ceo <-> cwo` with optional joint discussion channel.
 - owner may communicate with selected non-specialist agents by policy scope.
 - owner direct interaction with `specialist` is prohibited; specialist communication routes through `project_manager`.
-- `domain_leader` may be declared in schema but remains disabled in first MVP runtime activation.
-- first MVP operational role set is `ceo`, `cwo`, `auditor`, `administrator`, `project_manager`, `specialist`.
+- `domain_leader` may be declared in schema but remains disabled in v1 runtime activation.
+- v1 operational role set: `ceo`, `cwo`, `auditor`, `administrator`, `project_manager`, `specialist`.
+
+MVP v2 active profile (supersedes v1 profile above):
+- `secretary` is active as an institutional front-desk agent: advisory-only, handles intent triage, routing assistance, and daily summaries. Activated in M11.
+- `cso` is active as a real advisory governance gate enforced by live OPA policy evaluation. Activated in M12 (after OPA wiring and role self-assertion fix are complete).
+- `domain_leader` is active as a backend-routed virtual agent scoped to project context. It is NOT a standalone Discord bot identity. Activated in M13 (after project-space binding is in place).
+- Allowed owner direct messages (v2): `administrator`, `auditor`, `ceo`, `cwo`, `cso`, `secretary`.
+- `leadership_council` (v2): `owner`, `administrator`, `auditor`, `ceo`, `cwo`, `cso`, `secretary`
+- `governance` (v2): `owner`, `administrator`, `auditor`, `secretary`
+- `executive` (v2): `owner`, `ceo`, `cwo`, `cso`, `secretary`
+- `project` channel name: `<project_name>` (v2 — runtime-bound project space, see `ProjectSpaceBindingModel.md`)
+  - `proposed`: `owner`, `ceo`, `cwo`, `cso`
+  - `approved|active|paused`: `owner`, `ceo`, `cwo`, `cso`, `project_manager`
+  - `completed|terminated`: same membership, read-only
+  - `archived`: locked for new messages
+
+MVP v2 governance posture:
+- `project_manager` is the default responder in project spaces; routing is enforced by project-space binding, not by Discord bot identity.
+- `domain_leader` responds only through PM escalation or governed review paths; it is not a default channel participant.
+- Free-text and compact command interaction replaces JSON-shaped daily use. See `OwnerInteractionGrammar.md`.
+- Agent loop controls (hop limits, pair-round caps) are enforced per trace. See `AgentLoopControls.md`.
+- All governance prerequisites for role activation (OPA wiring, role self-assertion fix) MUST be satisfied before the v2 active profile is treated as live.
 
 ## 3. Message Types
 - `command`

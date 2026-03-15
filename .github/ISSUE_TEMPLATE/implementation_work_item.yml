@@ -1,5 +1,5 @@
 name: Implementation Work Item
-description: Track a v1 implementation feature/task with required governance fields.
+description: Track a v2 implementation feature/task with required governance fields.
 title: "M?: <short implementation title>"
 labels:
   - type:feature
@@ -10,11 +10,21 @@ body:
       label: Milestone
       description: Select the implementation milestone.
       options:
-        - M0 Foundation Scaffold
-        - M1 First Executable Slice
-        - M2 Execution Targets
-        - M3 Communication Reliability
-        - M4 Hardening and Release Readiness
+        - M11 Discord Grammar and Secretary Activation
+        - M12 Infrastructure Wiring, Security Hardening, and CSO Activation
+        - M13 Project Space Binding, Routing, and Orchestration Foundation
+        - M14 Budget Persistence, Real Cost Model, and Grafana Dashboard
+        - M15 Onboarding, Diagnostics, and Runtime Polish
+        - M16 Open-Source and Sponsorship Readiness
+    validations:
+      required: true
+
+  - type: input
+    id: wp
+    attributes:
+      label: Work Package (WP)
+      description: The WP this issue belongs to (e.g. M12-WP3).
+      placeholder: M12-WP3
     validations:
       required: true
 
@@ -23,7 +33,7 @@ body:
     attributes:
       label: Goal
       description: One-sentence outcome this issue delivers.
-      placeholder: Deliver the first governed task admission and decision path.
+      placeholder: Wire the real OPA HTTP client and remove the always-allow stub.
     validations:
       required: true
 
@@ -42,7 +52,7 @@ body:
     id: acceptance
     attributes:
       label: Acceptance Criteria
-      description: Testable criteria that must pass before closing.
+      description: Testable criteria that must pass before closing. Maps directly to WP done-criteria.
       placeholder: |
         1. ...
         2. ...
@@ -53,8 +63,8 @@ body:
     id: dependencies
     attributes:
       label: Dependencies
-      description: Blocking issues, PRs, environments, or decisions.
-      placeholder: "#12, #15, local docker baseline"
+      description: Blocking issues, PRs, WP entry criteria, or environments.
+      placeholder: "#12, M12-WP1 complete, local compose stack running"
     validations:
       required: true
 
@@ -62,11 +72,13 @@ body:
     id: evidence
     attributes:
       label: Evidence Links
-      description: Add PR/test/trace/audit links during implementation.
+      description: Add PR/test/trace/audit/migration links during implementation.
       placeholder: |
         - PR:
         - Test run:
         - Trace/Audit:
+        - Alembic forward-apply (if DB migration):
+        - OPA Rego unit tests (if Rego bundle changed):
     validations:
       required: true
 
@@ -77,9 +89,11 @@ body:
       description: Completion checklist for issue closure.
       value: |
         - [ ] Acceptance criteria satisfied.
-        - [ ] Required tests/checks passed.
+        - [ ] Required tests/checks passed (ruff, mypy, pytest unit/component, relevant integration tests).
+        - [ ] No `InMemory*` class introduced in any production code path.
+        - [ ] WP task checkbox checked in the WP document after merge.
         - [ ] Evidence links updated.
-        - [ ] implementation/v1/planning/ImplementationProgress-v1.md updated when milestone status changes.
+        - [ ] `implementation/v2/planning/ImplementationProgress-v2.md` updated when WP/milestone status changes.
         - [ ] Repository consistency/governance check scope considered for this work item.
     validations:
       required: true
@@ -93,4 +107,6 @@ body:
         - label: I will use branch format `<type>/<issue-id>-<short-slug>`.
           required: true
         - label: I will link this issue in the PR and include verification commands.
+          required: true
+        - label: I will not introduce any `InMemory*` class in a production code path.
           required: true

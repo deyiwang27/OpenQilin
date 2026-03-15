@@ -28,10 +28,13 @@ Normative precedence:
 | Hot-path cache/idempotency | Redis (bounded role) | `spec/rfcs/RFC-04-Data-Memory-Architecture.md` |
 | Assistive memory overlay | Mem0 (defer/adopt_later) | `spec/cross-cutting/planning/DeferredCapabilityActivationCriteria.md` |
 | Telemetry baseline | OpenTelemetry + Grafana | `spec/rfcs/RFC-02-Memory-Intelligence-Observability.md` |
-| Observability overlays | LangSmith + AgentOps (retained) | `spec/rfcs/RFC-02-Memory-Intelligence-Observability.md` |
+| Observability overlays | LangSmith (dev-time tracing only; not governance audit source of truth) + AgentOps (optional cost complement, not budget source of record) | `spec/rfcs/RFC-02-Memory-Intelligence-Observability.md`; posture refined in v2 |
 | Deployment path | local-first with Docker, then cloud hybrid promotion | `spec/rfcs/RFC-05-Deployment-and-Cost-Strategy.md` |
-| Owner interface posture | Discord-first + Grafana, React/TypeScript defer | `spec/rfcs/RFC-03-Language-Runtime-Persistence-Deployment.md` |
-| Owner chat governance posture | fixed Discord chat classes with state-driven project-channel membership; `secretary` participation defined as pending in first MVP | `spec/orchestration/communication/OwnerInteractionModel.md` |
+| Owner interface posture | Discord-first (interaction) + Grafana single dashboard (all visualization: business data via PostgreSQL + ops telemetry via OTel); React/TypeScript deferred | `spec/rfcs/RFC-03-Language-Runtime-Persistence-Deployment.md`; dashboard model defined in `spec/observability/OperatorDashboardModel.md` |
+| Owner chat governance posture | fixed Discord chat classes with state-driven project-channel membership; v1: `secretary`, `cso`, `domain_leader` pending/inactive; v2: all three activated per milestone sequencing | `spec/orchestration/communication/OwnerInteractionModel.md` |
+| Owner interaction grammar | v2: free-text + compact command syntax replaces JSON-shaped daily interaction | `spec/orchestration/communication/OwnerInteractionGrammar.md` |
+| Project-space binding | v2: runtime-managed per-project Discord channel/thread bound to `project_id`; PM-default routing; lifecycle automation | `spec/orchestration/communication/ProjectSpaceBindingModel.md` |
+| Agent loop controls | v2: per-trace hop count and pair-round caps; governed terminal action on breach | `spec/orchestration/communication/AgentLoopControls.md` |
 
 ## 3. Runtime Component Map
 ### 3.1 Governance and Control Plane
