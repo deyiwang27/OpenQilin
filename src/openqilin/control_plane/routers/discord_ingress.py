@@ -13,6 +13,9 @@ from openqilin.control_plane.api.dependencies import (
     get_audit_writer,
     get_budget_reservation_service,
     get_governance_repository,
+    get_grammar_classifier,
+    get_grammar_parser,
+    get_grammar_router,
     get_identity_channel_repository,
     get_metric_recorder,
     get_policy_runtime_client,
@@ -20,6 +23,10 @@ from openqilin.control_plane.api.dependencies import (
     get_task_dispatch_service,
     get_tracer,
 )
+from openqilin.control_plane.grammar.command_parser import CommandParser
+from openqilin.control_plane.grammar.free_text_router import FreeTextRouter
+from openqilin.control_plane.grammar.intent_classifier import IntentClassifier
+from openqilin.control_plane.grammar.models import ChatContext, GrammarParseError
 from openqilin.control_plane.routers.owner_commands import submit_owner_command
 from openqilin.control_plane.schemas.discord_ingress import DiscordIngressRequest
 from openqilin.control_plane.schemas.owner_commands import (
@@ -44,6 +51,8 @@ from openqilin.task_orchestrator.services.task_service import TaskDispatchServic
 
 router = APIRouter(prefix="/v1/connectors/discord", tags=["discord_ingress"])
 
+_COMMAND_PREFIX = "/oq"
+
 
 def _resolve_target(*, action: str, explicit_target: str | None) -> str:
     if explicit_target is not None and explicit_target.strip():
@@ -54,6 +63,28 @@ def _resolve_target(*, action: str, explicit_target: str | None) -> str:
     if normalized_action.startswith("msg_"):
         return "communication"
     return "sandbox"
+
+
+def _grammar_error_response(
+    payload: DiscordIngressRequest, error: GrammarParseError
+) -> JSONResponse:
+    """Convert GrammarParseError into a 400 validation_error JSON response."""
+    return JSONResponse(
+        status_code=400,
+        content={
+            "status": "denied",
+            "trace_id": payload.trace_id,
+            "error": {
+                "code": error.code,
+                "class": "validation_error",
+                "message": error.message,
+                "retryable": False,
+                "source_component": "grammar_layer",
+                "trace_id": payload.trace_id,
+                "details": error.details,
+            },
+        },
+    )
 
 
 @router.post(
@@ -76,9 +107,47 @@ def submit_discord_message(
     identity_channel_repository: InMemoryIdentityChannelRepository = Depends(
         get_identity_channel_repository
     ),
+    grammar_classifier: IntentClassifier = Depends(get_grammar_classifier),
+    grammar_parser: CommandParser = Depends(get_grammar_parser),
+    grammar_router: FreeTextRouter = Depends(get_grammar_router),
     x_openqilin_signature: Annotated[str | None, Header(alias="X-OpenQilin-Signature")] = None,
 ) -> OwnerCommandResponse | JSONResponse:
-    """Translate Discord connector payload into canonical owner-command ingress contract."""
+    """Translate Discord connector payload into canonical owner-command ingress contract.
+
+    Grammar layer is called before building the ingress payload:
+    - Explicit /oq commands are parsed by CommandParser (bypasses free-text classifier).
+    - Free-text messages are classified by IntentClassifier; mutation intent is rejected
+      with GRAM-004 before reaching CommandHandler.
+    - FreeTextRouter resolves the routing target for free-text discussion/query.
+    """
+    grammar_context = ChatContext(
+        chat_class=payload.chat_class,
+        channel_id=payload.channel_id,
+        project_id=payload.project_id,
+    )
+
+    content = payload.content.strip()
+    if content.startswith(_COMMAND_PREFIX):
+        # Explicit /oq command: parse and derive action/target from grammar
+        try:
+            envelope = grammar_parser.parse(content)
+        except GrammarParseError as exc:
+            return _grammar_error_response(payload, exc)
+        resolved_action = envelope.verb
+        resolved_target = envelope.target or _resolve_target(
+            action=payload.action, explicit_target=payload.target
+        )
+        resolved_args = [str(a) for a in envelope.args] if envelope.args else payload.args
+    else:
+        # Free-text: classify intent, reject mutations, resolve routing target
+        try:
+            intent = grammar_classifier.classify(content, grammar_context)
+        except GrammarParseError as exc:
+            return _grammar_error_response(payload, exc)
+        hint = grammar_router.resolve(intent, grammar_context)
+        resolved_action = intent.value
+        resolved_target = hint.target_role
+        resolved_args = payload.args
 
     owner_payload = OwnerCommandRequest(
         message_id=payload.external_message_id,
@@ -110,9 +179,9 @@ def submit_discord_message(
             ),
         ),
         command=OwnerCommandResolution(
-            action=payload.action,
-            target=_resolve_target(action=payload.action, explicit_target=payload.target),
-            payload={"args": payload.args},
+            action=resolved_action,
+            target=resolved_target,
+            payload={"args": resolved_args},
         ),
     )
     return submit_owner_command(

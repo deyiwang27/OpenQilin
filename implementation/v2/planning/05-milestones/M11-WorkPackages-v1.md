@@ -23,12 +23,12 @@ Replace JSON-shaped command entry with human-friendly free-text and compact comm
 
 ### Tasks
 
-- [ ] Create `src/openqilin/control_plane/grammar/models.py` — `IntentClass` enum, `CommandEnvelope`, `RoutingHint` dataclasses
-- [ ] Implement `grammar/intent_classifier.py` — classify message into `discussion | query | mutation | admin`; call LLM gateway for free-text classification; reject `mutation` from free text with `GRAM-004`
-- [ ] Implement `grammar/command_parser.py` — parse `/oq <verb> [target] [args]` into `CommandEnvelope`; raise `GrammarParseError` on unrecognized verb
-- [ ] Implement `grammar/free_text_router.py` — resolve routing target from chat class, project binding context, and explicit mention; default to `secretary` for unroutable discussion in institutional channels
-- [ ] Wire grammar layer into `routers/discord_ingress.py` — call grammar before building ingress payload; explicit `/oq` bypasses free-text classifier
-- [ ] Wire grammar layer in `api/dependencies.py`
+- [x] Create `src/openqilin/control_plane/grammar/models.py` — `IntentClass` enum, `CommandEnvelope`, `RoutingHint` dataclasses
+- [x] Implement `grammar/intent_classifier.py` — classify message into `discussion | query | mutation | admin`; call LLM gateway for free-text classification; reject `mutation` from free text with `GRAM-004`
+- [x] Implement `grammar/command_parser.py` — parse `/oq <verb> [target] [args]` into `CommandEnvelope`; raise `GrammarParseError` on unrecognized verb
+- [x] Implement `grammar/free_text_router.py` — resolve routing target from chat class, project binding context, and explicit mention; default to `secretary` for unroutable discussion in institutional channels
+- [x] Wire grammar layer into `routers/discord_ingress.py` — call grammar before building ingress payload; explicit `/oq` bypasses free-text classifier
+- [x] Wire grammar layer in `api/dependencies.py`
 
 ### Outputs
 
@@ -37,10 +37,10 @@ Replace JSON-shaped command entry with human-friendly free-text and compact comm
 
 ### Done criteria
 
-- [ ] Valid `/oq submit task "do X"` returns correct `CommandEnvelope`
-- [ ] Unrecognized verb raises `GrammarParseError` → 400
-- [ ] Free-text `mutation`-classified message rejected with `GRAM-004` validation error before reaching `CommandHandler`
-- [ ] Free-text `discussion` in institutional channel resolves routing to `secretary`
+- [x] Valid `/oq submit task "do X"` returns correct `CommandEnvelope`
+- [x] Unrecognized verb raises `GrammarParseError` → 400
+- [x] Free-text `mutation`-classified message rejected with `GRAM-004` validation error before reaching `CommandHandler`
+- [x] Free-text `discussion` in institutional channel resolves routing to `secretary`
 
 ---
 
