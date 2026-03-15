@@ -109,14 +109,14 @@ Replace JSON-shaped command entry with human-friendly free-text and compact comm
 
 ### Tasks
 
-- [ ] Add to `compose.yml` under `orchestrator_worker` service:
+- [x] Add to `compose.yml` under `orchestrator_worker` service:
   ```yaml
   LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2:-false}
   LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY:-}
   LANGCHAIN_PROJECT: ${LANGCHAIN_PROJECT:-openqilin-dev}
   ```
-- [ ] Add `LANGCHAIN_TRACING_V2`, `LANGCHAIN_API_KEY`, `LANGCHAIN_PROJECT` to `.env.example` with default `false`/empty values
-- [ ] Add comment in `compose.yml` clarifying LangSmith is dev-time tracing only — not a governance audit source
+- [x] Add `LANGCHAIN_TRACING_V2`, `LANGCHAIN_API_KEY`, `LANGCHAIN_PROJECT` to `.env.example` with default `false`/empty values
+- [x] Add comment in `compose.yml` clarifying LangSmith is dev-time tracing only — not a governance audit source
 
 ### Outputs
 
@@ -125,8 +125,8 @@ Replace JSON-shaped command entry with human-friendly free-text and compact comm
 
 ### Done criteria
 
-- [ ] LangSmith tracing can be enabled by setting `LANGCHAIN_TRACING_V2=true` in `.env` without code changes
-- [ ] Disabled by default (no LangSmith calls when env var is absent or `false`)
+- [x] LangSmith tracing can be enabled by setting `LANGCHAIN_TRACING_V2=true` in `.env` without code changes
+- [x] Disabled by default (no LangSmith calls when env var is absent or `false`)
 
 ---
 
