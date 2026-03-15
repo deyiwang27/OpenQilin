@@ -77,6 +77,7 @@ Updated: `2026-03-15`
 | [OpenClawReferenceLearningReport-v1.md](04-research/OpenClawReferenceLearningReport-v1.md) | Adopt/adapt/reject learning from OpenClaw |
 | [EdictSpikeReport-v1.md](04-research/EdictSpikeReport-v1.md) | Edict comparison spike |
 | [ExternalReferenceLandscapeSpike-v1.md](04-research/ExternalReferenceLandscapeSpike-v1.md) | External reference landscape scan |
+| [ZeroClawSpikeReport-v1.md](04-research/ZeroClawSpikeReport-v1.md) | ZeroClaw comparison spike — 3 adopt findings deferred post-MVP |
 
 ---
 
