@@ -4,8 +4,9 @@
 ## Linked Issue
 - Closes #
 
-## Milestone
-- M0 / M1 / M2 / M3 / M4
+## Milestone / WP
+- Milestone: M11 / M12 / M13 / M14 / M15 / M16
+- WP: e.g. M12-WP3
 
 ## Scope
 - In scope:
@@ -23,6 +24,8 @@
 - Issue:
 - Test run:
 - Trace/Audit (if governed path impacted):
+- Alembic forward-apply (if DB migration included):
+- OPA Rego unit tests (if Rego bundle changed):
 - Governance check (if structure/policy/docs changed):
 
 ## Policy and Quality Checklist
@@ -32,8 +35,10 @@
 - [ ] Local verification commands are listed above.
 - [ ] Required checks for this change type are green.
 - [ ] Contract or migration changes include corresponding design/spec updates.
-- [ ] `implementation/v1/planning/ImplementationProgress-v1.md` updated when milestone status/evidence changed.
-- [ ] Repository consistency/governance checks are completed when applicable (`implementation/v1/workflow/RepositoryConsistencyAndGovernanceCheck-v1.md`).
+- [ ] No `InMemory*` class introduced in any production code path (only allowed under `testing/` subpackages).
+- [ ] WP task checkbox checked in the WP document if this PR completes a WP task.
+- [ ] `implementation/v2/planning/ImplementationProgress-v2.md` updated when WP/milestone status changed.
+- [ ] Repository consistency/governance checks completed when applicable (`implementation/v2/workflow/RepositoryConsistencyAndGovernanceCheck-v2.md`).
 
 ## Reviewer Notes
 - Risks:
