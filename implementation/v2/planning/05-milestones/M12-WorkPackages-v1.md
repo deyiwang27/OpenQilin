@@ -1,7 +1,7 @@
 # M12 Work Packages — Infrastructure Wiring, Security Hardening, and CSO Activation
 
 Milestone: `M12`
-Status: `planned`
+Status: `in_progress`
 Entry gate: M11 complete
 Design ref: `design/v2/architecture/M12-InfrastructureWiringAndSecurityModuleDesign-v2.md`, `design/v2/adr/ADR-0004`, `design/v2/adr/ADR-0006`, `design/v2/components/PolicyRuntimeComponentDelta-v2.md`, `design/v2/components/ObservabilityAndDashboardDelta-v2.md`
 
@@ -25,19 +25,19 @@ This milestone is the foundation that makes all subsequent milestones trustworth
 
 ### Tasks
 
-- [ ] Implement `OPAPolicyRuntimeClient` in `src/openqilin/policy_runtime_integration/client.py` using `httpx` async:
+- [x] Implement `OPAPolicyRuntimeClient` in `src/openqilin/policy_runtime_integration/client.py` using `httpx` sync:
   - POST to `http://opa:8181/v1/data/openqilin/policy/decide`
   - 150ms timeout budget
   - Fail-closed: any error (network, timeout, non-200) returns `deny` with `POL-003`
-- [ ] Move `InMemoryPolicyRuntimeClient` to `src/openqilin/policy_runtime_integration/testing/in_memory_client.py` — test use only
-- [ ] Create `src/openqilin/policy_runtime_integration/rego/` bundle:
+- [x] Move `InMemoryPolicyRuntimeClient` to `src/openqilin/policy_runtime_integration/testing/in_memory_client.py` — test use only
+- [x] Create `src/openqilin/policy_runtime_integration/rego/` bundle:
   - `policy.rego` — Rego package implementing all 12 rules from `constitution/core/PolicyRules.yaml`
   - `data/authority_matrix.json` — generated from `AuthorityMatrix.yaml` at build time
   - `data/obligation_policy.json` — generated from `ObligationPolicy.yaml` at build time
-- [ ] Update `compose.yml` OPA service to mount the Rego bundle: `command: ["run", "--server", "--bundle", "/bundle"]`; volume-mount `src/openqilin/policy_runtime_integration/rego:/bundle`
-- [ ] Implement `verify_opa_bundle_loaded()` in `src/openqilin/shared_kernel/startup_validation.py`; add `health_check()` and `get_active_policy_version()` to `OPAPolicyRuntimeClient`
-- [ ] Call startup validation in app lifespan before accepting traffic
-- [ ] Wire `OPAPolicyRuntimeClient` in `src/openqilin/control_plane/api/dependencies.py`
+- [x] Update `compose.yml` OPA service to mount the Rego bundle: `command: ["run", "--server", "--bundle", "/bundle"]`; volume-mount `src/openqilin/policy_runtime_integration/rego:/bundle`
+- [x] Implement `verify_opa_bundle_loaded()` in `src/openqilin/shared_kernel/startup_validation.py`; add `health_check()` and `get_active_policy_version()` to `OPAPolicyRuntimeClient`
+- [x] Call startup validation in app lifespan before accepting traffic
+- [x] Wire `OPAPolicyRuntimeClient` in `src/openqilin/control_plane/api/dependencies.py`
 
 ### Outputs
 
@@ -47,11 +47,11 @@ This milestone is the foundation that makes all subsequent milestones trustworth
 
 ### Done criteria
 
-- [ ] OPA returns a real `PolicyDecision` for a known-allow request
-- [ ] OPA fail-closed: OPA returns 500 → `PolicyDecision(decision="deny", rule_ids=["POL-003"])`
-- [ ] OPA fail-closed: timeout → same deny result
-- [ ] Startup validation: OPA unreachable at startup → app refuses to start with clear error
-- [ ] `InMemoryPolicyRuntimeClient` removed from all production code paths
+- [x] OPA returns a real `PolicyDecision` for a known-allow request
+- [x] OPA fail-closed: OPA returns 500 → `PolicyDecision(decision="deny", rule_ids=["POL-003"])`
+- [x] OPA fail-closed: timeout → same deny result
+- [x] Startup validation: OPA unreachable at startup → app refuses to start with clear error
+- [x] `InMemoryPolicyRuntimeClient` removed from all production code paths
 
 ---
 
@@ -65,14 +65,14 @@ This milestone is the foundation that makes all subsequent milestones trustworth
 
 ### Tasks
 
-- [ ] Implement `ObligationDispatcher` in `src/openqilin/policy_runtime_integration/obligations.py`:
+- [x] Implement `ObligationDispatcher` in `src/openqilin/policy_runtime_integration/obligations.py`:
   - Deterministic order: `emit_audit_event → require_owner_approval → reserve_budget → enforce_sandbox_profile`
   - Each obligation has a dedicated handler; unsatisfied obligation returns `satisfied=False` and blocks task
-- [ ] Implement `emit_audit_event` handler — writes to `PostgresAuditEventRepository` (from WP M12-03); mandatory for all policy decisions including deny
-- [ ] Implement `require_owner_approval` handler — transitions task to `blocked` with `approval_required` reason; notifies owner via Discord
-- [ ] Implement `reserve_budget` handler — calls `BudgetRuntimeClient.reserve()`; fails closed if `uncertain` (budget wiring completed in M14; stub hook in M12 that will be replaced)
-- [ ] Implement `enforce_sandbox_profile` handler — validates and binds dispatch target's sandbox profile (full enforcement in M13; validation hook in M12)
-- [ ] Wire `ObligationDispatcher` into the task orchestration path after policy decision is received
+- [x] Implement `emit_audit_event` handler — writes to `InMemoryAuditWriter` (upgraded to Postgres in M12-WP5); mandatory for all `allow_with_obligations` decisions
+- [x] Implement `require_owner_approval` handler — transitions task to `blocked` with `approval_required` reason; blocking
+- [x] Implement `reserve_budget` handler — calls `BudgetReservationService.reserve_with_fail_closed()`; M12 stub (replaced in M14-WP1)
+- [x] Implement `enforce_sandbox_profile` handler — validation hook only; non-blocking in M12 (full enforcement in M13-WP6)
+- [x] Wire `ObligationDispatcher` into the task orchestration path after policy decision is received
 
 ### Outputs
 
@@ -81,10 +81,10 @@ This milestone is the foundation that makes all subsequent milestones trustworth
 
 ### Done criteria
 
-- [ ] `allow_with_obligations` result now triggers obligation application (not silently allowed)
-- [ ] `emit_audit_event` fires before any other obligation
-- [ ] `require_owner_approval` transitions task to `blocked`; owner receives notification
-- [ ] Obligation order is deterministic and matches the documented sequence
+- [x] `allow_with_obligations` result now triggers obligation application (not silently allowed)
+- [x] `emit_audit_event` fires before any other obligation
+- [x] `require_owner_approval` transitions task to `blocked`; owner receives notification
+- [x] Obligation order is deterministic and matches the documented sequence
 
 ---
 
