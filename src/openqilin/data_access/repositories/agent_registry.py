@@ -9,7 +9,7 @@ from pathlib import Path
 
 from openqilin.shared_kernel.config import RuntimeSettings
 
-_INSTITUTIONAL_ROLES = ("administrator", "auditor", "ceo", "cwo")
+_INSTITUTIONAL_ROLES = ("administrator", "auditor", "ceo", "cwo", "cso")
 
 
 @dataclass(frozen=True, slots=True)

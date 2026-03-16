@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from openqilin.data_access.repositories.agent_registry import AgentRecord
 
-_INSTITUTIONAL_ROLES = ("administrator", "auditor", "ceo", "cwo")
+_INSTITUTIONAL_ROLES = ("administrator", "auditor", "ceo", "cwo", "cso")
 
 
 class PostgresAgentRegistryRepository:

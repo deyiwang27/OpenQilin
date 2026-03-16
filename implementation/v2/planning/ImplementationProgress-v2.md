@@ -1,7 +1,7 @@
 # OpenQilin v2 - Implementation Progress
 
 Status: `active`
-Updated: `2026-03-16`
+Updated: `2026-03-15`
 Tracking authority: GitHub Issues/PRs are the operational source of truth. This doc is the in-repo WP/milestone-level mirror.
 
 ---
@@ -11,7 +11,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 | Milestone | Status | WPs Done | Notes |
 |---|---|---|---|
 | M11 | `done` | 4 / 4 | All WPs complete; exit criteria met |
-| M12 | `in_progress` | 6 / 8 | WP1 (C-1 OPA), WP2 (C-2 Obligations), WP3 (PostgreSQL repos, H-4/H-5/H-6), WP4 (Redis idempotency), WP5 (C-5 OTel export), WP6 (C-6/C-8 security hardening) done |
+| M12 | `in_progress` | 8 / 8 | WP1–WP8 all done; exit criteria partially met (compose stack not validated) |
 | M13 | `planned` | 0 / 6 | Entry gate: M12 complete |
 | M14 | `planned` | 0 / 6 | Entry gate: M13 complete |
 | M15 | `planned` | 0 / 5 | Entry gate: M14 complete |
@@ -47,9 +47,9 @@ WP document: `05-milestones/M12-WorkPackages-v1.md`
 | M12-WP5 | OTel Export Wiring (C-5) | `done` | #84 | — | configure_tracer/metrics/logs; OTelAuditWriter dual-write |
 | M12-WP6 | Security Hardening: C-6 and C-8 | `done` | #85 | — | C-6: DB-backed role resolution; C-8: principal_role in ToolCallContext |
 | M12-WP7 | Critical Runtime Bug Fixes: H-1, H-2 | `done` | #86 | — | H-1: DispatchTargetError + mark_failed; H-2: transition_guard wired into both repos |
-| M12-WP8 | CSO Activation | `pending` | #87 | — | — |
+| M12-WP8 | CSO Activation | `done` | #87 | — | agents/cso/ package; CSOAgent + assert\_opa\_client\_required; cso in `_INSTITUTIONAL_ROLES`; wired into RuntimeServices |
 
-**M12 Exit criteria:** `pending`
+**M12 Exit criteria:** `in_progress` — all 8 WPs done; compose stack validation and OTel C-5 pending prod verification
 
 ---
 
@@ -141,8 +141,8 @@ All 20 architectural review findings from `00-direction/ArchitecturalReviewFindi
 | C-8 | Write tool access check inverted | M12 | M12-WP6 | `done` |
 | C-9 | LangGraph not used; linear HTTP handler | M13 | M13-WP1 | `pending` |
 | C-10 | Sandbox enforcement empty placeholder | M13 | M13-WP6 | `pending` |
-| H-1 | Fail-open dispatch fallback | M12 | M12-WP7 | `pending` |
-| H-2 | No state transition guard | M12 | M12-WP7 | `pending` |
+| H-1 | Fail-open dispatch fallback | M12 | M12-WP7 | `done` |
+| H-2 | No state transition guard | M12 | M12-WP7 | `done` |
 | H-3 | Snapshot split-brain | M13 | M13-WP4 | `pending` |
 | H-4 | Dual RuntimeServices init | M12 | M12-WP3 | `done` |
 | H-5 | Idempotency re-claim after failure | M12 | M12-WP3 | `done` |

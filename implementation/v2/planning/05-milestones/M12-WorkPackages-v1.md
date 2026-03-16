@@ -279,15 +279,15 @@ This milestone is the foundation that makes all subsequent milestones trustworth
 
 ### Tasks
 
-- [ ] Create `src/openqilin/agents/cso/` package: `agent.py`, `prompts.py`, `models.py`
-- [ ] Implement `CSOAgent` — advisory governance gate; uses real OPA policy evaluation; present in institutional channels
-- [ ] Add startup guard in `dependencies.py`:
+- [x] Create `src/openqilin/agents/cso/` package: `agent.py`, `prompts.py`, `models.py`
+- [x] Implement `CSOAgent` — advisory governance gate; uses real OPA policy evaluation; present in institutional channels
+- [x] Add startup guard in `dependencies.py`:
   ```python
   if not isinstance(policy_client, OPAPolicyRuntimeClient):
       raise RuntimeError("CSO must not be activated without real OPA client")
   ```
-- [ ] Wire CSO as active participant in institutional shared channels per `OwnerInteractionModel.md` MVP v2 active profile
-- [ ] Add integration test: CSO governance gate rejects a request that violates a Rego rule; CSO NOT activated when `InMemoryPolicyRuntimeClient` is detected
+- [x] Wire CSO as active participant in institutional shared channels per `OwnerInteractionModel.md` MVP v2 active profile
+- [x] Add integration test: CSO governance gate rejects a request that violates a Rego rule; CSO NOT activated when `InMemoryPolicyRuntimeClient` is detected
 
 ### Outputs
 
@@ -296,9 +296,9 @@ This milestone is the foundation that makes all subsequent milestones trustworth
 
 ### Done criteria
 
-- [ ] CSO governance gate calls real OPA; denial is based on actual Rego rule evaluation
-- [ ] CSO NOT activated if OPA is not wired — startup fails with clear error
-- [ ] CSO activated only in correct channels; not in project channels
+- [x] CSO governance gate calls real OPA; denial is based on actual Rego rule evaluation
+- [x] CSO NOT activated if OPA is not wired — startup fails with clear error
+- [x] CSO activated only in correct channels; not in project channels
 
 ---
 

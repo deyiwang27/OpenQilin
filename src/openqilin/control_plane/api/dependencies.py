@@ -15,6 +15,7 @@ from openqilin.control_plane.api.startup_recovery import (
     StartupRecoveryReport,
     payload_hash_for_task,
 )
+from openqilin.agents.cso.agent import CSOAgent, assert_opa_client_required
 from openqilin.agents.secretary.agent import SecretaryAgent
 from openqilin.control_plane.grammar.command_parser import CommandParser
 from openqilin.control_plane.grammar.free_text_router import FreeTextRouter
@@ -100,6 +101,7 @@ class RuntimeServices:
     grammar_parser: CommandParser
     grammar_router: FreeTextRouter
     secretary_agent: SecretaryAgent
+    cso_agent: CSOAgent
     ingress_dedupe: InMemoryIngressDedupe
     runtime_state_repo: InMemoryRuntimeStateRepository | PostgresTaskRepository
     communication_repo: InMemoryCommunicationRepository | PostgresCommunicationRepository
@@ -136,6 +138,9 @@ def build_runtime_services() -> RuntimeServices:
     grammar_parser = CommandParser()
     grammar_router = FreeTextRouter()
     secretary_agent = SecretaryAgent(llm_gateway=llm_gateway)
+    # CSO activation guard: OPA must be wired when opa_url is set.
+    # In dev mode (no opa_url), CSO is built with the InMemory client — no guard.
+    _cso_opa_required = bool(settings.opa_url)
 
     # --- repository tier selection -----------------------------------------
     # If database_url is set, use PostgreSQL-backed repositories.
@@ -227,6 +232,11 @@ def build_runtime_services() -> RuntimeServices:
         if settings.opa_url
         else InMemoryPolicyRuntimeClient()
     )
+    # M12-WP8: Activate CSO. If opa_url is set, enforce the OPA client guard.
+    if _cso_opa_required:
+        assert_opa_client_required(policy_runtime_client)
+    cso_agent = CSOAgent(llm_gateway=llm_gateway, policy_client=policy_runtime_client)
+
     budget_runtime_client = InMemoryBudgetRuntimeClient()
     budget_reservation_service = BudgetReservationService(client=budget_runtime_client)
     lifecycle_service = TaskLifecycleService(runtime_state_repo=runtime_state_repo)
@@ -303,6 +313,7 @@ def build_runtime_services() -> RuntimeServices:
         grammar_parser=grammar_parser,
         grammar_router=grammar_router,
         secretary_agent=secretary_agent,
+        cso_agent=cso_agent,
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
         communication_repo=communication_repo,
@@ -443,3 +454,9 @@ def get_secretary_agent(request: Request) -> SecretaryAgent:
     """Provide Secretary advisory agent for institutional channel routing."""
 
     return get_runtime_services(request).secretary_agent
+
+
+def get_cso_agent(request: Request) -> CSOAgent:
+    """Provide CSO governance advisory agent for institutional channel routing."""
+
+    return get_runtime_services(request).cso_agent
