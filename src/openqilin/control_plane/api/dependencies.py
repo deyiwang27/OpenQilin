@@ -14,6 +14,7 @@ from openqilin.control_plane.api.startup_recovery import (
     StartupRecoveryReport,
     payload_hash_for_task,
 )
+from openqilin.agents.secretary.agent import SecretaryAgent
 from openqilin.control_plane.grammar.command_parser import CommandParser
 from openqilin.control_plane.grammar.free_text_router import FreeTextRouter
 from openqilin.control_plane.grammar.intent_classifier import IntentClassifier
@@ -57,6 +58,7 @@ class RuntimeServices:
     grammar_classifier: IntentClassifier
     grammar_parser: CommandParser
     grammar_router: FreeTextRouter
+    secretary_agent: SecretaryAgent
     ingress_dedupe: InMemoryIngressDedupe
     runtime_state_repo: InMemoryRuntimeStateRepository
     communication_repo: InMemoryCommunicationRepository
@@ -88,6 +90,7 @@ def build_runtime_services() -> RuntimeServices:
     grammar_classifier = IntentClassifier(llm_gateway=llm_gateway)
     grammar_parser = CommandParser()
     grammar_router = FreeTextRouter()
+    secretary_agent = SecretaryAgent(llm_gateway=llm_gateway)
     runtime_snapshot_path = (
         settings.runtime_state_snapshot_path if settings.runtime_persistence_enabled else None
     )
@@ -183,6 +186,7 @@ def build_runtime_services() -> RuntimeServices:
         grammar_classifier=grammar_classifier,
         grammar_parser=grammar_parser,
         grammar_router=grammar_router,
+        secretary_agent=secretary_agent,
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
         communication_repo=communication_repo,
@@ -305,3 +309,9 @@ def get_grammar_router(request: Request) -> FreeTextRouter:
     """Provide grammar free-text router for intent-to-target resolution."""
 
     return get_runtime_services(request).grammar_router
+
+
+def get_secretary_agent(request: Request) -> SecretaryAgent:
+    """Provide Secretary advisory agent for institutional channel routing."""
+
+    return get_runtime_services(request).secretary_agent

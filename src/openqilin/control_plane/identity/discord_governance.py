@@ -11,12 +11,17 @@ from openqilin.data_access.repositories.identity_channels import (
     InMemoryIdentityChannelRepository,
 )
 
-_PENDING_ROLE_FLAGS = frozenset({"secretary", "cso", "domain_leader"})
+# secretary activated in M11; cso and domain_leader remain pending until M12/M13
+_PENDING_ROLE_FLAGS = frozenset({"cso", "domain_leader"})
 _MEMBERSHIP_BY_CHAT_CLASS: dict[str, frozenset[str]] = {
-    "direct": frozenset({"owner", "administrator", "auditor", "ceo", "cwo", "project_manager"}),
-    "leadership_council": frozenset({"owner", "administrator", "auditor", "ceo", "cwo"}),
-    "governance": frozenset({"owner", "administrator", "auditor"}),
-    "executive": frozenset({"owner", "ceo", "cwo"}),
+    "direct": frozenset(
+        {"owner", "administrator", "auditor", "ceo", "cwo", "cso", "secretary", "project_manager"}
+    ),
+    "leadership_council": frozenset(
+        {"owner", "administrator", "auditor", "ceo", "cwo", "secretary"}
+    ),
+    "governance": frozenset({"owner", "administrator", "auditor", "secretary"}),
+    "executive": frozenset({"owner", "ceo", "cwo", "secretary"}),
     "project": frozenset({"owner", "ceo", "cwo", "project_manager"}),
 }
 _KNOWN_ROLE_SET = frozenset(

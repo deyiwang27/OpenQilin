@@ -29,6 +29,8 @@ def _discord_payload() -> dict[str, object]:
 
 
 def test_discord_ingress_adapter_maps_payload_and_reuses_governed_owner_path() -> None:
+    # M11: grammar layer classifies free-text content; action is intent-derived, not payload.action.
+    # "Send status update to ceo." → DISCUSSION (default) → secretary bypass (direct channel).
     client = TestClient(create_control_plane_app())
     payload = _discord_payload()
     signature = sign_payload_hash(
@@ -46,7 +48,9 @@ def test_discord_ingress_adapter_maps_payload_and_reuses_governed_owner_path() -
     assert response.status_code == 202
     assert body["status"] == "accepted"
     assert body["data"]["connector"] == "discord"
-    assert body["data"]["command"] == "msg_notify"
+    # M11: grammar layer routes free-text to secretary; command reflects intent class
+    assert body["data"]["command"] == "discussion"
+    assert body["data"]["dispatch_target"] == "secretary"
 
 
 def test_discord_ingress_adapter_requires_signature_header() -> None:

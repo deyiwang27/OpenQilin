@@ -27,7 +27,7 @@ WP document: `05-milestones/M11-WorkPackages-v1.md`
 |---|---|---|---|---|---|
 | M11-WP1 | Grammar Layer | `done` | #75 | — | grammar package (4 modules) + discord_ingress wired |
 | M11-WP2 | C-7 Security Fix: `chat_class` KeyError | `done` | #76 | — | Fixed in discord_governance.py; 3 unit tests added |
-| M11-WP3 | Secretary Agent Activation | `pending` | #77 | — | — |
+| M11-WP3 | Secretary Agent Activation | `done` | #77 | — | agents/secretary/ package; advisory policy profile; channel membership activated |
 | M11-WP4 | LangSmith Dev-Time Tracing | `done` | #78 | — | compose.yml + .env.example updated |
 
 **M11 Exit criteria:** `pending`

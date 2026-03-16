@@ -7,6 +7,14 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Header, Request
 from fastapi.responses import JSONResponse
 
+import uuid
+
+from openqilin.agents.secretary.agent import SecretaryAgent
+from openqilin.agents.secretary.models import SecretaryPolicyError, SecretaryRequest
+from openqilin.control_plane.identity.connector_security import (
+    ConnectorSecurityError,
+    validate_connector_auth,
+)
 from openqilin.budget_runtime.reservation_service import BudgetReservationService
 from openqilin.control_plane.api.dependencies import (
     get_admission_service,
@@ -20,6 +28,7 @@ from openqilin.control_plane.api.dependencies import (
     get_metric_recorder,
     get_policy_runtime_client,
     get_runtime_state_repository,
+    get_secretary_agent,
     get_task_dispatch_service,
     get_tracer,
 )
@@ -30,6 +39,7 @@ from openqilin.control_plane.grammar.models import ChatContext, GrammarParseErro
 from openqilin.control_plane.routers.owner_commands import submit_owner_command
 from openqilin.control_plane.schemas.discord_ingress import DiscordIngressRequest
 from openqilin.control_plane.schemas.owner_commands import (
+    OwnerCommandAcceptedData,
     OwnerCommandConnectorMetadata,
     OwnerCommandDiscordContext,
     OwnerCommandRequest,
@@ -110,6 +120,7 @@ def submit_discord_message(
     grammar_classifier: IntentClassifier = Depends(get_grammar_classifier),
     grammar_parser: CommandParser = Depends(get_grammar_parser),
     grammar_router: FreeTextRouter = Depends(get_grammar_router),
+    secretary_agent: SecretaryAgent = Depends(get_secretary_agent),
     x_openqilin_signature: Annotated[str | None, Header(alias="X-OpenQilin-Signature")] = None,
 ) -> OwnerCommandResponse | JSONResponse:
     """Translate Discord connector payload into canonical owner-command ingress contract.
@@ -119,6 +130,7 @@ def submit_discord_message(
     - Free-text messages are classified by IntentClassifier; mutation intent is rejected
       with GRAM-004 before reaching CommandHandler.
     - FreeTextRouter resolves the routing target for free-text discussion/query.
+    - Free-text routed to secretary bypasses task dispatch; SecretaryAgent handles it directly.
     """
     grammar_context = ChatContext(
         chat_class=payload.chat_class,
@@ -127,7 +139,9 @@ def submit_discord_message(
     )
 
     content = payload.content.strip()
-    if content.startswith(_COMMAND_PREFIX):
+    is_command = content.startswith(_COMMAND_PREFIX)
+
+    if is_command:
         # Explicit /oq command: parse and derive action/target from grammar
         try:
             envelope = grammar_parser.parse(content)
@@ -148,6 +162,81 @@ def submit_discord_message(
         resolved_action = intent.value
         resolved_target = hint.target_role
         resolved_args = payload.args
+
+        # Advisory bypass: secretary handles discussion/query without task dispatch.
+        # Validate connector signature first — bypass must not skip authenticity checks.
+        if resolved_target == "secretary":
+            try:
+                validate_connector_auth(
+                    header_channel="discord",
+                    header_actor_external_id=payload.actor_external_id,
+                    header_idempotency_key=payload.idempotency_key,
+                    header_signature=x_openqilin_signature,
+                    payload_channel="discord",
+                    payload_actor_external_id=payload.actor_external_id,
+                    payload_idempotency_key=payload.idempotency_key,
+                    payload_raw_payload_hash=payload.raw_payload_hash,
+                )
+            except ConnectorSecurityError as exc:
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "status": "error",
+                        "trace_id": payload.trace_id,
+                        "error": {
+                            "code": exc.code,
+                            "class": "authorization_error",
+                            "message": exc.message,
+                            "retryable": False,
+                            "source_component": "connector_security",
+                            "trace_id": payload.trace_id,
+                        },
+                    },
+                )
+            sec_req = SecretaryRequest(
+                message=content,
+                intent=intent,
+                context=grammar_context,
+                trace_id=payload.trace_id,
+            )
+            try:
+                sec_resp = secretary_agent.handle(sec_req)
+            except SecretaryPolicyError as exc:
+                return JSONResponse(
+                    status_code=403,
+                    content={
+                        "status": "denied",
+                        "trace_id": payload.trace_id,
+                        "error": {
+                            "code": exc.code,
+                            "class": "authorization_error",
+                            "message": exc.message,
+                            "retryable": False,
+                            "source_component": "secretary_agent",
+                            "trace_id": payload.trace_id,
+                        },
+                    },
+                )
+            request_id = str(uuid.uuid4())
+            return OwnerCommandResponse(
+                status="accepted",
+                trace_id=payload.trace_id,
+                data=OwnerCommandAcceptedData(
+                    task_id=f"secretary-{payload.external_message_id}",
+                    admission_state="dispatched",
+                    replayed=False,
+                    request_id=request_id,
+                    principal_id=payload.actor_external_id,
+                    connector="discord",
+                    command=resolved_action,
+                    accepted_args=[],
+                    dispatch_target="secretary",
+                    llm_execution={
+                        "advisory_response": sec_resp.advisory_text,
+                        "routing_suggestion": sec_resp.routing_suggestion,
+                    },
+                ),
+            )
 
     owner_payload = OwnerCommandRequest(
         message_id=payload.external_message_id,

@@ -79,12 +79,12 @@ Replace JSON-shaped command entry with human-friendly free-text and compact comm
 
 ### Tasks
 
-- [ ] Create `src/openqilin/agents/secretary/` package: `agent.py`, `prompts.py`, `models.py`
-- [ ] Implement `SecretaryAgent.handle(request)` — advisory-only responses: intent disambiguation, routing suggestions, daily digest summaries
-- [ ] Bind advisory-only policy profile in `agent.py` — `allow` for `advisory` axis, `deny` for all mutation axes; Secretary MUST NOT issue commands or mutate state
-- [ ] Wire `SecretaryAgent` in `api/dependencies.py`; inject into grammar routing path
-- [ ] Confirm Secretary is a participant in `leadership_council`, `executive`, `governance` channels per `OwnerInteractionModel.md` MVP v2 active profile
-- [ ] Add integration test: Secretary handles `discussion` intent and returns advisory response; attempted mutation request is rejected before any state change
+- [x] Create `src/openqilin/agents/secretary/` package: `agent.py`, `prompts.py`, `models.py`
+- [x] Implement `SecretaryAgent.handle(request)` — advisory-only responses: intent disambiguation, routing suggestions, daily digest summaries
+- [x] Bind advisory-only policy profile in `agent.py` — `allow` for `advisory` axis, `deny` for all mutation axes; Secretary MUST NOT issue commands or mutate state
+- [x] Wire `SecretaryAgent` in `api/dependencies.py`; inject into grammar routing path
+- [x] Confirm Secretary is a participant in `leadership_council`, `executive`, `governance` channels per `OwnerInteractionModel.md` MVP v2 active profile
+- [x] Add integration test: Secretary handles `discussion` intent and returns advisory response; attempted mutation request is rejected before any state change
 
 ### Outputs
 
@@ -93,9 +93,9 @@ Replace JSON-shaped command entry with human-friendly free-text and compact comm
 
 ### Done criteria
 
-- [ ] `discussion` message in `leadership_council` receives Secretary advisory response
-- [ ] Secretary cannot trigger any state-mutating action (rejected by advisory policy profile)
-- [ ] Secretary is NOT activated as default responder in project channels
+- [x] `discussion` message in `leadership_council` receives Secretary advisory response
+- [x] Secretary cannot trigger any state-mutating action (rejected by advisory policy profile)
+- [x] Secretary is NOT activated as default responder in project channels
 
 ---
 
