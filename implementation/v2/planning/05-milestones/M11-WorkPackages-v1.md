@@ -132,12 +132,12 @@ Replace JSON-shaped command entry with human-friendly free-text and compact comm
 
 ## M11 Exit Criteria
 
-- [ ] All four WPs above are marked done
-- [ ] Free-text and `/oq` command interactions work end to end in the real Discord stack
-- [ ] Secretary is active and responds in institutional channels
-- [ ] No JSON-shaped input required for any normal owner interaction
-- [ ] Unknown `chat_class` returns 403, not 500
-- [ ] No new InMemory placeholder introduced in a production code path
+- [x] All four WPs above are marked done
+- [x] Free-text and `/oq` command interactions work end to end in the real Discord stack
+- [x] Secretary is active and responds in institutional channels
+- [x] No JSON-shaped input required for any normal owner interaction
+- [x] Unknown `chat_class` returns 403, not 500
+- [x] No new InMemory placeholder introduced in a production code path
 
 ## References
 

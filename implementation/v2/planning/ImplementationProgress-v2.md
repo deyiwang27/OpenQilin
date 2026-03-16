@@ -10,7 +10,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 
 | Milestone | Status | WPs Done | Notes |
 |---|---|---|---|
-| M11 | `planned` | 0 / 4 | Entry gate: M10 complete |
+| M11 | `done` | 4 / 4 | All WPs complete; exit criteria met |
 | M12 | `planned` | 0 / 8 | Entry gate: M11 complete |
 | M13 | `planned` | 0 / 6 | Entry gate: M12 complete |
 | M14 | `planned` | 0 / 6 | Entry gate: M13 complete |
@@ -30,7 +30,7 @@ WP document: `05-milestones/M11-WorkPackages-v1.md`
 | M11-WP3 | Secretary Agent Activation | `done` | #77 | — | agents/secretary/ package; advisory policy profile; channel membership activated |
 | M11-WP4 | LangSmith Dev-Time Tracing | `done` | #78 | — | compose.yml + .env.example updated |
 
-**M11 Exit criteria:** `pending`
+**M11 Exit criteria:** `done`
 
 ---
 
