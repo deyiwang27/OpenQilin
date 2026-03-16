@@ -50,6 +50,9 @@ class RuntimeSettings(BaseSettings):
     opa_url: str = (
         ""  # Empty = use InMemory client (local/test). Set to http://opa:8181 in compose.
     )
+    database_url: str = (
+        ""  # Empty = use InMemory repos (local/test). Set to postgresql+psycopg://... in compose.
+    )
 
     @property
     def system_root_path(self) -> Path:
