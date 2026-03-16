@@ -249,13 +249,13 @@ This milestone is the foundation that makes all subsequent milestones trustworth
 ### Tasks
 
 **H-1 — Fail-open dispatch fallback:**
-- [ ] In `src/openqilin/task_orchestrator/services/task_service.py`: replace silent `dispatched` assignment for unknown target with `raise DispatchTargetError(f"unknown dispatch target: {target}")` → task transitions to `failed`
-- [ ] Add unit test: unknown dispatch target → task status = `failed`; no `dispatched` record
+- [x] In `src/openqilin/task_orchestrator/services/task_service.py`: replace silent `dispatched` assignment for unknown target with `raise DispatchTargetError(f"unknown dispatch target: {target}")` → task transitions to `failed`
+- [x] Add unit test: unknown dispatch target → task status = `failed`; no `dispatched` record
 
 **H-2 — State transition guard:**
-- [ ] Create `src/openqilin/task_orchestrator/state/transition_guard.py` with `LEGAL_TRANSITIONS` dict and `assert_legal_transition(current, next_state)` that raises `InvalidStateTransitionError` on illegal transitions
-- [ ] Call `assert_legal_transition()` before every `update_task_status()` call in `runtime_state.py` and `task_service.py`
-- [ ] Add unit test: `queued → dispatched` raises `InvalidStateTransitionError`; `queued → policy_evaluation` succeeds
+- [x] Create `src/openqilin/task_orchestrator/state/transition_guard.py` with `LEGAL_TRANSITIONS` dict and `assert_legal_transition(current, next_state)` that raises `InvalidStateTransitionError` on illegal transitions
+- [x] Call `assert_legal_transition()` before every `update_task_status()` call in `runtime_state.py` and `postgres/task_repository.py`
+- [x] Add unit test: `queued → running` raises `InvalidStateTransitionError`; `queued → authorized` succeeds
 
 ### Outputs
 
@@ -264,8 +264,8 @@ This milestone is the foundation that makes all subsequent milestones trustworth
 
 ### Done criteria
 
-- [ ] H-1: unknown dispatch target produces `failed` task status, not `dispatched`
-- [ ] H-2: any illegal state transition raises `InvalidStateTransitionError`; task not updated
+- [x] H-1: unknown dispatch target produces `failed` task status, not `dispatched`
+- [x] H-2: any illegal state transition raises `InvalidStateTransitionError`; task not updated
 
 ---
 

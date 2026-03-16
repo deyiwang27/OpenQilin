@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from openqilin.data_access.repositories.runtime_state import TaskRecord
 from openqilin.task_orchestrator.admission.envelope_validator import AdmissionEnvelope
+from openqilin.task_orchestrator.state.transition_guard import assert_legal_transition
 
 
 class PostgresTaskRepository:
@@ -121,6 +122,8 @@ class PostgresTaskRepository:
         existing = self.get_task_by_id(task_id)
         if existing is None:
             return None
+        if existing.status != status:
+            assert_legal_transition(existing.status, status)
         outcome_details_json: str | None = None
         if outcome_details is not None:
             outcome_details_json = json.dumps(

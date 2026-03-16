@@ -529,10 +529,11 @@ def submit_owner_command(
         principal_headers = {
             "x-external-channel": x_external_channel,
             "x-openqilin-actor-external-id": x_external_actor_id,
-            "x-openqilin-actor-role": payload.sender.actor_role,
         }
         try:
-            principal = resolve_principal(principal_headers)
+            principal = resolve_principal(
+                principal_headers, identity_repo=identity_channel_repository
+            )
         except PrincipalResolutionError as error:
             span.set_status("error")
             span.set_attribute("outcome", "denied")

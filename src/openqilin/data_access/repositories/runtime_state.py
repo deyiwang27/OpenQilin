@@ -11,6 +11,7 @@ from uuid import uuid4
 
 from openqilin.shared_kernel.config import RuntimeSettings
 from openqilin.task_orchestrator.admission.envelope_validator import AdmissionEnvelope
+from openqilin.task_orchestrator.state.transition_guard import assert_legal_transition
 
 
 @dataclass(frozen=True, slots=True)
@@ -118,6 +119,8 @@ class InMemoryRuntimeStateRepository:
         task = self._task_by_id.get(task_id)
         if task is None:
             return None
+        if task.status != status:
+            assert_legal_transition(task.status, status)
         updated = replace(
             task,
             status=status,

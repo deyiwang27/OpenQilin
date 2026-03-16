@@ -28,6 +28,7 @@ def _build_runtime_state_repo_with_task() -> tuple[InMemoryRuntimeStateRepositor
     envelope = validate_owner_command_envelope(payload=payload, principal=principal)
     repo = InMemoryRuntimeStateRepository()
     task = repo.create_task_from_envelope(envelope)
+    repo.update_task_status(task.task_id, "authorized")
     repo.update_task_status(
         task.task_id,
         "dispatched",

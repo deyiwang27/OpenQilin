@@ -46,6 +46,10 @@ def _build_task(
     envelope = validate_owner_command_envelope(payload=payload, principal=principal)
     repository = InMemoryRuntimeStateRepository()
     task = repository.create_task_from_envelope(envelope)
+    # Advance to 'authorized' (as if policy evaluation passed) so dispatch
+    # tests start from the correct pre-dispatch state.
+    repository.update_task_status(task.task_id, "authorized")
+    task = repository.get_task_by_id(task.task_id)
     return task, repository
 
 

@@ -46,7 +46,7 @@ WP document: `05-milestones/M12-WorkPackages-v1.md`
 | M12-WP4 | Redis Idempotency Wiring | `done` | #83 | — | RedisIdempotencyCacheStore; env-gated via OPENQILIN_REDIS_URL |
 | M12-WP5 | OTel Export Wiring (C-5) | `done` | #84 | — | configure_tracer/metrics/logs; OTelAuditWriter dual-write |
 | M12-WP6 | Security Hardening: C-6 and C-8 | `done` | #85 | — | C-6: DB-backed role resolution; C-8: principal_role in ToolCallContext |
-| M12-WP7 | Critical Runtime Bug Fixes: H-1, H-2 | `pending` | #86 | — | — |
+| M12-WP7 | Critical Runtime Bug Fixes: H-1, H-2 | `done` | #86 | — | H-1: DispatchTargetError + mark_failed; H-2: transition_guard wired into both repos |
 | M12-WP8 | CSO Activation | `pending` | #87 | — | — |
 
 **M12 Exit criteria:** `pending`

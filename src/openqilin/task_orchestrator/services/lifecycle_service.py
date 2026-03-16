@@ -54,3 +54,21 @@ class TaskLifecycleService:
             dispatch_target=dispatch_target,
             dispatch_id=None,
         )
+
+    def mark_failed(
+        self,
+        task_id: str,
+        *,
+        error_code: str,
+        message: str,
+        outcome_source: str,
+    ) -> TaskRecord | None:
+        """Mark task as failed due to an unrecoverable error."""
+
+        return self._runtime_state_repo.update_task_status(
+            task_id,
+            "failed",
+            outcome_source=outcome_source,
+            outcome_error_code=error_code,
+            outcome_message=message,
+        )
