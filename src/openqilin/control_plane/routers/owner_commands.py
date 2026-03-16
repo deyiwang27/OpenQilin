@@ -61,6 +61,10 @@ from openqilin.observability.tracing.tracer import InMemoryTracer
 from openqilin.policy_runtime_integration.client import PolicyRuntimeClient
 from openqilin.policy_runtime_integration.fail_closed import evaluate_with_fail_closed
 from openqilin.policy_runtime_integration.normalizer import normalize_policy_input
+from openqilin.policy_runtime_integration.obligations import (
+    ObligationContext,
+    ObligationDispatcher,
+)
 from openqilin.task_orchestrator.admission.envelope_validator import (
     EnvelopeValidationError,
     validate_owner_command_envelope,
@@ -837,6 +841,51 @@ def submit_owner_command(
                 policy_hash=policy_hash,
                 rule_ids=rule_ids,
             )
+
+        # M12-WP2: Apply obligations for allow_with_obligations decisions (C-2).
+        if policy_decision == "allow_with_obligations" and policy_outcome.policy_result is not None:
+            obligation_context = ObligationContext(
+                trace_id=trace_id,
+                task_id=task_id,
+                request_id=request_id,
+                principal_id=principal_id,
+                principal_role=admission_result.task.principal_role,
+                action=admission_result.task.command,
+                target=admission_result.task.target,
+                project_id=admission_result.task.project_id,
+                policy_version=policy_version,
+                policy_hash=policy_hash,
+                rule_ids=tuple(rule_ids),
+                audit_writer=audit_writer,
+                runtime_state_repo=runtime_state_repo,
+                budget_reservation_service=budget_reservation_service,
+                task_record=admission_result.task,
+            )
+            obligation_result = ObligationDispatcher().apply(
+                obligations=policy_outcome.policy_result.obligations,
+                context=obligation_context,
+            )
+            if not obligation_result.all_satisfied and obligation_result.blocking_obligation:
+                blocking = obligation_result.blocking_obligation
+                # Task already transitioned to blocked by obligation handler if needed
+                span.set_status("error")
+                span.set_attribute("outcome", "obligation_blocked")
+                return _denied_response(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    trace_id=trace_id,
+                    code=f"obligation_{blocking}_unsatisfied",
+                    error_class="authorization_error",
+                    message=f"obligation '{blocking}' not satisfied — task blocked",
+                    source_component="obligation_dispatcher",
+                    details={
+                        "blocking_obligation": blocking,
+                        "task_id": task_id,
+                        "policy_version": policy_version,
+                    },
+                    policy_version=policy_version,
+                    policy_hash=policy_hash,
+                    rule_ids=rule_ids,
+                )
 
         runtime_state_repo.update_task_status(
             admission_result.task.task_id,
