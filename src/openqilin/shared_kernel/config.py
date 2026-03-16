@@ -53,6 +53,8 @@ class RuntimeSettings(BaseSettings):
     database_url: str = (
         ""  # Empty = use InMemory repos (local/test). Set to postgresql+psycopg://... in compose.
     )
+    redis_url: str = ""  # Empty = use InMemory idempotency store (local/test). Set to redis://redis:6379 in compose.
+    idempotency_ttl_seconds: int = 86400  # TTL for idempotency keys in Redis (default: 24 hours).
 
     @property
     def system_root_path(self) -> Path:

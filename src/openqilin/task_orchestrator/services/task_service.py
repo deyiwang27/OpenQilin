@@ -14,6 +14,9 @@ from openqilin.communication_gateway.storage.idempotency_store import (
 from openqilin.communication_gateway.storage.message_ledger import InMemoryMessageLedger
 from openqilin.budget_runtime.client import InMemoryBudgetRuntimeClient
 from openqilin.data_access.cache.idempotency_store import InMemoryIdempotencyCacheStore
+from openqilin.data_access.repositories.postgres.idempotency_cache_store import (
+    RedisIdempotencyCacheStore,
+)
 from openqilin.data_access.repositories.artifacts import InMemoryProjectArtifactRepository
 from openqilin.data_access.repositories.communication import (
     CommunicationDeadLetterRecord,
@@ -454,7 +457,9 @@ def build_task_dispatch_service(
     audit_writer: InMemoryAuditWriter | None = None,
     metric_recorder: InMemoryMetricRecorder | None = None,
     communication_repository: InMemoryCommunicationRepository | None = None,
-    idempotency_cache_store: InMemoryIdempotencyCacheStore | None = None,
+    idempotency_cache_store: InMemoryIdempotencyCacheStore
+    | RedisIdempotencyCacheStore
+    | None = None,
     retrieval_query_service: RetrievalGroundingService | RetrievalQueryService | None = None,
     governance_project_reader: GovernanceProjectReader | None = None,
     governance_repository: InMemoryGovernanceRepository | None = None,

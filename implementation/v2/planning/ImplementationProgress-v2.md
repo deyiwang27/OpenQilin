@@ -11,7 +11,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 | Milestone | Status | WPs Done | Notes |
 |---|---|---|---|
 | M11 | `done` | 4 / 4 | All WPs complete; exit criteria met |
-| M12 | `in_progress` | 2 / 8 | WP1 (C-1 OPA), WP2 (C-2 Obligations) done |
+| M12 | `in_progress` | 4 / 8 | WP1 (C-1 OPA), WP2 (C-2 Obligations), WP3 (PostgreSQL repos, H-4/H-5/H-6), WP4 (Redis idempotency) done |
 | M13 | `planned` | 0 / 6 | Entry gate: M12 complete |
 | M14 | `planned` | 0 / 6 | Entry gate: M13 complete |
 | M15 | `planned` | 0 / 5 | Entry gate: M14 complete |
@@ -42,7 +42,7 @@ WP document: `05-milestones/M12-WorkPackages-v1.md`
 |---|---|---|---|---|---|
 | M12-WP1 | OPA Policy Runtime Wiring (C-1) | `done` | #80 | — | OPAPolicyRuntimeClient + Rego bundle + startup validation; InMemory moved to testing/ |
 | M12-WP2 | Obligation Application (C-2) | `done` | #81 | — | ObligationDispatcher with 4 handlers; wired into owner_commands for allow_with_obligations |
-| M12-WP3 | PostgreSQL Repository Migration | `pending` | #82 | — | — |
+| M12-WP3 | PostgreSQL Repository Migration | `done` | #82 | — | 7 migrations; 7 Postgres repos; H-4/H-5/H-6 fixed |
 | M12-WP4 | Redis Idempotency Wiring | `pending` | #83 | — | — |
 | M12-WP5 | OTel Export Wiring (C-5) | `pending` | #84 | — | — |
 | M12-WP6 | Security Hardening: C-6 and C-8 | `pending` | #85 | — | — |
@@ -144,9 +144,9 @@ All 20 architectural review findings from `00-direction/ArchitecturalReviewFindi
 | H-1 | Fail-open dispatch fallback | M12 | M12-WP7 | `pending` |
 | H-2 | No state transition guard | M12 | M12-WP7 | `pending` |
 | H-3 | Snapshot split-brain | M13 | M13-WP4 | `pending` |
-| H-4 | Dual RuntimeServices init | M12 | M12-WP3 | `pending` |
-| H-5 | Idempotency re-claim after failure | M12 | M12-WP3 | `pending` |
-| H-6 | `dispatched` miscounted as terminal | M12 | M12-WP3 | `pending` |
+| H-4 | Dual RuntimeServices init | M12 | M12-WP3 | `done` |
+| H-5 | Idempotency re-claim after failure | M12 | M12-WP3 | `done` |
+| H-6 | `dispatched` miscounted as terminal | M12 | M12-WP3 | `done` |
 | M-1 | Multiple RuntimeSettings instances | M15 | M15-WP1 | `pending` |
 | M-2 | Conversation history lost on restart | M15 | M15-WP2 | `pending` |
 | M-3 | Idempotency namespace collision | M15 | M15-WP3 | `pending` |

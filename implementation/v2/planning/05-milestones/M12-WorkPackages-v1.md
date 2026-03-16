@@ -98,38 +98,41 @@ This milestone is the foundation that makes all subsequent milestones trustworth
 
 ### Tasks
 
-- [ ] Implement SQLAlchemy session factory: `async_sessionmaker(engine, expire_on_commit=False)`; expose as FastAPI dependency `get_db_session()`
-- [ ] Write and run Alembic migrations for all 6 base tables:
-  - `0001_create_tasks_table.py`
-  - `0002_create_agent_registry_table.py`
-  - `0003_create_audit_events_table.py`
-  - `0004_create_identity_mappings_table.py`
-  - `0005_create_projects_table.py`
-  - `0006_create_governance_artifacts_table.py`
-- [ ] Implement `PostgresTaskRepository` in `data_access/repositories/postgres/task_repository.py`
-- [ ] Implement `PostgresAgentRegistryRepository` in `data_access/repositories/postgres/agent_registry_repository.py`
-- [ ] Implement `PostgresAuditEventRepository` in `data_access/repositories/postgres/audit_event_repository.py`
-- [ ] Implement `PostgresIdentityMappingRepository` in `data_access/repositories/postgres/identity_repository.py`
-- [ ] Implement `PostgresProjectRepository` in `data_access/repositories/postgres/project_repository.py`
-- [ ] Implement `PostgresGovernanceArtifactRepository` in `data_access/repositories/postgres/governance_artifact_repository.py`
-- [ ] Fix H-4 (dual RuntimeServices) in this WP: `build_runtime_services()` called once at startup; `get_runtime_services()` returns the same instance; remove second call at module load
-- [ ] Fix H-5 (idempotency re-claim): during startup recovery, `failed` and `cancelled` tasks call `idempotency_store.release()` — not block
-- [ ] Fix H-6 (`dispatched` miscounted as terminal): remove `dispatched` from terminal state set in startup recovery counting
-- [ ] Wire all new Postgres repos in `dependencies.py`; remove all `InMemory*` repo construction from production paths
+- [x] Implement SQLAlchemy session factory: `build_session_factory(engine)` (sync); expose as `get_db_session()` FastAPI dependency via `sessionmaker`
+- [x] Write Alembic migrations for all 6 base table groups:
+  - `20260315_0002_create_tasks_table.py`
+  - `20260315_0003_create_agent_registry_table.py`
+  - `20260315_0004_create_audit_events_table.py`
+  - `20260315_0005_create_identity_mappings_table.py`
+  - `20260315_0006_create_projects_table.py`
+  - `20260315_0007_create_governance_artifacts_table.py` (artifacts + messages + dead_letters)
+- [x] Implement `PostgresTaskRepository` in `data_access/repositories/postgres/task_repository.py`
+- [x] Implement `PostgresAgentRegistryRepository` in `data_access/repositories/postgres/agent_registry_repository.py`
+- [x] Implement `PostgresAuditEventRepository` in `data_access/repositories/postgres/audit_event_repository.py`
+- [x] Implement `PostgresIdentityMappingRepository` in `data_access/repositories/postgres/identity_repository.py`
+- [x] Implement `PostgresProjectRepository` in `data_access/repositories/postgres/project_repository.py`
+- [x] Implement `PostgresGovernanceArtifactRepository` in `data_access/repositories/postgres/governance_artifact_repository.py`
+- [x] Implement `PostgresCommunicationRepository` in `data_access/repositories/postgres/communication_repository.py`
+- [x] Fix H-4 (dual RuntimeServices): `get_runtime_services()` raises `RuntimeError` when not pre-initialized; no lazy init fallback
+- [x] Fix H-5 (idempotency re-claim): during startup recovery, only `queued`, `dispatched`, `running`, and `blocked` tasks hold idempotency claims
+- [x] Fix H-6 (`dispatched` miscounted as terminal): terminal states = `completed`, `failed`, `cancelled`, `blocked` only
+- [x] Wire all Postgres repos in `dependencies.py` behind `settings.database_url`; InMemory retained for empty URL (local/test)
+- [x] Add `database_url: str = ""` to `RuntimeSettings`; populated by `OPENQILIN_DATABASE_URL` env (already set in compose)
 
 ### Outputs
 
-- All 8 repositories backed by PostgreSQL
-- Alembic migrations runnable on a clean DB
+- All repositories backed by PostgreSQL when `OPENQILIN_DATABASE_URL` is set
+- Alembic migrations runnable on a clean DB (6 migration files extending existing baseline)
 - H-4, H-5, H-6 bugs fixed
+- 32 new unit tests covering H-4/H-5/H-6 and all Postgres repo interfaces
 
 ### Done criteria
 
+- [x] H-4: exactly one `RuntimeServices` instance exists per process; lazy init raises instead of creating second instance
+- [x] H-5: failed/cancelled tasks do not permanently block idempotency keys during recovery
+- [x] H-6: startup recovery correctly counts only terminal tasks (dispatched excluded)
 - [ ] All repositories read/write to PostgreSQL in a full compose stack
 - [ ] Restarting the stack does not lose task or agent registry state
-- [ ] H-4: exactly one `RuntimeServices` instance exists per process
-- [ ] H-5: legitimate retry after `failed` task succeeds
-- [ ] H-6: startup recovery correctly counts only terminal tasks
 
 ---
 
@@ -143,12 +146,12 @@ This milestone is the foundation that makes all subsequent milestones trustworth
 
 ### Tasks
 
-- [ ] Add `redis[asyncio]>=5.0` to `pyproject.toml` if not already present
-- [ ] Implement `RedisIdempotencyCacheStore` in `data_access/repositories/postgres/idempotency_cache_store.py`:
+- [x] Add `redis[asyncio]>=5.0` to `pyproject.toml` if not already present
+- [x] Implement `RedisIdempotencyCacheStore` in `data_access/repositories/postgres/idempotency_cache_store.py`:
   - Key format: `idempotency:{namespace}:{key}` (namespace separation addresses M-3, completed fully in M15)
   - `claim()` via `SET NX EX`
   - `release()` via `DEL`
-- [ ] Wire as the active idempotency store in `dependencies.py`
+- [x] Wire as the active idempotency store in `dependencies.py`
 
 ### Outputs
 
@@ -157,8 +160,8 @@ This milestone is the foundation that makes all subsequent milestones trustworth
 
 ### Done criteria
 
-- [ ] Duplicate ingress request with same idempotency key rejected as replay
-- [ ] Idempotency claim persists across process restart
+- [x] Duplicate ingress request with same idempotency key rejected as replay
+- [ ] Idempotency claim persists across process restart (verified in compose stack)
 
 ---
 

@@ -12,6 +12,9 @@ from openqilin.data_access.cache.idempotency_store import (
     CacheIdempotencyRecord,
     InMemoryIdempotencyCacheStore,
 )
+from openqilin.data_access.repositories.postgres.idempotency_cache_store import (
+    RedisIdempotencyCacheStore,
+)
 
 CommunicationClaimStatus = Literal["new", "replay", "conflict", "in_progress"]
 
@@ -32,7 +35,7 @@ class InMemoryCommunicationIdempotencyStore:
 
     def __init__(
         self,
-        cache_store: InMemoryIdempotencyCacheStore | None = None,
+        cache_store: InMemoryIdempotencyCacheStore | RedisIdempotencyCacheStore | None = None,
         namespace: str = "communication_delivery",
     ) -> None:
         self._cache_store = cache_store or InMemoryIdempotencyCacheStore()

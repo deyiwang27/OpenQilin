@@ -21,6 +21,10 @@ from openqilin.control_plane.grammar.free_text_router import FreeTextRouter
 from openqilin.control_plane.grammar.intent_classifier import IntentClassifier
 from openqilin.control_plane.idempotency.ingress_dedupe import InMemoryIngressDedupe
 from openqilin.data_access.cache.idempotency_store import InMemoryIdempotencyCacheStore
+from openqilin.data_access.repositories.postgres.idempotency_cache_store import (
+    RedisIdempotencyCacheStore,
+    build_redis_client,
+)
 from openqilin.data_access.db.engine import create_sqlalchemy_engine
 from openqilin.data_access.db.session import build_session_factory
 from openqilin.data_access.repositories.agent_registry import (
@@ -96,7 +100,7 @@ class RuntimeServices:
     ingress_dedupe: InMemoryIngressDedupe
     runtime_state_repo: InMemoryRuntimeStateRepository | PostgresTaskRepository
     communication_repo: InMemoryCommunicationRepository | PostgresCommunicationRepository
-    idempotency_cache_store: InMemoryIdempotencyCacheStore
+    idempotency_cache_store: InMemoryIdempotencyCacheStore | RedisIdempotencyCacheStore
     agent_registry_repo: InMemoryAgentRegistryRepository | PostgresAgentRegistryRepository
     identity_channel_repo: InMemoryIdentityChannelRepository | PostgresIdentityMappingRepository
     project_artifact_repo: InMemoryProjectArtifactRepository | PostgresGovernanceArtifactRepository
@@ -189,11 +193,20 @@ def build_runtime_services() -> RuntimeServices:
             artifact_repository=project_artifact_repo  # type: ignore[arg-type]
         )
 
-    # --- idempotency (InMemory in WP3; replaced by Redis in WP4) ---------------
-    idempotency_snapshot_path = (
-        settings.idempotency_snapshot_path if settings.runtime_persistence_enabled else None
-    )
-    idempotency_cache_store = InMemoryIdempotencyCacheStore(snapshot_path=idempotency_snapshot_path)
+    # --- idempotency (M12-WP4: Redis when redis_url is set; InMemory otherwise) -
+    idempotency_cache_store: InMemoryIdempotencyCacheStore | RedisIdempotencyCacheStore
+    if settings.redis_url:
+        idempotency_cache_store = RedisIdempotencyCacheStore(
+            client=build_redis_client(settings.redis_url),
+            ttl_seconds=settings.idempotency_ttl_seconds,
+        )
+    else:
+        idempotency_snapshot_path = (
+            settings.idempotency_snapshot_path if settings.runtime_persistence_enabled else None
+        )
+        idempotency_cache_store = InMemoryIdempotencyCacheStore(
+            snapshot_path=idempotency_snapshot_path
+        )
 
     ingress_dedupe = InMemoryIngressDedupe()
 

@@ -143,6 +143,8 @@ services:
       OPENQILIN_GEMINI_FREE_FALLBACK_MODEL: ${OPENQILIN_GEMINI_FREE_FALLBACK_MODEL:-gemini-2.0-flash}
       # M12-WP1: OPA policy runtime wiring. Points api_app to the OPA container.
       OPENQILIN_OPA_URL: http://opa:8181
+      # M12-WP4: Redis idempotency wiring.
+      OPENQILIN_REDIS_URL: redis://redis:6379
     healthcheck:
       test:
         [
