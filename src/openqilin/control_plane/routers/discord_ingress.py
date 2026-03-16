@@ -55,7 +55,7 @@ from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStat
 from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
 from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
 from openqilin.observability.tracing.tracer import InMemoryTracer
-from openqilin.policy_runtime_integration.client import InMemoryPolicyRuntimeClient
+from openqilin.policy_runtime_integration.client import PolicyRuntimeClient
 from openqilin.task_orchestrator.admission.service import AdmissionService
 from openqilin.task_orchestrator.services.task_service import TaskDispatchService
 
@@ -106,7 +106,7 @@ def submit_discord_message(
     payload: DiscordIngressRequest,
     request: Request,
     admission_service: AdmissionService = Depends(get_admission_service),
-    policy_runtime_client: InMemoryPolicyRuntimeClient = Depends(get_policy_runtime_client),
+    policy_runtime_client: PolicyRuntimeClient = Depends(get_policy_runtime_client),
     budget_reservation_service: BudgetReservationService = Depends(get_budget_reservation_service),
     runtime_state_repo: InMemoryRuntimeStateRepository = Depends(get_runtime_state_repository),
     task_dispatch_service: TaskDispatchService = Depends(get_task_dispatch_service),

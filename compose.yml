@@ -32,7 +32,10 @@ services:
   opa:
     image: openpolicyagent/opa:0.69.0-static
     profiles: ["core", "full"]
-    command: ["run", "--server", "--addr=0.0.0.0:8181"]
+    # M12-WP1: serve the constitution Rego bundle from source tree.
+    command: ["run", "--server", "--addr=0.0.0.0:8181", "--bundle", "/bundle"]
+    volumes:
+      - ./src/openqilin/policy_runtime_integration/rego:/bundle:ro
     ports:
       - "8181:8181"
     healthcheck:
@@ -138,6 +141,8 @@ services:
       OPENQILIN_GEMINI_RETRY_MAX_DELAY_SECONDS: ${OPENQILIN_GEMINI_RETRY_MAX_DELAY_SECONDS:-8.0}
       OPENQILIN_GEMINI_FREE_PRIMARY_MODEL: ${OPENQILIN_GEMINI_FREE_PRIMARY_MODEL:-gemini-2.0-flash}
       OPENQILIN_GEMINI_FREE_FALLBACK_MODEL: ${OPENQILIN_GEMINI_FREE_FALLBACK_MODEL:-gemini-2.0-flash}
+      # M12-WP1: OPA policy runtime wiring. Points api_app to the OPA container.
+      OPENQILIN_OPA_URL: http://opa:8181
     healthcheck:
       test:
         [

@@ -33,7 +33,13 @@ from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStat
 from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
 from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
 from openqilin.observability.tracing.tracer import InMemoryTracer
-from openqilin.policy_runtime_integration.client import InMemoryPolicyRuntimeClient
+from openqilin.policy_runtime_integration.client import (
+    OPAPolicyRuntimeClient,
+    PolicyRuntimeClient,
+)
+from openqilin.policy_runtime_integration.testing.in_memory_client import (
+    InMemoryPolicyRuntimeClient,
+)
 from openqilin.retrieval_runtime.service import (
     RetrievalQueryService,
     build_retrieval_query_service,
@@ -68,7 +74,7 @@ class RuntimeServices:
     project_artifact_repo: InMemoryProjectArtifactRepository
     governance_repo: InMemoryGovernanceRepository
     admission_service: AdmissionService
-    policy_runtime_client: InMemoryPolicyRuntimeClient
+    policy_runtime_client: PolicyRuntimeClient
     budget_runtime_client: InMemoryBudgetRuntimeClient
     budget_reservation_service: BudgetReservationService
     lifecycle_service: TaskLifecycleService
@@ -121,7 +127,11 @@ def build_runtime_services() -> RuntimeServices:
         dedupe_store=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
     )
-    policy_runtime_client = InMemoryPolicyRuntimeClient()
+    policy_runtime_client: PolicyRuntimeClient = (
+        OPAPolicyRuntimeClient(opa_url=settings.opa_url)
+        if settings.opa_url
+        else InMemoryPolicyRuntimeClient()
+    )
     budget_runtime_client = InMemoryBudgetRuntimeClient()
     budget_reservation_service = BudgetReservationService(client=budget_runtime_client)
     lifecycle_service = TaskLifecycleService(runtime_state_repo=runtime_state_repo)
@@ -227,7 +237,7 @@ def get_admission_service(request: Request) -> AdmissionService:
     return get_runtime_services(request).admission_service
 
 
-def get_policy_runtime_client(request: Request) -> InMemoryPolicyRuntimeClient:
+def get_policy_runtime_client(request: Request) -> PolicyRuntimeClient:
     """Provide singleton policy-runtime client for API routes."""
 
     return get_runtime_services(request).policy_runtime_client

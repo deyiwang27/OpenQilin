@@ -3,7 +3,9 @@ from openqilin.data_access.repositories.runtime_state import (
     InMemoryRuntimeStateRepository,
     TaskRecord,
 )
-from openqilin.policy_runtime_integration.client import InMemoryPolicyRuntimeClient
+from openqilin.policy_runtime_integration.testing.in_memory_client import (
+    InMemoryPolicyRuntimeClient,
+)
 from openqilin.policy_runtime_integration.fail_closed import evaluate_with_fail_closed
 from openqilin.policy_runtime_integration.normalizer import normalize_policy_input
 from openqilin.task_orchestrator.admission.envelope_validator import validate_owner_command_envelope

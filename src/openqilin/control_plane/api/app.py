@@ -11,13 +11,19 @@ from openqilin.control_plane.routers.owner_discussions import (
 )
 from openqilin.control_plane.routers.queries import router as queries_router
 from openqilin.shared_kernel.config import RuntimeSettings
-from openqilin.shared_kernel.startup_validation import enforce_connector_secret_hardening
+from openqilin.shared_kernel.startup_validation import (
+    enforce_connector_secret_hardening,
+    verify_opa_bundle_loaded,
+)
 
 
 def create_control_plane_app() -> FastAPI:
     """Create the control-plane API app and register M1 ingress routes."""
 
-    enforce_connector_secret_hardening(RuntimeSettings())
+    settings = RuntimeSettings()
+    enforce_connector_secret_hardening(settings)
+    if settings.opa_url:
+        verify_opa_bundle_loaded(settings.opa_url)  # Fail fast if OPA unreachable
     app = FastAPI(title="OpenQilin Control Plane", version="0.1.0")
 
     @app.get("/health/live", tags=["health"])

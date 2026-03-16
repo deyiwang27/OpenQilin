@@ -47,6 +47,9 @@ class RuntimeSettings(BaseSettings):
     discord_response_chunk_size_chars: int = 1900
     discord_response_retry_attempts: int = 2
     discord_response_retry_base_delay_seconds: float = 0.5
+    opa_url: str = (
+        ""  # Empty = use InMemory client (local/test). Set to http://opa:8181 in compose.
+    )
 
     @property
     def system_root_path(self) -> Path:

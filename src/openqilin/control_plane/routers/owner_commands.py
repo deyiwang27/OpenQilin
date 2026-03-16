@@ -58,7 +58,7 @@ from openqilin.observability.tracing.spans import (
     TASK_ORCHESTRATION_SPAN,
 )
 from openqilin.observability.tracing.tracer import InMemoryTracer
-from openqilin.policy_runtime_integration.client import InMemoryPolicyRuntimeClient
+from openqilin.policy_runtime_integration.client import PolicyRuntimeClient
 from openqilin.policy_runtime_integration.fail_closed import evaluate_with_fail_closed
 from openqilin.policy_runtime_integration.normalizer import normalize_policy_input
 from openqilin.task_orchestrator.admission.envelope_validator import (
@@ -413,7 +413,7 @@ def submit_owner_command(
     payload: OwnerCommandRequest,
     request: Request,
     admission_service: AdmissionService = Depends(get_admission_service),
-    policy_runtime_client: InMemoryPolicyRuntimeClient = Depends(get_policy_runtime_client),
+    policy_runtime_client: PolicyRuntimeClient = Depends(get_policy_runtime_client),
     budget_reservation_service: BudgetReservationService = Depends(get_budget_reservation_service),
     runtime_state_repo: InMemoryRuntimeStateRepository = Depends(get_runtime_state_repository),
     task_dispatch_service: TaskDispatchService = Depends(get_task_dispatch_service),
