@@ -78,6 +78,7 @@ class LlmDispatchRequest:
     request_id: str
     trace_id: str
     principal_id: str
+    principal_role: str
     project_id: str | None
     command: str
     args: tuple[str, ...]
@@ -164,6 +165,7 @@ class LlmGatewayDispatchAdapter:
             request_id=payload.request_id,
             trace_id=payload.trace_id,
             principal_id=payload.principal_id,
+            principal_role=payload.principal_role,
             recipient_role=recipient_role,
             recipient_id=recipient_id,
             project_id=payload.project_id,

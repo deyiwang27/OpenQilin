@@ -226,6 +226,7 @@ class TaskDispatchService:
                         request_id=task.request_id,
                         trace_id=task.trace_id,
                         principal_id=task.principal_id,
+                        principal_role=task.principal_role,
                         project_id=task.project_id,
                         command=task.command,
                         args=task.args,

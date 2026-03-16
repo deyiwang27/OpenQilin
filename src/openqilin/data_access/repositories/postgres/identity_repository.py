@@ -29,6 +29,7 @@ class PostgresIdentityMappingRepository:
         guild_id: str,
         channel_id: str,
         channel_type: str,
+        principal_role: str = "owner",
     ) -> IdentityChannelMappingRecord:
         """Claim mapping key; return existing or newly created pending mapping record."""
 
@@ -59,6 +60,7 @@ class PostgresIdentityMappingRepository:
             status="pending",
             created_at=now,
             updated_at=now,
+            principal_role=principal_role,
         )
         with self._session_factory() as session:
             session.execute(
@@ -66,10 +68,10 @@ class PostgresIdentityMappingRepository:
                     """
                     INSERT INTO identity_channels (
                         mapping_id, connector, actor_external_id, guild_id,
-                        channel_id, channel_type, status, created_at, updated_at
+                        channel_id, channel_type, status, created_at, updated_at, principal_role
                     ) VALUES (
                         :mapping_id, :connector, :actor_external_id, :guild_id,
-                        :channel_id, :channel_type, :status, :created_at, :updated_at
+                        :channel_id, :channel_type, :status, :created_at, :updated_at, :principal_role
                     )
                     ON CONFLICT (connector, actor_external_id, guild_id, channel_id, channel_type)
                     DO NOTHING
@@ -85,6 +87,7 @@ class PostgresIdentityMappingRepository:
                     "status": record.status,
                     "created_at": record.created_at,
                     "updated_at": record.updated_at,
+                    "principal_role": record.principal_role,
                 },
             )
             session.commit()
@@ -224,6 +227,40 @@ class PostgresIdentityMappingRepository:
             )
         return tuple(_mapping_from_row(dict(row)) for row in rows)
 
+    def get_by_connector_actor(
+        self,
+        connector: str,
+        actor_external_id: str,
+    ) -> IdentityChannelMappingRecord | None:
+        """Return the first verified mapping for (connector, actor_external_id), or None."""
+
+        normalized_connector = connector.strip().lower()
+        normalized_actor = actor_external_id.strip()
+        with self._session_factory() as session:
+            row = (
+                session.execute(
+                    text(
+                        """
+                    SELECT * FROM identity_channels
+                    WHERE connector = :connector
+                      AND actor_external_id = :actor_external_id
+                      AND status = 'verified'
+                    ORDER BY updated_at DESC
+                    LIMIT 1
+                    """
+                    ),
+                    {
+                        "connector": normalized_connector,
+                        "actor_external_id": normalized_actor,
+                    },
+                )
+                .mappings()
+                .first()
+            )
+        if row is None:
+            return None
+        return _mapping_from_row(dict(row))
+
 
 def _normalize_key(
     *,
@@ -270,4 +307,5 @@ def _mapping_from_row(row: dict[str, object]) -> IdentityChannelMappingRecord:
         status=status,  # type: ignore[arg-type]
         created_at=created_at,  # type: ignore[arg-type]
         updated_at=updated_at,  # type: ignore[arg-type]
+        principal_role=str(row.get("principal_role", "owner")),
     )

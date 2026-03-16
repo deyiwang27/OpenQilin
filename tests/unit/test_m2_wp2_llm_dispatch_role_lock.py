@@ -83,6 +83,7 @@ def _build_request(
         request_id="request-llm-role-lock",
         trace_id="trace-llm-role-lock",
         principal_id="owner_001",
+        principal_role="owner",
         project_id="project_1",
         command="llm_reason",
         args=(prompt,),

@@ -16,6 +16,7 @@ class ToolCallContext:
     request_id: str
     trace_id: str
     principal_id: str
+    principal_role: str
     recipient_role: str
     recipient_id: str | None
     project_id: str | None

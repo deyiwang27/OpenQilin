@@ -71,6 +71,7 @@ def _build_request(prompt: str) -> LlmDispatchRequest:
         request_id="request-tool-policy-001",
         trace_id="trace-tool-policy-001",
         principal_id="owner_001",
+        principal_role="owner",
         project_id="project_1",
         command="llm_reason",
         args=(prompt,),
