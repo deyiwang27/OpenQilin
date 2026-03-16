@@ -1,7 +1,7 @@
 # OpenQilin v2 - Implementation Progress
 
 Status: `active`
-Updated: `2026-03-15`
+Updated: `2026-03-16`
 Tracking authority: GitHub Issues/PRs are the operational source of truth. This doc is the in-repo WP/milestone-level mirror.
 
 ---
