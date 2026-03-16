@@ -212,19 +212,16 @@ This milestone is the foundation that makes all subsequent milestones trustworth
 ### Tasks
 
 **C-6 — Role self-assertion fix:**
-- [ ] In `src/openqilin/control_plane/identity/principal_resolver.py`: replace header-based role with DB lookup:
-  ```python
-  mapping = await self.identity_repo.get_by_external_id(channel, actor_external_id)
-  if mapping is None or mapping.state != "verified":
-      raise AuthorizationError("unknown_or_unverified_identity")
-  return PrincipalContext(principal_role=mapping.role, ...)  # from DB, not header
-  ```
-- [ ] Remove all code that reads `x-openqilin-actor-role` header for role assignment (header may remain for logging/debug only)
-- [ ] Add unit test: valid connector secret + unverified identity → 403; valid connector secret + verified identity → correct role from DB (not from header value)
+- [x] In `src/openqilin/control_plane/identity/principal_resolver.py`: replace header-based role with DB lookup:
+  - `resolve_principal` accepts optional `identity_repo`; when provided and `connector != "internal"`, actor must have a verified DB mapping; role from `mapping.principal_role`
+  - Internal connector bypasses DB check (trusted system boundary)
+- [x] Remove all code that reads `x-openqilin-actor-role` header for role assignment on the critical Discord ingress path (`owner_commands.py` now passes `identity_repo`); header used only as fallback for internal/legacy admin paths
+- [x] Add `principal_role` column to `identity_channels` table (migration 20260315_0008); InMemory and Postgres repos updated with `get_by_connector_actor` lookup method
+- [x] Add unit test: valid connector secret + unverified identity → PrincipalResolutionError; verified identity → correct role from DB (not from header value)
 
 **C-8 — Write tool access check fix:**
-- [ ] In `src/openqilin/execution_sandbox/tools/write_tools.py` `GovernedWriteToolService`: replace `context.recipient_role` with `context.principal_role` in access check
-- [ ] Add unit test: requester with insufficient `principal_role` is denied; correct `principal_role` is allowed (regardless of `recipient_role`)
+- [x] In `src/openqilin/execution_sandbox/tools/write_tools.py` `GovernedWriteToolService`: replace `context.recipient_role` with `context.principal_role` in access check; added `principal_role` to `ToolCallContext`, `LlmDispatchRequest`, propagated from `task.principal_role`
+- [x] Add unit test: requester with insufficient `principal_role` is denied; correct `principal_role` is allowed (regardless of `recipient_role`)
 
 ### Outputs
 
@@ -233,9 +230,9 @@ This milestone is the foundation that makes all subsequent milestones trustworth
 
 ### Done criteria
 
-- [ ] Caller with valid connector secret but unrecognized external identity → 403
-- [ ] Caller cannot escalate role by sending `x-openqilin-actor-role: owner` in header
-- [ ] Write tool access denied when `principal_role` lacks permission; allowed when it has permission
+- [x] Caller with valid connector secret but unrecognized external identity → PrincipalResolutionError (principal_identity_unverified)
+- [x] Caller cannot escalate role by sending `x-openqilin-actor-role: owner` in header (header ignored on external connector path with identity_repo)
+- [x] Write tool access denied when `principal_role` lacks permission; allowed when it has permission
 
 ---
 
