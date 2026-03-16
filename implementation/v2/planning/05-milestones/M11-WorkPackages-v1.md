@@ -23,12 +23,12 @@ Replace JSON-shaped command entry with human-friendly free-text and compact comm
 
 ### Tasks
 
-- [ ] Create `src/openqilin/control_plane/grammar/models.py` — `IntentClass` enum, `CommandEnvelope`, `RoutingHint` dataclasses
-- [ ] Implement `grammar/intent_classifier.py` — classify message into `discussion | query | mutation | admin`; call LLM gateway for free-text classification; reject `mutation` from free text with `GRAM-004`
-- [ ] Implement `grammar/command_parser.py` — parse `/oq <verb> [target] [args]` into `CommandEnvelope`; raise `GrammarParseError` on unrecognized verb
-- [ ] Implement `grammar/free_text_router.py` — resolve routing target from chat class, project binding context, and explicit mention; default to `secretary` for unroutable discussion in institutional channels
-- [ ] Wire grammar layer into `routers/discord_ingress.py` — call grammar before building ingress payload; explicit `/oq` bypasses free-text classifier
-- [ ] Wire grammar layer in `api/dependencies.py`
+- [x] Create `src/openqilin/control_plane/grammar/models.py` — `IntentClass` enum, `CommandEnvelope`, `RoutingHint` dataclasses
+- [x] Implement `grammar/intent_classifier.py` — classify message into `discussion | query | mutation | admin`; call LLM gateway for free-text classification; reject `mutation` from free text with `GRAM-004`
+- [x] Implement `grammar/command_parser.py` — parse `/oq <verb> [target] [args]` into `CommandEnvelope`; raise `GrammarParseError` on unrecognized verb
+- [x] Implement `grammar/free_text_router.py` — resolve routing target from chat class, project binding context, and explicit mention; default to `secretary` for unroutable discussion in institutional channels
+- [x] Wire grammar layer into `routers/discord_ingress.py` — call grammar before building ingress payload; explicit `/oq` bypasses free-text classifier
+- [x] Wire grammar layer in `api/dependencies.py`
 
 ### Outputs
 
@@ -37,10 +37,10 @@ Replace JSON-shaped command entry with human-friendly free-text and compact comm
 
 ### Done criteria
 
-- [ ] Valid `/oq submit task "do X"` returns correct `CommandEnvelope`
-- [ ] Unrecognized verb raises `GrammarParseError` → 400
-- [ ] Free-text `mutation`-classified message rejected with `GRAM-004` validation error before reaching `CommandHandler`
-- [ ] Free-text `discussion` in institutional channel resolves routing to `secretary`
+- [x] Valid `/oq submit task "do X"` returns correct `CommandEnvelope`
+- [x] Unrecognized verb raises `GrammarParseError` → 400
+- [x] Free-text `mutation`-classified message rejected with `GRAM-004` validation error before reaching `CommandHandler`
+- [x] Free-text `discussion` in institutional channel resolves routing to `secretary`
 
 ---
 
@@ -54,8 +54,8 @@ Replace JSON-shaped command entry with human-friendly free-text and compact comm
 
 ### Tasks
 
-- [ ] In `src/openqilin/control_plane/identity/discord_governance.py`: replace `_MEMBERSHIP_BY_CHAT_CLASS[chat_class]` with `.get(chat_class)` and raise `GovernanceDenialError` when `None`
-- [ ] Add unit test: unknown `chat_class` → 403 `GovernanceDenialError`, not 500 `KeyError`
+- [x] In `src/openqilin/control_plane/identity/discord_governance.py`: replace `_MEMBERSHIP_BY_CHAT_CLASS[chat_class]` with `.get(chat_class)` and raise `GovernanceDenialError` when `None`
+- [x] Add unit test: unknown `chat_class` → 403 `GovernanceDenialError`, not 500 `KeyError`
 
 ### Outputs
 
@@ -64,8 +64,8 @@ Replace JSON-shaped command entry with human-friendly free-text and compact comm
 
 ### Done criteria
 
-- [ ] Sending unknown `chat_class` returns 403 with `governance_denial` payload
-- [ ] No `KeyError` raised in any code path for unknown `chat_class`
+- [x] Sending unknown `chat_class` returns 403 with `governance_denial` payload
+- [x] No `KeyError` raised in any code path for unknown `chat_class`
 
 ---
 
@@ -79,12 +79,12 @@ Replace JSON-shaped command entry with human-friendly free-text and compact comm
 
 ### Tasks
 
-- [ ] Create `src/openqilin/agents/secretary/` package: `agent.py`, `prompts.py`, `models.py`
-- [ ] Implement `SecretaryAgent.handle(request)` — advisory-only responses: intent disambiguation, routing suggestions, daily digest summaries
-- [ ] Bind advisory-only policy profile in `agent.py` — `allow` for `advisory` axis, `deny` for all mutation axes; Secretary MUST NOT issue commands or mutate state
-- [ ] Wire `SecretaryAgent` in `api/dependencies.py`; inject into grammar routing path
-- [ ] Confirm Secretary is a participant in `leadership_council`, `executive`, `governance` channels per `OwnerInteractionModel.md` MVP v2 active profile
-- [ ] Add integration test: Secretary handles `discussion` intent and returns advisory response; attempted mutation request is rejected before any state change
+- [x] Create `src/openqilin/agents/secretary/` package: `agent.py`, `prompts.py`, `models.py`
+- [x] Implement `SecretaryAgent.handle(request)` — advisory-only responses: intent disambiguation, routing suggestions, daily digest summaries
+- [x] Bind advisory-only policy profile in `agent.py` — `allow` for `advisory` axis, `deny` for all mutation axes; Secretary MUST NOT issue commands or mutate state
+- [x] Wire `SecretaryAgent` in `api/dependencies.py`; inject into grammar routing path
+- [x] Confirm Secretary is a participant in `leadership_council`, `executive`, `governance` channels per `OwnerInteractionModel.md` MVP v2 active profile
+- [x] Add integration test: Secretary handles `discussion` intent and returns advisory response; attempted mutation request is rejected before any state change
 
 ### Outputs
 
@@ -93,9 +93,9 @@ Replace JSON-shaped command entry with human-friendly free-text and compact comm
 
 ### Done criteria
 
-- [ ] `discussion` message in `leadership_council` receives Secretary advisory response
-- [ ] Secretary cannot trigger any state-mutating action (rejected by advisory policy profile)
-- [ ] Secretary is NOT activated as default responder in project channels
+- [x] `discussion` message in `leadership_council` receives Secretary advisory response
+- [x] Secretary cannot trigger any state-mutating action (rejected by advisory policy profile)
+- [x] Secretary is NOT activated as default responder in project channels
 
 ---
 
@@ -109,14 +109,14 @@ Replace JSON-shaped command entry with human-friendly free-text and compact comm
 
 ### Tasks
 
-- [ ] Add to `compose.yml` under `orchestrator_worker` service:
+- [x] Add to `compose.yml` under `orchestrator_worker` service:
   ```yaml
   LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2:-false}
   LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY:-}
   LANGCHAIN_PROJECT: ${LANGCHAIN_PROJECT:-openqilin-dev}
   ```
-- [ ] Add `LANGCHAIN_TRACING_V2`, `LANGCHAIN_API_KEY`, `LANGCHAIN_PROJECT` to `.env.example` with default `false`/empty values
-- [ ] Add comment in `compose.yml` clarifying LangSmith is dev-time tracing only — not a governance audit source
+- [x] Add `LANGCHAIN_TRACING_V2`, `LANGCHAIN_API_KEY`, `LANGCHAIN_PROJECT` to `.env.example` with default `false`/empty values
+- [x] Add comment in `compose.yml` clarifying LangSmith is dev-time tracing only — not a governance audit source
 
 ### Outputs
 
@@ -125,19 +125,19 @@ Replace JSON-shaped command entry with human-friendly free-text and compact comm
 
 ### Done criteria
 
-- [ ] LangSmith tracing can be enabled by setting `LANGCHAIN_TRACING_V2=true` in `.env` without code changes
-- [ ] Disabled by default (no LangSmith calls when env var is absent or `false`)
+- [x] LangSmith tracing can be enabled by setting `LANGCHAIN_TRACING_V2=true` in `.env` without code changes
+- [x] Disabled by default (no LangSmith calls when env var is absent or `false`)
 
 ---
 
 ## M11 Exit Criteria
 
-- [ ] All four WPs above are marked done
-- [ ] Free-text and `/oq` command interactions work end to end in the real Discord stack
-- [ ] Secretary is active and responds in institutional channels
-- [ ] No JSON-shaped input required for any normal owner interaction
-- [ ] Unknown `chat_class` returns 403, not 500
-- [ ] No new InMemory placeholder introduced in a production code path
+- [x] All four WPs above are marked done
+- [x] Free-text and `/oq` command interactions work end to end in the real Discord stack
+- [x] Secretary is active and responds in institutional channels
+- [x] No JSON-shaped input required for any normal owner interaction
+- [x] Unknown `chat_class` returns 403, not 500
+- [x] No new InMemory placeholder introduced in a production code path
 
 ## References
 

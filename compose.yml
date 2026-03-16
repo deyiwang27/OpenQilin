@@ -176,6 +176,11 @@ services:
       OPENQILIN_RUNTIME_PERSISTENCE_ENABLED: "true"
       OPENQILIN_SYSTEM_ROOT: /var/lib/openqilin
       OPENQILIN_CONNECTOR_SHARED_SECRET: ${OPENQILIN_CONNECTOR_SHARED_SECRET:-dev-openqilin-secret}
+      # LangSmith dev-time tracing (M11-WP4). Disabled by default.
+      # Not a governance audit source — dev-time visibility only.
+      LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2:-false}
+      LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY:-}
+      LANGCHAIN_PROJECT: ${LANGCHAIN_PROJECT:-openqilin-dev}
     healthcheck:
       test:
         [

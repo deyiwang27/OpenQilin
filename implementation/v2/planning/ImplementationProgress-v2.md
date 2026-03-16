@@ -10,7 +10,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 
 | Milestone | Status | WPs Done | Notes |
 |---|---|---|---|
-| M11 | `planned` | 0 / 4 | Entry gate: M10 complete |
+| M11 | `done` | 4 / 4 | All WPs complete; exit criteria met |
 | M12 | `planned` | 0 / 8 | Entry gate: M11 complete |
 | M13 | `planned` | 0 / 6 | Entry gate: M12 complete |
 | M14 | `planned` | 0 / 6 | Entry gate: M13 complete |
@@ -25,12 +25,12 @@ WP document: `05-milestones/M11-WorkPackages-v1.md`
 
 | WP | Title | Status | Issue | PR | Notes |
 |---|---|---|---|---|---|
-| M11-WP1 | Grammar Layer | `pending` | — | — | — |
-| M11-WP2 | C-7 Security Fix: `chat_class` KeyError | `pending` | — | — | — |
-| M11-WP3 | Secretary Agent Activation | `pending` | — | — | — |
-| M11-WP4 | LangSmith Dev-Time Tracing | `pending` | — | — | — |
+| M11-WP1 | Grammar Layer | `done` | #75 | — | grammar package (4 modules) + discord_ingress wired |
+| M11-WP2 | C-7 Security Fix: `chat_class` KeyError | `done` | #76 | — | Fixed in discord_governance.py; 3 unit tests added |
+| M11-WP3 | Secretary Agent Activation | `done` | #77 | — | agents/secretary/ package; advisory policy profile; channel membership activated |
+| M11-WP4 | LangSmith Dev-Time Tracing | `done` | #78 | — | compose.yml + .env.example updated |
 
-**M11 Exit criteria:** `pending`
+**M11 Exit criteria:** `done`
 
 ---
 
@@ -137,7 +137,7 @@ All 20 architectural review findings from `00-direction/ArchitecturalReviewFindi
 | C-3 | In-memory integer budget counter | M14 | M14-WP1 | `pending` |
 | C-5 | OTel export not wired | M12 | M12-WP5 | `pending` |
 | C-6 | Role self-assertion from header | M12 | M12-WP6 | `pending` |
-| C-7 | `chat_class` KeyError → 500 | M11 | M11-WP2 | `pending` |
+| C-7 | `chat_class` KeyError → 500 | M11 | M11-WP2 | `done` |
 | C-8 | Write tool access check inverted | M12 | M12-WP6 | `pending` |
 | C-9 | LangGraph not used; linear HTTP handler | M13 | M13-WP1 | `pending` |
 | C-10 | Sandbox enforcement empty placeholder | M13 | M13-WP6 | `pending` |
