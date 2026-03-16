@@ -175,15 +175,15 @@ This milestone is the foundation that makes all subsequent milestones trustworth
 
 ### Tasks
 
-- [ ] Add to `pyproject.toml`: `opentelemetry-sdk>=1.20`, `opentelemetry-exporter-otlp-proto-grpc>=1.20`, `opentelemetry-instrumentation-fastapi>=0.40`
-- [ ] Implement `configure_tracer(otlp_endpoint)` in `src/openqilin/observability/tracing/tracer.py` using `TracerProvider` + `BatchSpanProcessor(OTLPSpanExporter(...))`
-- [ ] Implement `configure_metrics(otlp_endpoint)` in `src/openqilin/observability/metrics/recorder.py` using `MeterProvider` + `PeriodicExportingMetricReader(OTLPMetricExporter(...))`
-- [ ] Implement `OTelAuditWriter` in `src/openqilin/observability/audit/audit_writer.py`:
+- [x] Add to `pyproject.toml`: `opentelemetry-sdk>=1.20`, `opentelemetry-exporter-otlp-proto-grpc>=1.20`, `opentelemetry-instrumentation-fastapi>=0.40`
+- [x] Implement `configure_tracer(otlp_endpoint)` in `src/openqilin/observability/tracing/tracer.py` using `TracerProvider` + `BatchSpanProcessor(OTLPSpanExporter(...))`
+- [x] Implement `configure_metrics(otlp_endpoint)` in `src/openqilin/observability/metrics/recorder.py` using `MeterProvider` + `PeriodicExportingMetricReader(OTLPMetricExporter(...))`
+- [x] Implement `OTelAuditWriter` in `src/openqilin/observability/audit/audit_writer.py`:
   - Dual write: OTel log record (streaming) AND PostgreSQL `audit_events` row (durable)
   - PostgreSQL write failure propagates error; OTel collector failure logs locally and continues
-- [ ] Call `configure_tracer()` and `configure_metrics()` in app lifespan startup
-- [ ] Wire `OTelAuditWriter` as the active audit writer in `dependencies.py`
-- [ ] Add Grafana volume mounts for provisioning directory in `compose.yml`; add `datasources/postgresql.yaml`, `datasources/prometheus.yaml`, `datasources/tempo.yaml` under `ops/grafana/provisioning/datasources/`
+- [x] Call `configure_tracer()` and `configure_metrics()` in app lifespan startup
+- [x] Wire `OTelAuditWriter` as the active audit writer in `dependencies.py`
+- [x] Add Grafana volume mounts for provisioning directory in `compose.yml`; add `datasources/postgresql.yaml`, `datasources/prometheus.yaml`, `datasources/tempo.yaml` under `ops/grafana/provisioning/datasources/`
 
 ### Outputs
 
@@ -193,11 +193,11 @@ This milestone is the foundation that makes all subsequent milestones trustworth
 
 ### Done criteria
 
-- [ ] OTel collector receives spans and metrics from the running application
-- [ ] Audit event creates both an OTel log record AND a PostgreSQL `audit_events` row
-- [ ] OTel collector unreachable → runtime continues; PostgreSQL audit row still written
-- [ ] PostgreSQL audit write fails → error propagated; runtime does NOT continue silently
-- [ ] Grafana data sources connected and queryable
+- [x] OTel collector receives spans and metrics from the running application
+- [x] Audit event creates both an OTel log record AND a PostgreSQL `audit_events` row
+- [x] OTel collector unreachable → runtime continues; PostgreSQL audit row still written
+- [x] PostgreSQL audit write fails → error propagated; runtime does NOT continue silently
+- [ ] Grafana data sources connected and queryable (verified in compose stack)
 
 ---
 

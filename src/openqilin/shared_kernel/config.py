@@ -55,6 +55,9 @@ class RuntimeSettings(BaseSettings):
     )
     redis_url: str = ""  # Empty = use InMemory idempotency store (local/test). Set to redis://redis:6379 in compose.
     idempotency_ttl_seconds: int = 86400  # TTL for idempotency keys in Redis (default: 24 hours).
+    otlp_endpoint: str = (
+        ""  # Empty = no OTel export (local/test). Set to http://otel_collector:4317 in compose.
+    )
 
     @property
     def system_root_path(self) -> Path:

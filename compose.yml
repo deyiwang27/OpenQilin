@@ -107,6 +107,9 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: admin
     ports:
       - "3000:3000"
+    # M12-WP5: Mount provisioning directory to auto-configure data sources.
+    volumes:
+      - ./ops/grafana/provisioning:/etc/grafana/provisioning:ro
     depends_on:
       - prometheus
       - tempo
@@ -145,6 +148,8 @@ services:
       OPENQILIN_OPA_URL: http://opa:8181
       # M12-WP4: Redis idempotency wiring.
       OPENQILIN_REDIS_URL: redis://redis:6379
+      # M12-WP5: OTel export wiring. Points api_app to the OTel collector gRPC endpoint.
+      OPENQILIN_OTLP_ENDPOINT: http://otel_collector:4317
     healthcheck:
       test:
         [

@@ -11,7 +11,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 | Milestone | Status | WPs Done | Notes |
 |---|---|---|---|
 | M11 | `done` | 4 / 4 | All WPs complete; exit criteria met |
-| M12 | `in_progress` | 4 / 8 | WP1 (C-1 OPA), WP2 (C-2 Obligations), WP3 (PostgreSQL repos, H-4/H-5/H-6), WP4 (Redis idempotency) done |
+| M12 | `in_progress` | 5 / 8 | WP1 (C-1 OPA), WP2 (C-2 Obligations), WP3 (PostgreSQL repos, H-4/H-5/H-6), WP4 (Redis idempotency), WP5 (C-5 OTel export) done |
 | M13 | `planned` | 0 / 6 | Entry gate: M12 complete |
 | M14 | `planned` | 0 / 6 | Entry gate: M13 complete |
 | M15 | `planned` | 0 / 5 | Entry gate: M14 complete |

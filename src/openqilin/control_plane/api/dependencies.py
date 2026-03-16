@@ -52,10 +52,13 @@ from openqilin.data_access.repositories.postgres.identity_repository import (
 from openqilin.data_access.repositories.postgres.project_repository import (
     PostgresProjectRepository,
 )
+from openqilin.data_access.repositories.postgres.audit_event_repository import (
+    PostgresAuditEventRepository,
+)
 from openqilin.data_access.repositories.postgres.task_repository import (
     PostgresTaskRepository,
 )
-from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
+from openqilin.observability.audit.audit_writer import InMemoryAuditWriter, OTelAuditWriter
 from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
 from openqilin.observability.tracing.tracer import InMemoryTracer
 from openqilin.policy_runtime_integration.client import (
@@ -113,7 +116,7 @@ class RuntimeServices:
     task_dispatch_service: TaskDispatchService
     retrieval_query_service: RetrievalQueryService
     tracer: InMemoryTracer
-    audit_writer: InMemoryAuditWriter
+    audit_writer: InMemoryAuditWriter | OTelAuditWriter
     metric_recorder: InMemoryMetricRecorder
     delivery_event_callback_processor: InMemoryDeliveryEventCallbackProcessor
     communication_outcome_notifier: CommunicationOutcomeNotifier
@@ -160,7 +163,11 @@ def build_runtime_services() -> RuntimeServices:
         governance_repo: InMemoryGovernanceRepository | PostgresProjectRepository = (
             PostgresProjectRepository(session_factory=session_factory)
         )
+        audit_event_repo: PostgresAuditEventRepository | None = PostgresAuditEventRepository(
+            session_factory=session_factory
+        )
     else:
+        audit_event_repo = None
         runtime_snapshot_path = (
             settings.runtime_state_snapshot_path if settings.runtime_persistence_enabled else None
         )
@@ -225,7 +232,12 @@ def build_runtime_services() -> RuntimeServices:
     lifecycle_service = TaskLifecycleService(runtime_state_repo=runtime_state_repo)
     retrieval_query_service = build_retrieval_query_service()
     tracer = InMemoryTracer()
-    audit_writer = InMemoryAuditWriter()
+    # M12-WP5: OTelAuditWriter when Postgres is available; InMemory otherwise.
+    audit_writer: InMemoryAuditWriter | OTelAuditWriter = (
+        OTelAuditWriter(audit_repo=audit_event_repo)
+        if audit_event_repo is not None
+        else InMemoryAuditWriter()
+    )
     metric_recorder = InMemoryMetricRecorder()
     delivery_event_callback_processor = InMemoryDeliveryEventCallbackProcessor(
         runtime_state_repo=runtime_state_repo,
@@ -391,7 +403,7 @@ def get_tracer(request: Request) -> InMemoryTracer:
     return get_runtime_services(request).tracer
 
 
-def get_audit_writer(request: Request) -> InMemoryAuditWriter:
+def get_audit_writer(request: Request) -> InMemoryAuditWriter | OTelAuditWriter:
     """Provide audit writer for governed-path decision evidence."""
 
     return get_runtime_services(request).audit_writer
