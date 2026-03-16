@@ -43,9 +43,9 @@ WP document: `05-milestones/M12-WorkPackages-v1.md`
 | M12-WP1 | OPA Policy Runtime Wiring (C-1) | `done` | #80 | — | OPAPolicyRuntimeClient + Rego bundle + startup validation; InMemory moved to testing/ |
 | M12-WP2 | Obligation Application (C-2) | `done` | #81 | — | ObligationDispatcher with 4 handlers; wired into owner_commands for allow_with_obligations |
 | M12-WP3 | PostgreSQL Repository Migration | `done` | #82 | — | 7 migrations; 7 Postgres repos; H-4/H-5/H-6 fixed |
-| M12-WP4 | Redis Idempotency Wiring | `pending` | #83 | — | — |
-| M12-WP5 | OTel Export Wiring (C-5) | `pending` | #84 | — | — |
-| M12-WP6 | Security Hardening: C-6 and C-8 | `pending` | #85 | — | — |
+| M12-WP4 | Redis Idempotency Wiring | `done` | #83 | — | RedisIdempotencyCacheStore; env-gated via OPENQILIN_REDIS_URL |
+| M12-WP5 | OTel Export Wiring (C-5) | `done` | #84 | — | configure_tracer/metrics/logs; OTelAuditWriter dual-write |
+| M12-WP6 | Security Hardening: C-6 and C-8 | `done` | #85 | — | C-6: DB-backed role resolution; C-8: principal_role in ToolCallContext |
 | M12-WP7 | Critical Runtime Bug Fixes: H-1, H-2 | `pending` | #86 | — | — |
 | M12-WP8 | CSO Activation | `pending` | #87 | — | — |
 
@@ -136,9 +136,9 @@ All 20 architectural review findings from `00-direction/ArchitecturalReviewFindi
 | C-2 | Obligations empty placeholder | M12 | M12-WP2 | `done` |
 | C-3 | In-memory integer budget counter | M14 | M14-WP1 | `pending` |
 | C-5 | OTel export not wired | M12 | M12-WP5 | `pending` |
-| C-6 | Role self-assertion from header | M12 | M12-WP6 | `pending` |
+| C-6 | Role self-assertion from header | M12 | M12-WP6 | `done` |
 | C-7 | `chat_class` KeyError → 500 | M11 | M11-WP2 | `done` |
-| C-8 | Write tool access check inverted | M12 | M12-WP6 | `pending` |
+| C-8 | Write tool access check inverted | M12 | M12-WP6 | `done` |
 | C-9 | LangGraph not used; linear HTTP handler | M13 | M13-WP1 | `pending` |
 | C-10 | Sandbox enforcement empty placeholder | M13 | M13-WP6 | `pending` |
 | H-1 | Fail-open dispatch fallback | M12 | M12-WP7 | `pending` |
