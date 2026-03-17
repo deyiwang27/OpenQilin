@@ -25,8 +25,9 @@
   - monitors infrastructure integrity and availability
   - may suspend components or isolate failures
 - ceo:
-  - evaluates major safety incidents
+  - evaluates major safety incidents (emergency_review carve-out; see `CeoRoleContract §4`)
   - may pause projects, adjust strategy, escalate to owner
+  - emergency project shutdown authority (emergency action only; not routine project review)
 
 ## 5. Containment and Emergency Actions
 - Containment:

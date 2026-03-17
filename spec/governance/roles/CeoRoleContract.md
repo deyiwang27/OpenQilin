@@ -28,6 +28,8 @@
 | oversight | deny |
 | workforce | deny |
 
+**Bounded exception — emergency review:** `review: deny` applies to routine project output review and artifact review. CEO retains `emergency_review: allow` scoped exclusively to: (1) evaluating major safety incidents as defined in `SafetyDoctrine §4`; (2) initiating emergency project shutdown. Emergency review actions must include `incident_class: emergency` in audit metadata and must not be used for routine project or task output review.
+
 ## 5. Data Access Boundaries
 - Read scope:
   - cross-project strategy, budget summaries, and escalation state

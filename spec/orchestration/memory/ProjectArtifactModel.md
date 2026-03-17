@@ -99,7 +99,7 @@ Lifecycle rules:
 - A published working version moves artifact state to `active`.
 - Newer accepted version marks previous version `superseded`.
 - Artifacts for archived projects become `archived` and read-only.
-- `completion_report` is immutable after publish (no in-place updates).
+- `completion_report` immutability is applied on **owner approval**, not on publication. Before owner approval, PM may issue a `completion_report_revision` (new version; prior version archived). Once owner issues an approval record for a `completion_report` version, that version is sealed and no further revisions are permitted. Owner approval of `completion_report` is the sealing event.
 
 ## 6. Governance and Access
 - Artifact writes must pass policy checks for role + scope.
