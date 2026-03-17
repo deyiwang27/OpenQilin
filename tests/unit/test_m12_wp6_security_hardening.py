@@ -71,9 +71,14 @@ def _discord_headers(actor_id: str = "user-001") -> dict[str, str]:
 
 
 def test_resolve_principal_unverified_identity_denied() -> None:
-    """Valid connector secret + unverified identity → PrincipalResolutionError."""
-    repo = InMemoryIdentityChannelRepository()
-    # No verified mappings seeded — all lookups return None
+    """Persistent repo + no verified mapping → PrincipalResolutionError.
+
+    The verified-identity gate only applies when using a persistent (Postgres)
+    identity store; simulated here with a mock that has _session_factory.
+    """
+    repo = MagicMock()
+    repo._session_factory = MagicMock()  # mark as persistent store
+    repo.get_by_connector_actor.return_value = None  # actor unknown
 
     with pytest.raises(PrincipalResolutionError) as exc_info:
         resolve_principal(_discord_headers(), identity_repo=repo)
@@ -82,17 +87,14 @@ def test_resolve_principal_unverified_identity_denied() -> None:
 
 
 def test_resolve_principal_pending_identity_denied() -> None:
-    """Identity with status='pending' → PrincipalResolutionError."""
-    repo = InMemoryIdentityChannelRepository()
-    repo.claim_mapping(
-        connector="discord",
-        actor_external_id="user-001",
-        guild_id="guild-001",
-        channel_id="channel-001",
-        channel_type="text",
-        principal_role="owner",
-    )
-    # status is 'pending' after claim_mapping — not verified
+    """Persistent repo + pending mapping → PrincipalResolutionError.
+
+    The verified-identity gate only applies when using a persistent (Postgres)
+    identity store; simulated here with a mock that has _session_factory.
+    """
+    repo = MagicMock()
+    repo._session_factory = MagicMock()  # mark as persistent store
+    repo.get_by_connector_actor.return_value = _make_record(status="pending")
 
     with pytest.raises(PrincipalResolutionError) as exc_info:
         resolve_principal(_discord_headers(), identity_repo=repo)
