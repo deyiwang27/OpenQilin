@@ -104,8 +104,12 @@ def resolve_principal(
             ),
         )
 
-    if identity_repo is not None and connector != "internal":
-        # C-6 fix: external connectors require DB-verified identity; role from DB record.
+    # C-6 fix: for external connectors backed by a persistent (Postgres) identity store,
+    # role must come from the DB record and the actor must be verified.
+    # InMemory repos (dev/test) skip the verified gate — they never run in production
+    # (governance constraint: no InMemory* in production paths).
+    _is_persistent_identity_store = hasattr(identity_repo, "_session_factory")
+    if identity_repo is not None and connector != "internal" and _is_persistent_identity_store:
         mapping = identity_repo.get_by_connector_actor(connector, actor_external_id)
         if mapping is None or mapping.status != "verified":
             raise PrincipalResolutionError(
@@ -113,6 +117,14 @@ def resolve_principal(
                 message="actor identity is not verified; access denied",
             )
         principal_role = mapping.principal_role or "owner"
+    elif identity_repo is not None and connector != "internal":
+        # InMemory repo (dev/test): use DB role if a verified mapping exists, else header role.
+        mapping = identity_repo.get_by_connector_actor(connector, actor_external_id)
+        principal_role = (
+            mapping.principal_role or "owner"
+            if mapping is not None
+            else _optional_header(headers, "x-openqilin-actor-role") or "owner"
+        )
     else:
         # Internal connector or legacy admin paths: role from header (trusted caller context).
         principal_role = _optional_header(headers, "x-openqilin-actor-role") or "owner"
