@@ -12,7 +12,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 |---|---|---|---|
 | M11 | `done` | 4 / 4 | All WPs complete; exit criteria met |
 | M12 | `done` | 8 / 8 | All WPs done; PR #88 raised; exit criteria partially met (compose stack validation pending prod) |
-| M13 | `planned` | 0 / 8 | Entry gate: M12 complete; includes CSO rewrite (WP7) and Secretary/routing (WP8) |
+| M13 | `planned` | 0 / 8 | Entry gate: M12 complete; milestone tracker #97; WPs #89–#96 |
 | M14 | `planned` | 0 / 7 | Entry gate: M13 complete; all remaining agents + file-backed artifact storage |
 | M15 | `planned` | 0 / 6 | Entry gate: M14 complete |
 | M16 | `planned` | 0 / 5 | Entry gate: M15 complete |
@@ -60,14 +60,14 @@ WP document: `05-milestones/M13-WorkPackages-v1.md`
 
 | WP | Title | Status | Issue | PR | Notes |
 |---|---|---|---|---|---|
-| M13-WP1 | LangGraph Orchestration Adoption (C-9) | `pending` | — | — | — |
-| M13-WP2 | Loop Controls Enforcement | `pending` | — | — | — |
-| M13-WP3 | Project Space Binding and Routing | `pending` | — | — | — |
-| M13-WP4 | H-3 Fix: Snapshot Split-Brain | `pending` | — | — | — |
-| M13-WP5 | Domain Leader Virtual Agent Activation | `pending` | — | — | Entry requires WP7 (CSO rewrite) complete |
-| M13-WP6 | Sandbox Enforcement Scaffolding (C-10) | `pending` | — | — | — |
-| M13-WP7 | CSO Rewrite: Chief Strategy Officer | `pending` | — | — | Remove OPA dep; rewrite as portfolio strategy advisor; fix assert_opa_client_required |
-| M13-WP8 | Secretary and Routing Spec Alignment | `pending` | — | — | Register secretary in _INSTITUTIONAL_ROLES; add CSO to FreeTextRouter; Secretary data access |
+| M13-WP1 | LangGraph Orchestration Adoption (C-9) | `pending` | #89 | — | — |
+| M13-WP2 | Loop Controls Enforcement | `pending` | #90 | — | — |
+| M13-WP3 | Project Space Binding and Routing | `pending` | #91 | — | — |
+| M13-WP4 | H-3 Fix: Snapshot Split-Brain | `pending` | #92 | — | — |
+| M13-WP5 | Domain Leader Virtual Agent Activation | `pending` | #93 | — | Entry requires WP7 (CSO rewrite) complete |
+| M13-WP6 | Sandbox Enforcement Scaffolding (C-10) | `pending` | #94 | — | — |
+| M13-WP7 | CSO Rewrite: Chief Strategy Officer | `pending` | #95 | — | Remove OPA dep; rewrite as portfolio strategy advisor; fix assert_opa_client_required |
+| M13-WP8 | Secretary and Routing Spec Alignment | `pending` | #96 | — | Register secretary in _INSTITUTIONAL_ROLES; add CSO to FreeTextRouter; Secretary data access |
 
 **M13 Exit criteria:** `pending`
 
