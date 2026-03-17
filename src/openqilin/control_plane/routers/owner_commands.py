@@ -431,6 +431,7 @@ def submit_owner_command(
     x_openqilin_trace_id: Annotated[str | None, Header(alias="X-OpenQilin-Trace-Id")] = None,
     x_external_channel: Annotated[str | None, Header(alias="X-External-Channel")] = None,
     x_external_actor_id: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
+    x_openqilin_actor_role: Annotated[str | None, Header(alias="X-OpenQilin-Actor-Role")] = None,
     x_idempotency_key: Annotated[str | None, Header(alias="X-Idempotency-Key")] = None,
     x_openqilin_signature: Annotated[str | None, Header(alias="X-OpenQilin-Signature")] = None,
 ) -> OwnerCommandResponse | JSONResponse:
@@ -526,10 +527,12 @@ def submit_owner_command(
                 details={"source": "connector_security"},
             )
 
-        principal_headers = {
+        principal_headers: dict[str, str] = {
             "x-external-channel": x_external_channel,
             "x-openqilin-actor-external-id": x_external_actor_id,
         }
+        if x_openqilin_actor_role:
+            principal_headers["x-openqilin-actor-role"] = x_openqilin_actor_role
         try:
             principal = resolve_principal(
                 principal_headers, identity_repo=identity_channel_repository

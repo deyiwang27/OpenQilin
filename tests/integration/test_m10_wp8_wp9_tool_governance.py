@@ -59,6 +59,7 @@ def test_tool_write_accepts_governed_mutation_and_emits_audit_evidence() -> None
             )
         ],
         actor_id="owner_m10_tool_write_ok",
+        actor_role="ceo",
         idempotency_key="idem-m10-tool-write-ok-001",
         project_id=project_id,
         recipients=[{"recipient_id": "ceo_core", "recipient_type": "ceo"}],
