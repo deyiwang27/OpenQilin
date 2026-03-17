@@ -332,9 +332,95 @@ Adopt LangGraph as the real orchestration engine, replacing the linear HTTP-hand
 
 ---
 
+## WP M13-09 — InMemory Stub Removal and Test Infrastructure Hardening
+
+**Goal:** Remove all `InMemory*` class definitions from production `src/` files. Replace infrastructure stubs with real Postgres/Redis/OPA implementations. Rename simulation stubs (no real transport counterpart) away from the `InMemory*` prefix. Move observability introspection stubs to `testing/`. Harden test infrastructure to require the compose stack for all non-pure-logic tests.
+
+**Bug ref:** CI governance gate (`grep -r --include="*.py" -l "class InMemory" src/ | grep -v "/testing/"` returns 26 files)
+**Design ref:** `design/v2/adr/ADR-0008-InMemory-Stub-Removal-Strategy.md`
+
+**Entry criteria:** M13-WP1 complete (real LangGraph nodes wired; current test suite passing).
+
+### Tasks
+
+#### Phase 1 — Delete Group 1 (infra stubs with real Postgres/Redis/OPA counterparts)
+
+- [ ] Delete `InMemoryRuntimeStateRepository` from `data_access/repositories/runtime_state.py`
+- [ ] Delete `InMemoryCommunicationRepository` from `data_access/repositories/communication.py`
+- [ ] Delete `InMemoryAgentRegistryRepository` from `data_access/repositories/agent_registry.py`
+- [ ] Delete `InMemoryProjectArtifactRepository` from `data_access/repositories/artifacts.py`
+- [ ] Delete `InMemoryGovernanceRepository` from `data_access/repositories/governance.py`
+- [ ] Delete `InMemoryIdentityChannelRepository` from `data_access/repositories/identity_channels.py`
+- [ ] Delete `InMemoryIdempotencyCacheStore` from `data_access/cache/idempotency_store.py`
+- [ ] Delete `InMemoryArtifactSearchReadModel` from `data_access/read_models/artifact_search.py`
+- [ ] Replace the `else` fallback branches in `build_runtime_services()` with `RuntimeError` guards for `DATABASE_URL`, `REDIS_URL`, `OPA_URL`
+- [ ] Narrow `RuntimeServices` dataclass union types to concrete Postgres/Redis types only
+
+#### Phase 2 — Rename Group 2 (simulation stubs with no real transport counterpart)
+
+- [ ] Rename `InMemoryDeliveryPublisher` → `LocalDeliveryPublisher`
+- [ ] Rename `InMemoryDeadLetterWriter` → `LocalDeadLetterWriter`
+- [ ] Rename `InMemoryMessageLedger` → `LocalMessageLedger`
+- [ ] Rename `InMemoryCommunicationIdempotencyStore` → `LocalCommunicationIdempotencyStore`
+- [ ] Rename `InMemoryAcpClient` → `LocalAcpClient`
+- [ ] Rename `InMemoryOrderingValidator` → `LocalOrderingValidator`
+- [ ] Rename `InMemoryCommunicationDispatchAdapter` → `LocalCommunicationDispatchAdapter`
+- [ ] Rename `InMemorySandboxExecutionAdapter` → `LocalSandboxExecutionAdapter`
+- [ ] Rename `InMemoryConversationStore` → `LocalConversationStore`
+- [ ] Rename `InMemoryLiteLLMAdapter` → `LocalLiteLLMAdapter`
+- [ ] Rename `InMemoryBudgetRuntimeClient` → `AlwaysAllowBudgetRuntimeClient`
+- [ ] Rename `InMemoryIngressDedupe` → `IngressDedupeStore`
+- [ ] Rename `InMemorySandboxEventCallbackProcessor` → `LocalSandboxEventCallbackProcessor`
+- [ ] Rename `InMemoryDeliveryEventCallbackProcessor` → `LocalDeliveryEventCallbackProcessor`
+- [ ] Update all callers and import sites for all renamed classes
+
+#### Phase 3 — Move Group 3 (observability introspection stubs) to `testing/`
+
+- [ ] Move `InMemoryAuditWriter` to `src/openqilin/observability/testing/stubs.py`
+- [ ] Move `InMemoryTracer` + `InMemorySpan` to `src/openqilin/observability/testing/stubs.py`
+- [ ] Move `InMemoryMetricRecorder` to `src/openqilin/observability/testing/stubs.py`
+- [ ] Move `InMemoryAlertEmitter` to `src/openqilin/observability/testing/stubs.py`
+- [ ] Update all import sites (tests, conftest files)
+
+#### Phase 4 — Harden test infrastructure
+
+- [ ] Add `tests/component/conftest.py` and `tests/integration/conftest.py`:
+  - `inject_test_observability` fixture: replace `app.state.runtime_services` audit_writer/tracer/metric_recorder with stubs from `observability/testing/stubs.py`
+  - Database cleanup fixture: truncate test-relevant tables between test functions
+- [ ] Add `@pytest.mark.no_infra` to all pure-logic unit tests (grammar, routing, state machine guards, schema validators)
+- [ ] Register `no_infra` marker in `pyproject.toml`
+- [ ] Rewrite the three tests that asserted "env var absent → InMemory selected" to assert `RuntimeError` is raised instead
+- [ ] Update `CLAUDE.md` test command table to document `no_infra` and compose-required tiers
+
+#### Phase 5 — Verify and gate
+
+- [ ] `grep -r --include="*.py" -l "class InMemory" src/ | grep -v "/testing/" | grep -v "tests/"` returns zero results
+- [ ] `uv run ruff check . && uv run mypy .` — clean
+- [ ] `uv run pytest -m no_infra tests/unit/` — passes without compose
+- [ ] `uv run pytest tests/unit tests/component tests/contract tests/integration tests/conformance` — passes with compose stack
+
+### Outputs
+
+- Zero `class InMemory` definitions in non-testing `src/` files
+- CI governance grep gate passes
+- `build_runtime_services()` fails fast on missing env vars instead of silently degrading to InMemory mode
+- All simulation stubs renamed to `Local*` or semantically accurate names
+- Observability stubs consolidated in `observability/testing/stubs.py`
+- `@pytest.mark.no_infra` tier established for fast, compose-free logic tests
+
+### Done criteria
+
+- [ ] `grep -r --include="*.py" -l "class InMemory" src/ | grep -v "/testing/" | grep -v "tests/"` returns zero
+- [ ] `build_runtime_services()` raises `RuntimeError` when `DATABASE_URL`, `REDIS_URL`, or `OPA_URL` is absent
+- [ ] Full test suite passes against compose stack
+- [ ] `uv run pytest -m no_infra tests/unit/` passes without compose stack
+- [ ] `uv run ruff check . && uv run mypy .` — clean
+
+---
+
 ## M13 Exit Criteria
 
-- [ ] All eight WPs above are marked done
+- [ ] All nine WPs above are marked done
 - [ ] LangGraph `StateGraph` is the active orchestration engine in production
 - [ ] Project spaces are created automatically; PM-default routing works
 - [ ] Domain Leader active as a backend-routed virtual agent
@@ -347,6 +433,7 @@ Adopt LangGraph as the real orchestration engine, replacing the linear HTTP-hand
 ## References
 
 - `design/v2/adr/ADR-0005-LangGraph-State-Machine-Adoption.md`
+- `design/v2/adr/ADR-0008-InMemory-Stub-Removal-Strategy.md`
 - `design/v2/architecture/M13-ProjectSpaceAndOrchestrationModuleDesign-v2.md`
 - `design/v2/components/OrchestratorComponentDelta-v2.md`
 - `spec/orchestration/communication/ProjectSpaceBindingModel.md`

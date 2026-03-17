@@ -12,7 +12,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 |---|---|---|---|
 | M11 | `done` | 4 / 4 | All WPs complete; exit criteria met |
 | M12 | `done` | 8 / 8 | All WPs done; PR #88 raised; exit criteria partially met (compose stack validation pending prod) |
-| M13 | `in_progress` | 1 / 8 | M13-WP1 done (LangGraph adoption); WPs #89–#96 |
+| M13 | `in_progress` | 1 / 9 | M13-WP1 done (LangGraph adoption); WPs #89–#96; WP9 added (InMemory removal) |
 | M14 | `planned` | 0 / 7 | Entry gate: M13 complete; all remaining agents + file-backed artifact storage |
 | M15 | `planned` | 0 / 6 | Entry gate: M14 complete |
 | M16 | `planned` | 0 / 5 | Entry gate: M15 complete |
@@ -68,6 +68,7 @@ WP document: `05-milestones/M13-WorkPackages-v1.md`
 | M13-WP6 | Sandbox Enforcement Scaffolding (C-10) | `pending` | #94 | — | — |
 | M13-WP7 | CSO Rewrite: Chief Strategy Officer | `pending` | #95 | — | Remove OPA dep; rewrite as portfolio strategy advisor; fix assert_opa_client_required |
 | M13-WP8 | Secretary and Routing Spec Alignment | `pending` | #96 | — | Register secretary in _INSTITUTIONAL_ROLES; add CSO to FreeTextRouter; Secretary data access |
+| M13-WP9 | InMemory Stub Removal and Test Infrastructure Hardening | `pending` | — | — | ADR-0008; 3-group strategy: delete infra stubs, rename simulation stubs, move observability to testing/ |
 
 **M13 Exit criteria:** `pending`
 
