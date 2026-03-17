@@ -27,6 +27,7 @@ class IdentityChannelMappingRecord:
     status: IdentityChannelStatus
     created_at: datetime
     updated_at: datetime
+    principal_role: str = "owner"
 
 
 class IdentityChannelRepositoryError(ValueError):
@@ -56,6 +57,7 @@ class InMemoryIdentityChannelRepository:
         guild_id: str,
         channel_id: str,
         channel_type: str,
+        principal_role: str = "owner",
     ) -> IdentityChannelMappingRecord:
         """Claim mapping key and return existing/new pending mapping record."""
 
@@ -82,6 +84,7 @@ class InMemoryIdentityChannelRepository:
             status="pending",
             created_at=now,
             updated_at=now,
+            principal_role=principal_role,
         )
         self._records_by_id[created.mapping_id] = created
         self._mapping_id_by_key[key] = created.mapping_id
@@ -151,6 +154,24 @@ class InMemoryIdentityChannelRepository:
         """List all persisted identity/channel mappings."""
 
         return tuple(self._records_by_id.values())
+
+    def get_by_connector_actor(
+        self,
+        connector: str,
+        actor_external_id: str,
+    ) -> IdentityChannelMappingRecord | None:
+        """Return the first verified mapping for (connector, actor_external_id), or None."""
+
+        normalized_connector = connector.strip().lower()
+        normalized_actor = actor_external_id.strip()
+        for record in self._records_by_id.values():
+            if (
+                record.connector == normalized_connector
+                and record.actor_external_id == normalized_actor
+                and record.status == "verified"
+            ):
+                return record
+        return None
 
     def _load_snapshot(self) -> None:
         path = self._resolved_snapshot_path()
@@ -237,6 +258,7 @@ def _mapping_to_dict(record: IdentityChannelMappingRecord) -> dict[str, object]:
         "status": record.status,
         "created_at": record.created_at.isoformat(),
         "updated_at": record.updated_at.isoformat(),
+        "principal_role": record.principal_role,
     }
 
 
@@ -262,4 +284,5 @@ def _mapping_from_dict(raw: object) -> IdentityChannelMappingRecord:
         status=status,  # type: ignore[arg-type]
         created_at=datetime.fromisoformat(str(raw["created_at"])).astimezone(UTC),
         updated_at=datetime.fromisoformat(str(raw["updated_at"])).astimezone(UTC),
+        principal_role=str(raw.get("principal_role", "owner")),
     )

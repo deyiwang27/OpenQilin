@@ -43,6 +43,8 @@ The following limits apply per trace (one owner prompt = one trace):
 
 Limit values are provisional defaults. They MUST be configurable per deployment via governed policy without code changes.
 
+**Escalation exemption (LOOP-006):** Messages with `message.type == 'escalation'` are exempt from per-trace hop counting and always open a fresh trace. This prevents the hop limit from silently swallowing critical safety escalations before they reach the owner.
+
 ## 5. Terminal Actions
 When a loop cap is hit, the runtime MUST:
 1. Stop further dispatch immediately on the current trace.
@@ -58,6 +60,7 @@ When a loop cap is hit, the runtime MUST:
 | LOOP-003 | Repeated sender/recipient pair rounds within one trace MUST be capped and MUST produce a governed terminal action on breach. | critical | Task Orchestrator |
 | LOOP-004 | Loop cap breaches MUST emit an audit event before terminating the trace. | high | Observability |
 | LOOP-005 | Loop cap limits MUST be configurable via governed policy without requiring code changes. | medium | Policy Engine |
+| LOOP-006 | Escalation messages (identified by `message.type == 'escalation'`) are exempt from per-trace hop counting. An escalation message MUST open a fresh trace with a new `trace_id`. Hop limits apply to task execution messages only; critical safety signals MUST always reach their target authority. | critical | Task Orchestrator |
 
 ## 7. Conformance Tests
 - A trace that exceeds the hop count limit is terminated with a governed denial and an audit event; no further dispatch occurs.

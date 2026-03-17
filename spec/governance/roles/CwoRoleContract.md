@@ -18,8 +18,8 @@
   - agent template
   - llm profile
   - system prompt package
-- Review Project Manager completion report and co-approve project completion with `ceo` before owner notification.
-- Co-approve controlled Project Manager documentation edits (`scope_statement`, `budget_plan`, `success_metrics`) with `ceo`.
+- Review Project Manager completion report and issue **workforce initialization command** to authorize project completion with `ceo` before owner notification. (Note: CWO gate action is a workforce command, not a decision approval — `decision: deny` is retained. See DecisionReviewGates GATE-005.)
+- Co-authorize controlled Project Manager documentation edits (`scope_statement`, `budget_plan`, `success_metrics`) with `ceo` as a command-layer authorization.
 
 ## 4. Authority Profile
 | Authority | Value |

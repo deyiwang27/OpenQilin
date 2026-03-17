@@ -86,10 +86,12 @@ def build_owner_command_headers(payload: dict[str, Any]) -> dict[str, str]:
     channel = str(connector["channel"])
     raw_payload_hash = str(connector["raw_payload_hash"])
     signature = sign_payload_hash(raw_payload_hash, RuntimeSettings().connector_shared_secret)
+    actor_role = str(payload.get("sender", {}).get("actor_role", "owner"))
     return {
         "X-OpenQilin-Trace-Id": str(payload["trace_id"]),
         "X-External-Channel": channel,
         "X-External-Actor-Id": actor_external_id,
+        "X-OpenQilin-Actor-Role": actor_role,
         "X-Idempotency-Key": idempotency_key,
         "X-OpenQilin-Signature": signature,
     }

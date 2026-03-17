@@ -313,16 +313,10 @@ def _smoke_payload() -> tuple[dict[str, Any], str]:
         "content": "admin smoke command",
         "project_id": "smoke-project",
         "connector": {
-            "channel": "discord",
+            "channel": "internal",
             "external_message_id": f"ext-admin-smoke-{uuid4()}",
             "actor_external_id": "owner_admin_smoke",
             "idempotency_key": idempotency_key,
-            "discord_context": {
-                "guild_id": "guild-admin-smoke",
-                "channel_id": "channel-admin-smoke",
-                "channel_type": "text",
-                "chat_class": "project",
-            },
         },
         "command": {
             "action": "run_task",
@@ -356,7 +350,7 @@ def run_in_process_smoke_check() -> CheckResult:
         OWNER_COMMAND_ROUTE,
         headers={
             "X-OpenQilin-Trace-Id": str(payload["trace_id"]),
-            "X-External-Channel": "discord",
+            "X-External-Channel": "internal",
             "X-External-Actor-Id": "owner_admin_smoke",
             "X-Idempotency-Key": str(payload["connector"]["idempotency_key"]),
             "X-OpenQilin-Signature": signature,
@@ -390,7 +384,7 @@ def run_smoke_check(*, api_base_url: str, timeout_seconds: float = 5.0) -> Check
                 route_url,
                 headers={
                     "X-OpenQilin-Trace-Id": str(payload["trace_id"]),
-                    "X-External-Channel": "discord",
+                    "X-External-Channel": "internal",
                     "X-External-Actor-Id": "owner_admin_smoke",
                     "X-Idempotency-Key": str(payload["connector"]["idempotency_key"]),
                     "X-OpenQilin-Signature": signature,

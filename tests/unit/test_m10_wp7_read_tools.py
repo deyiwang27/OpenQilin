@@ -20,6 +20,7 @@ def _build_context(
         request_id="request-read-tools-001",
         trace_id="trace-read-tools-001",
         principal_id="owner_001",
+        principal_role=role,
         recipient_role=role,
         recipient_id=f"{role}_core",
         project_id=project_id,

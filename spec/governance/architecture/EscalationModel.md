@@ -15,6 +15,7 @@ Escalation chains:
   - enforcement chain: auditor -> owner
 - Behavioral violations:
   - escalation chain: specialist -> project_manager -> auditor -> owner
+  - PM violation bypass (ESC-008): project_manager violation -> auditor -> owner (bypasses PM)
 - Infrastructure: system_component -> administrator -> owner
 
 Notification-only routes (not escalation chain ownership transfer):
@@ -50,6 +51,8 @@ Canonical triggers:
 | ESC-004 | Escalation records MUST include incident class, current stage, and next authority target. | high | Observability |
 | ESC-005 | Any agent pause action MUST be reported to ceo. | high | Task Orchestrator |
 | ESC-006 | Agent pause actions with critical impact MUST alert owner immediately. | critical | Task Orchestrator |
+| ESC-007 | Owner approval requests MUST expire after `OWNER_APPROVAL_TIMEOUT_HOURS` (default: 48h). On expiry: emit `approval_request_expired` audit event; transition task to `blocked`; release budget reservation; Secretary sends expiry notification to owner in `governance` channel; PM receives `task_blocked` event. | high | Task Orchestrator |
+| ESC-008 | Behavioral violations involving `project_manager` MUST escalate directly to `auditor -> owner`, bypassing the violating agent's chain. Auditor has authority to escalate any agent violation directly to owner without passing through the violating agent. | critical | Task Orchestrator |
 
 ## 6. Event Contract
 Minimum escalation event fields:

@@ -14,6 +14,9 @@ from openqilin.communication_gateway.storage.idempotency_store import (
 from openqilin.communication_gateway.storage.message_ledger import InMemoryMessageLedger
 from openqilin.budget_runtime.client import InMemoryBudgetRuntimeClient
 from openqilin.data_access.cache.idempotency_store import InMemoryIdempotencyCacheStore
+from openqilin.data_access.repositories.postgres.idempotency_cache_store import (
+    RedisIdempotencyCacheStore,
+)
 from openqilin.data_access.repositories.artifacts import InMemoryProjectArtifactRepository
 from openqilin.data_access.repositories.communication import (
     CommunicationDeadLetterRecord,
@@ -49,6 +52,7 @@ from openqilin.task_orchestrator.dispatch.sandbox_dispatch import (
 )
 from openqilin.task_orchestrator.dispatch.target_selector import (
     DispatchTarget,
+    DispatchTargetError,
     select_dispatch_target,
 )
 from openqilin.task_orchestrator.services.lifecycle_service import TaskLifecycleService
@@ -223,6 +227,7 @@ class TaskDispatchService:
                         request_id=task.request_id,
                         trace_id=task.trace_id,
                         principal_id=task.principal_id,
+                        principal_role=task.principal_role,
                         project_id=task.project_id,
                         command=task.command,
                         args=task.args,
@@ -392,27 +397,14 @@ class TaskDispatchService:
                     llm_metadata=None,
                 )
         else:
-            # Fallback is retained for forward-compatible targets not yet modeled.
-            dispatch_id = f"{target}-{uuid4()}"
-            message = f"{target} dispatch stub accepted"
-            self._lifecycle_service.mark_dispatched(
+            # H-1: Unknown dispatch targets are fail-closed — never fake a successful dispatch.
+            self._lifecycle_service.mark_failed(
                 task.task_id,
-                dispatch_target=target,
-                dispatch_id=dispatch_id,
-                message=message,
+                error_code="dispatch_target_unknown",
+                message=f"unknown dispatch target: {target!r}",
+                outcome_source="task_dispatch_service",
             )
-            outcome = TaskDispatchOutcome(
-                accepted=True,
-                target=target,
-                dispatch_id=dispatch_id,
-                error_code=None,
-                message=message,
-                replayed=False,
-                source=f"dispatch_{target}",
-                retryable=False,
-                dead_letter_id=None,
-                llm_metadata=None,
-            )
+            raise DispatchTargetError(f"unknown dispatch target: {target!r}")
 
         self._task_outcomes[task.task_id] = outcome
         return outcome
@@ -454,7 +446,9 @@ def build_task_dispatch_service(
     audit_writer: InMemoryAuditWriter | None = None,
     metric_recorder: InMemoryMetricRecorder | None = None,
     communication_repository: InMemoryCommunicationRepository | None = None,
-    idempotency_cache_store: InMemoryIdempotencyCacheStore | None = None,
+    idempotency_cache_store: InMemoryIdempotencyCacheStore
+    | RedisIdempotencyCacheStore
+    | None = None,
     retrieval_query_service: RetrievalGroundingService | RetrievalQueryService | None = None,
     governance_project_reader: GovernanceProjectReader | None = None,
     governance_repository: InMemoryGovernanceRepository | None = None,

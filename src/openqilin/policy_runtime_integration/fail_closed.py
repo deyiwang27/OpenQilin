@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from openqilin.policy_runtime_integration.client import InMemoryPolicyRuntimeClient
+from openqilin.policy_runtime_integration.client import PolicyRuntimeClient
 from openqilin.policy_runtime_integration.models import (
     PolicyEvaluationInput,
     PolicyEvaluationResult,
@@ -23,7 +23,7 @@ class PolicyFailClosedOutcome:
 
 def evaluate_with_fail_closed(
     payload: PolicyEvaluationInput,
-    client: InMemoryPolicyRuntimeClient,
+    client: PolicyRuntimeClient,
 ) -> PolicyFailClosedOutcome:
     """Apply fail-closed semantics to policy runtime evaluation."""
 

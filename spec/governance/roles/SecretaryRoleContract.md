@@ -41,12 +41,14 @@
   - workforce lifecycle actions
 
 ## 6. Escalation and Routing
-- Secretary may request participation from `ceo`, `cwo`, `cso`, `project_manager`, `domain_leader`, or `specialist` roles.
+- Secretary may request participation from `ceo`, `cwo`, `cso`, `project_manager`, `domain_leader`, `auditor`, or `administrator` roles.
+- Secretary does NOT directly address `specialist` agents. If a task requires specialist execution, Secretary routes the request to `project_manager` for Specialist dispatch. Direct Secretary→Specialist routing is prohibited (AUTH-005; PM-dispatch-only constraint).
 - Secretary must escalate when:
   - the request requires decision, command, or execution authority
   - policy/budget exceptions are needed
   - incident severity is warning/critical with execution impact
   - available status data is incomplete or stale for safe interpretation
+
 - Triage is advisory routing only and is never a delegated command.
 
 ## 7. Runtime Interfaces

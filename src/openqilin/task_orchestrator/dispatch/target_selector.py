@@ -9,6 +9,14 @@ from openqilin.data_access.repositories.runtime_state import TaskRecord
 DispatchTarget = Literal["sandbox", "llm", "communication"]
 
 
+class DispatchTargetError(ValueError):
+    """Raised when a dispatch target cannot be resolved for the given task."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+        self.message = message
+
+
 def select_dispatch_target(task: TaskRecord) -> DispatchTarget:
     """Select dispatch target based on admitted task command."""
 

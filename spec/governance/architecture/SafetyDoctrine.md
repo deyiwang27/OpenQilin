@@ -25,8 +25,9 @@
   - monitors infrastructure integrity and availability
   - may suspend components or isolate failures
 - ceo:
-  - evaluates major safety incidents
+  - evaluates major safety incidents (emergency_review carve-out; see `CeoRoleContract §4`)
   - may pause projects, adjust strategy, escalate to owner
+  - emergency project shutdown authority (emergency action only; not routine project review)
 
 ## 5. Containment and Emergency Actions
 - Containment:
@@ -42,6 +43,8 @@
 Pause reporting requirements:
 - Any agent pause action must notify ceo.
 - If pause impact is critical to project continuity or governance integrity, owner must be alerted immediately.
+
+**Project pause authority hierarchy:** `owner > auditor (safety) > ceo (emergency) > project_manager (budget/operational)`. Any agent may request a pause by issuing a `pause_request` event to the governance channel. Pause is applied immediately by Secretary (who tracks project state). Resume requires the pausing authority or owner to issue `resume_command`. Stacked pauses: a project remains paused until all active pause requests are cleared. Each pause request must reference the rule that triggered it.
 
 ## 6. Rule Set
 | Rule ID | Statement | Severity | Enforced By |

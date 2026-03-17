@@ -14,8 +14,14 @@ repos:
         language: system
         types_or: [python, pyi]
       - id: mypy-src
-        name: mypy src
-        entry: uv run mypy src
+        name: mypy .
+        entry: uv run mypy .
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+      - id: unit-and-component-tests
+        name: unit and component tests
+        entry: uv run pytest tests/unit tests/component -q --tb=short
         language: system
         pass_filenames: false
         stages: [pre-push]

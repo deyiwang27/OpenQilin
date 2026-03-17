@@ -88,7 +88,7 @@ class GovernedWriteToolService:
             )
             self._audit_write_attempt(result=result, context=context)
             return result
-        if not is_write_tool_allowed(role=context.recipient_role, tool_name=normalized_tool):
+        if not is_write_tool_allowed(role=context.principal_role, tool_name=normalized_tool):
             result = self._deny(
                 tool_name=normalized_tool,
                 context=context,
@@ -484,7 +484,7 @@ class GovernedWriteToolService:
             request_id=context.request_id,
             task_id=context.task_id,
             principal_id=context.principal_id,
-            principal_role=context.recipient_role,
+            principal_role=context.principal_role,
             source="tool_orchestration",
             reason_code=result.error_code,
             message=result.message,

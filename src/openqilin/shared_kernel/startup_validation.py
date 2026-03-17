@@ -36,3 +36,20 @@ def enforce_discord_role_bot_registry(settings: RuntimeSettings) -> None:
         raise RuntimeError(
             f"invalid Discord role-bot registry: {error.code} {error.message}"
         ) from error
+
+
+def verify_opa_bundle_loaded(opa_url: str) -> None:
+    """Fail fast when OPA is configured but unreachable or bundle is not loaded.
+
+    Only called when OPENQILIN_OPA_URL is set (non-empty). Skipped in local/test.
+    Raises RuntimeError if OPA is unreachable — app must not start without policy enforcement.
+    """
+    from openqilin.policy_runtime_integration.client import OPAPolicyRuntimeClient
+
+    client = OPAPolicyRuntimeClient(opa_url=opa_url)
+    if not client.health_check():
+        raise RuntimeError(
+            f"OPA startup validation failed: OPA unreachable at {opa_url}. "
+            "Application cannot start without policy enforcement (fail-closed)."
+        )
+    client.close()

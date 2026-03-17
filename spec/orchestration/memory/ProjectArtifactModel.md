@@ -24,7 +24,7 @@
 ## 3. Canonical Artifact Types (MVP-Strict Enum)
 | Artifact Type | Primary Owner | Scope | Required For `approved -> active` | Per-Type Active Cap | Mutability Model |
 | --- | --- | --- | --- | --- | --- |
-| `project_charter` | `owner`, `ceo`, `cwo` | project | yes | 1 | versioned update |
+| `project_charter` | `cwo` (creates/revises); `owner`+`ceo` (approve via gate record) | project | yes | 1 | versioned update |
 | `scope_statement` | `owner`, `ceo`, `cwo` | project | yes | 1 | versioned update |
 | `budget_plan` | `owner`, `ceo`, `cwo` | project | yes | 1 | versioned update |
 | `success_metrics` | `owner`, `ceo`, `cwo` | project | yes | 1 | versioned update |
@@ -99,7 +99,7 @@ Lifecycle rules:
 - A published working version moves artifact state to `active`.
 - Newer accepted version marks previous version `superseded`.
 - Artifacts for archived projects become `archived` and read-only.
-- `completion_report` is immutable after publish (no in-place updates).
+- `completion_report` immutability is applied on **owner approval**, not on publication. Before owner approval, PM may issue a `completion_report_revision` (new version; prior version archived). Once owner issues an approval record for a `completion_report` version, that version is sealed and no further revisions are permitted. Owner approval of `completion_report` is the sealing event.
 
 ## 6. Governance and Access
 - Artifact writes must pass policy checks for role + scope.

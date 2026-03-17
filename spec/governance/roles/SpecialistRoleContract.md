@@ -39,11 +39,19 @@
 
 ## 6. Escalation and Routing
 - Escalate blockers to `project_manager`.
-- Request technical clarification from `domain_leader`.
+- Request technical clarification from `domain_leader` (activated in M13-WP5) when clarification criteria below are met.
 - Governance/safety concerns must escalate via defined policy channels.
-- Interaction policy:
-  - Specialists are "touchable" by `project_manager` only in first MVP.
-  - `domain_leader` interaction path is declared but disabled for first MVP activation.
+
+**DL clarification criteria:** Specialist may route to `domain_leader` for clarification only when:
+1. Task requirements are internally contradictory.
+2. Required resource is outside task scope as defined by PM.
+3. Tool access required for the task is ambiguous or undocumented.
+
+Specialist must first mark task as `clarification_needed` before routing to DL. DL responds within the same trace. If DL cannot resolve, DL escalates to PM. Specialist does not block a task without first requesting clarification.
+
+Interaction policy:
+
+- `project_manager` dispatches Specialist agents; `domain_leader` may interact with Specialist via governed review and clarification paths (activated in M13-WP5).
 
 ## 7. Runtime Interfaces
 - `spec/orchestration/control/TaskOrchestrator.md`

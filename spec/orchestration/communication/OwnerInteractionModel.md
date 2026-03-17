@@ -59,7 +59,7 @@ MVP v1 governance posture:
 
 MVP v2 active profile (supersedes v1 profile above):
 - `secretary` is active as an institutional front-desk agent: advisory-only, handles intent triage, routing assistance, and daily summaries. Activated in M11.
-- `cso` is active as a real advisory governance gate enforced by live OPA policy evaluation. Activated in M12 (after OPA wiring and role self-assertion fix are complete).
+- `cso` (Chief Strategy Officer) is active as a portfolio strategy advisor: reviews CWO proposals for strategic alignment, provides cross-project insight and advisory opinions. No OPA dependency. Routes through governance channel. Activated in M13-WP7.
 - `domain_leader` is active as a backend-routed virtual agent scoped to project context. It is NOT a standalone Discord bot identity. Activated in M13 (after project-space binding is in place).
 - Allowed owner direct messages (v2): `administrator`, `auditor`, `ceo`, `cwo`, `cso`, `secretary`.
 - `leadership_council` (v2): `owner`, `administrator`, `auditor`, `ceo`, `cwo`, `cso`, `secretary`
@@ -76,7 +76,7 @@ MVP v2 governance posture:
 - `domain_leader` responds only through PM escalation or governed review paths; it is not a default channel participant.
 - Free-text and compact command interaction replaces JSON-shaped daily use. See `OwnerInteractionGrammar.md`.
 - Agent loop controls (hop limits, pair-round caps) are enforced per trace. See `AgentLoopControls.md`.
-- All governance prerequisites for role activation (OPA wiring, role self-assertion fix) MUST be satisfied before the v2 active profile is treated as live.
+- Governance prerequisites for role activation: `domain_leader` requires project-space binding (M13-WP3); `cso` requires M13-WP7 completion (no OPA dependency). OPA wiring is a prerequisite for `domain_leader` only.
 
 ## 3. Message Types
 - `command`

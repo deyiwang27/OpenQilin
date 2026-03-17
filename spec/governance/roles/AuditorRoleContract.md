@@ -43,6 +43,8 @@
 - Direct escalation path: `auditor -> owner`.
 - Notify `ceo` on governance and budget enforcement actions.
 - Severe violations require immediate escalation with immutable evidence.
+- PM violation bypass (ESC-008): if `project_manager` is the source of a behavioral violation, Auditor escalates directly to `owner` without routing through PM or any agent in PM's chain.
+- Auditor accountability: owner may issue `auditor_override` to clear a behavioral flag; Auditor must record the override in `audit_events` with `overridden_by: owner`; Auditor may not reissue the same finding for the same task/agent without new evidence.
 
 ## 7. Runtime Interfaces
 - `spec/governance/architecture/EscalationModel.md`
@@ -54,7 +56,7 @@
 - `GOV-001`
 - `BUD-001`, `BUD-002`
 - `AUD-001`
-- `ESC-001`, `ESC-002`
+- `ESC-001`, `ESC-002`, `ESC-008`
 
 ## 9. Conformance Tests
 - Auditor cannot issue execution commands.

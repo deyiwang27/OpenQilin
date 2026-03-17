@@ -15,7 +15,7 @@ from openqilin.control_plane.identity.principal_resolver import (
     PrincipalResolutionError,
     resolve_principal,
 )
-from openqilin.policy_runtime_integration.client import InMemoryPolicyRuntimeClient
+from openqilin.policy_runtime_integration.client import PolicyRuntimeClient
 from openqilin.policy_runtime_integration.fail_closed import evaluate_with_fail_closed
 from openqilin.policy_runtime_integration.models import PolicyEvaluationInput
 from openqilin.control_plane.schemas.queries import (
@@ -76,7 +76,7 @@ def search_project_artifacts(
     project_id: str,
     payload: ArtifactSearchRequest,
     retrieval_service: RetrievalQueryService = Depends(get_retrieval_query_service),
-    policy_runtime_client: InMemoryPolicyRuntimeClient = Depends(get_policy_runtime_client),
+    policy_runtime_client: PolicyRuntimeClient = Depends(get_policy_runtime_client),
     trace_id_header: Annotated[str | None, Header(alias="X-Trace-Id")] = None,
     external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
     external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,

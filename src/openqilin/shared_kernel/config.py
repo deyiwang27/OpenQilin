@@ -47,6 +47,17 @@ class RuntimeSettings(BaseSettings):
     discord_response_chunk_size_chars: int = 1900
     discord_response_retry_attempts: int = 2
     discord_response_retry_base_delay_seconds: float = 0.5
+    opa_url: str = (
+        ""  # Empty = use InMemory client (local/test). Set to http://opa:8181 in compose.
+    )
+    database_url: str = (
+        ""  # Empty = use InMemory repos (local/test). Set to postgresql+psycopg://... in compose.
+    )
+    redis_url: str = ""  # Empty = use InMemory idempotency store (local/test). Set to redis://redis:6379 in compose.
+    idempotency_ttl_seconds: int = 86400  # TTL for idempotency keys in Redis (default: 24 hours).
+    otlp_endpoint: str = (
+        ""  # Empty = no OTel export (local/test). Set to http://otel_collector:4317 in compose.
+    )
 
     @property
     def system_root_path(self) -> Path:

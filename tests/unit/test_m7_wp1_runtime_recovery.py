@@ -54,7 +54,7 @@ def test_startup_recovery_rehydrates_task_state_and_ingress_idempotency(
     assert report.restored_task_count == 1
     assert report.restored_terminal_task_count == 1
     assert report.reconstructed_ingress_claims == 1
-    assert report.institutional_agent_count == 4
+    assert report.institutional_agent_count == 5  # administrator, auditor, ceo, cwo, cso
 
     replay = second.admission_service.admit_owner_command(envelope)
     assert replay.replayed is True
@@ -69,4 +69,4 @@ def test_startup_recovery_bootstraps_institutional_agents(monkeypatch, tmp_path)
     services = build_runtime_services()
     roles = tuple(sorted(agent.role for agent in services.agent_registry_repo.list_agents()))
 
-    assert roles == ("administrator", "auditor", "ceo", "cwo")
+    assert roles == ("administrator", "auditor", "ceo", "cso", "cwo")

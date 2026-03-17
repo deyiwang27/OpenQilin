@@ -31,6 +31,7 @@ def _build_notifier_and_task() -> tuple[CommunicationOutcomeNotifier, str]:
     envelope = validate_owner_command_envelope(payload=payload, principal=principal)
     runtime_state_repo = InMemoryRuntimeStateRepository()
     task = runtime_state_repo.create_task_from_envelope(envelope)
+    runtime_state_repo.update_task_status(task.task_id, "authorized")
     runtime_state_repo.update_task_status(
         task.task_id,
         "dispatched",
