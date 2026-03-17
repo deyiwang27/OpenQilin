@@ -180,7 +180,7 @@ Adopt LangGraph as the real orchestration engine, replacing the linear HTTP-hand
 - [ ] Implement `DomainLeaderAgent.handle_escalation(request)` — receives PM escalation; produces domain response; does NOT reply directly to Discord channel
 - [ ] Implement `DomainLeaderAgent.review_specialist_output(task_id, output)` — DL `review: allow` authority; assesses specialist output for correctness/quality; returns review outcome with rework recommendations if needed (spec §3)
 - [ ] Implement `EscalationHandler` — PM calls DL; DL produces `DLResponse`; PM synthesizes response for channel reply
-- [ ] Wire DL → CWO material domain risk escalation (spec §6): when unresolved domain risk is identified, emit escalation event toward CWO through project governance path (EscalationModel operational coordination failure chain)
+- [ ] Wire DL → PM material domain risk escalation (spec §6): when domain risk cannot be resolved, DL escalates to PM; PM is responsible for further escalation to CWO through the project governance path (EscalationModel: "specialist → domain_leader → project_manager → cwo → ceo"); DL does not route directly to CWO
 - [ ] Wire Specialist → DL technical clarification path: `DomainLeaderAgent.handle_clarification_request(specialist_id, question, task_id)` — DL spec §6 declares this path active in MVP-v2; response returned to Specialist via PM synthesis (not direct)
 - [ ] Bind DL to project context: DL always requires `project_id` in request; rejected without it
 - [ ] Enforce `command: deny` for DL — DL cannot issue commands to specialists directly; all specialist interactions must route through PM
@@ -202,7 +202,7 @@ Adopt LangGraph as the real orchestration engine, replacing the linear HTTP-hand
 - [ ] DL invocation without `project_id` is rejected
 - [ ] DL not accessible via direct owner message or DM
 - [ ] DL specialist output review returns structured review outcome with rework recommendations when quality fails
-- [ ] DL material domain risk escalation emits escalation event toward CWO governance path
+- [ ] DL material domain risk escalation routes to PM (not directly to CWO); PM is accountable for further escalation to CWO
 - [ ] DL command=deny enforced: DL cannot dispatch tasks directly to specialists
 - [ ] Specialist → DL clarification request returns DL response via PM synthesis
 
