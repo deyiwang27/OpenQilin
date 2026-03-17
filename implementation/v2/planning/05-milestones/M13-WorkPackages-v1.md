@@ -1,4 +1,4 @@
-# M13 Work Packages — Project Space Binding, Routing, and Orchestration Foundation
+# M13 Work Packages — Project Space Binding, Routing, Orchestration, and Agent Spec Fixes
 
 Milestone: `M13`
 Status: `planned`
@@ -9,7 +9,7 @@ Design ref: `design/v2/architecture/M13-ProjectSpaceAndOrchestrationModuleDesign
 
 ## Milestone Goal
 
-Adopt LangGraph as the real orchestration engine, replacing the linear HTTP-handler call chain. Introduce project-space binding and PM-default routing. Activate Domain Leader as a backend-routed virtual agent. Fix the snapshot split-brain bug. Begin real sandbox enforcement.
+Adopt LangGraph as the real orchestration engine, replacing the linear HTTP-handler call chain. Introduce project-space binding and PM-default routing. Activate Domain Leader as a backend-routed virtual agent. Fix the snapshot split-brain bug. Begin real sandbox enforcement. Fix the CSO implementation (M12 built CSO as a generic governance gate; spec defines CSO as Chief Strategy Officer). Align Secretary with its spec contract (registry registration, runtime data access).
 
 ---
 
@@ -172,21 +172,28 @@ Adopt LangGraph as the real orchestration engine, replacing the linear HTTP-hand
 
 **Design ref:** `design/v2/architecture/M13-ProjectSpaceAndOrchestrationModuleDesign-v2.md §3`
 
-**Entry criteria:** WP M13-01 (LangGraph active), WP M13-03 (project-space routing active), M12 OPA wired.
+**Entry criteria:** WP M13-01 (LangGraph active), WP M13-03 (project-space routing active), WP M13-07 (CSO rewritten as Chief Strategy Officer — required so DL escalation path does not inherit the broken CSO governance gate), M12 OPA wired.
 
 ### Tasks
 
 - [ ] Create `src/openqilin/agents/domain_leader/` package: `agent.py`, `escalation_handler.py`, `prompts.py`, `models.py`
 - [ ] Implement `DomainLeaderAgent.handle_escalation(request)` — receives PM escalation; produces domain response; does NOT reply directly to Discord channel
+- [ ] Implement `DomainLeaderAgent.review_specialist_output(task_id, output)` — DL `review: allow` authority; assesses specialist output for correctness/quality; returns review outcome with rework recommendations if needed (spec §3)
 - [ ] Implement `EscalationHandler` — PM calls DL; DL produces `DLResponse`; PM synthesizes response for channel reply
+- [ ] Wire DL → CWO material domain risk escalation (spec §6): when unresolved domain risk is identified, emit escalation event toward CWO through project governance path (EscalationModel operational coordination failure chain)
+- [ ] Wire Specialist → DL technical clarification path: `DomainLeaderAgent.handle_clarification_request(specialist_id, question, task_id)` — DL spec §6 declares this path active in MVP-v2; response returned to Specialist via PM synthesis (not direct)
 - [ ] Bind DL to project context: DL always requires `project_id` in request; rejected without it
+- [ ] Enforce `command: deny` for DL — DL cannot issue commands to specialists directly; all specialist interactions must route through PM
 - [ ] Confirm DL is NOT a default Discord channel participant; NOT accessible by direct owner mention (no DM surface)
 - [ ] Add integration test: PM escalates to DL; DL response returned to PM; channel receives PM-synthesized reply (not raw DL response)
+- [ ] Add unit test: DL `command: deny` — attempt to dispatch task to specialist from DL is rejected
 
 ### Outputs
 
 - `DomainLeaderAgent` active as backend-routed virtual agent
 - DL surfaced only through PM escalation path
+- DL reviews specialist outputs (review=allow) and escalates domain risk to CWO
+- Specialist → DL clarification path wired
 
 ### Done criteria
 
@@ -194,6 +201,10 @@ Adopt LangGraph as the real orchestration engine, replacing the linear HTTP-hand
 - [ ] DL response NOT sent directly to Discord channel
 - [ ] DL invocation without `project_id` is rejected
 - [ ] DL not accessible via direct owner message or DM
+- [ ] DL specialist output review returns structured review outcome with rework recommendations when quality fails
+- [ ] DL material domain risk escalation emits escalation event toward CWO governance path
+- [ ] DL command=deny enforced: DL cannot dispatch tasks directly to specialists
+- [ ] Specialist → DL clarification request returns DL response via PM synthesis
 
 ---
 
@@ -226,14 +237,111 @@ Adopt LangGraph as the real orchestration engine, replacing the linear HTTP-hand
 
 ---
 
+---
+
+## WP M13-07 — CSO Rewrite: Chief Strategy Officer
+
+**Goal:** Rewrite `CSOAgent` to match its spec contract (`spec/governance/roles/CsoRoleContract.md`): portfolio strategy advisor, CWO proposal reviewer, cross-project risk analyst. Remove the erroneous OPA governance gate and `assert_opa_client_required` startup guard introduced in M12-WP8.
+
+**Design ref:** `spec/governance/roles/CsoRoleContract.md`, `spec/governance/architecture/DecisionReviewGates.md`
+
+**Entry criteria:** M12 complete. This WP corrects the M12-WP8 implementation.
+
+### Tasks
+
+- [ ] Remove `assert_opa_client_required` import and call from `src/openqilin/control_plane/api/dependencies.py`; remove `_cso_opa_required` flag; CSO no longer requires OPA
+- [ ] Rewrite `src/openqilin/agents/cso/models.py`:
+  - Replace `principal_role: str` with `proposal_id: str | None` and `portfolio_context: str | None`
+  - Replace `CSOPolicyError` with `CSOConflictFlag` (not an exception — a structured advisory outcome, not a gate block)
+  - Rename `governance_note` → `strategic_note` on `CSOResponse`
+- [ ] Rewrite `src/openqilin/agents/cso/prompts.py`:
+  - `STRATEGIC_SYSTEM_PROMPT` — CSO as portfolio strategist and long-horizon risk analyst; reviews for strategic alignment and opportunity cost
+  - `PROPOSAL_REVIEW_TEMPLATE` — when `proposal_id` present; inputs: proposal summary, portfolio context; outputs: strategic review outcome (`Aligned` / `Needs Revision` / `Strategic Conflict`) with rationale
+  - `CROSS_PROJECT_ADVISORY_TEMPLATE` — for `DISCUSSION`/`QUERY` intents without a specific proposal; provides cross-project insight and strategic perspective
+- [ ] Rewrite `src/openqilin/agents/cso/agent.py`:
+  - Remove all OPA evaluation (`_evaluate_governance`, `PolicyEvaluationInput`, `policy_client` dependency)
+  - `CSOAgent.__init__(self, llm_gateway, project_artifact_repo, governance_repo)` — takes data access repos instead of policy client
+  - `handle(request: CSORequest) -> CSOResponse`: for all intent classes; reads portfolio context from repos when `proposal_id` present; generates strategic advisory; sets `CSOConflictFlag` when strategic conflict detected
+  - `_read_portfolio_context(proposal_id, project_id)` — reads relevant project artifacts, cross-project metrics, and task status to inform advisory
+  - Returns `CSOResponse` with `advisory_text`, `strategic_note`, optional `conflict_flag: CSOConflictFlag | None`
+  - On `Strategic Conflict`: escalate to `ceo` (primary path); on material strategic risk, route escalation event to `owner` per governance policy (EscalationModel strategic chain: `cso → ceo → owner`)
+- [ ] Implement `CSOReviewRecord` write: after every proposal review, persist a governance record to `governance_artifacts` table with `proposal_id`, `review_outcome`, `cso_advisory_text`, `trace_id`, `created_at` — required by GATE-006 before proposal can advance to CEO+CWO review
+- [ ] Remove `assert_opa_client_required` function from `agent.py`
+- [ ] Update `dependencies.py`: `CSOAgent(llm_gateway=llm_gateway, project_artifact_repo=project_artifact_repo, governance_repo=governance_repo)`
+- [ ] Update unit tests in `tests/unit/test_m12_wp8_cso_activation.py` to reflect new interface; remove OPA guard tests; add strategic advisory and proposal review tests; add GATE-006 governance record persistence test
+
+### Outputs
+
+- `CSOAgent` is a strategic advisor; no OPA dependency
+- Proposal review returns structured `CSOConflictFlag` when strategic conflict detected
+- CSO reads portfolio/proposal artifacts to inform advisory
+- GATE-006 compliance: CSO review outcome persisted to governance record before proposal advances
+
+### Done criteria
+
+- [ ] `CSOAgent` has no reference to `PolicyRuntimeClient` or `OPAPolicyRuntimeClient`
+- [ ] CSO handles `proposal_id` in request — reads proposal artifacts and returns `Aligned`/`Needs Revision`/`Strategic Conflict` outcome
+- [ ] CSO review outcome persisted to `governance_artifacts` with `trace_id` before proposal advances (GATE-006)
+- [ ] `Strategic Conflict` triggers escalation event to CEO; material strategic risk routes escalation to owner
+- [ ] CSO handles cross-project advisory requests without proposal context
+- [ ] All unit tests pass; no OPA mock required to test CSO
+
+---
+
+## WP M13-08 — Secretary and Routing Spec Alignment
+
+**Goal:** Register Secretary in `_INSTITUTIONAL_ROLES`; add CSO as a routing target in executive and leadership_council channels; add Secretary runtime data access interfaces (project snapshot, task context).
+
+**Design ref:** `spec/governance/roles/SecretaryRoleContract.md §7`, `spec/orchestration/communication/OwnerInteractionModel.md §2.1`
+
+**Entry criteria:** WP M13-07 complete (CSO has stable interface before it is added to routing).
+
+### Tasks
+
+- [ ] Add `"secretary"` to `_INSTITUTIONAL_ROLES` in `src/openqilin/data_access/repositories/agent_registry.py`
+- [ ] Add `"secretary"` to `_INSTITUTIONAL_ROLES` in `src/openqilin/data_access/repositories/postgres/agent_registry_repository.py`
+- [ ] Update `src/openqilin/control_plane/grammar/free_text_router.py`: in `executive` and `leadership_council` channels, route `MUTATION`/`ADMIN` intents to `cso`; keep `DISCUSSION`/`QUERY` routed to `secretary` (CSO reviews governed actions; Secretary handles general queries)
+- [ ] Implement `src/openqilin/agents/secretary/data_access.py` — `SecretaryDataAccessService`:
+  - `get_project_snapshot(project_id) -> ProjectSnapshot | None` — reads project status, task counts, blockers from PostgreSQL
+  - `get_task_runtime_context(task_id) -> TaskRuntimeContext | None` — reads task state, logs, outcome
+  - `get_dashboard_summary() -> DashboardSummary` — reads alert counts and key metrics for status interpretation
+- [ ] Wire `SecretaryDataAccessService` into `SecretaryAgent.__init__`; use it in `_generate_advisory()` to include live project/task context in LLM prompt when relevant
+- [ ] Update `dependencies.py`: `SecretaryAgent(llm_gateway=llm_gateway, data_access=secretary_data_access)`
+- [ ] Add `policy_version`, `policy_hash`, and `rule_ids` fields to `SecretaryResponse` (spec §7: every interaction must include these) — wire with `policy_version="v2"`, `policy_hash="secretary-advisory-v1"`, `rule_ids=("AUTH-004", "AUTH-005")`
+- [ ] Add authority-profile validation in `bootstrap_institutional_agents()` for `secretary` registration: validate that secretary is registered with advisory-only capability profile; reject if non-advisory authority or mutating data capabilities requested (AgentRegistry spec §3)
+- [ ] Update `dependencies.py`: `SecretaryAgent(llm_gateway=llm_gateway, data_access=secretary_data_access)`
+- [ ] Add unit tests for routing table changes (MUTATION in executive → cso; DISCUSSION in executive → secretary)
+- [ ] Add unit tests for data access (project snapshot enriches advisory context)
+- [ ] Add unit test: secretary registration with command capability → rejected by registry bootstrap
+
+### Outputs
+
+- Secretary registered as an institutional agent with `AgentRecord` in the registry
+- CSO reachable from executive and leadership_council channels for governed actions
+- Secretary advisory responses include live project/task context from PostgreSQL
+- `SecretaryResponse` includes full audit metadata (`policy_version`, `policy_hash`, `rule_ids`)
+
+### Done criteria
+
+- [ ] `bootstrap_institutional_agents()` creates a `secretary` record
+- [ ] MUTATION intent in executive/leadership_council channel → routed to `cso`
+- [ ] DISCUSSION/QUERY intent in executive/leadership_council channel → routed to `secretary`
+- [ ] Secretary advisory includes live project status when `project_id` context is available
+- [ ] `SecretaryResponse` includes `policy_version`, `policy_hash`, and `rule_ids` fields (AUTH-004, AUTH-005)
+- [ ] Secretary registration rejected if non-advisory capabilities are requested (AgentRegistry spec §3)
+
+---
+
 ## M13 Exit Criteria
 
-- [ ] All six WPs above are marked done
+- [ ] All eight WPs above are marked done
 - [ ] LangGraph `StateGraph` is the active orchestration engine in production
 - [ ] Project spaces are created automatically; PM-default routing works
 - [ ] Domain Leader active as a backend-routed virtual agent
 - [ ] H-3 snapshot split-brain fixed
 - [ ] Loop caps enforced on all inter-agent hops
+- [ ] CSO rewritten as Chief Strategy Officer; no OPA dependency; portfolio data access wired
+- [ ] Secretary registered in agent registry; CSO routing active; Secretary data access wired
 - [ ] No `InMemory` placeholder used in any new orchestration path
 
 ## References

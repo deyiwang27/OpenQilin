@@ -1,6 +1,6 @@
 # OpenQilin MVP-v2 Milestone Plan
 
-Date: `2026-03-15`
+Date: `2026-03-16`
 Status: `active`
 Supersedes: `00-direction/TemporaryMvpPlan-v2.md`
 
@@ -18,12 +18,13 @@ Full success bar: `00-direction/MvpV2SuccessCriteria-v1.md`
 
 | ID | Milestone | Status | Gate (entry) | Exit criteria |
 |---|---|---|---|---|
-| M11 | Discord Grammar and Secretary Activation | `planned` | M10 complete | Free-text + `/oq` command UX live; Secretary active; C-7 fixed |
-| M12 | Infrastructure Wiring, Security Hardening, CSO Activation | `planned` | M11 complete | OPA, PostgreSQL, Redis, OTel all wired; all C/H security fixes applied; CSO active |
-| M13 | Project Space Binding, Routing, and Orchestration Foundation | `planned` | M12 complete | LangGraph active; project spaces bound; DL virtual agent active; H-3 fixed |
-| M14 | Budget Persistence, Real Cost Model, and Grafana Dashboard | `planned` | M13 complete | PostgreSQL budget ledger live; token cost model active; Grafana dashboard provisioned with 6 panels |
-| M15 | Onboarding, Diagnostics, and Runtime Polish | `planned` | M14 complete | RuntimeSettings singleton; conversation persistence; idempotency namespaced; doctor CLI working |
-| M16 | Open-Source and Sponsorship Readiness | `planned` | M15 complete | README, demo, roadmap, website, contributor path, sponsorship assets all published |
+| M11 | Discord Grammar and Secretary Activation | `done` | M10 complete | Free-text + `/oq` command UX live; Secretary active; C-7 fixed |
+| M12 | Infrastructure Wiring, Security Hardening, CSO Activation | `done` | M11 complete | OPA, PostgreSQL, Redis, OTel all wired; all C/H security fixes applied; CSO wired |
+| M13 | Project Space Binding, Routing, Orchestration, and Agent Spec Fixes | `planned` | M12 complete | LangGraph active; project spaces bound; DL virtual agent active; H-3 fixed; CSO rewritten as Chief Strategy Officer; Secretary spec aligned |
+| M14 | Executive and Operational Agent Activation | `planned` | M13 complete | PM, CEO, CWO, Auditor, Administrator, Specialist agents active; DecisionReviewGates flow wired |
+| M15 | Budget Persistence, Real Cost Model, and Grafana Dashboard | `planned` | M14 complete | PostgreSQL budget ledger live; token cost model active; Grafana dashboard provisioned with 6 panels |
+| M16 | Onboarding, Diagnostics, and Runtime Polish | `planned` | M15 complete | RuntimeSettings singleton; conversation persistence; idempotency namespaced; doctor CLI working |
+| M17 | Open-Source and Sponsorship Readiness | `planned` | M16 complete | README, demo, roadmap, website, contributor path, sponsorship assets all published |
 
 ---
 
@@ -33,13 +34,15 @@ Full success bar: `00-direction/MvpV2SuccessCriteria-v1.md`
 
 **M12 pulled forward (before agent features):** All subsequent milestones depend on real infrastructure. OPA, PostgreSQL, and OTel must be live before new agent roles can claim real governance authority. Role self-assertion (C-6) must be fixed before CSO or Secretary are trusted with enforcement. Infrastructure must be honest before dashboard panels have real data.
 
-**M13 after M12:** LangGraph orchestration and project-space automation require real PostgreSQL task state. Domain Leader escalation flows require real policy evaluation from M12 OPA.
+**M13 after M12:** LangGraph orchestration and project-space automation require real PostgreSQL task state. Domain Leader escalation flows require real policy evaluation from M12 OPA. M13 also fixes the CSO implementation (wrong domain in M12) and aligns Secretary spec gaps before agent activation in M14.
 
-**M14 after M13:** Grafana budget and cost panels need real PostgreSQL budget data. Budget obligation enforcement requires LangGraph nodes from M13.
+**M14 after M13:** All executive and operational agents (PM, CEO, CWO, Auditor, Administrator, Specialist) require LangGraph orchestration (M13-WP1), project-space routing (M13-WP3), and a correctly implemented CSO (M13-WP7) before the DecisionReviewGates approval flow and workforce lifecycle can be wired.
 
-**M15 after M14:** Runtime polish is low-risk cleanup with all infrastructure stable. RuntimeSettings singleton and conversation persistence are safe to ship last.
+**M15 after M14:** Grafana budget and cost panels need real PostgreSQL budget data and real task execution from M14 agents. Budget obligation enforcement requires LangGraph nodes from M13.
 
-**M16 after M15:** Public-readiness requires a complete, polished runtime to demo.
+**M16 after M15:** Runtime polish is low-risk cleanup with all infrastructure and agents stable. RuntimeSettings singleton and conversation persistence are safe to ship last.
+
+**M17 after M16:** Public-readiness requires a complete, polished runtime to demo.
 
 ---
 
@@ -49,9 +52,9 @@ These apply to every milestone:
 
 | Constraint | Rule |
 |---|---|
-| No new roles on mock policy | CSO and DL MUST NOT be activated until `OPAPolicyRuntimeClient` is the active policy client (M12) |
+| No new roles on mock policy | DL MUST NOT be activated until `OPAPolicyRuntimeClient` is active (M12). CSO is advisory (no OPA needed); CEO/CWO/PM/Auditor/Administrator/Specialist activated in M14 after real infrastructure is stable. |
 | Infrastructure before features | Grafana panels must have real PostgreSQL data; budget panels must have real budget ledger |
-| LangGraph before multi-step flows | CSO policy gate, DL escalation, and multi-hop approvals require LangGraph from M13 |
+| LangGraph before multi-step flows | DL escalation, DecisionReviewGates approval flow, and multi-hop agent interactions require LangGraph from M13 |
 | Fail-closed default | Every new code path defaults to deny/block/error on unknown or error state |
 | Two surfaces only | Discord (interaction) and Grafana (visualization) — no third UI surface in MVP-v2 |
 | Durable-write-first | Governance-critical events written to PostgreSQL before OTel export; never the reverse |
@@ -97,6 +100,7 @@ All bug fixes from the 2026-03-15 architectural review, mapped to milestone:
 | M14 | `M14-WorkPackages-v1.md` |
 | M15 | `M15-WorkPackages-v1.md` |
 | M16 | `M16-WorkPackages-v1.md` |
+| M17 | `M17-WorkPackages-v1.md` |
 
 ---
 
