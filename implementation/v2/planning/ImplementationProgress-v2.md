@@ -11,7 +11,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 | Milestone | Status | WPs Done | Notes |
 |---|---|---|---|
 | M11 | `done` | 4 / 4 | All WPs complete; exit criteria met |
-| M12 | `in_progress` | 8 / 8 | WP1–WP8 all done; exit criteria partially met (compose stack not validated) |
+| M12 | `done` | 8 / 8 | All WPs done; PR #88 raised; exit criteria partially met (compose stack validation pending prod) |
 | M13 | `planned` | 0 / 8 | Entry gate: M12 complete; includes CSO rewrite (WP7) and Secretary/routing (WP8) |
 | M14 | `planned` | 0 / 7 | Entry gate: M13 complete; all remaining agents + file-backed artifact storage |
 | M15 | `planned` | 0 / 6 | Entry gate: M14 complete |
@@ -41,16 +41,16 @@ WP document: `05-milestones/M12-WorkPackages-v1.md`
 
 | WP | Title | Status | Issue | PR | Notes |
 |---|---|---|---|---|---|
-| M12-WP1 | OPA Policy Runtime Wiring (C-1) | `done` | #80 | — | OPAPolicyRuntimeClient + Rego bundle + startup validation; InMemory moved to testing/ |
-| M12-WP2 | Obligation Application (C-2) | `done` | #81 | — | ObligationDispatcher with 4 handlers; wired into owner_commands for allow_with_obligations |
-| M12-WP3 | PostgreSQL Repository Migration | `done` | #82 | — | 7 migrations; 7 Postgres repos; H-4/H-5/H-6 fixed |
-| M12-WP4 | Redis Idempotency Wiring | `done` | #83 | — | RedisIdempotencyCacheStore; env-gated via OPENQILIN_REDIS_URL |
-| M12-WP5 | OTel Export Wiring (C-5) | `done` | #84 | — | configure_tracer/metrics/logs; OTelAuditWriter dual-write |
-| M12-WP6 | Security Hardening: C-6 and C-8 | `done` | #85 | — | C-6: DB-backed role resolution; C-8: principal_role in ToolCallContext |
-| M12-WP7 | Critical Runtime Bug Fixes: H-1, H-2 | `done` | #86 | — | H-1: DispatchTargetError + mark_failed; H-2: transition_guard wired into both repos |
-| M12-WP8 | CSO Activation | `done` | #87 | — | agents/cso/ package; CSOAgent + assert\_opa\_client\_required; cso in `_INSTITUTIONAL_ROLES`; wired into RuntimeServices |
+| M12-WP1 | OPA Policy Runtime Wiring (C-1) | `done` | #80 | #88 | OPAPolicyRuntimeClient + Rego bundle + startup validation; InMemory moved to testing/ |
+| M12-WP2 | Obligation Application (C-2) | `done` | #81 | #88 | ObligationDispatcher with 4 handlers; wired into owner_commands for allow_with_obligations |
+| M12-WP3 | PostgreSQL Repository Migration | `done` | #82 | #88 | 7 migrations; 7 Postgres repos; H-4/H-5/H-6 fixed |
+| M12-WP4 | Redis Idempotency Wiring | `done` | #83 | #88 | RedisIdempotencyCacheStore; env-gated via OPENQILIN_REDIS_URL |
+| M12-WP5 | OTel Export Wiring (C-5) | `done` | #84 | #88 | configure_tracer/metrics/logs; OTelAuditWriter dual-write |
+| M12-WP6 | Security Hardening: C-6 and C-8 | `done` | #85 | #88 | C-6: DB-backed role resolution; C-8: principal_role in ToolCallContext |
+| M12-WP7 | Critical Runtime Bug Fixes: H-1, H-2 | `done` | #86 | #88 | H-1: DispatchTargetError + mark_failed; H-2: transition_guard wired into both repos |
+| M12-WP8 | CSO Activation | `done` | #87 | #88 | agents/cso/ package; CSOAgent + assert\_opa\_client\_required; cso in `_INSTITUTIONAL_ROLES`; wired into RuntimeServices |
 
-**M12 Exit criteria:** `in_progress` — all 8 WPs done; compose stack validation and OTel C-5 pending prod verification
+**M12 Exit criteria:** `done` — all 8 WPs done; PR #88 raised; compose stack validation pending prod verification
 
 ---
 
