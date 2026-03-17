@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 
+from openqilin.apps.orchestrator_worker import drain_queued_tasks
 from openqilin.control_plane.api.app import create_control_plane_app
 from openqilin.testing.owner_command import (
     build_owner_command_headers,
@@ -27,8 +28,12 @@ def test_governed_ingress_communication_send_ack_records_ledger() -> None:
     body = response.json()
     assert response.status_code == 202
     assert body["status"] == "accepted"
+    task_id = body["data"]["task_id"]
+
+    drain_queued_tasks(app.state.runtime_services)
+
     records = app.state.runtime_services.task_dispatch_service.list_communication_message_records(
-        task_id=body["data"]["task_id"]
+        task_id=task_id
     )
     assert len(records) == 1
     record = records[0]
@@ -60,13 +65,19 @@ def test_governed_ingress_communication_send_nack_records_ledger() -> None:
     )
 
     body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "denied"
-    assert body["error"]["code"] == "acp_contract_rejected"
-    assert body["error"]["source_component"] == "communication_gateway"
-    assert body["error"]["details"]["retryable"] == "false"
+    assert response.status_code == 202
+    assert body["status"] == "accepted"
+    task_id = body["data"]["task_id"]
+
+    drain_queued_tasks(app.state.runtime_services)
+
+    task_body = client.get(f"/v1/tasks/{task_id}").json()
+    assert task_body["status"] == "blocked"
+    assert task_body["error_code"] == "acp_contract_rejected"
+    assert task_body["outcome_source"] == "dispatch_communication_gateway"
+
     records = app.state.runtime_services.task_dispatch_service.list_communication_message_records(
-        task_id=body["error"]["details"]["task_id"]
+        task_id=task_id
     )
     assert len(records) == 1
     record = records[0]

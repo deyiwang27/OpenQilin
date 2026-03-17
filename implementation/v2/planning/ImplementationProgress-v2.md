@@ -60,7 +60,7 @@ WP document: `05-milestones/M13-WorkPackages-v1.md`
 
 | WP | Title | Status | Issue | PR | Notes |
 |---|---|---|---|---|---|
-| M13-WP1 | LangGraph Orchestration Adoption (C-9) | `pending` | #89 | — | — |
+| M13-WP1 | LangGraph Orchestration Adoption (C-9) | `done` | #89 | — | 554 tests pass; all static checks clean |
 | M13-WP2 | Loop Controls Enforcement | `pending` | #90 | — | — |
 | M13-WP3 | Project Space Binding and Routing | `pending` | #91 | — | — |
 | M13-WP4 | H-3 Fix: Snapshot Split-Brain | `pending` | #92 | — | — |
@@ -160,7 +160,7 @@ All 20 architectural review findings from `00-direction/ArchitecturalReviewFindi
 | C-6 | Role self-assertion from header | M12 | M12-WP6 | `done` |
 | C-7 | `chat_class` KeyError → 500 | M11 | M11-WP2 | `done` |
 | C-8 | Write tool access check inverted | M12 | M12-WP6 | `done` |
-| C-9 | LangGraph not used; linear HTTP handler | M13 | M13-WP1 | `pending` |
+| C-9 | LangGraph not used; linear HTTP handler | M13 | M13-WP1 | `resolved` |
 | C-10 | Sandbox enforcement empty placeholder | M13 | M13-WP6 | `pending` |
 | H-1 | Fail-open dispatch fallback | M12 | M12-WP7 | `done` |
 | H-2 | No state transition guard | M12 | M12-WP7 | `done` |

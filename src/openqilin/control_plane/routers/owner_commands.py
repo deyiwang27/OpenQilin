@@ -8,17 +8,12 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, Header, Request, status
 from fastapi.responses import JSONResponse
 
-from openqilin.budget_runtime.reservation_service import BudgetReservationService
 from openqilin.control_plane.api.dependencies import (
     get_admission_service,
     get_audit_writer,
-    get_budget_reservation_service,
     get_governance_repository,
     get_identity_channel_repository,
     get_metric_recorder,
-    get_policy_runtime_client,
-    get_runtime_state_repository,
-    get_task_dispatch_service,
     get_tracer,
 )
 from openqilin.control_plane.identity.connector_security import (
@@ -43,28 +38,15 @@ from openqilin.control_plane.schemas.owner_commands import (
     OwnerCommandRequest,
     OwnerCommandResponse,
 )
-from openqilin.data_access.repositories.runtime_state import (
-    InMemoryRuntimeStateRepository,
-    TaskRecord,
-)
+from openqilin.data_access.repositories.runtime_state import TaskRecord
 from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
 from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
 from openqilin.observability.tracing.spans import (
     AUDIT_EMIT_SPAN,
-    BUDGET_RESERVATION_SPAN,
-    EXECUTION_SANDBOX_SPAN,
     OWNER_COMMAND_INGRESS_SPAN,
-    POLICY_EVALUATION_SPAN,
     TASK_ORCHESTRATION_SPAN,
 )
 from openqilin.observability.tracing.tracer import InMemoryTracer
-from openqilin.policy_runtime_integration.client import PolicyRuntimeClient
-from openqilin.policy_runtime_integration.fail_closed import evaluate_with_fail_closed
-from openqilin.policy_runtime_integration.normalizer import normalize_policy_input
-from openqilin.policy_runtime_integration.obligations import (
-    ObligationContext,
-    ObligationDispatcher,
-)
 from openqilin.task_orchestrator.admission.envelope_validator import (
     EnvelopeValidationError,
     validate_owner_command_envelope,
@@ -74,7 +56,6 @@ from openqilin.task_orchestrator.admission.service import (
     AdmissionService,
 )
 from openqilin.task_orchestrator.dispatch.target_selector import select_dispatch_target
-from openqilin.task_orchestrator.services.task_service import TaskDispatchService
 
 router = APIRouter(prefix="/v1/owner/commands", tags=["owner_commands"])
 
@@ -417,10 +398,6 @@ def submit_owner_command(
     payload: OwnerCommandRequest,
     request: Request,
     admission_service: AdmissionService = Depends(get_admission_service),
-    policy_runtime_client: PolicyRuntimeClient = Depends(get_policy_runtime_client),
-    budget_reservation_service: BudgetReservationService = Depends(get_budget_reservation_service),
-    runtime_state_repo: InMemoryRuntimeStateRepository = Depends(get_runtime_state_repository),
-    task_dispatch_service: TaskDispatchService = Depends(get_task_dispatch_service),
     tracer: InMemoryTracer = Depends(get_tracer),
     audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
     metric_recorder: InMemoryMetricRecorder = Depends(get_metric_recorder),
@@ -728,439 +705,24 @@ def submit_owner_command(
             )
             return _replayed_response(admission_result.task)
 
-        with tracer.start_span(
-            trace_id=trace_id,
-            name=POLICY_EVALUATION_SPAN,
-            attributes={"stage": "policy_evaluation"},
-        ) as policy_span:
-            policy_span.set_attribute("correlation.task_id", task_id)
-            policy_input = normalize_policy_input(admission_result.task)
-            policy_outcome = evaluate_with_fail_closed(policy_input, policy_runtime_client)
-        policy_decision = (
-            policy_outcome.policy_result.decision
-            if policy_outcome.policy_result is not None
-            else "error"
-        )
-        policy_reason = (
-            policy_outcome.policy_result.reason_code
-            if policy_outcome.policy_result is not None
-            else policy_outcome.error_code
-        )
-        policy_version = (
-            policy_outcome.policy_result.policy_version
-            if policy_outcome.policy_result is not None
-            else "policy-version-unknown"
-        )
-        policy_hash = (
-            policy_outcome.policy_result.policy_hash
-            if policy_outcome.policy_result is not None
-            else "policy-hash-unknown"
-        )
-        rule_ids = (
-            list(policy_outcome.policy_result.rule_ids)
-            if policy_outcome.policy_result is not None
-            else []
-        )
-
-        _emit_stage_decision_audit(
-            tracer=tracer,
-            audit_writer=audit_writer,
-            trace_id=trace_id,
-            request_id=request_id,
-            task_id=task_id,
-            principal_id=principal_id,
-            principal_role=admission_result.task.principal_role,
-            stage="policy",
-            decision=policy_decision,
-            source="policy_runtime",
-            reason_code=policy_reason,
-            message=policy_outcome.message,
-            policy_version=policy_version,
-            policy_hash=policy_hash,
-            rule_ids=rule_ids,
-            attributes={
-                "policy_version": policy_version,
-                "policy_hash": policy_hash,
-                "rule_ids": ",".join(rule_ids),
-                "replayed": str(admission_result.replayed).lower(),
-            },
-        )
-
-        if not policy_outcome.allowed:
-            details = {
-                "source": "policy_runtime",
-                "task_id": admission_result.task.task_id,
-                "replayed": str(admission_result.replayed).lower(),
-                "policy_version": policy_version,
-                "policy_hash": policy_hash,
-                "rule_ids": ",".join(rule_ids),
-            }
-            if policy_outcome.policy_result is not None:
-                details["decision"] = policy_outcome.policy_result.decision
-                details["reason_code"] = policy_outcome.policy_result.reason_code
-
-            runtime_state_repo.update_task_status(
-                admission_result.task.task_id,
-                "blocked",
-                outcome_source="policy_runtime",
-                outcome_error_code=policy_outcome.error_code or "policy_blocked",
-                outcome_message=policy_outcome.message,
-                outcome_details=details,
-            )
-            span.set_status("error")
-            span.set_attribute("outcome", "denied")
-            span.set_attribute("source", "policy_runtime")
-            _emit_outcome_observability(
-                tracer=tracer,
-                audit_writer=audit_writer,
-                metric_recorder=metric_recorder,
-                trace_id=trace_id,
-                request_id=request_id,
-                task_id=task_id,
-                principal_id=principal_id,
-                principal_role=admission_result.task.principal_role,
-                source="policy_runtime",
-                outcome="denied",
-                error_code=policy_outcome.error_code or "policy_blocked",
-                message=policy_outcome.message,
-                policy_version=policy_version,
-                policy_hash=policy_hash,
-                rule_ids=rule_ids,
-                attributes={
-                    "decision": policy_decision,
-                    "policy_version": policy_version,
-                    "policy_hash": policy_hash,
-                    "rule_ids": ",".join(rule_ids),
-                },
-            )
-            return _denied_response(
-                status_code=status.HTTP_403_FORBIDDEN,
-                trace_id=trace_id,
-                code=policy_outcome.error_code or "policy_blocked",
-                error_class="authorization_error",
-                message=policy_outcome.message,
-                source_component="policy_engine",
-                details=details,
-                policy_version=policy_version,
-                policy_hash=policy_hash,
-                rule_ids=rule_ids,
-            )
-
-        # M12-WP2: Apply obligations for allow_with_obligations decisions (C-2).
-        if policy_decision == "allow_with_obligations" and policy_outcome.policy_result is not None:
-            obligation_context = ObligationContext(
-                trace_id=trace_id,
-                task_id=task_id,
-                request_id=request_id,
-                principal_id=principal_id,
-                principal_role=admission_result.task.principal_role,
-                action=admission_result.task.command,
-                target=admission_result.task.target,
-                project_id=admission_result.task.project_id,
-                policy_version=policy_version,
-                policy_hash=policy_hash,
-                rule_ids=tuple(rule_ids),
-                audit_writer=audit_writer,
-                runtime_state_repo=runtime_state_repo,
-                budget_reservation_service=budget_reservation_service,
-                task_record=admission_result.task,
-            )
-            obligation_result = ObligationDispatcher().apply(
-                obligations=policy_outcome.policy_result.obligations,
-                context=obligation_context,
-            )
-            if not obligation_result.all_satisfied and obligation_result.blocking_obligation:
-                blocking = obligation_result.blocking_obligation
-                # Task already transitioned to blocked by obligation handler if needed
-                span.set_status("error")
-                span.set_attribute("outcome", "obligation_blocked")
-                return _denied_response(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    trace_id=trace_id,
-                    code=f"obligation_{blocking}_unsatisfied",
-                    error_class="authorization_error",
-                    message=f"obligation '{blocking}' not satisfied — task blocked",
-                    source_component="obligation_dispatcher",
-                    details={
-                        "blocking_obligation": blocking,
-                        "task_id": task_id,
-                        "policy_version": policy_version,
-                    },
-                    policy_version=policy_version,
-                    policy_hash=policy_hash,
-                    rule_ids=rule_ids,
-                )
-
-        runtime_state_repo.update_task_status(
-            admission_result.task.task_id,
-            "authorized",
-            outcome_source="policy_runtime",
-            outcome_error_code=None,
-            outcome_message="policy authorized command",
-            outcome_details={
-                "decision": policy_decision,
-                "policy_version": policy_version,
-                "policy_hash": policy_hash,
-                "rule_ids": ",".join(rule_ids),
-            },
-        )
-
-        with tracer.start_span(
-            trace_id=trace_id,
-            name=BUDGET_RESERVATION_SPAN,
-            attributes={"stage": "budget_reservation"},
-        ) as budget_span:
-            budget_span.set_attribute("correlation.task_id", task_id)
-            budget_outcome = budget_reservation_service.reserve_with_fail_closed(
-                admission_result.task
-            )
-        budget_decision = (
-            budget_outcome.reservation.decision
-            if budget_outcome.reservation is not None
-            else "error"
-        )
-        budget_reason = (
-            budget_outcome.reservation.reason_code
-            if budget_outcome.reservation is not None
-            else budget_outcome.error_code
-        )
-        budget_version = (
-            budget_outcome.reservation.budget_version
-            if budget_outcome.reservation is not None
-            else "budget-version-unknown"
-        )
-
-        _emit_stage_decision_audit(
-            tracer=tracer,
-            audit_writer=audit_writer,
-            trace_id=trace_id,
-            request_id=request_id,
-            task_id=task_id,
-            principal_id=principal_id,
-            principal_role=admission_result.task.principal_role,
-            stage="budget",
-            decision=budget_decision,
-            source="budget_runtime",
-            reason_code=budget_reason,
-            message=budget_outcome.message,
-            policy_version=policy_version,
-            policy_hash=policy_hash,
-            rule_ids=rule_ids,
-            attributes={
-                "budget_version": budget_version,
-                "policy_version": policy_version,
-                "policy_hash": policy_hash,
-                "rule_ids": ",".join(rule_ids),
-                "replayed": str(admission_result.replayed).lower(),
-            },
-        )
-
-        if not budget_outcome.allowed:
-            details = {
-                "source": "budget_runtime",
-                "task_id": admission_result.task.task_id,
-                "replayed": str(admission_result.replayed).lower(),
-                "policy_version": policy_version,
-                "policy_hash": policy_hash,
-                "rule_ids": ",".join(rule_ids),
-            }
-            if budget_outcome.reservation is not None:
-                details["decision"] = budget_outcome.reservation.decision
-                details["reason_code"] = budget_outcome.reservation.reason_code
-                details["budget_version"] = budget_outcome.reservation.budget_version
-                if budget_outcome.reservation.remaining_units is not None:
-                    details["remaining_units"] = str(budget_outcome.reservation.remaining_units)
-
-            runtime_state_repo.update_task_status(
-                admission_result.task.task_id,
-                "blocked",
-                outcome_source="budget_runtime",
-                outcome_error_code=budget_outcome.error_code or "budget_blocked",
-                outcome_message=budget_outcome.message,
-                outcome_details=details,
-            )
-            span.set_status("error")
-            span.set_attribute("outcome", "denied")
-            span.set_attribute("source", "budget_runtime")
-            _emit_outcome_observability(
-                tracer=tracer,
-                audit_writer=audit_writer,
-                metric_recorder=metric_recorder,
-                trace_id=trace_id,
-                request_id=request_id,
-                task_id=task_id,
-                principal_id=principal_id,
-                principal_role=admission_result.task.principal_role,
-                source="budget_runtime",
-                outcome="denied",
-                error_code=budget_outcome.error_code or "budget_blocked",
-                message=budget_outcome.message,
-                policy_version=policy_version,
-                policy_hash=policy_hash,
-                rule_ids=rule_ids,
-                attributes={"decision": budget_decision, "budget_version": budget_version},
-            )
-            return _denied_response(
-                status_code=status.HTTP_403_FORBIDDEN,
-                trace_id=trace_id,
-                code=budget_outcome.error_code or "budget_blocked",
-                error_class="budget_error",
-                message=budget_outcome.message,
-                source_component="budget_engine",
-                details=details,
-                policy_version=policy_version,
-                policy_hash=policy_hash,
-                rule_ids=rule_ids,
-            )
-
-        with tracer.start_span(
-            trace_id=trace_id,
-            name=EXECUTION_SANDBOX_SPAN,
-            attributes={"stage": "execution_dispatch"},
-        ) as dispatch_span:
-            dispatch_span.set_attribute("correlation.task_id", task_id)
-            dispatch_outcome = task_dispatch_service.dispatch_admitted_task(
-                admission_result.task,
-                policy_version=policy_version,
-                policy_hash=policy_hash,
-                rule_ids=tuple(rule_ids),
-            )
-        if not dispatch_outcome.accepted:
-            dispatch_source = dispatch_outcome.source
-            details = {
-                "source": dispatch_source,
-                "task_id": admission_result.task.task_id,
-                "replayed": str(dispatch_outcome.replayed).lower(),
-                "dispatch_target": dispatch_outcome.target,
-                "policy_version": policy_version,
-                "policy_hash": policy_hash,
-                "rule_ids": ",".join(rule_ids),
-            }
-            if dispatch_outcome.error_code is not None:
-                details["reason_code"] = dispatch_outcome.error_code
-            details["retryable"] = str(dispatch_outcome.retryable).lower()
-            if dispatch_outcome.dead_letter_id is not None:
-                details["dead_letter_id"] = dispatch_outcome.dead_letter_id
-
-            span.set_status("error")
-            span.set_attribute("outcome", "denied")
-            span.set_attribute("source", dispatch_source)
-            span.set_attribute("dispatch_target", dispatch_outcome.target)
-            _emit_outcome_observability(
-                tracer=tracer,
-                audit_writer=audit_writer,
-                metric_recorder=metric_recorder,
-                trace_id=trace_id,
-                request_id=request_id,
-                task_id=task_id,
-                principal_id=principal_id,
-                principal_role=admission_result.task.principal_role,
-                source=dispatch_source,
-                outcome="denied",
-                error_code=dispatch_outcome.error_code or "execution_dispatch_failed",
-                message=dispatch_outcome.message,
-                policy_version=policy_version,
-                policy_hash=policy_hash,
-                rule_ids=rule_ids,
-                attributes={"dispatch_target": dispatch_outcome.target},
-            )
-            if dispatch_source == "dispatch_llm_gateway":
-                source_component = "llm_gateway"
-            elif dispatch_source.startswith("dispatch_communication"):
-                source_component = "communication_gateway"
-            else:
-                source_component = "sandbox"
-            return _denied_response(
-                status_code=status.HTTP_403_FORBIDDEN,
-                trace_id=trace_id,
-                code=dispatch_outcome.error_code or "execution_dispatch_failed",
-                error_class="runtime_error",
-                message=dispatch_outcome.message,
-                source_component=source_component,
-                details=details,
-                policy_version=policy_version,
-                policy_hash=policy_hash,
-                rule_ids=rule_ids,
-            )
-
-        response_task = (
-            runtime_state_repo.get_task_by_id(admission_result.task.task_id)
-            or admission_result.task
-        )
+        # Admission-only: task is queued and will be processed by the orchestrator worker.
+        # Callers poll GET /v1/tasks/{task_id} for the final outcome.
         span.set_attribute("outcome", "accepted")
-        span.set_attribute("source", "dispatch")
-        span.set_attribute("dispatch_target", dispatch_outcome.target)
-        _emit_outcome_observability(
-            tracer=tracer,
-            audit_writer=audit_writer,
-            metric_recorder=metric_recorder,
-            trace_id=response_task.trace_id,
-            request_id=response_task.request_id,
-            task_id=response_task.task_id,
-            principal_id=response_task.principal_id,
-            principal_role=response_task.principal_role,
-            source=f"dispatch_{dispatch_outcome.target}",
-            outcome="accepted",
-            error_code=None,
-            message=dispatch_outcome.message,
-            policy_version=policy_version,
-            policy_hash=policy_hash,
-            rule_ids=rule_ids,
-            attributes={
-                "dispatch_target": dispatch_outcome.target,
-                "dispatch_id": dispatch_outcome.dispatch_id or "dispatch-id-missing",
-                "replayed": str(dispatch_outcome.replayed).lower(),
-            },
-        )
-
+        span.set_attribute("source", "admission")
         return OwnerCommandResponse(
             status="accepted",
-            trace_id=response_task.trace_id,
-            policy_version=policy_version,
-            policy_hash=policy_hash,
-            rule_ids=rule_ids,
+            trace_id=trace_id,
             data=OwnerCommandAcceptedData(
-                task_id=response_task.task_id,
-                admission_state="dispatched",
+                task_id=task_id,
+                admission_state="queued",
                 replayed=admission_result.replayed,
-                request_id=response_task.request_id,
-                principal_id=response_task.principal_id,
-                connector=response_task.connector,
-                command=response_task.command,
-                accepted_args=list(response_task.args),
-                dispatch_target=dispatch_outcome.target,
-                dispatch_id=dispatch_outcome.dispatch_id or "dispatch-id-missing",
-                llm_execution=(
-                    {
-                        "decision": dispatch_outcome.llm_metadata.decision,
-                        "model_selected": dispatch_outcome.llm_metadata.model_selected,
-                        "routing_profile": dispatch_outcome.llm_metadata.routing_profile,
-                        "quota_limit_source": dispatch_outcome.llm_metadata.quota_limit_source,
-                        "usage": {
-                            "input_tokens": dispatch_outcome.llm_metadata.input_tokens,
-                            "output_tokens": dispatch_outcome.llm_metadata.output_tokens,
-                            "total_tokens": dispatch_outcome.llm_metadata.total_tokens,
-                            "request_units": dispatch_outcome.llm_metadata.request_units,
-                        },
-                        "cost": {
-                            "estimated_cost_usd": dispatch_outcome.llm_metadata.estimated_cost_usd,
-                            "actual_cost_usd": dispatch_outcome.llm_metadata.actual_cost_usd,
-                            "cost_source": dispatch_outcome.llm_metadata.cost_source,
-                        },
-                        "budget_usage": {
-                            "currency_delta_usd": dispatch_outcome.llm_metadata.currency_delta_usd,
-                            "quota_token_units": dispatch_outcome.llm_metadata.quota_token_units,
-                        },
-                        "generated_text": dispatch_outcome.llm_metadata.generated_text,
-                        "recipient_role": dispatch_outcome.llm_metadata.recipient_role,
-                        "recipient_id": dispatch_outcome.llm_metadata.recipient_id,
-                        "grounding_sources": list(
-                            dispatch_outcome.llm_metadata.grounding_source_ids
-                        ),
-                    }
-                    if dispatch_outcome.llm_metadata is not None
-                    else None
-                ),
+                request_id=admission_result.task.request_id,
+                principal_id=admission_result.task.principal_id,
+                connector=admission_result.task.connector,
+                command=admission_result.task.command,
+                accepted_args=list(admission_result.task.args),
+                dispatch_target=None,
+                dispatch_id=None,
+                llm_execution=None,
             ),
         )
-    raise RuntimeError("unreachable owner command control flow")

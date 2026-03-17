@@ -5,6 +5,7 @@ import json
 from fastapi.testclient import TestClient
 
 from openqilin.apps.api_app import app
+from openqilin.apps.orchestrator_worker import drain_queued_tasks
 from openqilin.testing.owner_command import (
     build_owner_command_headers,
     build_owner_command_request_dict,
@@ -41,6 +42,7 @@ def _ensure_active_project(*, project_id: str) -> None:
 
 def test_tool_write_accepts_governed_mutation_and_emits_audit_evidence() -> None:
     client = TestClient(app)
+    services = app.state.runtime_services
     project_id = "project_m10_tool_write_ok"
     _ensure_active_project(project_id=project_id)
 
@@ -74,11 +76,16 @@ def test_tool_write_accepts_governed_mutation_and_emits_audit_evidence() -> None
     body = response.json()
     assert response.status_code == 202
     assert body["status"] == "accepted"
-    assert body["data"]["dispatch_target"] == "llm"
-    assert body["data"]["llm_execution"]["generated_text"]
-    assert "[source:artifact:progress_report]" in body["data"]["llm_execution"]["generated_text"]
+    task_id = body["data"]["task_id"]
 
-    services = app.state.runtime_services
+    drain_queued_tasks(services)
+
+    task_body = client.get(f"/v1/tasks/{task_id}").json()
+    assert task_body["status"] == "dispatched"
+    assert task_body["dispatch_target"] == "llm"
+    assert task_body["llm_execution"]["generated_text"]
+    assert "[source:artifact:progress_report]" in task_body["llm_execution"]["generated_text"]
+
     assert any(
         event.event_type == "tool.write.append_progress_report"
         for event in services.audit_writer.get_events()
@@ -87,6 +94,7 @@ def test_tool_write_accepts_governed_mutation_and_emits_audit_evidence() -> None
 
 def test_tool_write_denies_raw_mutation_requests_fail_closed() -> None:
     client = TestClient(app)
+    services = app.state.runtime_services
     project_id = "project_m10_tool_write_raw_denied"
     _ensure_active_project(project_id=project_id)
 
@@ -117,13 +125,20 @@ def test_tool_write_denies_raw_mutation_requests_fail_closed() -> None:
     )
 
     body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "denied"
-    assert body["error"]["code"] == "tool_raw_db_mutation_denied"
+    assert response.status_code == 202
+    assert body["status"] == "accepted"
+    task_id = body["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
+    task_body = client.get(f"/v1/tasks/{task_id}").json()
+    assert task_body["status"] == "blocked"
+    assert task_body["error_code"] == "tool_raw_db_mutation_denied"
 
 
 def test_tool_read_denies_disallowed_role_tool_access() -> None:
     client = TestClient(app)
+    services = app.state.runtime_services
     project_id = "project_m10_tool_read_denied"
     _ensure_active_project(project_id=project_id)
 
@@ -151,6 +166,12 @@ def test_tool_read_denies_disallowed_role_tool_access() -> None:
     )
 
     body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "denied"
-    assert body["error"]["code"] == "tool_access_denied"
+    assert response.status_code == 202
+    assert body["status"] == "accepted"
+    task_id = body["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
+    task_body = client.get(f"/v1/tasks/{task_id}").json()
+    assert task_body["status"] == "blocked"
+    assert task_body["error_code"] == "tool_access_denied"

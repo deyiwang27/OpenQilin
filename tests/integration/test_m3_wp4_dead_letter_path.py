@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 
+from openqilin.apps.orchestrator_worker import drain_queued_tasks
 from openqilin.control_plane.api.app import create_control_plane_app
 from openqilin.testing.owner_command import (
     build_owner_command_headers,
@@ -25,16 +26,22 @@ def test_governed_ingress_retry_exhaustion_routes_to_dead_letter_sink() -> None:
     )
 
     body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "denied"
-    assert body["error"]["code"] == "communication_retry_exhausted"
-    dead_letter_id = body["error"]["details"].get("dead_letter_id")
-    assert isinstance(dead_letter_id, str) and dead_letter_id
+    assert response.status_code == 202
+    assert body["status"] == "accepted"
+    task_id = body["data"]["task_id"]
+
     services = app.state.runtime_services
+    drain_queued_tasks(services)
+
+    task_body = client.get(f"/v1/tasks/{task_id}").json()
+    assert task_body["status"] == "blocked"
+    assert task_body["error_code"] == "communication_retry_exhausted"
+
     dead_letters = services.task_dispatch_service.list_communication_dead_letters()
     assert len(dead_letters) == 1
-    assert dead_letters[0].dead_letter_id == dead_letter_id
-    assert dead_letters[0].task_id == body["error"]["details"]["task_id"]
+    dead_letter_id = dead_letters[0].dead_letter_id
+    assert isinstance(dead_letter_id, str) and dead_letter_id
+    assert dead_letters[0].task_id == task_id
     assert dead_letters[0].attempts == 3
     assert dead_letters[0].error_code == "communication_retry_exhausted"
 
@@ -47,7 +54,7 @@ def test_governed_ingress_retry_exhaustion_routes_to_dead_letter_sink() -> None:
     events = services.audit_writer.get_events()
     dlq_events = [event for event in events if event.event_type == "communication.dead_letter"]
     assert len(dlq_events) == 1
-    assert dlq_events[0].task_id == body["error"]["details"]["task_id"]
+    assert dlq_events[0].task_id == task_id
     assert dlq_events[0].reason_code == "communication_retry_exhausted"
 
 
@@ -65,15 +72,18 @@ def test_governed_ingress_replay_does_not_duplicate_dead_letter_records() -> Non
     headers = build_owner_command_headers(payload)
 
     first = client.post("/v1/owner/commands", headers=headers, json=payload)
-    second = client.post("/v1/owner/commands", headers=headers, json=payload)
-
     first_body = first.json()
-    second_body = second.json()
-    assert first.status_code == 403
-    assert second.status_code == 403
-    assert first_body["error"]["code"] == "communication_retry_exhausted"
-    assert second_body["error"]["code"] == "communication_retry_exhausted"
+    assert first.status_code == 202
+    assert first_body["status"] == "accepted"
     services = app.state.runtime_services
+    drain_queued_tasks(services)
+
+    second = client.post("/v1/owner/commands", headers=headers, json=payload)
+    second_body = second.json()
+    assert second.status_code == 403
+    assert second_body["status"] == "denied"
+    assert second_body["error"]["code"] == "communication_retry_exhausted"
+
     dead_letters = services.task_dispatch_service.list_communication_dead_letters()
     assert len(dead_letters) == 1
     metric_value = services.metric_recorder.get_counter_value(

@@ -3,6 +3,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from openqilin.apps.api_app import create_app
+from openqilin.apps.orchestrator_worker import drain_queued_tasks
 from openqilin.testing.owner_command import (
     build_owner_command_headers,
     build_owner_command_request_dict,
@@ -19,7 +20,9 @@ def _query_headers(*, trace_id: str, actor_id: str, project_scope: str) -> dict[
 
 
 def test_m2_execution_targets_conformance_sandbox_and_llm_paths() -> None:
-    client = TestClient(create_app())
+    app = create_app()
+    client = TestClient(app)
+    services = app.state.runtime_services
 
     sandbox_payload = build_owner_command_request_dict(
         action="run_task",
@@ -36,8 +39,7 @@ def test_m2_execution_targets_conformance_sandbox_and_llm_paths() -> None:
     sandbox_body = sandbox_response.json()
     assert sandbox_response.status_code == 202
     assert sandbox_body["status"] == "accepted"
-    assert sandbox_body["data"]["dispatch_target"] == "sandbox"
-    assert sandbox_body["data"]["dispatch_id"]
+    sandbox_task_id = sandbox_body["data"]["task_id"]
 
     llm_payload = build_owner_command_request_dict(
         action="llm_summarize",
@@ -54,10 +56,21 @@ def test_m2_execution_targets_conformance_sandbox_and_llm_paths() -> None:
     llm_body = llm_response.json()
     assert llm_response.status_code == 202
     assert llm_body["status"] == "accepted"
-    assert llm_body["data"]["dispatch_target"] == "llm"
-    assert llm_body["data"]["llm_execution"]["model_selected"]
-    assert llm_body["data"]["llm_execution"]["usage"]["total_tokens"] > 0
-    assert llm_body["data"]["llm_execution"]["cost"]["cost_source"] in {
+    llm_task_id = llm_body["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
+    sandbox_task = client.get(f"/v1/tasks/{sandbox_task_id}").json()
+    assert sandbox_task["status"] == "dispatched"
+    assert sandbox_task["dispatch_target"] == "sandbox"
+    assert sandbox_task["dispatch_id"]
+
+    llm_task = client.get(f"/v1/tasks/{llm_task_id}").json()
+    assert llm_task["status"] == "dispatched"
+    assert llm_task["dispatch_target"] == "llm"
+    assert llm_task["llm_execution"]["model_selected"]
+    assert llm_task["llm_execution"]["usage"]["total_tokens"] > 0
+    assert llm_task["llm_execution"]["cost"]["cost_source"] in {
         "pricing_table",
         "free_tier_assumed_zero",
         "none",

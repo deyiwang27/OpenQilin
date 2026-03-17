@@ -409,6 +409,10 @@ class TaskDispatchService:
         self._task_outcomes[task.task_id] = outcome
         return outcome
 
+    def get_dispatch_outcome(self, task_id: str) -> TaskDispatchOutcome | None:
+        """Return the stored dispatch outcome for a task, or None if not yet dispatched."""
+        return self._task_outcomes.get(task_id)
+
     def list_communication_message_records(
         self,
         *,

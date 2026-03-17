@@ -25,6 +25,8 @@ dependencies = [
   "opentelemetry-sdk>=1.35,<2",
   "opentelemetry-exporter-otlp-proto-grpc>=1.35,<2",
   "opentelemetry-instrumentation-fastapi>=0.61b0",
+  "langgraph>=0.2",
+  "langchain-core>=0.2",
 ]
 
 [dependency-groups]

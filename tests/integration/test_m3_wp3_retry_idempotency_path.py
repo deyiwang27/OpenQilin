@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 
+from openqilin.apps.orchestrator_worker import drain_queued_tasks
 from openqilin.control_plane.api.app import create_control_plane_app
 from openqilin.testing.owner_command import (
     build_owner_command_headers,
@@ -27,8 +28,12 @@ def test_governed_ingress_communication_retry_then_ack_is_deterministic() -> Non
     body = response.json()
     assert response.status_code == 202
     assert body["status"] == "accepted"
+    task_id = body["data"]["task_id"]
+
+    drain_queued_tasks(app.state.runtime_services)
+
     records = app.state.runtime_services.task_dispatch_service.list_communication_message_records(
-        task_id=body["data"]["task_id"]
+        task_id=task_id
     )
     assert len(records) == 2
     assert records[0].attempt == 1
@@ -61,12 +66,18 @@ def test_governed_ingress_communication_retry_exhausted_fails_closed() -> None:
     )
 
     body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "denied"
-    assert body["error"]["code"] == "communication_retry_exhausted"
-    assert body["error"]["details"]["retryable"] == "false"
+    assert response.status_code == 202
+    assert body["status"] == "accepted"
+    task_id = body["data"]["task_id"]
+
+    drain_queued_tasks(app.state.runtime_services)
+
+    task_body = client.get(f"/v1/tasks/{task_id}").json()
+    assert task_body["status"] == "blocked"
+    assert task_body["error_code"] == "communication_retry_exhausted"
+
     records = app.state.runtime_services.task_dispatch_service.list_communication_message_records(
-        task_id=body["error"]["details"]["task_id"]
+        task_id=task_id
     )
     assert len(records) == 3
     assert [record.attempt for record in records] == [1, 2, 3]
@@ -101,6 +112,9 @@ def test_governed_ingress_replay_does_not_duplicate_retry_side_effects() -> None
     assert first_body["data"]["replayed"] is False
     assert second_body["data"]["replayed"] is True
     assert first_body["data"]["task_id"] == second_body["data"]["task_id"]
+
+    drain_queued_tasks(app.state.runtime_services)
+
     records = app.state.runtime_services.task_dispatch_service.list_communication_message_records(
         task_id=first_body["data"]["task_id"]
     )

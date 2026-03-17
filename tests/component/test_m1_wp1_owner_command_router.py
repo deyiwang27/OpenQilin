@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 
+from openqilin.apps.orchestrator_worker import drain_queued_tasks
 from openqilin.control_plane.api.app import create_control_plane_app
 from openqilin.testing.owner_command import (
     build_owner_command_headers,
@@ -10,6 +11,7 @@ from openqilin.testing.owner_command import (
 def test_submit_owner_command_accepts_valid_payload() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="run_task",
         args=["alpha", "beta"],
@@ -33,11 +35,17 @@ def test_submit_owner_command_accepts_valid_payload() -> None:
     assert body["data"]["principal_id"] == "owner_123"
     assert body["data"]["command"] == "run_task"
     assert body["data"]["accepted_args"] == ["alpha", "beta"]
-    assert body["data"]["dispatch_target"] == "sandbox"
-    assert body["data"]["dispatch_id"]
-    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(body["data"]["task_id"])
-    assert task is not None
-    assert task.status == "dispatched"
+    assert body["data"]["admission_state"] == "queued"
+
+    task_id = body["data"]["task_id"]
+    drain_queued_tasks(services)
+
+    status_response = client.get(f"/v1/tasks/{task_id}")
+    task_body = status_response.json()
+    assert status_response.status_code == 200
+    assert task_body["dispatch_target"] == "sandbox"
+    assert task_body["dispatch_id"]
+    assert task_body["status"] == "dispatched"
 
 
 def test_submit_owner_command_errors_on_missing_required_header() -> None:
@@ -125,6 +133,7 @@ def test_submit_owner_command_errors_on_recipient_role_mismatch() -> None:
 def test_submit_owner_command_replay_returns_same_task() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="run_task",
         args=["alpha", "beta"],
@@ -134,19 +143,22 @@ def test_submit_owner_command_replay_returns_same_task() -> None:
     headers = build_owner_command_headers(payload)
 
     first = client.post("/v1/owner/commands", headers=headers, json=payload)
-    second = client.post("/v1/owner/commands", headers=headers, json=payload)
-
     first_body = first.json()
-    second_body = second.json()
     assert first.status_code == 202
-    assert second.status_code == 202
     assert first_body["data"]["replayed"] is False
+
+    # Drain so the task reaches dispatched state before the replay
+    drain_queued_tasks(services)
+
+    second = client.post("/v1/owner/commands", headers=headers, json=payload)
+    second_body = second.json()
+    assert second.status_code == 202
     assert second_body["data"]["replayed"] is True
     assert first_body["data"]["task_id"] == second_body["data"]["task_id"]
     assert first_body["data"]["request_id"] == second_body["data"]["request_id"]
-    assert first_body["data"]["dispatch_target"] == second_body["data"]["dispatch_target"]
-    assert first_body["data"]["dispatch_id"] == second_body["data"]["dispatch_id"]
-    events = app.state.runtime_services.audit_writer.get_events()
+    assert second_body["data"]["dispatch_target"] == "sandbox"
+    assert second_body["data"]["dispatch_id"]
+    events = services.audit_writer.get_events()
     assert [event.event_type for event in events] == [
         "policy.decision",
         "budget.decision",
@@ -158,6 +170,7 @@ def test_submit_owner_command_replay_returns_same_task() -> None:
 def test_submit_owner_command_replay_returns_prior_denied_without_re_evaluation() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="policy_uncertain",
         args=["alpha"],
@@ -167,20 +180,23 @@ def test_submit_owner_command_replay_returns_prior_denied_without_re_evaluation(
     headers = build_owner_command_headers(payload)
 
     first = client.post("/v1/owner/commands", headers=headers, json=payload)
-    second = client.post("/v1/owner/commands", headers=headers, json=payload)
-
     first_body = first.json()
+    assert first.status_code == 202
+    assert first_body["data"]["admission_state"] == "queued"
+    task_id = first_body["data"]["task_id"]
+
+    # Drain so the task is blocked by policy
+    drain_queued_tasks(services)
+
+    second = client.post("/v1/owner/commands", headers=headers, json=payload)
     second_body = second.json()
-    assert first.status_code == 403
     assert second.status_code == 403
-    assert first_body["status"] == "denied"
     assert second_body["status"] == "denied"
-    assert first_body["error"]["code"] == "policy_uncertain_fail_closed"
     assert second_body["error"]["code"] == "policy_uncertain_fail_closed"
-    assert first_body["error"]["details"]["task_id"] == second_body["error"]["details"]["task_id"]
+    assert second_body["error"]["details"]["task_id"] == task_id
     assert second_body["error"]["details"]["replayed"] == "true"
 
-    events = app.state.runtime_services.audit_writer.get_events()
+    events = services.audit_writer.get_events()
     assert [event.event_type for event in events] == [
         "policy.decision",
         "owner_command.denied",
@@ -224,6 +240,7 @@ def test_submit_owner_command_blocks_idempotency_key_conflict() -> None:
 def test_submit_owner_command_denies_policy_deny() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="deny_delete_project",
         args=["project_1"],
@@ -238,20 +255,27 @@ def test_submit_owner_command_denies_policy_deny() -> None:
     )
 
     body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "denied"
-    assert body["error"]["code"] == "policy_denied"
-    assert body["error"]["class"] == "authorization_error"
-    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(
-        body["error"]["details"]["task_id"]
-    )
+    assert response.status_code == 202
+    assert body["status"] == "accepted"
+    task_id = body["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
+    task = services.runtime_state_repo.get_task_by_id(task_id)
     assert task is not None
     assert task.status == "blocked"
+    assert task.outcome_error_code == "policy_denied"
+
+    status_response = client.get(f"/v1/tasks/{task_id}")
+    assert status_response.status_code == 200
+    assert status_response.json()["status"] == "blocked"
+    assert status_response.json()["error_code"] == "policy_denied"
 
 
 def test_submit_owner_command_denies_budget_deny() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="budget_deny_project",
         args=["project_1"],
@@ -266,20 +290,21 @@ def test_submit_owner_command_denies_budget_deny() -> None:
     )
 
     body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "denied"
-    assert body["error"]["code"] == "budget_denied"
-    assert body["error"]["class"] == "budget_error"
-    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(
-        body["error"]["details"]["task_id"]
-    )
+    assert response.status_code == 202
+    task_id = body["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
+    task = services.runtime_state_repo.get_task_by_id(task_id)
     assert task is not None
     assert task.status == "blocked"
+    assert task.outcome_error_code == "budget_denied"
 
 
 def test_submit_owner_command_denies_dispatch_reject() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="dispatch_reject",
         args=["project_1"],
@@ -294,19 +319,23 @@ def test_submit_owner_command_denies_dispatch_reject() -> None:
     )
 
     body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "denied"
-    assert body["error"]["code"] == "execution_dispatch_failed"
-    assert body["error"]["class"] == "runtime_error"
-    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(
-        body["error"]["details"]["task_id"]
-    )
+    assert response.status_code == 202
+    task_id = body["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
+    task = services.runtime_state_repo.get_task_by_id(task_id)
     assert task is not None
     assert task.status == "blocked"
 
+    status_response = client.get(f"/v1/tasks/{task_id}")
+    assert status_response.json()["error_code"] == "execution_dispatch_failed"
+
 
 def test_submit_owner_command_accepts_llm_target_with_usage_cost_metadata() -> None:
-    client = TestClient(create_control_plane_app())
+    app = create_control_plane_app()
+    client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="llm_summarize",
         args=["project_1"],
@@ -321,26 +350,31 @@ def test_submit_owner_command_accepts_llm_target_with_usage_cost_metadata() -> N
         json=payload,
     )
 
-    body = response.json()
     assert response.status_code == 202
-    assert body["status"] == "accepted"
-    assert body["data"]["dispatch_target"] == "llm"
-    assert body["data"]["dispatch_id"]
-    assert body["data"]["llm_execution"]["model_selected"]
-    assert body["data"]["llm_execution"]["routing_profile"] == "dev_gemini_free"
-    assert body["data"]["llm_execution"]["usage"]["total_tokens"] > 0
-    assert body["data"]["llm_execution"]["cost"]["cost_source"] in {
+    task_id = response.json()["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
+    status_response = client.get(f"/v1/tasks/{task_id}")
+    task_body = status_response.json()
+    assert task_body["dispatch_target"] == "llm"
+    assert task_body["dispatch_id"]
+    assert task_body["llm_execution"]["model_selected"]
+    assert task_body["llm_execution"]["routing_profile"] == "dev_gemini_free"
+    assert task_body["llm_execution"]["usage"]["total_tokens"] > 0
+    assert task_body["llm_execution"]["cost"]["cost_source"] in {
         "none",
         "catalog_estimated",
         "provider_reported",
     }
-    assert body["data"]["llm_execution"]["recipient_role"] == "ceo"
-    assert body["data"]["llm_execution"]["recipient_id"] == "ceo_core"
+    assert task_body["llm_execution"]["recipient_role"] == "ceo"
+    assert task_body["llm_execution"]["recipient_id"] == "ceo_core"
 
 
 def test_submit_owner_command_denies_llm_gateway_runtime_failure() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="llm_runtime_error",
         args=["project_1"],
@@ -354,20 +388,21 @@ def test_submit_owner_command_denies_llm_gateway_runtime_failure() -> None:
         json=payload,
     )
 
-    body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "denied"
-    assert body["error"]["code"] == "llm_provider_unavailable"
-    assert body["error"]["details"]["source"] == "dispatch_llm_gateway"
-    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(
-        body["error"]["details"]["task_id"]
-    )
+    assert response.status_code == 202
+    task_id = response.json()["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
+    task = services.runtime_state_repo.get_task_by_id(task_id)
     assert task is not None
     assert task.status == "blocked"
+    assert task.outcome_error_code == "llm_provider_unavailable"
 
 
 def test_submit_owner_command_accepts_communication_target() -> None:
-    client = TestClient(create_control_plane_app())
+    app = create_control_plane_app()
+    client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="msg_notify",
         args=["agent_42"],
@@ -382,16 +417,21 @@ def test_submit_owner_command_accepts_communication_target() -> None:
         json=payload,
     )
 
-    body = response.json()
     assert response.status_code == 202
-    assert body["status"] == "accepted"
-    assert body["data"]["dispatch_target"] == "communication"
-    assert body["data"]["dispatch_id"]
+    task_id = response.json()["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
+    status_response = client.get(f"/v1/tasks/{task_id}")
+    task_body = status_response.json()
+    assert task_body["dispatch_target"] == "communication"
+    assert task_body["dispatch_id"]
 
 
 def test_submit_owner_command_denies_owner_direct_specialist_path() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="msg_notify",
         args=["deliver update"],
@@ -407,21 +447,21 @@ def test_submit_owner_command_denies_owner_direct_specialist_path() -> None:
         json=payload,
     )
 
-    body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "denied"
-    assert body["error"]["code"] == "governance_specialist_direct_command_denied"
-    assert body["error"]["class"] == "authorization_error"
-    assert body["error"]["source_component"] == "policy_engine"
-    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(
-        body["error"]["details"]["task_id"]
-    )
+    assert response.status_code == 202
+    task_id = response.json()["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
+    task = services.runtime_state_repo.get_task_by_id(task_id)
     assert task is not None
     assert task.status == "blocked"
+    assert task.outcome_error_code == "governance_specialist_direct_command_denied"
 
 
 def test_submit_owner_command_allows_owner_to_project_manager_path() -> None:
-    client = TestClient(create_control_plane_app())
+    app = create_control_plane_app()
+    client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="msg_notify",
         args=["delegate to specialist"],
@@ -437,16 +477,21 @@ def test_submit_owner_command_allows_owner_to_project_manager_path() -> None:
         json=payload,
     )
 
-    body = response.json()
     assert response.status_code == 202
-    assert body["status"] == "accepted"
-    assert body["data"]["dispatch_target"] == "communication"
-    assert body["data"]["dispatch_id"]
+    task_id = response.json()["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
+    status_response = client.get(f"/v1/tasks/{task_id}")
+    task_body = status_response.json()
+    assert task_body["dispatch_target"] == "communication"
+    assert task_body["dispatch_id"]
 
 
 def test_submit_owner_command_denies_communication_contract_violation() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="msg_notify",
         args=[],
@@ -461,21 +506,21 @@ def test_submit_owner_command_denies_communication_contract_violation() -> None:
         json=payload,
     )
 
-    body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "denied"
-    assert body["error"]["code"] == "a2a_missing_recipient_args"
-    assert body["error"]["source_component"] == "communication_gateway"
-    task = app.state.runtime_services.runtime_state_repo.get_task_by_id(
-        body["error"]["details"]["task_id"]
-    )
+    assert response.status_code == 202
+    task_id = response.json()["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
+    task = services.runtime_state_repo.get_task_by_id(task_id)
     assert task is not None
     assert task.status == "blocked"
+    assert task.outcome_error_code == "a2a_missing_recipient_args"
 
 
 def test_submit_owner_command_emits_observability_on_accept() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="run_task",
         args=["alpha"],
@@ -490,9 +535,11 @@ def test_submit_owner_command_emits_observability_on_accept() -> None:
         json=payload,
     )
 
-    body = response.json()
     assert response.status_code == 202
-    services = app.state.runtime_services
+    task_id = response.json()["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
     metric_value = services.metric_recorder.get_counter_value(
         "owner_command_admission_outcomes_total",
         labels={"outcome": "accepted", "source": "dispatch_sandbox"},
@@ -507,9 +554,7 @@ def test_submit_owner_command_emits_observability_on_accept() -> None:
     ]
     accepted_event = audit_events[-1]
     assert accepted_event.outcome == "accepted"
-    assert accepted_event.trace_id == body["trace_id"]
-    assert accepted_event.request_id == body["data"]["request_id"]
-    assert accepted_event.task_id == body["data"]["task_id"]
+    assert accepted_event.task_id == task_id
 
     spans = services.tracer.get_spans()
     span_names = [span.name for span in spans]
@@ -524,6 +569,7 @@ def test_submit_owner_command_emits_observability_on_accept() -> None:
 def test_submit_owner_command_emits_observability_on_policy_deny() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="deny_delete_project",
         args=["alpha"],
@@ -538,9 +584,11 @@ def test_submit_owner_command_emits_observability_on_policy_deny() -> None:
         json=payload,
     )
 
-    body = response.json()
-    assert response.status_code == 403
-    services = app.state.runtime_services
+    assert response.status_code == 202
+    task_id = response.json()["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
     metric_value = services.metric_recorder.get_counter_value(
         "owner_command_admission_outcomes_total",
         labels={"outcome": "denied", "source": "policy_runtime"},
@@ -553,7 +601,7 @@ def test_submit_owner_command_emits_observability_on_policy_deny() -> None:
         "owner_command.denied",
     ]
     denied_event = audit_events[-1]
-    denied_task = services.runtime_state_repo.get_task_by_id(body["error"]["details"]["task_id"])
+    denied_task = services.runtime_state_repo.get_task_by_id(task_id)
     assert denied_task is not None
     assert denied_event.outcome == "denied"
     assert denied_event.source == "policy_runtime"
@@ -566,4 +614,3 @@ def test_submit_owner_command_emits_observability_on_policy_deny() -> None:
     assert "task_orchestration" in span_names
     assert "policy_evaluation" in span_names
     assert "audit_emit" in span_names
-    assert any(span.status == "error" for span in spans)

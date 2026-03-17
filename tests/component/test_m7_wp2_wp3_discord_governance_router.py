@@ -148,6 +148,10 @@ def test_owner_command_denied_when_pending_role_is_addressed() -> None:
 
 
 def test_owner_command_allows_direct_dm_to_project_manager() -> None:
+    from openqilin.apps.orchestrator_worker import drain_queued_tasks
+
+    app = create_control_plane_app()
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="msg_notify",
         args=["provide status update"],
@@ -160,7 +164,7 @@ def test_owner_command_allows_direct_dm_to_project_manager() -> None:
         discord_chat_class="direct",
     )
 
-    response = TestClient(create_control_plane_app()).post(
+    response = TestClient(app).post(
         "/v1/owner/commands",
         headers=build_owner_command_headers(payload),
         json=payload,
@@ -169,4 +173,10 @@ def test_owner_command_allows_direct_dm_to_project_manager() -> None:
 
     assert response.status_code == 202
     assert body["status"] == "accepted"
-    assert body["data"]["dispatch_target"] == "communication"
+    task_id = body["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
+    task = services.runtime_state_repo.get_task_by_id(task_id)
+    assert task is not None
+    assert task.dispatch_target == "communication"
