@@ -23,16 +23,16 @@ Adopt LangGraph as the real orchestration engine, replacing the linear HTTP-hand
 
 ### Tasks
 
-- [ ] Add `langgraph>=0.2` and `langchain-core>=0.2` to `pyproject.toml`
-- [ ] Create `src/openqilin/task_orchestrator/workflow/state_models.py` — `TaskState` TypedDict: `task_id`, `project_id`, `principal_role`, `command`, `policy_decision`, `obligation_result`, `budget_reservation`, `final_state`, `loop_state`
-- [ ] Implement `workflow/nodes.py` — four async node functions:
+- [x] Add `langgraph>=0.2` and `langchain-core>=0.2` to `pyproject.toml`
+- [x] Create `src/openqilin/task_orchestrator/workflow/state_models.py` — `TaskState` TypedDict: `task_id`, `project_id`, `principal_role`, `command`, `policy_decision`, `obligation_result`, `budget_reservation`, `final_state`, `loop_state`
+- [x] Implement `workflow/nodes.py` — four async node functions:
   - `policy_evaluation_node(state)` — calls `OPAPolicyRuntimeClient.evaluate()`; returns updated state with `policy_decision`
   - `obligation_check_node(state)` — calls `ObligationDispatcher.apply()`; returns updated state with `obligation_result`
   - `budget_reservation_node(state)` — calls budget client reserve (M14 completes this; M13 wires the stub that will be swapped)
   - `dispatch_node(state)` — dispatches to execution sandbox; writes final status
-- [ ] Implement `workflow/graph.py` — `build_task_graph()` returns a compiled `StateGraph` connecting the four nodes with conditional edges for `blocked` and `failed` outcomes; replace the existing one-line placeholder
-- [ ] Implement `state/state_machine.py` — graph compilation and transition enforcement using `transition_guard`; replace the existing one-line placeholder
-- [ ] Implement `apps/orchestrator_worker.py` as real async polling loop:
+- [x] Implement `workflow/graph.py` — `build_task_graph()` returns a compiled `StateGraph` connecting the four nodes with conditional edges for `blocked` and `failed` outcomes; replace the existing one-line placeholder
+- [x] Implement `state/state_machine.py` — graph compilation and transition enforcement using `transition_guard`; replace the existing one-line placeholder
+- [x] Implement `apps/orchestrator_worker.py` as real async polling loop:
   ```python
   async def run():
       task_graph = build_task_graph()
@@ -44,7 +44,7 @@ Adopt LangGraph as the real orchestration engine, replacing the linear HTTP-hand
               except Exception as e:
                   await update_task_status(session, task.id, "failed", reason=str(e))
   ```
-- [ ] Update HTTP command handler to be admission-only: insert task as `queued` → return `accepted {task_id}` immediately; remove all orchestration logic from HTTP handler
+- [x] Update HTTP command handler to be admission-only: insert task as `queued` → return `accepted {task_id}` immediately; remove all orchestration logic from HTTP handler
 
 ### Outputs
 
@@ -54,10 +54,10 @@ Adopt LangGraph as the real orchestration engine, replacing the linear HTTP-hand
 
 ### Done criteria
 
-- [ ] End-to-end test: `queued` task progresses through all four nodes to `completed` via real LangGraph graph
-- [ ] OPA deny in `policy_evaluation_node` → task transitions to `blocked` without reaching dispatch
-- [ ] HTTP handler returns `202 accepted` immediately; task result visible only via status poll
-- [ ] `InMemory` task state machine placeholder replaced
+- [x] End-to-end test: `queued` task progresses through all four nodes to `completed` via real LangGraph graph
+- [x] OPA deny in `policy_evaluation_node` → task transitions to `blocked` without reaching dispatch
+- [x] HTTP handler returns `202 accepted` immediately; task result visible only via status poll
+- [x] `InMemory` task state machine placeholder replaced
 
 ---
 

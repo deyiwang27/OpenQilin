@@ -12,7 +12,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 |---|---|---|---|
 | M11 | `done` | 4 / 4 | All WPs complete; exit criteria met |
 | M12 | `done` | 8 / 8 | All WPs done; PR #88 raised; exit criteria partially met (compose stack validation pending prod) |
-| M13 | `planned` | 0 / 8 | Entry gate: M12 complete; milestone tracker #97; WPs #89–#96 |
+| M13 | `in_progress` | 1 / 8 | M13-WP1 done (LangGraph adoption); WPs #89–#96 |
 | M14 | `planned` | 0 / 7 | Entry gate: M13 complete; all remaining agents + file-backed artifact storage |
 | M15 | `planned` | 0 / 6 | Entry gate: M14 complete |
 | M16 | `planned` | 0 / 5 | Entry gate: M15 complete |
