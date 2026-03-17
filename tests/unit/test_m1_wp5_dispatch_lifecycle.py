@@ -49,7 +49,7 @@ def _build_task(
     # Advance to 'authorized' (as if policy evaluation passed) so dispatch
     # tests start from the correct pre-dispatch state.
     repository.update_task_status(task.task_id, "authorized")
-    task = repository.get_task_by_id(task.task_id)
+    task = repository.get_task_by_id(task.task_id)  # type: ignore[assignment]
     return task, repository
 
 

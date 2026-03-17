@@ -206,7 +206,7 @@ class TestPostgresRepoTransitionGuard:
         )
 
         repo = PostgresTaskRepository.__new__(PostgresTaskRepository)
-        repo.get_task_by_id = MagicMock(return_value=existing_task)
+        repo.get_task_by_id = MagicMock(return_value=existing_task)  # type: ignore[method-assign]
         # _session_factory not called for illegal transitions
         repo._session_factory = MagicMock()
         return repo

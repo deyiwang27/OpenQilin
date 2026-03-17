@@ -13,6 +13,7 @@ Coverage:
 from __future__ import annotations
 
 import pytest
+from typing import Any
 from unittest.mock import MagicMock
 
 from openqilin.agents.cso.agent import CSOAgent, assert_opa_client_required
@@ -64,7 +65,7 @@ def _make_request(intent: IntentClass, message: str = "test message") -> CSORequ
     )
 
 
-def _stub_deny_policy() -> object:
+def _stub_deny_policy() -> Any:
     """Return a policy client that always denies."""
     client = MagicMock()
     client.evaluate.return_value = PolicyEvaluationResult(
@@ -78,7 +79,7 @@ def _stub_deny_policy() -> object:
     return client
 
 
-def _stub_allow_policy() -> object:
+def _stub_allow_policy() -> Any:
     """Return a policy client that always allows."""
     client = MagicMock()
     client.evaluate.return_value = PolicyEvaluationResult(
@@ -92,7 +93,7 @@ def _stub_allow_policy() -> object:
     return client
 
 
-def _stub_llm(text: str = "governance advisory response") -> object:
+def _stub_llm(text: str = "governance advisory response") -> Any:
     """Return an LLM gateway that always returns the given text."""
     llm = MagicMock()
     llm.complete.return_value = _llm_response(text)

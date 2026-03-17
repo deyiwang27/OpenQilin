@@ -60,8 +60,8 @@ class TestEmitAuditEventObligation:
         ctx = _make_context()
         result = ObligationDispatcher().apply(("emit_audit_event",), ctx)
         assert result.all_satisfied
-        ctx.audit_writer.write_event.assert_called_once()
-        call_kwargs = ctx.audit_writer.write_event.call_args.kwargs
+        ctx.audit_writer.write_event.assert_called_once()  # type: ignore[attr-defined]
+        call_kwargs = ctx.audit_writer.write_event.call_args.kwargs  # type: ignore[attr-defined]
         assert call_kwargs["event_type"] == "obligation.emit_audit_event"
 
     def test_emit_audit_event_fires_first(self) -> None:
@@ -72,7 +72,7 @@ class TestEmitAuditEventObligation:
 
     def test_emit_audit_event_non_blocking_on_failure(self) -> None:
         ctx = _make_context()
-        ctx.audit_writer.write_event.side_effect = RuntimeError("db down")
+        ctx.audit_writer.write_event.side_effect = RuntimeError("db down")  # type: ignore[attr-defined]
         result = ObligationDispatcher().apply(("emit_audit_event",), ctx)
         # Non-blocking — all_satisfied=False but no blocking_obligation
         assert not result.all_satisfied
@@ -85,8 +85,8 @@ class TestRequireOwnerApprovalObligation:
         result = ObligationDispatcher().apply(("require_owner_approval",), ctx)
         assert not result.all_satisfied
         assert result.blocking_obligation == "require_owner_approval"
-        ctx.runtime_state_repo.update_task_status.assert_called_once()
-        call_args = ctx.runtime_state_repo.update_task_status.call_args
+        ctx.runtime_state_repo.update_task_status.assert_called_once()  # type: ignore[attr-defined]
+        call_args = ctx.runtime_state_repo.update_task_status.call_args  # type: ignore[attr-defined]
         assert call_args.args[1] == "blocked"
         assert call_args.kwargs["outcome_error_code"] == "approval_required"
 
@@ -114,14 +114,14 @@ class TestReserveBudgetObligation:
         budget_outcome.allowed = False
         budget_outcome.message = "over budget"
         budget_outcome.reservation = None
-        ctx.budget_reservation_service.reserve_with_fail_closed.return_value = budget_outcome
+        ctx.budget_reservation_service.reserve_with_fail_closed.return_value = budget_outcome  # type: ignore[attr-defined]
         result = ObligationDispatcher().apply(("reserve_budget",), ctx)
         assert not result.all_satisfied
         assert result.blocking_obligation == "reserve_budget"
 
     def test_reserve_budget_fail_closed_on_exception(self) -> None:
         ctx = _make_context()
-        ctx.budget_reservation_service.reserve_with_fail_closed.side_effect = RuntimeError(
+        ctx.budget_reservation_service.reserve_with_fail_closed.side_effect = RuntimeError(  # type: ignore[attr-defined]
             "service down"
         )
         result = ObligationDispatcher().apply(("reserve_budget",), ctx)
