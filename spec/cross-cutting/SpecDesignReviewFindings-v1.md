@@ -27,27 +27,27 @@ Systematic review of all agent role specs, authority profiles, escalation models
 | # | Category | Finding | Severity | Status |
 | --- | --- | --- | --- | --- |
 | 1.1 | Authority Profile | CEO `review: deny` vs SafetyDoctrine "evaluates major safety incidents" | High | `resolved` |
-| 1.2 | Authority Profile | PM workforce scope — creates Specialists only within project scope | Medium | `open` |
-| 1.3 | Authority Profile | CWO co-approval — "command" or "approval role"? | Medium | `open` |
-| 1.4 | Authority Profile | CSO `decision: allow` — outputs are recommendations, not decisions | Medium | `open` |
+| 1.2 | Authority Profile | PM workforce scope — creates Specialists only within project scope | Medium | `resolved` |
+| 1.3 | Authority Profile | CWO co-approval — "command" or "approval role"? | Medium | `resolved` |
+| 1.4 | Authority Profile | CSO `decision: allow` — outputs are recommendations, not decisions | Medium | `resolved` |
 | 2.1 | Escalation Path | No timeout or non-response handling for owner approval requests | High | `resolved` |
 | 2.2 | Escalation Path | Loop controls and escalation chains interact destructively | High | `resolved` |
 | 2.3 | Escalation Path | No bypass path when PM is the behavioral violator | High | `resolved` |
-| 2.4 | Escalation Path | No formal auditor accountability mechanism | Medium | `open` |
-| 3.1 | Gate Flow | No proposal timeout — CWO proposal can block indefinitely | Medium | `open` |
-| 3.2 | Gate Flow | GATE-003 three-cycle block — CEO still advances but accountability not logged | Medium | `open` |
+| 2.4 | Escalation Path | No formal auditor accountability mechanism | Medium | `resolved` |
+| 3.1 | Gate Flow | No proposal timeout — CWO proposal can block indefinitely | Medium | `resolved` |
+| 3.2 | Gate Flow | GATE-003 three-cycle block — CEO still advances but accountability not logged | Medium | `resolved` |
 | 3.3 | Gate Flow | `completion_report` immutability creates completion deadlock | High | `resolved` |
-| 3.4 | Gate Flow | No trigger defined for DecisionReviewGate flow initiation | Medium | `open` |
+| 3.4 | Gate Flow | No trigger defined for DecisionReviewGate flow initiation | Medium | `resolved` |
 | 4.1 | Cross-Role Boundary | Secretary can "request participation from Specialist" — conflicts with PM-dispatch-only | High | `resolved` |
-| 4.2 | Cross-Role Boundary | Project pause authority gap — no single agent has clear pause authority | Medium | `open` |
-| 4.3 | Cross-Role Boundary | Specialist→DL clarification path activation criteria undefined | Medium | `open` |
-| 4.4 | Cross-Role Boundary | `project_charter` co-owner: CWO commands it, CEO approves it — write authority ambiguous | Medium | `open` |
+| 4.2 | Cross-Role Boundary | Project pause authority gap — no single agent has clear pause authority | Medium | `resolved` |
+| 4.3 | Cross-Role Boundary | Specialist→DL clarification path activation criteria undefined | Medium | `resolved` |
+| 4.4 | Cross-Role Boundary | `project_charter` co-owner: CWO commands it, CEO approves it — write authority ambiguous | Medium | `resolved` |
 | 5.1 | Stale Spec Text | OwnerInteractionModel describes CSO as OPA governance gate | High | `resolved` |
-| 5.2 | Stale Spec Text | DL contract still says "disabled in current phase" | Low | `open` |
-| 5.3 | Stale Spec Text | Specialist contract still says "disabled in current phase" | Low | `open` |
-| 6.1 | Missing Spec | No Owner Role Contract | Medium | `open` |
-| 6.2 | Missing Spec | No `task_execution_results` spec (referenced by M14-WP6/WP7) | Medium | `open` |
-| 6.3 | Missing Spec | DL→CSO strategic insight request mechanism undefined | Low | `open` |
+| 5.2 | Stale Spec Text | DL contract still says "disabled in current phase" | Low | `resolved` |
+| 5.3 | Stale Spec Text | Specialist contract still says "disabled in current phase" | Low | `resolved` |
+| 6.1 | Missing Spec | No Owner Role Contract | Medium | `resolved` |
+| 6.2 | Missing Spec | No `task_execution_results` spec (referenced by M14-WP6/WP7) | Medium | `resolved` |
+| 6.3 | Missing Spec | DL→CSO strategic insight request mechanism undefined | Low | `resolved` |
 
 ---
 
@@ -331,28 +331,28 @@ Systematic review of all agent role specs, authority profiles, escalation models
 
 | Finding | Resolution | Spec File Changed | Milestone Impact | Done |
 | --- | --- | --- | --- | --- |
-| 1.1 | CEO emergency_review carve-out in CeoRoleContract §3 | `CeoRoleContract.md`, `AgentAuthorityGraph.md` | M14-WP2 done criteria | ☐ |
-| 1.2 | `workforce_scope: project_bound` in PM profile + M14-WP1 done criterion | `ProjectManagerRoleContract.md` | M14-WP1 | ☐ |
-| 1.3 | CWO GATE-005 is command not approval; rename in DecisionReviewGates | `CwoRoleContract.md`, `DecisionReviewGates.md` | M14-WP3 | ☐ |
-| 1.4 | Clarify CSO `decision: allow` as advisory opinion, not binding | `CsoRoleContract.md`, `AgentAuthorityGraph.md` | M13-WP7 | ☐ |
-| 2.1 | ESC-007 approval timeout; Secretary expiry notification | `EscalationModel.md` | M16 or new WP | ☐ |
-| 2.2 | LOOP-006 escalation trace reset — escalation messages exempt from hop count | `AgentLoopControls.md` | M13-WP1 | ☐ |
-| 2.3 | ESC-008 PM violation → Auditor → owner direct path | `EscalationModel.md`, `AuditorRoleContract.md` | M14-WP4 | ☐ |
-| 2.4 | Owner `auditor_override` command; Auditor records override | `AuditorRoleContract.md` | M14-WP4 | ☐ |
-| 3.1 | Gate timeouts in DecisionReviewGates §4 | `DecisionReviewGates.md` | M13-WP7 / M14-WP2 | ☐ |
-| 3.2 | GATE-003 block → owner notification + override/terminate options | `DecisionReviewGates.md` | M14-WP2 | ☐ |
-| 3.3 | `completion_report` sealing on owner approval, not publication | `ProjectArtifactModel.md` | M14-WP7 | ☐ |
-| 3.4 | Gate flow trigger: CWO `submit_proposal()` → Secretary initiates GATE-001 | `DecisionReviewGates.md` | M13-WP7 | ☐ |
-| 4.1 | Remove `specialist` from Secretary routing list | `SecretaryRoleContract.md` | M13-WP8 | ☐ |
-| 4.2 | Pause authority hierarchy + stacked pause handling | `SafetyDoctrine.md` | M14-WP4 or M16 | ☐ |
-| 4.3 | Specialist clarification criteria in SpecialistRoleContract §5 | `SpecialistRoleContract.md` | M14-WP6 | ☐ |
-| 4.4 | `project_charter` write = CWO only; CEO approval = separate record | `ProjectArtifactModel.md` | M14-WP3 | ☐ |
-| 5.1 | Fix OwnerInteractionModel CSO description | `OwnerInteractionModel.md` (both copies) | M13-WP7 | ☐ |
-| 5.2 | Remove DL "disabled" text | `DomainLeaderRoleContract.md` | M13-WP5 | ☐ |
-| 5.3 | Remove Specialist "disabled" text | `SpecialistRoleContract.md` | M14-WP6 | ☐ |
-| 6.1 | Create OwnerRoleContract.md | new file | M16 or M17 | ☐ |
-| 6.2 | Create TaskExecutionResultsModel.md | new file | M14-WP6 | ☐ |
-| 6.3 | CSO async advisory pattern in CsoRoleContract §5 | `CsoRoleContract.md` | M13-WP7 | ☐ |
+| 1.1 | CEO emergency_review carve-out in CeoRoleContract §4 | `CeoRoleContract.md`, `AgentAuthorityGraph.md` | M14-WP2 done criteria | ☑ |
+| 1.2 | `workforce_scope: project_bound` in PM profile + M14-WP1 done criterion | `ProjectManagerRoleContract.md` | M14-WP1 | ☑ |
+| 1.3 | CWO GATE-005 is command not approval; renamed in DecisionReviewGates | `CwoRoleContract.md`, `DecisionReviewGates.md` | M14-WP3 | ☑ |
+| 1.4 | Clarify CSO `decision: allow` as advisory opinion, not binding | `CsoRoleContract.md`, `AgentAuthorityGraph.md` | M13-WP7 | ☑ |
+| 2.1 | ESC-007 approval timeout; Secretary expiry notification | `EscalationModel.md` | M16 or new WP | ☑ |
+| 2.2 | LOOP-006 escalation trace reset — escalation messages exempt from hop count | `AgentLoopControls.md` | M13-WP1 | ☑ |
+| 2.3 | ESC-008 PM violation → Auditor → owner direct path | `EscalationModel.md`, `AuditorRoleContract.md` | M14-WP4 | ☑ |
+| 2.4 | Owner `auditor_override` command; Auditor records override | `AuditorRoleContract.md` | M14-WP4 | ☑ |
+| 3.1 | Gate timeouts in DecisionReviewGates §3 | `DecisionReviewGates.md` | M13-WP7 / M14-WP2 | ☑ |
+| 3.2 | GATE-003 block → owner notification + override/terminate options | `DecisionReviewGates.md` | M14-WP2 | ☑ |
+| 3.3 | `completion_report` sealing on owner approval, not publication | `ProjectArtifactModel.md` | M14-WP7 | ☑ |
+| 3.4 | Gate flow trigger: CWO `submit_proposal()` → Secretary initiates GATE-001 | `DecisionReviewGates.md` | M13-WP7 | ☑ |
+| 4.1 | Remove `specialist` from Secretary routing list | `SecretaryRoleContract.md` | M13-WP8 | ☑ |
+| 4.2 | Pause authority hierarchy + stacked pause handling | `SafetyDoctrine.md` | M14-WP4 or M16 | ☑ |
+| 4.3 | Specialist clarification criteria in SpecialistRoleContract §6 | `SpecialistRoleContract.md` | M14-WP6 | ☑ |
+| 4.4 | `project_charter` write = CWO only; CEO+owner approval = separate gate record | `ProjectArtifactModel.md` | M14-WP3 | ☑ |
+| 5.1 | Fix OwnerInteractionModel CSO description | `OwnerInteractionModel.md` | M13-WP7 | ☑ |
+| 5.2 | Remove DL "disabled" text; update to M13-WP5 activation | `DomainLeadRoleContract.md` | M13-WP5 | ☑ |
+| 5.3 | Remove Specialist "disabled" text; update to M14-WP6 activation | `SpecialistRoleContract.md` | M14-WP6 | ☑ |
+| 6.1 | Create OwnerRoleContract.md | `OwnerRoleContract.md` (new) | M16 or M17 | ☑ |
+| 6.2 | Create TaskExecutionResultsModel.md | `TaskExecutionResultsModel.md` (new) | M14-WP6 | ☑ |
+| 6.3 | CSO async advisory pattern in CsoRoleContract §6 | `CsoRoleContract.md` | M13-WP7 | ☑ |
 
 ---
 

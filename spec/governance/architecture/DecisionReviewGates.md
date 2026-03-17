@@ -14,15 +14,25 @@ MVP v1 (simplified, CSO deferred):
 
 MVP v2 (full gate, CSO active):
 
-- owner/cwo proposal drafting → **cso strategic review** → ceo+cwo review → owner+ceo approval → cwo project initialization
-- cso is activated in M12 and participates as a mandatory strategic review step before ceo+cwo review.
+- owner/cwo proposal drafting → **cso strategic review** → ceo+cwo review → owner+ceo approval → **cwo initialization command**
+- cso is activated in M13-WP7 and participates as a mandatory strategic review step before ceo+cwo review.
 - proposal revisions remain in `proposed` project state until approval.
+
+**Gate flow trigger:** Gate flow is triggered when CWO calls `submit_proposal(project_charter)`. Secretary registers the proposal in `governance_artifacts` with `status: gate_pending`. Secretary then initiates GATE-001 (CSO review) by routing to CSO. All subsequent gate transitions are driven by Secretary based on current gate state and recorded outcomes. (Note: CWO's GATE-005 action is a **workforce initialization command**, not a decision approval — `decision: deny` applies to CWO throughout the flow.)
 
 ## 3. Strategic Review Outcomes
 
 - `Aligned`: proposal proceeds to ceo+cwo review.
 - `Needs Revision`: proposal must be revised and resubmitted before advancing.
-- `Strategic Conflict`: after three unresolved revision cycles, proposal requires explicit ceo override to proceed.
+- `Strategic Conflict`: after three unresolved revision cycles, proposal is blocked. On block: emit `revision_cycle_exhausted` audit event with full revision history. Owner is notified directly by Secretary. Owner may either: (a) issue a `gate_override` command (with mandatory justification) to advance to the approval gate; or (b) issue a `proposal_terminate` command to close the gate flow. CEO and CWO both receive the block notification and cannot unilaterally restart the flow.
+
+**Gate timeouts** (default values; configurable via `settings.py`):
+
+| Gate | Stage | Timeout | On Expiry |
+| --- | --- | --- | --- |
+| GATE-001 | CSO strategic review | 24h | Emit `gate_timeout`; Secretary notifies CWO and CSO; CWO may resubmit |
+| GATE-003 | CEO+CWO review | 48h | Emit `gate_timeout`; Secretary notifies CEO and CWO; proposal returns to `proposed` |
+| GATE-004 | Owner+CEO approval | 48h | Emit `gate_timeout`; Secretary notifies owner; proposal returns to `proposed` |
 
 ## 4. Decision Ownership
 
@@ -40,7 +50,7 @@ MVP v2 (full gate, CSO active):
 | GATE-002 | Proposals marked `Needs Revision` MUST NOT proceed without resubmission. | high | Task Orchestrator |
 | GATE-003 | `Strategic Conflict` proposals with three unresolved revision cycles MUST require explicit ceo override to proceed. | high | Task Orchestrator |
 | GATE-004 | ceo final decision outcomes MUST be audit logged with rationale. | medium | Observability |
-| GATE-005 | Proposals MUST pass cso strategic review before entering ceo+cwo review (MVP v2). | high | Task Orchestrator |
+| GATE-005 | Proposals MUST pass cso strategic review before entering ceo+cwo review (MVP v2). CWO project initialization (GATE-005 action) is a workforce command, not a decision approval. | high | Task Orchestrator |
 | GATE-006 | cso strategic review outcomes MUST be recorded with traceable metadata before the proposal advances. | medium | Observability |
 
 ## 6. Gate Event Contract

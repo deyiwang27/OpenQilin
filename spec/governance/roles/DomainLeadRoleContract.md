@@ -2,7 +2,7 @@
 
 ## 1. Scope
 - Defines runtime contract for `domain_leader`.
-- First MVP posture: role is declared in schema for forward compatibility but runtime activation is disabled by policy.
+- Activated in M13-WP5 after project-space binding is in place.
 
 ## 2. Role Identity
 - `role_id`: `domain_leader`
@@ -40,7 +40,7 @@
 
 ## 6. Escalation and Routing
 - Escalate unresolved technical risk to `project_manager`.
-- Escalate material domain risk to `cwo` through project governance path.
+- Escalate material domain risk to `project_manager`; PM escalates to `cwo` if warranted. DL does not route directly to `cwo`.
 - Advisory output cannot be used as command delegation.
 
 ## 7. Runtime Interfaces

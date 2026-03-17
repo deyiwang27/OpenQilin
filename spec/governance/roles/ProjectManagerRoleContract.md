@@ -32,6 +32,8 @@
 | oversight | deny |
 | workforce | allow |
 
+**Workforce scope constraint:** `workforce: allow` is bounded to the PM's assigned project (`workforce_scope: project_bound`). PM may only create or command Specialist agents within the assigned project scope and budget. Cross-project workforce actions are denied (AUTH-001). In implementation, `dispatch_specialist()` must validate `task.project_id == pm.assigned_project_id` before creating the Specialist.
+
 ## 5. Data Access Boundaries
 - Read scope:
   - project task state, milestone progress, scoped budget and risk status

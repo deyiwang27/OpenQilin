@@ -24,7 +24,7 @@
 ## 3. Canonical Artifact Types (MVP-Strict Enum)
 | Artifact Type | Primary Owner | Scope | Required For `approved -> active` | Per-Type Active Cap | Mutability Model |
 | --- | --- | --- | --- | --- | --- |
-| `project_charter` | `owner`, `ceo`, `cwo` | project | yes | 1 | versioned update |
+| `project_charter` | `cwo` (creates/revises); `owner`+`ceo` (approve via gate record) | project | yes | 1 | versioned update |
 | `scope_statement` | `owner`, `ceo`, `cwo` | project | yes | 1 | versioned update |
 | `budget_plan` | `owner`, `ceo`, `cwo` | project | yes | 1 | versioned update |
 | `success_metrics` | `owner`, `ceo`, `cwo` | project | yes | 1 | versioned update |

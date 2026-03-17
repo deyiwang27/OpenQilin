@@ -27,6 +27,8 @@ Notes:
 - `secretary` is advisory-only and acts as onboarding guide + status interpreter + triage router.
 - `secretary` has read-only access to relevant dashboard, alert, and owner chat data for basic analysis.
 - `secretary` can invite executive/specialist participation for out-of-scope questions, but cannot command them.
+- `cso` `decision: Y` means CSO may form and issue a strategic review opinion (Aligned / Needs Revision / Strategic Conflict). It does not confer approval or veto authority — CSO decisions are advisory and non-binding without CEO or owner endorsement. See `CsoRoleContract §4`.
+- CEO `emergency_review` carve-out: CEO `review: -` applies to routine review. CEO retains bounded `emergency_review` authority for safety incidents and emergency project shutdown only. See `CeoRoleContract §4`.
 
 ## 4. Hard Constraints
 - Governance agents cannot participate in project execution.

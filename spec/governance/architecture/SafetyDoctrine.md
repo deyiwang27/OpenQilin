@@ -44,6 +44,8 @@ Pause reporting requirements:
 - Any agent pause action must notify ceo.
 - If pause impact is critical to project continuity or governance integrity, owner must be alerted immediately.
 
+**Project pause authority hierarchy:** `owner > auditor (safety) > ceo (emergency) > project_manager (budget/operational)`. Any agent may request a pause by issuing a `pause_request` event to the governance channel. Pause is applied immediately by Secretary (who tracks project state). Resume requires the pausing authority or owner to issue `resume_command`. Stacked pauses: a project remains paused until all active pause requests are cleared. Each pause request must reference the rule that triggered it.
+
 ## 6. Rule Set
 | Rule ID | Statement | Severity | Enforced By |
 | --- | --- | --- | --- |

@@ -26,6 +26,8 @@
 | oversight | deny |
 | workforce | deny |
 
+**Note on `decision: allow`:** CSO `decision: allow` means CSO may form and issue a strategic review opinion (e.g. `Aligned`, `Needs Revision`, `Strategic Conflict`). It does **not** confer approval or veto authority over projects. CSO recommendations are advisory and non-binding without CEO or owner endorsement. CSO cannot approve, block, or terminate a project unilaterally.
+
 ## 5. Data Access Boundaries
 - Read scope:
   - cross-project metrics, strategic trend signals, risk summaries
@@ -41,6 +43,7 @@
 - Strategic conflicts escalate to `ceo`.
 - Material strategic risk may be routed to `owner` per governance policy.
 - Execution-level remediation requests are routed to `cwo` or `project_manager`.
+- Domain leader advisory path: `domain_leader` may submit a `strategic_insight_request` to CSO through the governance channel (routed by Secretary). CSO responds with an advisory record in `governance_artifacts`. The response is non-binding; DL does not wait on CSO before proceeding (async advisory pattern).
 
 ## 7. Runtime Interfaces
 - `spec/governance/architecture/DecisionReviewGates.md`
