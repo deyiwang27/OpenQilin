@@ -290,12 +290,12 @@ def _mapping_from_row(row: dict[str, object]) -> IdentityChannelMappingRecord:
     updated_at = row["updated_at"]
     if isinstance(created_at, str):
         created_at = datetime.fromisoformat(created_at).astimezone(UTC)
-    elif hasattr(created_at, "tzinfo") and created_at.tzinfo is None:  # type: ignore[union-attr]
-        created_at = created_at.replace(tzinfo=UTC)  # type: ignore[union-attr]
+    elif hasattr(created_at, "tzinfo") and created_at.tzinfo is None:  # type: ignore[attr-defined]
+        created_at = created_at.replace(tzinfo=UTC)  # type: ignore[attr-defined]
     if isinstance(updated_at, str):
         updated_at = datetime.fromisoformat(updated_at).astimezone(UTC)
-    elif hasattr(updated_at, "tzinfo") and updated_at.tzinfo is None:  # type: ignore[union-attr]
-        updated_at = updated_at.replace(tzinfo=UTC)  # type: ignore[union-attr]
+    elif hasattr(updated_at, "tzinfo") and updated_at.tzinfo is None:  # type: ignore[attr-defined]
+        updated_at = updated_at.replace(tzinfo=UTC)  # type: ignore[attr-defined]
     status = str(row.get("status", "pending")).strip().lower()
     return IdentityChannelMappingRecord(
         mapping_id=str(row["mapping_id"]),

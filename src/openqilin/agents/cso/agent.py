@@ -27,7 +27,10 @@ from openqilin.llm_gateway.schemas.requests import (
 )
 from openqilin.llm_gateway.service import LlmGatewayService
 from openqilin.policy_runtime_integration.client import PolicyRuntimeClient
-from openqilin.policy_runtime_integration.models import PolicyEvaluationInput
+from openqilin.policy_runtime_integration.models import (
+    PolicyEvaluationInput,
+    PolicyEvaluationResult,
+)
 
 # CSO advisory-only policy context: CSO itself is advisory — never mutation.
 _CSO_POLICY_CONTEXT = LlmPolicyContext(
@@ -105,7 +108,7 @@ class CSOAgent:
             trace_id=request.trace_id,
         )
 
-    def _evaluate_governance(self, request: CSORequest) -> object:
+    def _evaluate_governance(self, request: CSORequest) -> PolicyEvaluationResult:
         """Evaluate the request against OPA policy for governance gate decision."""
         policy_input = PolicyEvaluationInput(
             task_id=_CSO_ADVISORY_TASK_ID,

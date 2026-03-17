@@ -225,7 +225,7 @@ def build_runtime_services() -> RuntimeServices:
     # --- services ----------------------------------------------------------------
     admission_service = AdmissionService(
         dedupe_store=ingress_dedupe,
-        runtime_state_repo=runtime_state_repo,
+        runtime_state_repo=runtime_state_repo,  # type: ignore[arg-type]
     )
     policy_runtime_client: PolicyRuntimeClient = (
         OPAPolicyRuntimeClient(opa_url=settings.opa_url)
@@ -239,7 +239,7 @@ def build_runtime_services() -> RuntimeServices:
 
     budget_runtime_client = InMemoryBudgetRuntimeClient()
     budget_reservation_service = BudgetReservationService(client=budget_runtime_client)
-    lifecycle_service = TaskLifecycleService(runtime_state_repo=runtime_state_repo)
+    lifecycle_service = TaskLifecycleService(runtime_state_repo=runtime_state_repo)  # type: ignore[arg-type]
     retrieval_query_service = build_retrieval_query_service()
     tracer = InMemoryTracer()
     # M12-WP5: OTelAuditWriter when Postgres is available; InMemory otherwise.
@@ -250,8 +250,8 @@ def build_runtime_services() -> RuntimeServices:
     )
     metric_recorder = InMemoryMetricRecorder()
     delivery_event_callback_processor = InMemoryDeliveryEventCallbackProcessor(
-        runtime_state_repo=runtime_state_repo,
-        audit_writer=audit_writer,
+        runtime_state_repo=runtime_state_repo,  # type: ignore[arg-type]
+        audit_writer=audit_writer,  # type: ignore[arg-type]
         metric_recorder=metric_recorder,
     )
     communication_outcome_notifier = CommunicationOutcomeNotifier(
@@ -259,15 +259,15 @@ def build_runtime_services() -> RuntimeServices:
     )
     task_dispatch_service = build_task_dispatch_service(
         lifecycle_service=lifecycle_service,
-        audit_writer=audit_writer,
+        audit_writer=audit_writer,  # type: ignore[arg-type]
         metric_recorder=metric_recorder,
-        communication_repository=communication_repo,
+        communication_repository=communication_repo,  # type: ignore[arg-type]
         idempotency_cache_store=idempotency_cache_store,
         retrieval_query_service=retrieval_query_service,
-        governance_project_reader=governance_repo,
-        governance_repository=governance_repo,
-        project_artifact_repository=project_artifact_repo,
-        runtime_state_repository=runtime_state_repo,
+        governance_project_reader=governance_repo,  # type: ignore[arg-type]
+        governance_repository=governance_repo,  # type: ignore[arg-type]
+        project_artifact_repository=project_artifact_repo,  # type: ignore[arg-type]
+        runtime_state_repository=runtime_state_repo,  # type: ignore[arg-type]
         budget_runtime_client=budget_runtime_client,
     )
 

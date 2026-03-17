@@ -217,8 +217,8 @@ def _task_from_row(row: dict[str, object]) -> TaskRecord:
     created_at = row["created_at"]
     if isinstance(created_at, str):
         created_at = datetime.fromisoformat(created_at).astimezone(UTC)
-    elif hasattr(created_at, "tzinfo") and created_at.tzinfo is None:  # type: ignore[union-attr]
-        created_at = created_at.replace(tzinfo=UTC)  # type: ignore[union-attr]
+    elif hasattr(created_at, "tzinfo") and created_at.tzinfo is None:  # type: ignore[attr-defined]
+        created_at = created_at.replace(tzinfo=UTC)  # type: ignore[attr-defined]
     return TaskRecord(
         task_id=str(row["task_id"]),
         request_id=str(row["request_id"]),

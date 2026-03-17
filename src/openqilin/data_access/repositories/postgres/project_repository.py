@@ -555,8 +555,8 @@ def _dt_from_iso(value: str | None | object) -> datetime | None:
     if isinstance(value, str):
         return datetime.fromisoformat(value).astimezone(UTC)
     if hasattr(value, "tzinfo"):
-        if value.tzinfo is None:  # type: ignore[union-attr]
-            return value.replace(tzinfo=UTC)  # type: ignore[return-value]
+        if value.tzinfo is None:  # type: ignore[attr-defined]
+            return value.replace(tzinfo=UTC)  # type: ignore[attr-defined, return-value]
         return value  # type: ignore[return-value]
     return None
 
@@ -585,7 +585,7 @@ def _transition_from_dict(d: dict[str, object]) -> ProjectStatusTransitionRecord
         timestamp=_dt_from_iso(d.get("timestamp")),  # type: ignore[arg-type]
         metadata=tuple(
             (str(item[0]), str(item[1]))
-            for item in (d.get("metadata") or [])
+            for item in (d.get("metadata") or [])  # type: ignore[attr-defined]
             if isinstance(item, (list, tuple)) and len(item) == 2
         ),
     )
@@ -661,7 +661,7 @@ def _completion_report_from_dict(d: dict[str, object]) -> CompletionReportRecord
         summary=str(d["summary"]),
         metric_results=tuple(
             (str(item[0]), str(item[1]))
-            for item in (d.get("metric_results") or [])
+            for item in (d.get("metric_results") or [])  # type: ignore[attr-defined]
             if isinstance(item, (list, tuple)) and len(item) == 2
         ),
         trace_id=str(d["trace_id"]),
@@ -808,7 +808,7 @@ def _workforce_binding_from_dict(d: dict[str, object]) -> WorkforceBindingRecord
         template_id=str(d["template_id"]),
         llm_routing_profile=str(d["llm_routing_profile"]),
         system_prompt_hash=str(d["system_prompt_hash"]),
-        mandatory_operations=tuple(str(op) for op in (d.get("mandatory_operations") or [])),
+        mandatory_operations=tuple(str(op) for op in (d.get("mandatory_operations") or [])),  # type: ignore[attr-defined]
         binding_status=str(d["binding_status"]),
         actor_id=str(d["actor_id"]),
         actor_role=str(d["actor_role"]),

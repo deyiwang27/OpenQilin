@@ -332,7 +332,7 @@ def _transition_from_dict(d: dict[str, object]) -> CommunicationStateTransition:
     if isinstance(changed_at_raw, str):
         changed_at = datetime.fromisoformat(changed_at_raw).astimezone(UTC)
     elif hasattr(changed_at_raw, "tzinfo"):
-        changed_at = changed_at_raw if changed_at_raw.tzinfo else changed_at_raw.replace(tzinfo=UTC)  # type: ignore[union-attr]
+        changed_at = changed_at_raw if changed_at_raw.tzinfo else changed_at_raw.replace(tzinfo=UTC)  # type: ignore[attr-defined, assignment]
     else:
         changed_at = datetime.now(tz=UTC)
     return CommunicationStateTransition(
@@ -373,8 +373,8 @@ def _parse_dt(value: object) -> datetime:
     if isinstance(value, str):
         return datetime.fromisoformat(value).astimezone(UTC)
     if hasattr(value, "tzinfo"):
-        if value.tzinfo is None:  # type: ignore[union-attr]
-            return value.replace(tzinfo=UTC)  # type: ignore[return-value]
+        if value.tzinfo is None:  # type: ignore[attr-defined]
+            return value.replace(tzinfo=UTC)  # type: ignore[attr-defined, return-value]
         return value  # type: ignore[return-value]
     return datetime.now(tz=UTC)
 
@@ -394,7 +394,7 @@ def _record_from_row(row: dict[str, object]) -> CommunicationMessageRecord:
         target=str(row["target"]),
         route_key=str(row["route_key"]),
         endpoint=str(row["endpoint"]),
-        attempt=int(row.get("attempt", 1)),  # type: ignore[arg-type]
+        attempt=int(row.get("attempt", 1)),  # type: ignore[call-overload]
         state=str(row["state"]),  # type: ignore[arg-type]
         dispatch_id=str(row["dispatch_id"]) if row.get("dispatch_id") else None,
         delivery_id=str(row["delivery_id"]) if row.get("delivery_id") else None,
@@ -426,7 +426,7 @@ def _dead_letter_from_row(row: dict[str, object]) -> CommunicationDeadLetterReco
         endpoint=str(row["endpoint"]),
         error_code=str(row["error_code"]),
         error_message=str(row["error_message"]),
-        attempts=int(row.get("attempts", 0)),  # type: ignore[arg-type]
+        attempts=int(row.get("attempts", 0)),  # type: ignore[call-overload]
         ledger_id=str(row["ledger_id"]) if row.get("ledger_id") else None,
         created_at=_parse_dt(row["created_at"]),
     )

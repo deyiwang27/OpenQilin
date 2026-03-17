@@ -88,7 +88,7 @@ class PostgresGovernanceArtifactRepository:
                 .mappings()
                 .first()
             )
-            current_count = int((count_row or {}).get("cnt", 0))  # type: ignore[arg-type]
+            current_count = int((count_row or {}).get("cnt", 0))  # type: ignore[call-overload]
 
             total_count_row = (
                 session.execute(
@@ -98,7 +98,7 @@ class PostgresGovernanceArtifactRepository:
                 .mappings()
                 .first()
             )
-            total_count = int((total_count_row or {}).get("cnt", 0))  # type: ignore[arg-type]
+            total_count = int((total_count_row or {}).get("cnt", 0))  # type: ignore[call-overload]
 
         if is_append_only:
             if current_count >= per_type_cap:
@@ -321,14 +321,14 @@ def _pointer_from_row(row: dict[str, object]) -> ProjectArtifactPointer:
     created_at = row["created_at"]
     if isinstance(created_at, str):
         created_at = datetime.fromisoformat(created_at).astimezone(UTC)
-    elif hasattr(created_at, "tzinfo") and created_at.tzinfo is None:  # type: ignore[union-attr]
-        created_at = created_at.replace(tzinfo=UTC)  # type: ignore[union-attr]
+    elif hasattr(created_at, "tzinfo") and created_at.tzinfo is None:  # type: ignore[attr-defined]
+        created_at = created_at.replace(tzinfo=UTC)  # type: ignore[attr-defined]
     return ProjectArtifactPointer(
         project_id=str(row["project_id"]),
         artifact_type=str(row["artifact_type"]),
-        revision_no=int(row["revision_no"]),  # type: ignore[arg-type]
+        revision_no=int(row["revision_no"]),  # type: ignore[call-overload]
         storage_uri=str(row["storage_uri"]),
         content_hash=str(row["content_hash"]),
         created_at=created_at,  # type: ignore[arg-type]
-        byte_size=int(row["byte_size"]),  # type: ignore[arg-type]
+        byte_size=int(row["byte_size"]),  # type: ignore[call-overload]
     )

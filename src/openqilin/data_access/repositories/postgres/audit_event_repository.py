@@ -128,8 +128,8 @@ def _event_from_row(row: dict[str, object]) -> AuditEventRecord:
     created_at = row["created_at"]
     if isinstance(created_at, str):
         created_at = datetime.fromisoformat(created_at).astimezone(UTC)
-    elif hasattr(created_at, "tzinfo") and created_at.tzinfo is None:  # type: ignore[union-attr]
-        created_at = created_at.replace(tzinfo=UTC)  # type: ignore[union-attr]
+    elif hasattr(created_at, "tzinfo") and created_at.tzinfo is None:  # type: ignore[attr-defined]
+        created_at = created_at.replace(tzinfo=UTC)  # type: ignore[attr-defined]
     return AuditEventRecord(
         event_id=str(row["event_id"]),
         event_type=str(row["event_type"]),

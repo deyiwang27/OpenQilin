@@ -238,7 +238,8 @@ def _emit_otel_log_record(
     """
 
     from opentelemetry._logs import get_logger
-    from opentelemetry.sdk._logs import LogRecord
+    from opentelemetry._logs._internal import LogRecord
+    from opentelemetry._logs.severity import SeverityNumber
     from opentelemetry.trace import TraceFlags
 
     otel_logger = get_logger("openqilin.audit")
@@ -248,9 +249,8 @@ def _emit_otel_log_record(
         span_id=0,
         trace_flags=TraceFlags(0x01),
         severity_text="INFO",
-        severity_number=9,  # INFO
+        severity_number=SeverityNumber.INFO,
         body=message,
-        resource=None,
         attributes={
             "audit.event_id": event_id,
             "audit.event_type": event_type,
