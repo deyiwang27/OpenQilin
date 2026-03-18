@@ -45,6 +45,12 @@ _TEST_ACTORS: tuple[tuple[str, str], ...] = (
     ("owner_m13_wp2_loop_001", "owner"),
     ("owner_m13_wp2_loop_002a", "owner"),
     ("owner_m13_wp2_loop_002b", "owner"),
+    # Conformance test actors
+    ("owner_m2_conformance_001", "owner"),
+    ("owner_m2_conformance_002", "owner"),
+    ("owner_m2_conformance_query_001", "owner"),
+    ("owner_m3_conformance_cb", "owner"),
+    ("owner_m3_conformance_dlq", "owner"),
     ("owner_m10_tool_write_ok", "ceo"),
     ("owner_m10_tool_write_raw_denied", "owner"),
     ("owner_m10_tool_read_denied", "owner"),
