@@ -259,3 +259,167 @@ class TestAdministratorRetention:
         events = audit_writer.get_events()
         assert events[0].rule_ids == ("STR-001",)
         assert events[-1].rule_ids == ("STR-001", "STR-002")
+
+
+class TestDocumentPolicyEdgeCases:
+    def test_artifact_cap_denied_unknown_type(self, tmp_path: Path) -> None:
+        _, document_policy, _, _, _, _ = _make_agent(tmp_path)
+
+        result = document_policy.check_artifact_cap(
+            project_id="proj-001",
+            artifact_type="unknown_xyz_type",
+            trace_id="t1",
+        )
+
+        assert result.allowed is False
+        assert result.denial_code == "artifact_type_not_allowed"
+
+    def test_role_permission_administrator_allowed_any_type(self, tmp_path: Path) -> None:
+        _, document_policy, _, _, _, _ = _make_agent(tmp_path)
+
+        allowed = document_policy.check_role_permission(
+            actor_role="administrator",
+            artifact_type="project_charter",
+            project_status="active",
+        )
+
+        assert allowed is True
+
+    def test_role_permission_non_writable_project_status_denied(self, tmp_path: Path) -> None:
+        _, document_policy, _, _, _, _ = _make_agent(tmp_path)
+
+        allowed = document_policy.check_role_permission(
+            actor_role="administrator",
+            artifact_type="execution_plan",
+            project_status="completed",
+        )
+
+        assert allowed is False
+
+    def test_hash_integrity_pass_when_provided_none(self, tmp_path: Path) -> None:
+        _, document_policy, _, _, _, _ = _make_agent(tmp_path)
+
+        result = document_policy.check_hash_integrity(
+            stored_hash="abc",
+            provided_hash=None,
+            trace_id="t1",
+        )
+
+        assert result.integrity_ok is True
+
+    def test_hash_integrity_pass_when_stored_none(self, tmp_path: Path) -> None:
+        _, document_policy, _, _, _, _ = _make_agent(tmp_path)
+
+        result = document_policy.check_hash_integrity(
+            stored_hash=None,
+            provided_hash="abc",
+            trace_id="t1",
+        )
+
+        assert result.integrity_ok is True
+
+    def test_hash_integrity_pass_when_equal(self, tmp_path: Path) -> None:
+        _, document_policy, _, _, _, _ = _make_agent(tmp_path)
+
+        result = document_policy.check_hash_integrity(
+            stored_hash="same",
+            provided_hash="same",
+            trace_id="t1",
+        )
+
+        assert result.integrity_ok is True
+
+
+class TestAdministratorContainmentEdgeCases:
+    def test_quarantine_agent_requires_agent_id(self, tmp_path: Path) -> None:
+        import pytest
+
+        from openqilin.agents.administrator.models import AdministratorError
+
+        agent, _, _, _, _, _ = _make_agent(tmp_path)
+
+        with pytest.raises(AdministratorError):
+            agent.handle(
+                _request(
+                    action="quarantine_agent",
+                    agent_id=None,
+                    project_id="proj-001",
+                    reason="test",
+                )
+            )
+
+    def test_quarantine_agent_not_found(self, tmp_path: Path) -> None:
+        import pytest
+
+        from openqilin.agents.administrator.models import AdministratorError
+
+        agent, _, _, _, _, _ = _make_agent(tmp_path)
+
+        with pytest.raises(AdministratorError):
+            agent.handle(
+                _request(
+                    action="quarantine_agent",
+                    agent_id="nonexistent-agent",
+                    project_id="proj-001",
+                )
+            )
+
+
+class TestAdministratorHandleRouting:
+    def test_handle_cap_check_via_agent(self, tmp_path: Path) -> None:
+        agent, _, _, _, _, _ = _make_agent(tmp_path)
+
+        response = agent.handle(
+            _request(
+                action="check_artifact_cap",
+                project_id="proj-001",
+                artifact_type="administrator_containment",
+            )
+        )
+
+        assert response.action_taken == "cap_allowed"
+
+    def test_handle_enforce_retention_via_agent(self, tmp_path: Path) -> None:
+        agent, _, _, _, _, _ = _make_agent(tmp_path)
+
+        response = agent.handle(
+            _request(
+                action="enforce_retention",
+                project_id="proj-002",
+                reason="project completed",
+            )
+        )
+
+        assert response.action_taken == "retention_enforced"
+        assert response.audit_record_id is not None
+
+    def test_handle_unknown_action_no_raise(self, tmp_path: Path) -> None:
+        agent, _, _, _, _, _ = _make_agent(tmp_path)
+
+        response = agent.handle(_request(action="nonexistent_action"))
+
+        assert response.action_taken == "no_action"
+
+
+class TestAdministratorWriteAuth:
+    def test_write_auth_includes_administrator(self, tmp_path: Path) -> None:
+        from openqilin.data_access.repositories.artifacts import ProjectArtifactRepositoryError
+
+        _, _, _, repo, _, _ = _make_agent(tmp_path)
+
+        try:
+            repo.write_project_artifact(
+                project_id="proj-write-auth",
+                artifact_type="administrator_containment",
+                content='{"test": true}',
+                write_context=ProjectArtifactWriteContext(
+                    actor_role="administrator",
+                    project_status="active",
+                ),
+            )
+        except ProjectArtifactRepositoryError as exc:
+            if exc.code == "artifact_write_role_forbidden":
+                raise AssertionError(
+                    "administrator writes should not be rejected by role authorization"
+                ) from exc
+            raise
