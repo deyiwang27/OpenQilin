@@ -68,7 +68,7 @@ WP document: `05-milestones/M13-WorkPackages-v1.md`
 | M13-WP6 | Sandbox Enforcement Scaffolding (C-10) | `pending` | #94 | — | — |
 | M13-WP7 | CSO Rewrite: Chief Strategy Officer | `pending` | #95 | — | Remove OPA dep; rewrite as portfolio strategy advisor; fix assert_opa_client_required |
 | M13-WP8 | Secretary and Routing Spec Alignment | `pending` | #96 | — | Register secretary in _INSTITUTIONAL_ROLES; add CSO to FreeTextRouter; Secretary data access |
-| M13-WP9 | InMemory Stub Removal and Test Infrastructure Hardening | `pending` | — | — | ADR-0008; 3-group strategy: delete infra stubs, rename simulation stubs, move observability to testing/ |
+| M13-WP9 | InMemory Stub Removal and Test Infrastructure Hardening | `pending` | #98 | — | ADR-0008; 3-group strategy: delete infra stubs, rename simulation stubs, move observability to testing/ |
 
 **M13 Exit criteria:** `pending`
 
