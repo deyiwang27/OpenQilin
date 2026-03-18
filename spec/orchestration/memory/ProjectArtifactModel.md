@@ -50,6 +50,11 @@ Policy behavior:
 - Revisions increment `version_no` on existing artifacts and remain trace-linked.
 - `completed|terminated|archived` projects are read-only for all project documentation types.
 
+Total-cap exemption:
+- Governance and oversight event artifact types are excluded from project total-document cap accounting. These records are written by institutional agents as enforcement and gate-flow evidence and must not be blocked by normal project document accounting.
+- Exempt types: `cso_review`, `ceo_proposal_decision`, `ceo_coapproval`, `cwo_coapproval`, `auditor_finding`, `auditor_enforcement`, `auditor_owner_escalation`, `auditor_ceo_notification`, `auditor_owner_alert`.
+- Per-type caps still apply to exempt types.
+
 ## 3.2 Activation Baseline Requirement
 Before `approved -> active` transition:
 - Initial version (`version_no=1`) must exist and be finalized for:

@@ -1,18 +1,16 @@
-# Handoff Complete: M14-WP3 — CWO Agent
+# Handoff Complete: M14-WP4 — Auditor Agent
 
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-18
-**Branch:** `feat/m14-wp3-cwo-agent`
-**Draft PR:** #106
+**Branch:** `feat/m14-wp4-auditor-agent`
+**Draft PR:** [#110](https://github.com/deyiwang27/OpenQilin/pull/110)
 **Implements:** `implementation/handoff/current.md`
 
 ---
 
 ## Summary
 
-Implemented the CWO agent package, workforce initializer, runtime dependency wiring, and the full M14-WP3 unit test file. The CWO flow now drafts workforce proposals, enforces CSO-before-CEO gate sequencing, blocks initialization without approval-chain evidence, records CWO coapproval evidence, and routes strategy/execution/budget status requests to the correct owner.
-
-Draft PR URL: https://github.com/deyiwang27/OpenQilin/pull/106
+Implemented the M14-WP4 auditor package with an oversight-only `AuditorAgent`, an append-only `AuditorEnforcementService`, runtime wiring, and the requested unit test matrix. The implementation follows the concrete handoff files and acceptance checks, with conservative fail-closed handling where the handoff left project scope or notification-delivery details ambiguous.
 
 ---
 
@@ -20,14 +18,14 @@ Draft PR URL: https://github.com/deyiwang27/OpenQilin/pull/106
 
 | Task | Status | Notes |
 |---|---|---|
-| Create `src/openqilin/agents/cwo/` package with `agent.py`, `models.py`, `prompts.py`, `workforce_initializer.py` | ✅ Done | Added exports in `__init__.py` as well |
-| Implement `CwoRequest` and `CwoResponse` models plus command/approval errors | ✅ Done | `CwoCommandError` and `CwoApprovalChainError` added |
-| Implement `CwoAgent.handle()` for status, proposal flow, initialization, and coapproval | ✅ Done | Includes command-only framing and route handling for CSO/PM/CEO |
-| Enforce proposal gate ordering: CSO review before CEO review | ✅ Done | CWO verifies a recorded `cso_review_outcome` before calling CEO |
-| Implement `WorkforceInitializer` approval-chain verification and artifact writes | ✅ Done | Writes `workforce_plan`, conditionally writes `project_charter`, binds project workforce registry record |
-| Wire `CwoAgent` into `RuntimeServices` and dependency providers | ✅ Done | Added `cwo_agent` field and `get_cwo_agent()` |
-| Update component-test runtime stubs for new `RuntimeServices.cwo_agent` field | ✅ Done | Added CWO construction in `tests/component/conftest.py` and registry stub support |
-| Add `tests/unit/test_m14_wp3_cwo_agent.py` coverage | ✅ Done | 18 unit tests covering proposal flow, initialization, coapproval, and status routing |
+| Create `src/openqilin/agents/auditor/` package (`__init__.py`, `models.py`, `enforcement.py`, `agent.py`) | ✅ Done | Added request/response models, enforcement service, and oversight-only routing logic. |
+| Implement budget breach enforcement path | ✅ Done | Pause path writes immutable enforcement evidence, CEO notification, owner escalation, and critical owner alert. |
+| Implement governance, behavioral, and document violation handling | ✅ Done | Added immutable findings, owner escalation, CEO awareness writes where required, and behavioral duplicate suppression. |
+| Wire `AuditorAgent` into `RuntimeServices` and provider surface | ✅ Done | Added runtime construction plus `get_auditor_agent()`. |
+| Add component-test runtime wiring | ✅ Done | Added auditor construction to `tests/component/conftest.py`. |
+| Extend governed artifact repository for auditor evidence records | ✅ Done | Added auditor artifact types/caps and allowed `actor_role="auditor"` writes. |
+| Add `tests/unit/test_m14_wp4_auditor_agent.py` | ✅ Done | Added 23 unit tests covering the requested scenarios. |
+| Implement `AuditorMonitorLoop` / background scan registration | ⚠️ Partial | The WP text mentions a monitor loop, but the concrete handoff deliverables/files/interfaces did not define a worker integration surface for it. See Spec Change Requests. |
 
 ---
 
@@ -38,15 +36,18 @@ InMemory gate:    PASS
 ruff check:       PASS
 ruff format:      PASS
 mypy:             PASS
-pytest unit:      PASS  (560 passed, 1 warning)
-pytest component: NOT RUN  (not requested in this handoff)
+pytest unit:      PASS  (583 passed, 0 failed; 1 warning)
+pytest component: NOT RUN
 ```
 
 Commands run:
-- `uv run python -m pytest -m no_infra tests/unit/`
+
+- `uv sync --all-groups`
 - `uv run ruff check .`
 - `uv run ruff format --check .`
 - `uv run python -m mypy .`
+- `uv run python -m pytest -m no_infra tests/unit/`
+- `grep -r --include='*.py' -l 'class InMemory' src/ | grep -v '/testing/'`
 
 ---
 
@@ -54,7 +55,8 @@ Commands run:
 
 | File | Line | Note |
 |---|---|---|
-| `src/openqilin/data_access/repositories/postgres/agent_registry_repository.py` | 139 | The current agent registry schema lacks dedicated `project_scope` / template / profile / prompt-package columns. I persisted a project-scoped CWO activation record keyed by project id and kept the full binding package in the governed `workforce_plan` artifact until the schema is extended. |
+| `src/openqilin/agents/auditor/enforcement.py` | 274 | The handoff requires CEO/owner delivery notifications and passes a communication repository, but this service only receives the durable communication ledger, not a publish-capable notifier. The implementation records immutable notification evidence and leaves live delivery orchestration to Architect direction. |
+| `src/openqilin/agents/auditor/enforcement.py` | 295 | The handoff allows `project_id=None`, but the governed artifact repository is project-scoped only. The implementation fails closed and raises `AuditorFindingError` when durable auditor evidence lacks a project scope. |
 
 ---
 
@@ -62,18 +64,19 @@ Commands run:
 
 | Conflict | Docs involved | Blocking question |
 |---|---|---|
-| None |  |  |
+| WP text requires `AuditorMonitorLoop` and audit-event scanning, but the concrete handoff deliverables, file list, runtime wiring, and test matrix scope only the agent/enforcement package and DI integration. | `implementation/handoff/current.md` task list vs `implementation/handoff/current.md` concrete file/change list | Should monitor-loop/background scanning be added in this WP via a follow-up handoff, or is the current scope intentionally limited to the callable auditor agent/enforcement surface? |
 
 ---
 
 ## What Was Skipped
 
-None.
+No additional code was skipped beyond the monitor-loop/background registration gap documented above.
 
 ---
 
 ## Notes
 
-- `grep -r --include="*.py" -l "class InMemory" src/ | grep -v "/testing/"` returned empty.
-- In this environment, `uv run pytest ...` and `uv run mypy ...` failed to spawn the script entrypoints directly, so I used the equivalent module invocations via `uv run python -m pytest ...` and `uv run python -m mypy ...`.
-- I left unrelated user changes in `implementation/v2/planning/ImplementationProgress-v2.md` and the untracked `implementation/handoff/current.md` untouched.
+- Draft PR created: `https://github.com/deyiwang27/OpenQilin/pull/110`
+- GitHub issue: `https://github.com/deyiwang27/OpenQilin/issues/108`
+- Milestone tracker: `https://github.com/deyiwang27/OpenQilin/issues/100`
+- The branch includes the pre-existing local `main` housekeeping commit `20353cb` (`chore: M14-WP3 post-merge housekeeping + start WP4 Auditor`), which updates `ImplementationProgress-v2.md` and adds the WP4 handoff doc.
