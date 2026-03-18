@@ -53,10 +53,18 @@ _APPEND_ONLY_ARTIFACT_TYPES = frozenset(
 )
 _GOVERNANCE_EVENT_ARTIFACT_TYPES = frozenset(
     {
+        # Executive gate-flow records — excluded from project total-document cap.
         "cso_review",
         "ceo_proposal_decision",
         "ceo_coapproval",
         "cwo_coapproval",
+        # Auditor oversight evidence — excluded from project total-document cap.
+        # Enforcement writes must never be blocked by normal project document accounting.
+        "auditor_finding",
+        "auditor_enforcement",
+        "auditor_owner_escalation",
+        "auditor_ceo_notification",
+        "auditor_owner_alert",
     }
 )
 _PROJECT_WRITABLE_STATES = frozenset({"proposed", "approved", "active", "paused"})
