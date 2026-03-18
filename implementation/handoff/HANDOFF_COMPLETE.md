@@ -3,8 +3,8 @@
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-18
 **Branch:** `feat/m14-wp2-ceo-agent`
-**Draft PR:** `TBD`
-**PR URL:** `TBD`
+**Draft PR:** #104
+**PR URL:** `https://github.com/deyiwang27/OpenQilin/pull/104`
 **Implements:** `implementation/handoff/current.md`
 
 ---
@@ -31,7 +31,7 @@ The required unit and static validation gates passed. One conservative REVIEW_NO
 | Wire `CeoAgent` in `dependencies.py` | ✅ Done | Added `RuntimeServices.ceo_agent`, construction wiring, provider function, and component-test runtime wiring |
 | Extend repository support for governance-event history reads | ✅ Done | Added governance event artifact types plus repository methods to list historical artifact documents without raw SQL in the agent |
 | Add unit tests for M14-WP2 | ✅ Done | Added `tests/unit/test_m14_wp2_ceo_agent.py` with 16 CEO-focused tests |
-| Open draft PR and prepare handoff output | ⚠️ Partial | Handoff file written now; PR details will be updated after `gh pr create` |
+| Open draft PR and prepare handoff output | ✅ Done | Draft PR #104 opened against `main`; this file records results and REVIEW_NOTE |
 
 ---
 
