@@ -213,7 +213,7 @@ def test_governed_ingress_fail_closed_on_policy_runtime_error() -> None:
 
     task_body = client.get(f"/v1/tasks/{task_id}").json()
     assert task_body["status"] == "blocked"
-    assert task_body["error_code"] == "policy_runtime_error_fail_closed"
+    assert task_body["error_code"] == "policy_uncertain_fail_closed"
     assert task_body["outcome_source"] == "policy_runtime"
 
 
@@ -380,7 +380,29 @@ def test_governed_ingress_llm_reason_denies_without_grounding_evidence() -> None
     assert task_body["outcome_source"] == "dispatch_llm_gateway"
 
 
+def _ensure_project_exists(project_id: str) -> None:
+    """Seed a minimal project record so grounding tools can find evidence."""
+    services = app.state.runtime_services
+    repo = services.governance_repo
+    if repo.get_project(project_id) is not None:
+        return
+    repo.create_project(
+        project_id=project_id,
+        name=f"Test project {project_id}",
+        objective="Integration test fixture",
+        status="proposed",
+    )
+    repo.transition_project_status(
+        project_id=project_id,
+        next_status="approved",
+        reason_code="test_seed",
+        actor_role="owner",
+        trace_id=f"trace-seed-approved-{project_id}",
+    )
+
+
 def test_governed_ingress_llm_reason_denies_when_citations_missing() -> None:
+    _ensure_project_exists("project_1")
     client = TestClient(app)
     services = app.state.runtime_services
     payload = build_owner_command_request_dict(

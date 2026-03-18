@@ -422,10 +422,27 @@ class PostgresProjectRepository:
                 code="governance_project_missing",
                 message=f"project not found: {project_id}",
             )
+        try:
+            normalized_next = assert_project_transition(project.status, "active")
+        except ProjectLifecycleError as error:
+            raise GovernanceRepositoryError(code=error.code, message=error.message) from error
+        now = datetime.now(tz=UTC)
+        transition = ProjectStatusTransitionRecord(
+            project_id=project.project_id,
+            from_status=project.status,
+            to_status=normalized_next,
+            reason_code="cwo_initialization",
+            actor_role=snapshot.actor_role,
+            trace_id=snapshot.trace_id,
+            timestamp=now,
+            metadata=(),
+        )
         updated = replace(
             project,
-            updated_at=datetime.now(tz=UTC),
+            status=normalized_next,
+            updated_at=now,
             initialization=snapshot,
+            transitions=project.transitions + (transition,),
         )
         self._upsert_project(updated)
         return updated

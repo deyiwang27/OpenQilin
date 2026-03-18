@@ -86,10 +86,14 @@ def test_tool_write_accepts_governed_mutation_and_emits_audit_evidence() -> None
     assert task_body["llm_execution"]["generated_text"]
     assert "[source:artifact:progress_report]" in task_body["llm_execution"]["generated_text"]
 
-    assert any(
-        event.event_type == "tool.write.append_progress_report"
-        for event in services.audit_writer.get_events()
-    )
+    from openqilin.observability.audit.audit_writer import OTelAuditWriter
+
+    assert isinstance(services.audit_writer, OTelAuditWriter)
+    audit_repo = services.audit_writer._audit_repo  # type: ignore[attr-defined]
+    task_record = services.runtime_state_repo.get_task_by_id(task_id)
+    assert task_record is not None
+    events = audit_repo.list_events_for_trace(task_record.trace_id)
+    assert any(event.event_type == "tool.write.append_progress_report" for event in events)
 
 
 def test_tool_write_denies_raw_mutation_requests_fail_closed() -> None:

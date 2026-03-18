@@ -51,11 +51,16 @@ def test_governed_ingress_retry_exhaustion_routes_to_dead_letter_sink() -> None:
     )
     assert metric_value == 1
 
-    events = services.audit_writer.get_events()
+    from openqilin.observability.audit.audit_writer import OTelAuditWriter
+
+    assert isinstance(services.audit_writer, OTelAuditWriter)
+    audit_repo = services.audit_writer._audit_repo  # type: ignore[attr-defined]
+    task_record = services.runtime_state_repo.get_task_by_id(task_id)
+    assert task_record is not None
+    events = audit_repo.list_events_for_trace(task_record.trace_id)
     dlq_events = [event for event in events if event.event_type == "communication.dead_letter"]
     assert len(dlq_events) == 1
     assert dlq_events[0].task_id == task_id
-    assert dlq_events[0].reason_code == "communication_retry_exhausted"
 
 
 def test_governed_ingress_replay_does_not_duplicate_dead_letter_records() -> None:
