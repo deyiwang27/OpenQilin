@@ -367,9 +367,11 @@ class TestPostgresGovernanceArtifactRepositoryInterface:
 
 
 class TestConfigDatabaseUrl:
-    def test_database_url_defaults_to_empty(self) -> None:
+    def test_database_url_defaults_to_empty(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from openqilin.shared_kernel.config import RuntimeSettings
 
+        monkeypatch.delenv("OPENQILIN_DATABASE_URL", raising=False)
+        monkeypatch.delenv("DATABASE_URL", raising=False)
         settings = RuntimeSettings()
         assert settings.database_url == ""
 

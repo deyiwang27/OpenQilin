@@ -324,7 +324,9 @@ def test_build_redis_client_returns_redis_instance() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_runtime_settings_redis_url_defaults_empty() -> None:
+def test_runtime_settings_redis_url_defaults_empty(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("OPENQILIN_REDIS_URL", raising=False)
+    monkeypatch.delenv("REDIS_URL", raising=False)
     settings = RuntimeSettings()
     assert settings.redis_url == ""
 
