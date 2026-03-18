@@ -1,4 +1,6 @@
-# OpenQilin — Codex Agent Instructions
+# OpenQilin — CodeX Agent Instructions
+
+> For the full collaboration model (Owner, Architect, Engineer roles, approval gates, and escalation paths), see `CLAUDE.md` — Collaboration Model section.
 
 ## Role
 
