@@ -6,7 +6,7 @@ import json
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from sqlalchemy import text
+from sqlalchemy import bindparam, String, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from openqilin.data_access.repositories.communication import (
@@ -85,6 +85,8 @@ class PostgresCommunicationRepository:
                         :error_code, :error_message, CAST(:transitions AS JSONB), :created_at, :updated_at
                     )
                     """
+                ).bindparams(
+                    bindparam("transitions", type_=String()),
                 ),
                 _record_to_params(record),
             )
@@ -145,6 +147,8 @@ class PostgresCommunicationRepository:
                         updated_at      = :updated_at
                     WHERE ledger_id = :ledger_id
                     """
+                ).bindparams(
+                    bindparam("transitions", type_=String()),
                 ),
                 {
                     "ledger_id": ledger_id,

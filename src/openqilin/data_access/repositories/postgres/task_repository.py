@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from typing import Mapping
 from uuid import uuid4
 
-from sqlalchemy import text
+from sqlalchemy import bindparam, String, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from openqilin.data_access.repositories.runtime_state import TaskRecord
@@ -55,6 +55,9 @@ class PostgresTaskRepository:
                         :project_id, :idempotency_key, :status, :created_at
                     )
                     """
+                ).bindparams(
+                    bindparam("args", type_=String()),
+                    bindparam("metadata", type_=String()),
                 ),
                 _task_to_params(task),
             )
@@ -147,6 +150,8 @@ class PostgresTaskRepository:
                         dispatch_id         = COALESCE(:dispatch_id, dispatch_id)
                     WHERE task_id = :task_id
                     """
+                ).bindparams(
+                    bindparam("outcome_details", type_=String()),
                 ),
                 {
                     "task_id": task_id,

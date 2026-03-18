@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 from typing import Mapping
 from uuid import uuid4
 
-from sqlalchemy import text
+from sqlalchemy import bindparam, String, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from openqilin.control_plane.governance.project_lifecycle import (
@@ -497,6 +497,15 @@ class PostgresProjectRepository:
                         workforce_bindings                      = EXCLUDED.workforce_bindings,
                         updated_at                              = EXCLUDED.updated_at
                     """
+                ).bindparams(
+                    bindparam("metadata", type_=String()),
+                    bindparam("transitions", type_=String()),
+                    bindparam("proposal_messages", type_=String()),
+                    bindparam("proposal_approvals", type_=String()),
+                    bindparam("completion_report", type_=String()),
+                    bindparam("completion_approvals", type_=String()),
+                    bindparam("initialization", type_=String()),
+                    bindparam("workforce_bindings", type_=String()),
                 ),
                 row,
             )

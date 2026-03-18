@@ -247,9 +247,10 @@ def test_governed_ingress_fail_closed_on_budget_runtime_error() -> None:
 
 
 def test_governed_ingress_fail_closed_on_dispatch_reject() -> None:
+    from openqilin.observability.audit.audit_writer import OTelAuditWriter
+
     client = TestClient(app)
     services = app.state.runtime_services
-    before_event_count = len(services.audit_writer.get_events())
     before_span_count = len(services.tracer.get_spans())
     before_metric_value = services.metric_recorder.get_counter_value(
         "owner_command_admission_outcomes_total",
@@ -286,7 +287,11 @@ def test_governed_ingress_fail_closed_on_dispatch_reject() -> None:
     )
     assert after_metric_value == before_metric_value + 1
 
-    new_events = services.audit_writer.get_events()[before_event_count:]
+    assert isinstance(services.audit_writer, OTelAuditWriter)
+    audit_repo = services.audit_writer._audit_repo  # type: ignore[attr-defined]
+    task_record = services.runtime_state_repo.get_task_by_id(task_id)
+    assert task_record is not None
+    new_events = audit_repo.list_events_for_trace(task_record.trace_id)
     assert [event.event_type for event in new_events] == [
         "policy.decision",
         "budget.decision",

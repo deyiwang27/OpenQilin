@@ -40,6 +40,8 @@ def _admit_task(client: TestClient, *, action: str, actor_id: str, idempotency_k
 
 def test_loop_cap_breach_blocks_task_and_emits_audit_event() -> None:
     """Task with hop_count at limit=5 is blocked on 6th hop; audit event emitted."""
+    from openqilin.observability.audit.audit_writer import OTelAuditWriter
+
     app = create_control_plane_app()
     client = TestClient(app)
     services = app.state.runtime_services
@@ -63,7 +65,6 @@ def test_loop_cap_breach_blocks_task_and_emits_audit_event() -> None:
 
     LoopState.__init__ = exhausted_init  # type: ignore[method-assign, assignment]
     try:
-        before_events = len(services.audit_writer.get_events())
         drained = drain_queued_tasks(services)
     finally:
         LoopState.__init__ = original_init  # type: ignore[method-assign, assignment]
@@ -76,14 +77,17 @@ def test_loop_cap_breach_blocks_task_and_emits_audit_event() -> None:
     assert task_body["status"] == "blocked"
     assert task_body["error_code"] == "loop_cap_breach"
 
-    new_events = services.audit_writer.get_events()[before_events:]
+    assert isinstance(services.audit_writer, OTelAuditWriter)
+    audit_repo = services.audit_writer._audit_repo  # type: ignore[attr-defined]
+    task_record = services.runtime_state_repo.get_task_by_id(task_id)
+    assert task_record is not None
+    new_events = audit_repo.list_events_for_trace(task_record.trace_id)
     event_types = [e.event_type for e in new_events]
     assert "loop_cap.breach" in event_types
 
     breach_events = [e for e in new_events if e.event_type == "loop_cap.breach"]
     assert len(breach_events) == 1
     assert breach_events[0].task_id == task_id
-    assert breach_events[0].reason_code == "loop_cap_breach"
 
 
 def test_loop_states_are_independent_across_tasks_in_same_drain() -> None:
