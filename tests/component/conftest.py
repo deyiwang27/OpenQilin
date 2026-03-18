@@ -14,6 +14,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from openqilin.agents.ceo.agent import CeoAgent
+from openqilin.agents.ceo.decision_writer import CeoDecisionWriter
 from openqilin.agents.cso.agent import CSOAgent
 from openqilin.agents.project_manager.agent import ProjectManagerAgent
 from openqilin.agents.project_manager.artifact_writer import PMProjectArtifactWriter
@@ -120,6 +122,12 @@ def _build_test_runtime_services() -> RuntimeServices:
         project_artifact_repo=project_artifact_repo,  # type: ignore[arg-type]
         governance_repo=governance_repo,  # type: ignore[arg-type]
     )
+    ceo_agent = CeoAgent(
+        llm_gateway=llm_gateway,
+        decision_writer=CeoDecisionWriter(governance_repo=project_artifact_repo),
+        governance_repo=project_artifact_repo,
+        cso_agent=cso_agent,
+    )
 
     budget_runtime_client = AlwaysAllowBudgetRuntimeClient()
     budget_reservation_service = BudgetReservationService(client=budget_runtime_client)
@@ -184,6 +192,7 @@ def _build_test_runtime_services() -> RuntimeServices:
         secretary_agent=secretary_agent,
         project_manager_agent=project_manager_agent,
         cso_agent=cso_agent,
+        ceo_agent=ceo_agent,
         domain_leader_agent=domain_leader_agent,
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,

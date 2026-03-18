@@ -241,6 +241,7 @@ class CSOAgent:
         """
         record_content = json.dumps(
             {
+                "event_type": "cso_review_outcome",
                 "proposal_id": proposal_id,
                 "review_outcome": review_outcome,
                 "cso_advisory_text": advisory_text,
