@@ -47,12 +47,12 @@ jobs:
 
     env:
       # Unprefixed: used by alembic and legacy tooling
-      DATABASE_URL: postgresql+asyncpg://openqilin:openqilin@localhost:5432/openqilin
+      DATABASE_URL: postgresql+psycopg://openqilin:openqilin@localhost:5432/openqilin
       REDIS_URL: redis://localhost:6379/0
       OPA_URL: http://localhost:8181
       # OPENQILIN_ prefixed: read by RuntimeSettings (env_prefix="OPENQILIN_")
       # Required by build_runtime_services() fail-closed guards (M13-WP9)
-      OPENQILIN_DATABASE_URL: postgresql+asyncpg://openqilin:openqilin@localhost:5432/openqilin
+      OPENQILIN_DATABASE_URL: postgresql+psycopg://openqilin:openqilin@localhost:5432/openqilin
       OPENQILIN_REDIS_URL: redis://localhost:6379/0
       OPENQILIN_OPA_URL: http://localhost:8181
 
