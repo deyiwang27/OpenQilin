@@ -473,12 +473,12 @@ class PostgresProjectRepository:
                         initialization, workforce_bindings,
                         created_at, updated_at
                     ) VALUES (
-                        :project_id, :name, :objective, :status, :metadata::jsonb,
-                        :transitions::jsonb, :proposal_messages::jsonb, :proposal_approvals::jsonb,
-                        :completion_report::jsonb, :completion_approvals::jsonb,
+                        :project_id, :name, :objective, :status, CAST(:metadata AS JSONB),
+                        CAST(:transitions AS JSONB), CAST(:proposal_messages AS JSONB), CAST(:proposal_approvals AS JSONB),
+                        CAST(:completion_report AS JSONB), CAST(:completion_approvals AS JSONB),
                         :completion_owner_notified_at,
                         :completion_owner_notification_trace_id,
-                        :initialization::jsonb, :workforce_bindings::jsonb,
+                        CAST(:initialization AS JSONB), CAST(:workforce_bindings AS JSONB),
                         :created_at, :updated_at
                     )
                     ON CONFLICT (project_id) DO UPDATE SET

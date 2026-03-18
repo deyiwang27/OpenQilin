@@ -82,7 +82,7 @@ class PostgresCommunicationRepository:
                         :ledger_id, :task_id, :trace_id, :message_id, :external_message_id,
                         :connector, :command, :target, :route_key, :endpoint,
                         :attempt, :state, :dispatch_id, :delivery_id, :retryable,
-                        :error_code, :error_message, :transitions::jsonb, :created_at, :updated_at
+                        :error_code, :error_message, CAST(:transitions AS JSONB), :created_at, :updated_at
                     )
                     """
                 ),
@@ -141,7 +141,7 @@ class PostgresCommunicationRepository:
                         retryable       = :retryable,
                         error_code      = :error_code,
                         error_message   = :error_message,
-                        transitions     = :transitions::jsonb,
+                        transitions     = CAST(:transitions AS JSONB),
                         updated_at      = :updated_at
                     WHERE ledger_id = :ledger_id
                     """

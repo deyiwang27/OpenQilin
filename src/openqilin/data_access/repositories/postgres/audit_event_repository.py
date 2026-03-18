@@ -75,7 +75,7 @@ class PostgresAuditEventRepository:
                     ) VALUES (
                         :event_id, :event_type, :trace_id, :task_id, :principal_id,
                         :principal_role, :action, :target, :decision,
-                        :rule_ids::jsonb, :payload::jsonb, :created_at
+                        CAST(:rule_ids AS JSONB), CAST(:payload AS JSONB), :created_at
                     )
                     """
                 ),

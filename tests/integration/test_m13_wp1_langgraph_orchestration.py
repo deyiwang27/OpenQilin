@@ -14,6 +14,7 @@ from fastapi.testclient import TestClient
 
 from openqilin.apps.orchestrator_worker import drain_queued_tasks
 from openqilin.control_plane.api.app import create_control_plane_app
+from openqilin.observability.audit.audit_writer import OTelAuditWriter
 from openqilin.testing.owner_command import (
     build_owner_command_headers,
     build_owner_command_request_dict,
@@ -168,8 +169,12 @@ def test_langgraph_observability_emitted_during_drain() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
     services = app.state.runtime_services
+    trace_id = "trace-m13-wp1-e2e-observability-001"
 
-    before_event_count = len(services.audit_writer.get_events())
+    # Integration tests always use OTelAuditWriter with a real PostgresAuditEventRepository.
+    assert isinstance(services.audit_writer, OTelAuditWriter)
+    audit_repo = services.audit_writer._audit_repo  # type: ignore[attr-defined]
+
     before_span_count = len(services.tracer.get_spans())
 
     payload = build_owner_command_request_dict(
@@ -177,7 +182,7 @@ def test_langgraph_observability_emitted_during_drain() -> None:
         args=["langgraph_observability"],
         actor_id="owner_m13_wp1_e2e_005",
         idempotency_key="idem-m13-wp1-e2e-observability-001",
-        trace_id="trace-m13-wp1-e2e-observability-001",
+        trace_id=trace_id,
     )
 
     response = client.post(
@@ -188,7 +193,7 @@ def test_langgraph_observability_emitted_during_drain() -> None:
     assert response.status_code == 202
     task_id = response.json()["data"]["task_id"]
 
-    events_after_post = services.audit_writer.get_events()[before_event_count:]
+    events_after_post = audit_repo.list_events_for_trace(trace_id)
     event_types_after_post = [e.event_type for e in events_after_post]
     assert "policy.decision" not in event_types_after_post
     assert "budget.decision" not in event_types_after_post
@@ -196,7 +201,7 @@ def test_langgraph_observability_emitted_during_drain() -> None:
 
     drain_queued_tasks(services)
 
-    new_events = services.audit_writer.get_events()[before_event_count:]
+    new_events = audit_repo.list_events_for_trace(trace_id)
     event_types = [e.event_type for e in new_events]
     assert "policy.decision" in event_types
     assert "budget.decision" in event_types
