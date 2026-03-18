@@ -136,12 +136,13 @@ class TestEnforceSandboxProfileObligation:
         outcome = result.outcomes[0]
         assert outcome.satisfied
 
-    def test_unknown_target_non_blocking(self) -> None:
+    def test_any_target_binds_default_profile(self) -> None:
+        """M13-WP6: all targets bind to 'default' seccomp profile; outcome is satisfied."""
         ctx = _make_context(target="unknown_agent")
         result = ObligationDispatcher().apply(("enforce_sandbox_profile",), ctx)
         outcome = result.outcomes[0]
-        assert not outcome.satisfied
-        assert not outcome.blocking  # Non-blocking in M12
+        assert outcome.satisfied  # default profile exists; any target can bind to it
+        assert not outcome.blocking  # non-blocking in M13 (hook only)
         assert result.blocking_obligation is None
 
 

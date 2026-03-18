@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
-_INSTITUTIONAL_ROLES = ("administrator", "auditor", "ceo", "cwo", "cso")
+_INSTITUTIONAL_ROLES = ("administrator", "auditor", "ceo", "cwo", "cso", "secretary")
 
 
 @dataclass(frozen=True, slots=True)

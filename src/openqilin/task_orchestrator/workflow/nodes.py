@@ -13,6 +13,7 @@ from openqilin.observability.tracing.spans import (
 from openqilin.policy_runtime_integration.fail_closed import evaluate_with_fail_closed
 from openqilin.policy_runtime_integration.models import PolicyEvaluationInput
 from openqilin.policy_runtime_integration.obligations import ObligationContext, ObligationDispatcher
+from openqilin.task_orchestrator.loop_control import check_and_increment_hop
 from openqilin.task_orchestrator.workflow.state_models import TaskState, WorkflowServices
 
 if TYPE_CHECKING:
@@ -136,6 +137,7 @@ def _emit_outcome_audit(
 
 def make_policy_evaluation_node(services: WorkflowServices) -> Any:
     def policy_evaluation_node(state: TaskState) -> dict[str, Any]:
+        check_and_increment_hop(state["loop_state"])
         task_id = state["task_id"]
         task = services.runtime_state_repo.get_task_by_id(task_id)
         if task is None:
@@ -260,6 +262,7 @@ def make_policy_evaluation_node(services: WorkflowServices) -> Any:
 
 def make_obligation_check_node(services: WorkflowServices) -> Any:
     def obligation_check_node(state: TaskState) -> dict[str, Any]:
+        check_and_increment_hop(state["loop_state"])
         task_id = state["task_id"]
         task = services.runtime_state_repo.get_task_by_id(task_id)
         if task is None:
@@ -316,6 +319,7 @@ def make_obligation_check_node(services: WorkflowServices) -> Any:
 
 def make_budget_reservation_node(services: WorkflowServices) -> Any:
     def budget_reservation_node(state: TaskState) -> dict[str, Any]:
+        check_and_increment_hop(state["loop_state"])
         task_id = state["task_id"]
         task = services.runtime_state_repo.get_task_by_id(task_id)
         if task is None:
@@ -398,6 +402,7 @@ def make_budget_reservation_node(services: WorkflowServices) -> Any:
 
 def make_dispatch_node(services: WorkflowServices) -> Any:
     def dispatch_node(state: TaskState) -> dict[str, Any]:
+        check_and_increment_hop(state["loop_state"])
         task_id = state["task_id"]
         task = services.runtime_state_repo.get_task_by_id(task_id)
         if task is None:

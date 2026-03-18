@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING, Any
 
 from typing_extensions import TypedDict
 
+from openqilin.task_orchestrator.loop_control import LoopState
+
 if TYPE_CHECKING:
     from openqilin.budget_runtime.service import BudgetReservationService  # type: ignore[import-untyped]
     from openqilin.data_access.repositories.postgres.task_repository import PostgresTaskRepository
@@ -51,8 +53,8 @@ class TaskState(TypedDict):
     llm_execution: dict[str, Any] | None
     # Terminal state written by whichever node finishes the task
     final_state: str
-    # Loop controls placeholder (M13-WP2)
-    loop_state: dict[str, Any]
+    # Per-task loop cap tracking (M13-WP2)
+    loop_state: LoopState
 
 
 @dataclass(frozen=True, slots=True)

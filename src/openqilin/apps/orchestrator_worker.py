@@ -8,6 +8,7 @@ import structlog
 
 from openqilin.shared_kernel.config import RuntimeSettings
 from openqilin.shared_kernel.startup_validation import enforce_connector_secret_hardening
+from openqilin.task_orchestrator.loop_control import LoopCapBreachError, LoopState
 from openqilin.task_orchestrator.workflow.graph import build_task_graph
 from openqilin.task_orchestrator.workflow.state_models import WorkflowServices
 
@@ -71,10 +72,49 @@ def drain_queued_tasks(runtime_services: "RuntimeServices") -> int:
             "dispatch_error_code": None,
             "llm_execution": None,
             "final_state": "queued",
-            "loop_state": {},
+            "loop_state": LoopState(),
         }
         try:
             task_graph.invoke(initial_state)
+        except LoopCapBreachError as exc:
+            LOGGER.warning(
+                "worker.drain.loop_cap_breach",
+                task_id=task.task_id,
+                cap_type=exc.cap_type,
+                count=exc.count,
+                limit=exc.limit,
+            )
+            runtime_services.runtime_state_repo.update_task_status(
+                task.task_id,
+                "blocked",
+                outcome_source="loop_control",
+                outcome_error_code="loop_cap_breach",
+                outcome_message=str(exc),
+                outcome_details={
+                    "cap_type": exc.cap_type,
+                    "count": exc.count,
+                    "limit": exc.limit,
+                    "pair": list(exc.pair) if exc.pair else None,
+                },
+            )
+            services.audit_writer.write_event(
+                event_type="loop_cap.breach",
+                outcome="blocked",
+                trace_id=task.trace_id,
+                request_id=task.request_id,
+                task_id=task.task_id,
+                principal_id=task.principal_id,
+                principal_role=task.principal_role,
+                source="loop_control",
+                reason_code="loop_cap_breach",
+                message=str(exc),
+                payload={
+                    "cap_type": exc.cap_type,
+                    "count": exc.count,
+                    "limit": exc.limit,
+                    "pair": list(exc.pair) if exc.pair else None,
+                },
+            )
         except Exception:
             LOGGER.exception("worker.drain.task_error", task_id=task.task_id)
             runtime_services.runtime_state_repo.update_task_status(
@@ -127,10 +167,49 @@ async def main(*, run_once: bool = False) -> None:
                 "dispatch_error_code": None,
                 "llm_execution": None,
                 "final_state": "queued",
-                "loop_state": {},
+                "loop_state": LoopState(),
             }
             try:
                 await task_graph.ainvoke(initial_state)
+            except LoopCapBreachError as exc:
+                LOGGER.warning(
+                    "worker.loop.loop_cap_breach",
+                    task_id=task.task_id,
+                    cap_type=exc.cap_type,
+                    count=exc.count,
+                    limit=exc.limit,
+                )
+                runtime_services.runtime_state_repo.update_task_status(
+                    task.task_id,
+                    "blocked",
+                    outcome_source="loop_control",
+                    outcome_error_code="loop_cap_breach",
+                    outcome_message=str(exc),
+                    outcome_details={
+                        "cap_type": exc.cap_type,
+                        "count": exc.count,
+                        "limit": exc.limit,
+                        "pair": list(exc.pair) if exc.pair else None,
+                    },
+                )
+                services.audit_writer.write_event(
+                    event_type="loop_cap.breach",
+                    outcome="blocked",
+                    trace_id=task.trace_id,
+                    request_id=task.request_id,
+                    task_id=task.task_id,
+                    principal_id=task.principal_id,
+                    principal_role=task.principal_role,
+                    source="loop_control",
+                    reason_code="loop_cap_breach",
+                    message=str(exc),
+                    payload={
+                        "cap_type": exc.cap_type,
+                        "count": exc.count,
+                        "limit": exc.limit,
+                        "pair": list(exc.pair) if exc.pair else None,
+                    },
+                )
             except Exception:
                 LOGGER.exception("worker.loop.task_error", task_id=task.task_id)
                 runtime_services.runtime_state_repo.update_task_status(

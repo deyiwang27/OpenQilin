@@ -212,34 +212,34 @@ def _handle_reserve_budget(context: ObligationContext) -> ObligationOutcome:
 
 
 def _handle_enforce_sandbox_profile(context: ObligationContext) -> ObligationOutcome:
-    """Validate sandbox profile (M12 validation hook; full enforcement in M13-WP6)."""
-    _KNOWN_SANDBOX_ROLES = frozenset(
-        {
-            "llm",
-            "sandbox",
-            "communication",
-            "secretary",
-            "project_manager",
-            "domain_leader",
-            "specialist",
-            "ceo",
-            "cwo",
-            "cso",
-        }
+    """Bind seccomp sandbox profile via SandboxProfileEnforcer (M13-WP6).
+
+    Calls SandboxProfileEnforcer.bind(dispatch_target, profile) to resolve and
+    bind the seccomp profile for the target agent.  Fail-closed: unknown profile
+    → obligation not satisfied, blocking=False (non-fatal in M13; full enforcement
+    in post-MVP-v2).
+    """
+    from openqilin.execution_sandbox.profiles.enforcement import (
+        SandboxProfileEnforcer,
+        SandboxProfileNotFoundError,
     )
-    if context.target in _KNOWN_SANDBOX_ROLES:
+
+    enforcer = SandboxProfileEnforcer()
+    try:
+        enforcer.bind(dispatch_target=context.target, profile_name="default")
+    except SandboxProfileNotFoundError as exc:
         return ObligationOutcome(
             obligation="enforce_sandbox_profile",
-            satisfied=True,
+            satisfied=False,
             blocking=False,
-            reason=f"sandbox profile validated for target '{context.target}' (M12 hook)",
+            reason=str(exc),
         )
     return ObligationOutcome(
         obligation="enforce_sandbox_profile",
-        satisfied=False,
+        satisfied=True,
         blocking=False,
         reason=(
-            f"sandbox profile not found for target '{context.target}' "
-            "(non-blocking in M12; full enforcement in M13-WP6)"
+            f"seccomp profile 'default' bound for target '{context.target}' "
+            "(M13-WP6 hook; BPF application deferred to post-MVP-v2)"
         ),
     )

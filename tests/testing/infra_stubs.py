@@ -64,10 +64,7 @@ from openqilin.data_access.repositories.identity_channels import (
     IdentityChannelMappingRecord,
     IdentityChannelStatus,
 )
-from openqilin.data_access.repositories.runtime_state import (
-    RuntimeStateRepositoryError,
-    TaskRecord,
-)
+from openqilin.data_access.repositories.runtime_state import TaskRecord
 from openqilin.task_orchestrator.admission.envelope_validator import AdmissionEnvelope
 from openqilin.task_orchestrator.state.transition_guard import assert_legal_transition
 
@@ -78,14 +75,14 @@ from openqilin.task_orchestrator.state.transition_guard import assert_legal_tran
 
 
 class InMemoryRuntimeStateRepository(PostgresTaskRepository):
-    """Test-only in-memory runtime state repository."""
+    """Test-only in-memory runtime state repository.
 
-    def __init__(self, *, snapshot_path: Path | None = None) -> None:  # type: ignore[override]
+    No filesystem snapshot: PostgreSQL is the durable store (H-3 fix).
+    """
+
+    def __init__(self) -> None:  # type: ignore[override]
         self._task_by_id: dict[str, TaskRecord] = {}
         self._task_id_by_principal_key: dict[tuple[str, str], str] = {}
-        self._snapshot_path = snapshot_path
-        if self._snapshot_path is not None and self._snapshot_path.exists():
-            self._load_snapshot()
 
     def create_task_from_envelope(self, envelope: AdmissionEnvelope) -> TaskRecord:
         task = TaskRecord(
@@ -107,7 +104,6 @@ class InMemoryRuntimeStateRepository(PostgresTaskRepository):
         )
         self._task_by_id[task.task_id] = task
         self._task_id_by_principal_key[(task.principal_id, task.idempotency_key)] = task.task_id
-        self._flush_snapshot()
         return task
 
     def get_task_by_id(self, task_id: str) -> TaskRecord | None:
@@ -161,35 +157,10 @@ class InMemoryRuntimeStateRepository(PostgresTaskRepository):
             dispatch_id=dispatch_id if dispatch_id is not None else task.dispatch_id,
         )
         self._task_by_id[task_id] = updated
-        self._flush_snapshot()
         return updated
 
     def list_tasks(self) -> tuple[TaskRecord, ...]:
         return tuple(self._task_by_id.values())
-
-    def _load_snapshot(self) -> None:
-        if self._snapshot_path is None:
-            return
-        try:
-            payload = json.loads(self._snapshot_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError) as error:
-            raise RuntimeStateRepositoryError(
-                code="runtime_state_snapshot_load_failed",
-                message=f"failed to load snapshot: {self._snapshot_path}",
-            ) from error
-        for raw in payload.get("tasks", []):
-            task = _task_from_dict(raw)
-            self._task_by_id[task.task_id] = task
-            self._task_id_by_principal_key[(task.principal_id, task.idempotency_key)] = task.task_id
-
-    def _flush_snapshot(self) -> None:
-        if self._snapshot_path is None:
-            return
-        self._snapshot_path.parent.mkdir(parents=True, exist_ok=True)
-        payload = {"tasks": [_task_to_dict(t) for t in self._task_by_id.values()]}
-        self._snapshot_path.write_text(
-            json.dumps(payload, sort_keys=True, indent=2), encoding="utf-8"
-        )
 
 
 def _task_to_dict(task: TaskRecord) -> dict[str, object]:
@@ -1665,13 +1636,18 @@ class InMemoryIdempotencyCacheStore:
 class InMemoryAgentRegistryRepository:
     """Test-only in-memory agent registry repository."""
 
-    _INSTITUTIONAL_ROLES = ("administrator", "auditor", "ceo", "cwo", "cso")
+    _INSTITUTIONAL_ROLES = ("administrator", "auditor", "ceo", "cwo", "cso", "secretary")
+    _ADVISORY_ONLY_ROLES: frozenset[str] = frozenset({"secretary"})
 
     def __init__(self) -> None:
-        from openqilin.data_access.repositories.agent_registry import AgentRecord
+        from openqilin.data_access.repositories.agent_registry import (
+            AgentRecord,
+            AgentRegistryRepositoryError,
+        )
 
         self._agents: dict[str, "AgentRecord"] = {}
         self._AgentRecord = AgentRecord
+        self._AgentRegistryRepositoryError = AgentRegistryRepositoryError
 
     def bootstrap_institutional_agents(self) -> tuple:
         """Ensure canonical institutional agents exist; return active records."""
@@ -1679,6 +1655,17 @@ class InMemoryAgentRegistryRepository:
         now = datetime.now(tz=UTC)
         for role in self._INSTITUTIONAL_ROLES:
             existing = self._agents.get(role)
+            if existing is not None and role in self._ADVISORY_ONLY_ROLES:
+                if existing.agent_type != "institutional":
+                    raise self._AgentRegistryRepositoryError(
+                        code="agent_registry_advisory_only_violation",
+                        message=(
+                            f"Role '{role}' must be registered with advisory-only capability "
+                            f"(agent_type='institutional'). "
+                            f"Found agent_type='{existing.agent_type}'. "
+                            "Secretary cannot be granted command or mutation capabilities."
+                        ),
+                    )
             if existing is None:
                 record = self._AgentRecord(
                     agent_id=f"{role}_core",
@@ -1705,3 +1692,47 @@ class InMemoryAgentRegistryRepository:
                 key=lambda r: r.role,
             )
         )
+
+
+# ---------------------------------------------------------------------------
+# InMemoryProjectSpaceBindingRepository
+# ---------------------------------------------------------------------------
+
+from openqilin.project_spaces.binding_repository import PostgresProjectSpaceBindingRepository  # noqa: E402
+from openqilin.project_spaces.models import BindingState as _BindingState  # noqa: E402
+from openqilin.project_spaces.models import ProjectSpaceBinding as _ProjectSpaceBinding  # noqa: E402
+
+
+class InMemoryProjectSpaceBindingRepository(PostgresProjectSpaceBindingRepository):
+    """Test-only in-memory project space binding repository.
+
+    Overrides PostgresProjectSpaceBindingRepository without a real session factory.
+    Used by the component test conftest to avoid needing a compose stack.
+    """
+
+    def __init__(self) -> None:  # type: ignore[override]
+        self._by_channel: dict[tuple[str, str], _ProjectSpaceBinding] = {}
+        self._by_project: dict[str, _ProjectSpaceBinding] = {}
+        self._by_id: dict[str, _ProjectSpaceBinding] = {}
+
+    def insert(self, binding: _ProjectSpaceBinding) -> _ProjectSpaceBinding:
+        self._by_channel[(binding.guild_id, binding.channel_id)] = binding
+        self._by_project[binding.project_id] = binding
+        self._by_id[binding.id] = binding
+        return binding
+
+    def find_by_channel(self, guild_id: str, channel_id: str) -> _ProjectSpaceBinding | None:
+        return self._by_channel.get((guild_id, channel_id))
+
+    def find_by_project_id(self, project_id: str) -> _ProjectSpaceBinding | None:
+        return self._by_project.get(project_id)
+
+    def update_state(self, binding_id: str, state: _BindingState) -> _ProjectSpaceBinding:
+        from dataclasses import replace as dc_replace
+
+        binding = self._by_id[binding_id]
+        updated = dc_replace(binding, binding_state=state, updated_at=datetime.now(tz=UTC))
+        self._by_id[binding_id] = updated
+        self._by_channel[(updated.guild_id, updated.channel_id)] = updated
+        self._by_project[updated.project_id] = updated
+        return updated

@@ -27,11 +27,13 @@ from openqilin.control_plane.api.dependencies import (
     get_identity_channel_repository,
     get_metric_recorder,
     get_policy_runtime_client,
+    get_routing_resolver,
     get_runtime_state_repository,
     get_secretary_agent,
     get_task_dispatch_service,
     get_tracer,
 )
+from openqilin.project_spaces.routing_resolver import ProjectSpaceRoutingResolver
 from openqilin.control_plane.grammar.command_parser import CommandParser
 from openqilin.control_plane.grammar.free_text_router import FreeTextRouter
 from openqilin.control_plane.grammar.intent_classifier import IntentClassifier
@@ -123,6 +125,7 @@ def submit_discord_message(
     grammar_parser: CommandParser = Depends(get_grammar_parser),
     grammar_router: FreeTextRouter = Depends(get_grammar_router),
     secretary_agent: SecretaryAgent = Depends(get_secretary_agent),
+    routing_resolver: ProjectSpaceRoutingResolver = Depends(get_routing_resolver),
     x_openqilin_signature: Annotated[str | None, Header(alias="X-OpenQilin-Signature")] = None,
 ) -> OwnerCommandResponse | JSONResponse:
     """Translate Discord connector payload into canonical owner-command ingress contract.
@@ -134,10 +137,19 @@ def submit_discord_message(
     - FreeTextRouter resolves the routing target for free-text discussion/query.
     - Free-text routed to secretary bypasses task dispatch; SecretaryAgent handles it directly.
     """
+    # Resolve Discord channel to project context (M13-WP3).
+    # If a binding exists and is active, use the DB-backed project_id and
+    # default_recipient.  Unknown / inactive channels return None (fail-closed
+    # at the resolver level); the payload's project_id is used as fallback.
+    routing_context = routing_resolver.resolve(payload.guild_id, payload.channel_id)
+    resolved_project_id = (
+        routing_context.project_id if routing_context is not None else payload.project_id
+    )
+
     grammar_context = ChatContext(
         chat_class=payload.chat_class,
         channel_id=payload.channel_id,
-        project_id=payload.project_id,
+        project_id=resolved_project_id,
     )
 
     content = payload.content.strip()
@@ -252,7 +264,7 @@ def submit_discord_message(
         priority=payload.priority,
         timestamp=payload.timestamp,
         content=payload.content,
-        project_id=payload.project_id,
+        project_id=resolved_project_id,
         connector=OwnerCommandConnectorMetadata(
             channel="discord",
             external_message_id=payload.external_message_id,

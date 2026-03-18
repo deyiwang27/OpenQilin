@@ -15,7 +15,9 @@ from openqilin.control_plane.api.startup_recovery import (
     StartupRecoveryReport,
     payload_hash_for_task,
 )
-from openqilin.agents.cso.agent import CSOAgent, assert_opa_client_required
+from openqilin.agents.cso.agent import CSOAgent
+from openqilin.agents.secretary.data_access import SecretaryDataAccessService
+from openqilin.agents.domain_leader.agent import DomainLeaderAgent
 from openqilin.agents.secretary.agent import SecretaryAgent
 from openqilin.control_plane.grammar.command_parser import CommandParser
 from openqilin.control_plane.grammar.free_text_router import FreeTextRouter
@@ -58,6 +60,8 @@ from openqilin.policy_runtime_integration.client import (
     OPAPolicyRuntimeClient,
     PolicyRuntimeClient,
 )
+from openqilin.project_spaces.binding_repository import PostgresProjectSpaceBindingRepository
+from openqilin.project_spaces.routing_resolver import ProjectSpaceRoutingResolver
 from openqilin.retrieval_runtime.service import (
     RetrievalQueryService,
     build_retrieval_query_service,
@@ -91,6 +95,7 @@ class RuntimeServices:
     grammar_router: FreeTextRouter
     secretary_agent: SecretaryAgent
     cso_agent: CSOAgent
+    domain_leader_agent: DomainLeaderAgent
     ingress_dedupe: IngressDedupeStore
     runtime_state_repo: PostgresTaskRepository
     communication_repo: PostgresCommunicationRepository
@@ -109,6 +114,7 @@ class RuntimeServices:
     tracer: InMemoryTracer
     audit_writer: InMemoryAuditWriter | OTelAuditWriter
     metric_recorder: InMemoryMetricRecorder
+    routing_resolver: ProjectSpaceRoutingResolver
     delivery_event_callback_processor: LocalDeliveryEventCallbackProcessor
     communication_outcome_notifier: CommunicationOutcomeNotifier
     startup_recovery_report: StartupRecoveryReport
@@ -141,7 +147,7 @@ def build_runtime_services() -> RuntimeServices:
     grammar_classifier = IntentClassifier(llm_gateway=llm_gateway)
     grammar_parser = CommandParser()
     grammar_router = FreeTextRouter()
-    secretary_agent = SecretaryAgent(llm_gateway=llm_gateway)
+    domain_leader_agent = DomainLeaderAgent(llm_gateway=llm_gateway)
 
     # --- repository tier -------------------------------------------------
     engine = create_sqlalchemy_engine(settings.database_url)
@@ -154,6 +160,15 @@ def build_runtime_services() -> RuntimeServices:
     project_artifact_repo = PostgresGovernanceArtifactRepository(session_factory=session_factory)
     governance_repo = PostgresProjectRepository(session_factory=session_factory)
     audit_event_repo = PostgresAuditEventRepository(session_factory=session_factory)
+    project_space_binding_repo = PostgresProjectSpaceBindingRepository(
+        session_factory=session_factory
+    )
+    routing_resolver = ProjectSpaceRoutingResolver(binding_repo=project_space_binding_repo)
+    secretary_data_access = SecretaryDataAccessService(
+        governance_repo=governance_repo,
+        runtime_state_repo=runtime_state_repo,
+    )
+    secretary_agent = SecretaryAgent(llm_gateway=llm_gateway, data_access=secretary_data_access)
 
     # --- idempotency (Redis required) ------------------------------------
     idempotency_cache_store = RedisIdempotencyCacheStore(
@@ -169,9 +184,11 @@ def build_runtime_services() -> RuntimeServices:
         runtime_state_repo=runtime_state_repo,
     )
     policy_runtime_client: PolicyRuntimeClient = OPAPolicyRuntimeClient(opa_url=settings.opa_url)
-    # CSO activation guard: OPA client must be the real client.
-    assert_opa_client_required(policy_runtime_client)
-    cso_agent = CSOAgent(llm_gateway=llm_gateway, policy_client=policy_runtime_client)
+    cso_agent = CSOAgent(
+        llm_gateway=llm_gateway,
+        project_artifact_repo=project_artifact_repo,
+        governance_repo=governance_repo,
+    )
 
     budget_runtime_client = AlwaysAllowBudgetRuntimeClient()
     budget_reservation_service = BudgetReservationService(client=budget_runtime_client)
@@ -248,6 +265,7 @@ def build_runtime_services() -> RuntimeServices:
         grammar_router=grammar_router,
         secretary_agent=secretary_agent,
         cso_agent=cso_agent,
+        domain_leader_agent=domain_leader_agent,
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
         communication_repo=communication_repo,
@@ -266,6 +284,7 @@ def build_runtime_services() -> RuntimeServices:
         tracer=tracer,
         audit_writer=audit_writer,
         metric_recorder=metric_recorder,
+        routing_resolver=routing_resolver,
         delivery_event_callback_processor=delivery_event_callback_processor,
         communication_outcome_notifier=communication_outcome_notifier,
         startup_recovery_report=startup_recovery_report,
@@ -394,3 +413,15 @@ def get_cso_agent(request: Request) -> CSOAgent:
     """Provide CSO governance advisory agent for institutional channel routing."""
 
     return get_runtime_services(request).cso_agent
+
+
+def get_routing_resolver(request: Request) -> ProjectSpaceRoutingResolver:
+    """Provide project space routing resolver for Discord channel → project context."""
+
+    return get_runtime_services(request).routing_resolver
+
+
+def get_domain_leader_agent(request: Request) -> DomainLeaderAgent:
+    """Provide Domain Leader backend-routed virtual agent."""
+
+    return get_runtime_services(request).domain_leader_agent

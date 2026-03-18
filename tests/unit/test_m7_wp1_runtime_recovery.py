@@ -107,4 +107,4 @@ def test_startup_recovery_bootstraps_institutional_agents() -> None:
     institutional_agents = agent_registry_repo.bootstrap_institutional_agents()
     roles = tuple(sorted(agent.role for agent in institutional_agents))
 
-    assert roles == ("administrator", "auditor", "ceo", "cso", "cwo")
+    assert roles == ("administrator", "auditor", "ceo", "cso", "cwo", "secretary")

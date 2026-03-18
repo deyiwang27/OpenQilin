@@ -15,6 +15,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from openqilin.agents.cso.agent import CSOAgent
+from openqilin.agents.secretary.data_access import SecretaryDataAccessService
+from openqilin.agents.domain_leader.agent import DomainLeaderAgent
 from openqilin.agents.secretary.agent import SecretaryAgent
 from openqilin.budget_runtime.client import AlwaysAllowBudgetRuntimeClient
 from openqilin.budget_runtime.reservation_service import BudgetReservationService
@@ -47,6 +49,7 @@ from openqilin.task_orchestrator.callbacks.delivery_events import (
 )
 from openqilin.task_orchestrator.services.lifecycle_service import TaskLifecycleService
 from openqilin.task_orchestrator.services.task_service import build_task_dispatch_service
+from openqilin.project_spaces.routing_resolver import ProjectSpaceRoutingResolver
 from tests.testing.infra_stubs import (
     InMemoryAgentRegistryRepository,
     InMemoryCommunicationRepository,
@@ -54,6 +57,7 @@ from tests.testing.infra_stubs import (
     InMemoryIdentityChannelRepository,
     InMemoryIdempotencyCacheStore,
     InMemoryProjectArtifactRepository,
+    InMemoryProjectSpaceBindingRepository,
     InMemoryRuntimeStateRepository,
 )
 
@@ -95,14 +99,25 @@ def _build_test_runtime_services() -> RuntimeServices:
 
     idempotency_cache_store = InMemoryIdempotencyCacheStore()
     ingress_dedupe = IngressDedupeStore()
+    project_space_binding_repo = InMemoryProjectSpaceBindingRepository()
+    routing_resolver = ProjectSpaceRoutingResolver(binding_repo=project_space_binding_repo)  # type: ignore[arg-type]
 
     llm_gateway = MagicMock()
     grammar_classifier = IntentClassifier(llm_gateway=llm_gateway)
     grammar_parser = CommandParser()
     grammar_router = FreeTextRouter()
-    secretary_agent = SecretaryAgent(llm_gateway=llm_gateway)
+    secretary_data_access = SecretaryDataAccessService(
+        governance_repo=governance_repo,  # type: ignore[arg-type]
+        runtime_state_repo=runtime_state_repo,
+    )
+    secretary_agent = SecretaryAgent(llm_gateway=llm_gateway, data_access=secretary_data_access)
+    domain_leader_agent = DomainLeaderAgent(llm_gateway=llm_gateway)
     policy_runtime_client = InMemoryPolicyRuntimeClient()
-    cso_agent = CSOAgent(llm_gateway=llm_gateway, policy_client=policy_runtime_client)
+    cso_agent = CSOAgent(
+        llm_gateway=llm_gateway,
+        project_artifact_repo=project_artifact_repo,  # type: ignore[arg-type]
+        governance_repo=governance_repo,  # type: ignore[arg-type]
+    )
 
     budget_runtime_client = AlwaysAllowBudgetRuntimeClient()
     budget_reservation_service = BudgetReservationService(client=budget_runtime_client)
@@ -158,6 +173,7 @@ def _build_test_runtime_services() -> RuntimeServices:
         grammar_router=grammar_router,
         secretary_agent=secretary_agent,
         cso_agent=cso_agent,
+        domain_leader_agent=domain_leader_agent,
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
         communication_repo=communication_repo,
@@ -166,6 +182,7 @@ def _build_test_runtime_services() -> RuntimeServices:
         identity_channel_repo=identity_channel_repo,  # type: ignore[arg-type]
         project_artifact_repo=project_artifact_repo,  # type: ignore[arg-type]
         governance_repo=governance_repo,  # type: ignore[arg-type]
+        routing_resolver=routing_resolver,
         admission_service=admission_service,
         policy_runtime_client=policy_runtime_client,
         budget_runtime_client=budget_runtime_client,

@@ -25,6 +25,10 @@ class SecretaryResponse:
     intent_confirmed: IntentClass
     routing_suggestion: str | None
     trace_id: str
+    # Audit metadata (AUTH-004, AUTH-005): every interaction must include policy provenance.
+    policy_version: str = "v2"
+    policy_hash: str = "secretary-advisory-v1"
+    rule_ids: tuple[str, ...] = ("AUTH-004", "AUTH-005")
 
 
 class SecretaryPolicyError(Exception):
