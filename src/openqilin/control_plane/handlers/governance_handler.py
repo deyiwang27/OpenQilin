@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Mapping
@@ -246,17 +247,43 @@ def initialize_project_by_cwo(
             return ()
         return tuple((str(k), str(v)) for k, v in m.items())
 
+    from openqilin.shared_kernel.config import RuntimeSettings
+
+    settings = RuntimeSettings()
+    initialized_at = datetime.now(tz=UTC)
+    metric_plan_pairs = _to_pair_tuple(metric_plan)
+    workforce_plan_pairs = _to_pair_tuple(workforce_plan)
+
+    charter_data = {
+        "project_id": project_id,
+        "objective": objective,
+        "budget_currency_total": budget_currency_total,
+        "budget_quota_total": budget_quota_total,
+        "metric_plan": dict(metric_plan_pairs),
+        "workforce_plan": dict(workforce_plan_pairs),
+        "actor_id": actor_id,
+        "actor_role": normalized_role,
+        "trace_id": trace_id,
+        "initialized_at": initialized_at.isoformat(),
+    }
+    charter_json = json.dumps(charter_data, sort_keys=True, indent=2)
+    charter_content_hash = hashlib.sha256(charter_json.encode()).hexdigest()
+    charter_dir = settings.system_root_path / "governance" / "projects" / project_id
+    charter_dir.mkdir(parents=True, exist_ok=True)
+    charter_path = charter_dir / "charter.json"
+    charter_path.write_text(charter_json)
+
     snapshot = ProjectInitializationSnapshot(
         objective=objective,
         budget_currency_total=budget_currency_total,
         budget_quota_total=budget_quota_total,
-        metric_plan=_to_pair_tuple(metric_plan),
-        workforce_plan=_to_pair_tuple(workforce_plan),
+        metric_plan=metric_plan_pairs,
+        workforce_plan=workforce_plan_pairs,
         actor_id=actor_id,
         actor_role=normalized_role,
         trace_id=trace_id,
-        charter_storage_uri=None,
-        charter_content_hash=None,
+        charter_storage_uri=str(charter_path),
+        charter_content_hash=charter_content_hash,
         scope_statement_storage_uri=None,
         scope_statement_content_hash=None,
         budget_plan_storage_uri=None,
@@ -267,7 +294,7 @@ def initialize_project_by_cwo(
         workforce_plan_content_hash=None,
         execution_plan_storage_uri=None,
         execution_plan_content_hash=None,
-        initialized_at=datetime.now(tz=UTC),
+        initialized_at=initialized_at,
     )
     try:
         project = repository.record_initialization(
@@ -370,6 +397,19 @@ def finalize_project_completion_by_c_suite(
             message="completion finalization is limited to ceo or cwo",
         )
     try:
+        # Auto-record owner notification if not already done; the finalize step
+        # implicitly notifies the owner by transitioning to completed.
+        existing = repository.get_project(project_id)
+        if existing is None:
+            raise GovernanceRepositoryError(
+                code="governance_project_missing",
+                message=f"project not found: {project_id}",
+            )
+        if existing.completion_owner_notified_at is None:
+            repository.record_completion_owner_notified(
+                project_id=project_id,
+                trace_id=trace_id,
+            )
         project = repository.transition_project_status(
             project_id=project_id,
             next_status="completed",
