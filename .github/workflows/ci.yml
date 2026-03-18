@@ -97,18 +97,18 @@ jobs:
       - name: Release artifact package checks
         run: uv run python ops/scripts/check_release_artifact_package.py
 
-  # ── Job 2: Unit and component tests ──────────────────────────────────────
+  # ── Job 2: Unit tests ─────────────────────────────────────────────────────
   # No services. Runs in parallel with static-checks.
-  # unit/     — @pytest.mark.no_infra; pure logic, no I/O.
-  # component/ — in-process stubs via patch_build_runtime_services fixture.
-  unit-component:
-    name: Unit and Component Tests
+  # unit/ — @pytest.mark.no_infra; pure logic, no I/O.
+  # component/ tests are NOT infra-free: create_control_plane_app() runs a
+  # hard OPA health check at startup (fail-closed). They run in job 3 instead.
+  unit-tests:
+    name: Unit Tests
     runs-on: ubuntu-latest
 
     env:
       # Required by RuntimeSettings fail-closed guards even though no real
-      # services are present. unit/component tests patch build_runtime_services
-      # and never actually connect to these endpoints.
+      # services are present. Unit tests never actually connect to these.
       OPENQILIN_DATABASE_URL: postgresql+psycopg://openqilin:openqilin@localhost:5432/openqilin
       OPENQILIN_REDIS_URL: redis://localhost:6379/0
       OPENQILIN_OPA_URL: http://localhost:8181
@@ -130,16 +130,18 @@ jobs:
       - name: Install dependencies (frozen)
         run: uv sync --all-groups --frozen
 
-      - name: Unit and component tests
-        run: uv run pytest tests/unit tests/component
+      - name: Unit tests
+        run: uv run pytest tests/unit
 
-  # ── Job 3: Integration tests ──────────────────────────────────────────────
+  # ── Job 3: Component + Integration tests ─────────────────────────────────
   # Requires jobs 1 + 2 to pass first.
   # Spins up PostgreSQL, Redis, and OPA. Runs all infra-dependent test tiers.
+  # component/ runs here because create_control_plane_app() performs a hard
+  # OPA health check at startup (fail-closed); OPA must be live.
   integration:
     name: Integration Tests
     runs-on: ubuntu-latest
-    needs: [static-checks, unit-component]
+    needs: [static-checks, unit-tests]
 
     services:
       postgres:
@@ -209,6 +211,9 @@ jobs:
         run: |
           uv run alembic upgrade head
           echo "Alembic migration forward-apply: PASS"
+
+      - name: Component tests
+        run: uv run pytest tests/component
 
       - name: Contract and integration tests
         run: uv run pytest tests/contract tests/integration
