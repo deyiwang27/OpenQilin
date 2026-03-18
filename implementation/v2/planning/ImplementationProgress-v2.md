@@ -1,7 +1,7 @@
 # OpenQilin v2 - Implementation Progress
 
 Status: `active`
-Updated: `2026-03-17`
+Updated: `2026-03-18`
 Tracking authority: GitHub Issues/PRs are the operational source of truth. This doc is the in-repo WP/milestone-level mirror.
 
 ---
@@ -13,7 +13,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 | M11 | `done` | 4 / 4 | All WPs complete; exit criteria met |
 | M12 | `done` | 8 / 8 | All WPs done; PR #88 raised; exit criteria partially met (compose stack validation pending prod) |
 | M13 | `done` | 9 / 9 | All WPs complete; exit criteria met; WPs #89–#96, #98 |
-| M14 | `planned` | 0 / 7 | Entry gate: M13 complete; all remaining agents + file-backed artifact storage |
+| M14 | `in_progress` | 3 / 7 | Entry gate: M13 complete; all remaining agents + file-backed artifact storage |
 | M15 | `planned` | 0 / 6 | Entry gate: M14 complete |
 | M16 | `planned` | 0 / 5 | Entry gate: M15 complete |
 | M17 | `planned` | 0 / 6 | Entry gate: M16 complete |
@@ -80,15 +80,15 @@ WP document: `05-milestones/M14-WorkPackages-v1.md`
 
 | WP | Title | Status | Issue | PR | Notes |
 |---|---|---|---|---|---|
-| M14-WP1 | Project Manager Agent | `pending` | — | — | Status reports/decisions (advisory=deny); completion_report; state-aware writes; Specialist dispatch; DL escalation |
-| M14-WP2 | CEO Agent | `pending` | — | — | Directives (advisory=deny); GATE-003/004/005; revision_cycle_count; co-approval enforcement |
-| M14-WP3 | CWO Agent | `pending` | — | — | Command authority (decision=deny); reads completion_report before co-approval; project_charter write; full DecisionReviewGates |
-| M14-WP4 | Auditor Agent | `pending` | — | — | ESC-005/006 CEO+owner pause notification; project-doc compliance monitoring; behavioral violation path |
+| M14-WP1 | Project Manager Agent | `done` | #101 | #102 | Status reports/decisions (advisory=deny); completion_report; state-aware writes; Specialist dispatch; DL escalation; 526 unit tests pass |
+| M14-WP2 | CEO Agent | `done` | #103 | #104 | Directives (advisory=deny); GATE-003/004/005; revision_cycle_count; co-approval enforcement; 542 unit tests pass |
+| M14-WP3 | CWO Agent | `done` | #105 | #106 | Command authority (decision=deny+advisory=deny); reads completion_report before co-approval; project_charter write; full DecisionReviewGates; 560 unit tests pass |
+| M14-WP4 | Auditor Agent | `in_progress` | #108 | — | ESC-005/006 CEO+owner pause notification; project-doc compliance monitoring; behavioral violation path |
 | M14-WP5 | Administrator Agent | `pending` | — | — | Artifact caps; hash integrity enforcement; STR/FRM rule bindings; Auditor/Admin boundary clarified |
 | M14-WP6 | Specialist Agent and Task Execution Engine | `pending` | — | — | Writes task_execution_results NOT project artifacts (spec conflict resolved); Specialist→DL path |
 | M14-WP7 | File-Backed Artifact Storage | `pending` | — | — | Canonical OPENQILIN_SYSTEM_ROOT path; storage_uri + content_hash in DB; ProjectArtifactModel §2.1/§7 |
 
-**M14 Exit criteria:** `pending`
+**M14 Exit criteria:** `in_progress`
 
 ---
 
