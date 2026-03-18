@@ -17,6 +17,8 @@ import pytest
 from openqilin.agents.ceo.agent import CeoAgent
 from openqilin.agents.ceo.decision_writer import CeoDecisionWriter
 from openqilin.agents.cso.agent import CSOAgent
+from openqilin.agents.cwo.agent import CwoAgent
+from openqilin.agents.cwo.workforce_initializer import WorkforceInitializer
 from openqilin.agents.project_manager.agent import ProjectManagerAgent
 from openqilin.agents.project_manager.artifact_writer import PMProjectArtifactWriter
 from openqilin.agents.secretary.data_access import SecretaryDataAccessService
@@ -128,6 +130,17 @@ def _build_test_runtime_services() -> RuntimeServices:
         governance_repo=project_artifact_repo,
         cso_agent=cso_agent,
     )
+    cwo_agent = CwoAgent(
+        llm_gateway=llm_gateway,
+        cso_agent=cso_agent,
+        ceo_agent=ceo_agent,
+        workforce_initializer=WorkforceInitializer(
+            governance_repo=project_artifact_repo,
+            agent_registry_repo=agent_registry_repo,  # type: ignore[arg-type]
+        ),
+        governance_repo=project_artifact_repo,  # type: ignore[arg-type]
+        data_access=secretary_data_access,
+    )
 
     budget_runtime_client = AlwaysAllowBudgetRuntimeClient()
     budget_reservation_service = BudgetReservationService(client=budget_runtime_client)
@@ -193,6 +206,7 @@ def _build_test_runtime_services() -> RuntimeServices:
         project_manager_agent=project_manager_agent,
         cso_agent=cso_agent,
         ceo_agent=ceo_agent,
+        cwo_agent=cwo_agent,
         domain_leader_agent=domain_leader_agent,
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
