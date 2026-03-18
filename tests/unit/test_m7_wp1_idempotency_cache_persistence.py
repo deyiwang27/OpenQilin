@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from openqilin.data_access.cache.idempotency_store import InMemoryIdempotencyCacheStore
+from tests.testing.infra_stubs import InMemoryIdempotencyCacheStore
 
 
 def test_idempotency_cache_store_persists_records(tmp_path: Path) -> None:

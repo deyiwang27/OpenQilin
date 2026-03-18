@@ -6,14 +6,11 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Mapping
 
 if TYPE_CHECKING:
-    from openqilin.data_access.repositories.identity_channels import (
-        InMemoryIdentityChannelRepository,
-    )
     from openqilin.data_access.repositories.postgres.identity_repository import (
         PostgresIdentityMappingRepository,
     )
 
-    IdentityRepo = InMemoryIdentityChannelRepository | PostgresIdentityMappingRepository
+    IdentityRepo = PostgresIdentityMappingRepository
 
 
 class PrincipalResolutionError(ValueError):

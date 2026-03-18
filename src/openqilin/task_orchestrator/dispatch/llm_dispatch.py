@@ -145,7 +145,7 @@ class LlmGatewayDispatchAdapter:
     ) -> None:
         self._llm_gateway_service = llm_gateway_service
         self._settings = settings or RuntimeSettings()
-        self._conversation_store = InMemoryConversationStore(max_turns=6)
+        self._conversation_store = LocalConversationStore(max_turns=6)
         self._retrieval_query_service = retrieval_query_service
         self._governance_project_reader = governance_project_reader
         self._tool_registry = ToolServiceRegistry(
@@ -564,7 +564,7 @@ class ConversationTurn:
     content: str
 
 
-class InMemoryConversationStore:
+class LocalConversationStore:
     """Bounded in-memory conversation turns per scope."""
 
     def __init__(self, *, max_turns: int) -> None:
@@ -917,3 +917,7 @@ def _format_project_portfolio_evidence(project_records: tuple[object, ...]) -> s
         name = str(getattr(project, "name", "name-unknown"))
         entries.append(f"{project_id}:{status}:{name}")
     return "projects=" + ", ".join(entries)
+
+
+# Backward-compatible alias retained for existing imports.
+InMemoryConversationStore = LocalConversationStore

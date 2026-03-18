@@ -54,6 +54,10 @@ packages = ["src/openqilin"]
 [tool.pytest.ini_options]
 addopts = "-ra"
 testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+    "no_infra: pure-logic unit test that passes without a compose stack (no DB/Redis/OPA required)",
+]
 
 [tool.ruff]
 target-version = "py312"
@@ -64,4 +68,4 @@ python_version = "3.12"
 warn_unused_configs = true
 strict = false
 pretty = true
-mypy_path = ["src"]
+mypy_path = ["src", "tests"]

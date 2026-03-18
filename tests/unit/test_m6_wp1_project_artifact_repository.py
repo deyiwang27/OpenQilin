@@ -6,10 +6,10 @@ from pathlib import Path
 import pytest
 
 from openqilin.data_access.repositories.artifacts import (
-    InMemoryProjectArtifactRepository,
     ProjectArtifactRepositoryError,
     ProjectArtifactWriteContext,
 )
+from tests.testing.infra_stubs import InMemoryProjectArtifactRepository
 
 
 def _cwo_context() -> ProjectArtifactWriteContext:

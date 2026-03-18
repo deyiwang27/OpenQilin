@@ -1,7 +1,7 @@
-from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
-from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
+from openqilin.observability.testing.stubs import InMemoryAuditWriter
+from openqilin.observability.testing.stubs import InMemoryMetricRecorder
 from openqilin.observability.tracing.spans import OWNER_COMMAND_INGRESS_SPAN
-from openqilin.observability.tracing.tracer import InMemoryTracer
+from openqilin.observability.testing.stubs import InMemoryTracer
 
 
 def test_in_memory_tracer_records_completed_span() -> None:

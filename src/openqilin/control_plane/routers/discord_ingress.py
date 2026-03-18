@@ -47,14 +47,16 @@ from openqilin.control_plane.schemas.owner_commands import (
     OwnerCommandResolution,
     OwnerCommandSender,
 )
-from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
-from openqilin.data_access.repositories.identity_channels import (
-    InMemoryIdentityChannelRepository,
+from openqilin.data_access.repositories.postgres.identity_repository import (
+    PostgresIdentityMappingRepository,
 )
-from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
-from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
-from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
-from openqilin.observability.tracing.tracer import InMemoryTracer
+from openqilin.data_access.repositories.postgres.project_repository import PostgresProjectRepository
+from openqilin.data_access.repositories.postgres.task_repository import PostgresTaskRepository
+from openqilin.observability.testing.stubs import (
+    InMemoryAuditWriter,
+    InMemoryMetricRecorder,
+    InMemoryTracer,
+)
 from openqilin.policy_runtime_integration.client import PolicyRuntimeClient
 from openqilin.task_orchestrator.admission.service import AdmissionService
 from openqilin.task_orchestrator.services.task_service import TaskDispatchService
@@ -108,13 +110,13 @@ def submit_discord_message(
     admission_service: AdmissionService = Depends(get_admission_service),
     policy_runtime_client: PolicyRuntimeClient = Depends(get_policy_runtime_client),
     budget_reservation_service: BudgetReservationService = Depends(get_budget_reservation_service),
-    runtime_state_repo: InMemoryRuntimeStateRepository = Depends(get_runtime_state_repository),
+    runtime_state_repo: PostgresTaskRepository = Depends(get_runtime_state_repository),
     task_dispatch_service: TaskDispatchService = Depends(get_task_dispatch_service),
     tracer: InMemoryTracer = Depends(get_tracer),
     audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
     metric_recorder: InMemoryMetricRecorder = Depends(get_metric_recorder),
-    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
-    identity_channel_repository: InMemoryIdentityChannelRepository = Depends(
+    governance_repository: PostgresProjectRepository = Depends(get_governance_repository),
+    identity_channel_repository: PostgresIdentityMappingRepository = Depends(
         get_identity_channel_repository
     ),
     grammar_classifier: IntentClassifier = Depends(get_grammar_classifier),

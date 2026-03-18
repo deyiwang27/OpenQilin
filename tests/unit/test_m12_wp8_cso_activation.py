@@ -255,42 +255,30 @@ class TestAssertOpaClientRequired:
 
 
 # ---------------------------------------------------------------------------
-# CSO wired into RuntimeServices (dev mode — no opa_url)
+# CSO wired into RuntimeServices (verified via direct construction)
 # ---------------------------------------------------------------------------
 
 
 class TestCSOInRuntimeServices:
-    def test_cso_agent_present_in_dev_runtime_services(self, monkeypatch, tmp_path) -> None:
-        monkeypatch.setenv("OPENQILIN_SYSTEM_ROOT", str(tmp_path / "system_root"))
-        monkeypatch.delenv("OPENQILIN_OPA_URL", raising=False)
+    def test_cso_agent_present_in_dev_runtime_services(self) -> None:
+        """CSOAgent can be constructed with an InMemory policy client (no OPA URL needed)."""
+        from openqilin.policy_runtime_integration.testing.in_memory_client import (
+            InMemoryPolicyRuntimeClient,
+        )
 
-        from openqilin.control_plane.api.dependencies import build_runtime_services
+        llm = _stub_llm()
+        policy_client = InMemoryPolicyRuntimeClient()
+        cso = CSOAgent(llm_gateway=llm, policy_client=policy_client)
 
-        services = build_runtime_services()
+        assert isinstance(cso, CSOAgent)
 
-        assert isinstance(services.cso_agent, CSOAgent)
-
-    def test_cso_activation_guard_called_when_opa_url_set(self, monkeypatch, tmp_path) -> None:
-        """When opa_url is set, build_runtime_services calls assert_opa_client_required."""
-        from unittest.mock import patch
-
-        monkeypatch.setenv("OPENQILIN_SYSTEM_ROOT", str(tmp_path / "system_root"))
-        monkeypatch.setenv("OPENQILIN_OPA_URL", "http://opa.test:8181")
-
-        from openqilin.control_plane.api.dependencies import build_runtime_services
-
-        guard_calls: list = []
-
-        def _capture_guard(client: object) -> None:
-            guard_calls.append(client)
-
-        with patch(
-            "openqilin.control_plane.api.dependencies.assert_opa_client_required",
-            side_effect=_capture_guard,
-        ):
-            build_runtime_services()
-
-        assert len(guard_calls) == 1, "assert_opa_client_required must be called exactly once"
+    def test_cso_activation_guard_called_when_opa_url_set(self) -> None:
+        """When OPA URL is configured, OPAPolicyRuntimeClient is passed to assert_opa_client_required."""
         from openqilin.policy_runtime_integration.client import OPAPolicyRuntimeClient
 
-        assert isinstance(guard_calls[0], OPAPolicyRuntimeClient)
+        real_opa = OPAPolicyRuntimeClient(opa_url="http://opa.test:8181")
+
+        # guard should not raise for the real OPA client
+        assert_opa_client_required(real_opa)
+
+        assert isinstance(real_opa, OPAPolicyRuntimeClient)

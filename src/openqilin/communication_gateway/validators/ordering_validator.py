@@ -17,8 +17,8 @@ class OrderingValidationError(ValueError):
         self.message = message
 
 
-class InMemoryOrderingValidator:
-    """In-memory ordering and duplicate-id checks per communication stream."""
+class LocalOrderingValidator:
+    """Local in-process ordering and duplicate-id checks per communication stream."""
 
     def __init__(self) -> None:
         self._latest_seen_at_by_stream: dict[str, datetime] = {}
@@ -49,3 +49,7 @@ class InMemoryOrderingValidator:
 def _stream_key(envelope: A2AEnvelope) -> str:
     project = envelope.project_id or "project-unspecified"
     return f"{envelope.connector}:{envelope.principal_id}:{project}:{envelope.target}"
+
+
+# Backward-compatible alias retained for existing imports.
+InMemoryOrderingValidator = LocalOrderingValidator

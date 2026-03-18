@@ -14,11 +14,9 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from openqilin.budget_runtime.reservation_service import BudgetReservationService
-    from openqilin.data_access.repositories.runtime_state import (
-        InMemoryRuntimeStateRepository,
-        TaskRecord,
-    )
-    from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
+    from openqilin.data_access.repositories.postgres.task_repository import PostgresTaskRepository
+    from openqilin.data_access.repositories.runtime_state import TaskRecord
+    from openqilin.observability.testing.stubs import InMemoryAuditWriter
 
 # Deterministic obligation execution order (POL-005)
 _OBLIGATION_ORDER = (
@@ -45,7 +43,7 @@ class ObligationContext:
     policy_hash: str
     rule_ids: tuple[str, ...]
     audit_writer: InMemoryAuditWriter
-    runtime_state_repo: InMemoryRuntimeStateRepository
+    runtime_state_repo: PostgresTaskRepository
     budget_reservation_service: BudgetReservationService
     task_record: TaskRecord
 

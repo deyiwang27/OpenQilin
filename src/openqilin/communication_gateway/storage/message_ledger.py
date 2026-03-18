@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+from uuid import uuid4
+
 from openqilin.data_access.repositories.communication import (
     CommunicationMessageRecord,
-    InMemoryCommunicationRepository,
+    CommunicationStateTransition,
     LedgerState,
 )
 
@@ -25,11 +28,12 @@ class MessageLedgerError(ValueError):
         self.message = message
 
 
-class InMemoryMessageLedger:
-    """Deterministic in-memory ledger for communication message lifecycle."""
+class LocalMessageLedger:
+    """Deterministic in-process ledger for communication message lifecycle."""
 
-    def __init__(self, repository: InMemoryCommunicationRepository | None = None) -> None:
-        self._repository = repository or InMemoryCommunicationRepository()
+    def __init__(self) -> None:
+        self._records: dict[str, CommunicationMessageRecord] = {}
+        self._records_by_task: dict[str, list[str]] = {}
 
     def begin_dispatch(
         self,
@@ -47,7 +51,17 @@ class InMemoryMessageLedger:
     ) -> CommunicationMessageRecord:
         """Persist prepared transition when dispatch pipeline starts."""
 
-        return self._repository.create_record(
+        ledger_id = str(uuid4())
+        now = datetime.now(tz=UTC)
+        prepared_transition = CommunicationStateTransition(
+            state="prepared",
+            changed_at=now,
+            reason_code="dispatch_started",
+            message="dispatch pipeline started",
+            retryable=None,
+        )
+        record = CommunicationMessageRecord(
+            ledger_id=ledger_id,
             task_id=task_id,
             trace_id=trace_id,
             message_id=message_id,
@@ -57,8 +71,20 @@ class InMemoryMessageLedger:
             target=target,
             route_key=route_key,
             endpoint=endpoint,
+            state="prepared",
             attempt=attempt,
+            dispatch_id=None,
+            delivery_id=None,
+            error_code=None,
+            error_message=None,
+            retryable=None,
+            transitions=(prepared_transition,),
+            created_at=now,
+            updated_at=now,
         )
+        self._records[ledger_id] = record
+        self._records_by_task.setdefault(task_id, []).append(ledger_id)
+        return record
 
     def mark_sent(
         self,
@@ -71,22 +97,25 @@ class InMemoryMessageLedger:
 
         record = self._require_record(ledger_id)
         self._assert_transition(record.state, "sent")
-        updated = self._repository.append_transition(
-            ledger_id,
+        from dataclasses import replace
+
+        now = datetime.now(tz=UTC)
+        sent_transition = CommunicationStateTransition(
             state="sent",
-            reason_code="acp_send_accepted",
-            message="ACP client accepted send request",
+            changed_at=now,
+            reason_code="acp_accepted",
+            message="ACP send accepted",
             retryable=None,
+        )
+        updated = replace(
+            record,
+            state="sent",
             dispatch_id=dispatch_id,
             delivery_id=delivery_id,
-            error_code=None,
-            error_message=None,
+            transitions=record.transitions + (sent_transition,),
+            updated_at=now,
         )
-        if updated is None:
-            raise MessageLedgerError(
-                code="message_ledger_missing_record",
-                message="message ledger record missing during sent transition",
-            )
+        self._records[ledger_id] = updated
         return updated
 
     def mark_acked(
@@ -100,22 +129,24 @@ class InMemoryMessageLedger:
 
         record = self._require_record(ledger_id)
         self._assert_transition(record.state, "acked")
-        updated = self._repository.append_transition(
-            ledger_id,
+        from dataclasses import replace
+
+        now = datetime.now(tz=UTC)
+        acked_transition = CommunicationStateTransition(
             state="acked",
+            changed_at=now,
             reason_code=reason_code,
             message=message,
             retryable=False,
-            dispatch_id=record.dispatch_id,
-            delivery_id=record.delivery_id,
-            error_code=None,
-            error_message=None,
         )
-        if updated is None:
-            raise MessageLedgerError(
-                code="message_ledger_missing_record",
-                message="message ledger record missing during ack transition",
-            )
+        updated = replace(
+            record,
+            state="acked",
+            retryable=False,
+            transitions=record.transitions + (acked_transition,),
+            updated_at=now,
+        )
+        self._records[ledger_id] = updated
         return updated
 
     def mark_nacked(
@@ -130,41 +161,46 @@ class InMemoryMessageLedger:
 
         record = self._require_record(ledger_id)
         self._assert_transition(record.state, "nacked")
-        updated = self._repository.append_transition(
-            ledger_id,
+        from dataclasses import replace
+
+        now = datetime.now(tz=UTC)
+        nacked_transition = CommunicationStateTransition(
             state="nacked",
+            changed_at=now,
             reason_code=error_code,
             message=message,
             retryable=retryable,
-            dispatch_id=record.dispatch_id,
-            delivery_id=record.delivery_id,
+        )
+        updated = replace(
+            record,
+            state="nacked",
             error_code=error_code,
             error_message=message,
+            retryable=retryable,
+            transitions=record.transitions + (nacked_transition,),
+            updated_at=now,
         )
-        if updated is None:
-            raise MessageLedgerError(
-                code="message_ledger_missing_record",
-                message="message ledger record missing during nack transition",
-            )
+        self._records[ledger_id] = updated
         return updated
 
     def get_record(self, ledger_id: str) -> CommunicationMessageRecord | None:
         """Load one message ledger record."""
 
-        return self._repository.get_record(ledger_id)
+        return self._records.get(ledger_id)
 
     def list_records_for_task(self, task_id: str) -> tuple[CommunicationMessageRecord, ...]:
         """List message ledger records for a task."""
 
-        return self._repository.list_records_for_task(task_id)
+        ledger_ids = self._records_by_task.get(task_id, [])
+        return tuple(self._records[lid] for lid in ledger_ids if lid in self._records)
 
     def list_records(self) -> tuple[CommunicationMessageRecord, ...]:
         """List all message ledger records."""
 
-        return self._repository.list_records()
+        return tuple(self._records.values())
 
     def _require_record(self, ledger_id: str) -> CommunicationMessageRecord:
-        record = self._repository.get_record(ledger_id)
+        record = self._records.get(ledger_id)
         if record is None:
             raise MessageLedgerError(
                 code="message_ledger_missing_record",
@@ -181,3 +217,7 @@ class InMemoryMessageLedger:
             code="message_ledger_invalid_transition",
             message=f"invalid message ledger transition: {current} -> {next_state}",
         )
+
+
+# Backward-compatible alias retained for existing imports.
+InMemoryMessageLedger = LocalMessageLedger

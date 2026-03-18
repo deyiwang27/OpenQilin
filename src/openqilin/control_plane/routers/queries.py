@@ -20,7 +20,6 @@ from openqilin.control_plane.identity.principal_resolver import (
     resolve_principal,
 )
 from openqilin.data_access.repositories.postgres.task_repository import PostgresTaskRepository
-from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
 from openqilin.policy_runtime_integration.client import PolicyRuntimeClient
 from openqilin.policy_runtime_integration.fail_closed import evaluate_with_fail_closed
 from openqilin.policy_runtime_integration.models import PolicyEvaluationInput
@@ -225,7 +224,7 @@ def search_project_artifacts(
 @router.get("/v1/tasks/{task_id}")
 def get_task_status(
     task_id: str,
-    runtime_state_repo: InMemoryRuntimeStateRepository | PostgresTaskRepository = Depends(
+    runtime_state_repo: PostgresTaskRepository | PostgresTaskRepository = Depends(
         get_runtime_state_repository
     ),
     task_dispatch_service: TaskDispatchService = Depends(get_task_dispatch_service),

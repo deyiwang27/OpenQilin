@@ -8,7 +8,7 @@ from typing import Protocol
 from openqilin.communication_gateway.delivery.ack_handler import MessageAckHandler
 from openqilin.communication_gateway.delivery.dlq_writer import (
     DeadLetterWriteRequest,
-    InMemoryDeadLetterWriter,
+    LocalDeadLetterWriter,
 )
 from openqilin.communication_gateway.delivery.retry_scheduler import (
     DeterministicRetryScheduler,
@@ -16,14 +16,14 @@ from openqilin.communication_gateway.delivery.retry_scheduler import (
 )
 from openqilin.communication_gateway.storage.idempotency_store import (
     CommunicationIdempotencyRecord,
-    InMemoryCommunicationIdempotencyStore,
+    LocalCommunicationIdempotencyStore,
 )
-from openqilin.communication_gateway.storage.message_ledger import InMemoryMessageLedger
+from openqilin.communication_gateway.storage.message_ledger import LocalMessageLedger
 from openqilin.communication_gateway.transport.acp_client import (
     AcpClient,
     AcpClientError,
     AcpSendRequest,
-    InMemoryAcpClient,
+    LocalAcpClient,
 )
 from openqilin.data_access.repositories.communication import (
     CommunicationDeadLetterRecord,
@@ -71,25 +71,25 @@ class DeliveryPublisher(Protocol):
         """Publish communication message through ACP send lifecycle."""
 
 
-class InMemoryDeliveryPublisher:
-    """Deterministic publisher using in-memory ACP client and message ledger."""
+class LocalDeliveryPublisher:
+    """Deterministic publisher using local ACP client and message ledger."""
 
     def __init__(
         self,
         *,
         acp_client: AcpClient | None = None,
-        message_ledger: InMemoryMessageLedger | None = None,
+        message_ledger: LocalMessageLedger | None = None,
         ack_handler: MessageAckHandler | None = None,
         retry_scheduler: RetryScheduler | None = None,
-        idempotency_store: InMemoryCommunicationIdempotencyStore | None = None,
-        dead_letter_writer: InMemoryDeadLetterWriter | None = None,
+        idempotency_store: LocalCommunicationIdempotencyStore | None = None,
+        dead_letter_writer: LocalDeadLetterWriter | None = None,
     ) -> None:
-        self._ledger = message_ledger or InMemoryMessageLedger()
-        self._acp_client = acp_client or InMemoryAcpClient()
+        self._ledger = message_ledger or LocalMessageLedger()
+        self._acp_client = acp_client or LocalAcpClient()
         self._ack_handler = ack_handler or MessageAckHandler(self._ledger)
         self._retry_scheduler = retry_scheduler or DeterministicRetryScheduler()
-        self._idempotency_store = idempotency_store or InMemoryCommunicationIdempotencyStore()
-        self._dead_letter_writer = dead_letter_writer or InMemoryDeadLetterWriter()
+        self._idempotency_store = idempotency_store or LocalCommunicationIdempotencyStore()
+        self._dead_letter_writer = dead_letter_writer or LocalDeadLetterWriter()
 
     def publish(self, payload: PublishRequest) -> PublishReceipt:
         """Execute send + ack/nack pipeline and persist deterministic transitions."""
@@ -310,6 +310,10 @@ class InMemoryDeliveryPublisher:
         """List communication dead-letter records for diagnostics/tests."""
 
         return self._dead_letter_writer.list_dead_letters()
+
+
+# Backward-compatible alias retained for existing imports.
+InMemoryDeliveryPublisher = LocalDeliveryPublisher
 
 
 def _receipt_result_payload(

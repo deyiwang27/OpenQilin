@@ -1,9 +1,56 @@
-from openqilin.retrieval_runtime.models import RetrievalArtifactHit, RetrievalQueryRequest
-from openqilin.retrieval_runtime.service import RetrievalQueryService, build_retrieval_query_service
+from openqilin.retrieval_runtime.models import (
+    RetrievalArtifactHit,
+    RetrievalQueryRequest,
+    RetrievalRuntimeError,
+)
+from openqilin.retrieval_runtime.service import RetrievalQueryService
+
+
+# ---------------------------------------------------------------------------
+# Simulated read model for unit tests
+# ---------------------------------------------------------------------------
+
+_SEED_HITS: tuple[RetrievalArtifactHit, ...] = (
+    RetrievalArtifactHit(
+        project_id="project_1",
+        artifact_id="art-001",
+        artifact_type="project_charter",
+        title="Retrieval Status Rollout Charter",
+        snippet="retrieval status rollout plan",
+        source_ref="projects/project_1/docs/project_charter--v001.md",
+        score=0.95,
+    ),
+    RetrievalArtifactHit(
+        project_id="project_2",
+        artifact_id="art-002",
+        artifact_type="success_metrics",
+        title="Project Status Metrics",
+        snippet="status project success criteria",
+        source_ref="projects/project_2/docs/success_metrics--v001.md",
+        score=0.88,
+    ),
+)
+
+
+class _SimulatedArtifactSearchReadModel:
+    """Deterministic read model with seeded hits for unit tests."""
+
+    def search(self, request: RetrievalQueryRequest) -> tuple[RetrievalArtifactHit, ...]:
+        if "retrieval_error" in request.query:
+            raise RetrievalRuntimeError(
+                code="retrieval_backend_unavailable",
+                message="simulated retrieval backend error",
+                retryable=True,
+            )
+        return tuple(hit for hit in _SEED_HITS if hit.project_id == request.project_id)
+
+
+def _build_service() -> RetrievalQueryService:
+    return RetrievalQueryService(read_model=_SimulatedArtifactSearchReadModel())
 
 
 def test_retrieval_query_returns_scoped_hits() -> None:
-    service = build_retrieval_query_service()
+    service = _build_service()
 
     result = service.search_project_artifacts(
         RetrievalQueryRequest(
@@ -20,7 +67,7 @@ def test_retrieval_query_returns_scoped_hits() -> None:
 
 
 def test_retrieval_query_fail_closed_on_runtime_error() -> None:
-    service = build_retrieval_query_service()
+    service = _build_service()
 
     result = service.search_project_artifacts(
         RetrievalQueryRequest(
@@ -37,7 +84,7 @@ def test_retrieval_query_fail_closed_on_runtime_error() -> None:
 
 
 def test_retrieval_query_applies_project_scope_even_on_common_terms() -> None:
-    service = build_retrieval_query_service()
+    service = _build_service()
 
     result = service.search_project_artifacts(
         RetrievalQueryRequest(

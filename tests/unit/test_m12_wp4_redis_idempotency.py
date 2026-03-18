@@ -16,10 +16,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from openqilin.data_access.cache.idempotency_store import (
-    CacheIdempotencyRecord,
-    InMemoryIdempotencyCacheStore,
-)
+from openqilin.data_access.cache.idempotency_store import CacheIdempotencyRecord
 from openqilin.data_access.repositories.postgres.idempotency_cache_store import (
     RedisIdempotencyCacheStore,
     _record_from_json,
@@ -355,31 +352,30 @@ def test_runtime_settings_ttl_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_dependencies_idempotency_store_type_annotations() -> None:
-    """RuntimeServices.idempotency_cache_store accepts both store types."""
+    """RuntimeServices.idempotency_cache_store is typed as RedisIdempotencyCacheStore."""
     from openqilin.control_plane.api.dependencies import RuntimeServices
 
     hints = {}
     for field in RuntimeServices.__dataclass_fields__.values():
         hints[field.name] = field.type
-    # The type annotation should include both InMemory and Redis
+    # After M13-WP9 hardening, only the Redis store type is accepted (no InMemory fallback).
     field_type = hints.get("idempotency_cache_store", "")
     type_str = str(field_type)
-    assert "InMemoryIdempotencyCacheStore" in type_str
     assert "RedisIdempotencyCacheStore" in type_str
 
 
-def test_build_runtime_services_uses_inmemory_when_no_redis_url(
+def test_build_runtime_services_raises_runtime_error_when_no_redis_url(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """When redis_url is empty, InMemoryIdempotencyCacheStore is wired."""
+    """When redis_url is empty, build_runtime_services raises RuntimeError (fail-closed)."""
     monkeypatch.setenv("OPENQILIN_REDIS_URL", "")
     monkeypatch.setenv("OPENQILIN_OPA_URL", "")
     monkeypatch.setenv("OPENQILIN_DATABASE_URL", "")
 
     from openqilin.control_plane.api.dependencies import build_runtime_services
 
-    services = build_runtime_services()
-    assert isinstance(services.idempotency_cache_store, InMemoryIdempotencyCacheStore)
+    with pytest.raises(RuntimeError, match="OPENQILIN_DATABASE_URL is required"):
+        build_runtime_services()
 
 
 def test_build_runtime_services_uses_redis_when_redis_url_set(

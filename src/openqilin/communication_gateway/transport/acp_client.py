@@ -54,8 +54,8 @@ class AcpClient(Protocol):
         """Send communication payload through ACP transport."""
 
 
-class InMemoryAcpClient:
-    """Deterministic in-memory ACP client for send/ack/nack lifecycle tests."""
+class LocalAcpClient:
+    """Deterministic local ACP client for send/ack/nack lifecycle simulation."""
 
     def __init__(self) -> None:
         self._attempt_by_message_key: dict[str, int] = {}
@@ -126,3 +126,7 @@ class InMemoryAcpClient:
             message=f"ACP delivery acknowledged via {payload.route_key}",
             retryable=False,
         )
+
+
+# Backward-compatible alias retained for existing imports.
+InMemoryAcpClient = LocalAcpClient

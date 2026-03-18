@@ -2,9 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from openqilin.data_access.repositories.identity_channels import (
-    InMemoryIdentityChannelRepository,
-)
+from tests.testing.infra_stubs import InMemoryIdentityChannelRepository
 
 
 def test_identity_channel_repository_claim_status_and_persistence(tmp_path: Path) -> None:

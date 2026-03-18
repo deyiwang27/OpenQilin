@@ -21,13 +21,11 @@ from openqilin.control_plane.identity.principal_resolver import (
     PrincipalResolutionError,
     resolve_principal,
 )
-from openqilin.data_access.repositories.identity_channels import (
-    IdentityChannelMappingRecord,
-    InMemoryIdentityChannelRepository,
-)
+from openqilin.data_access.repositories.identity_channels import IdentityChannelMappingRecord
+from tests.testing.infra_stubs import InMemoryIdentityChannelRepository
 from openqilin.execution_sandbox.tools.contracts import ToolCallContext
 from openqilin.execution_sandbox.tools.write_tools import GovernedWriteToolService
-from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
+from openqilin.observability.testing.stubs import InMemoryAuditWriter
 
 
 # ---------------------------------------------------------------------------
@@ -318,8 +316,8 @@ def _build_tool_context(
 
 
 def _build_write_service() -> GovernedWriteToolService:
-    from openqilin.data_access.repositories.artifacts import InMemoryProjectArtifactRepository
-    from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
+    from tests.testing.infra_stubs import InMemoryProjectArtifactRepository
+    from tests.testing.infra_stubs import InMemoryGovernanceRepository
 
     return GovernedWriteToolService(
         governance_repository=InMemoryGovernanceRepository(),

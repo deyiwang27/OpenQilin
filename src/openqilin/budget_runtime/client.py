@@ -11,8 +11,8 @@ class BudgetRuntimeClientError(RuntimeError):
     """Raised when budget runtime call cannot be completed."""
 
 
-class InMemoryBudgetRuntimeClient:
-    """Deterministic in-memory budget client for M1 integration."""
+class AlwaysAllowBudgetRuntimeClient:
+    """Always-allow budget client used until real budget service is wired (M14)."""
 
     def __init__(self, budget_version: str = "m1-budget-shell-v1") -> None:
         self._budget_version = budget_version
@@ -63,3 +63,7 @@ class InMemoryBudgetRuntimeClient:
             remaining_units=self._remaining_units,
             budget_version=self._budget_version,
         )
+
+
+# Backward-compat alias
+InMemoryBudgetRuntimeClient = AlwaysAllowBudgetRuntimeClient

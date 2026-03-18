@@ -10,10 +10,12 @@ from typing_extensions import TypedDict
 if TYPE_CHECKING:
     from openqilin.budget_runtime.service import BudgetReservationService  # type: ignore[import-untyped]
     from openqilin.data_access.repositories.postgres.task_repository import PostgresTaskRepository
-    from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
-    from openqilin.observability.audit.audit_writer import InMemoryAuditWriter, OTelAuditWriter
-    from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
-    from openqilin.observability.tracing.tracer import InMemoryTracer
+    from openqilin.observability.audit.audit_writer import OTelAuditWriter
+    from openqilin.observability.testing.stubs import (
+        InMemoryAuditWriter,
+        InMemoryMetricRecorder,
+        InMemoryTracer,
+    )
     from openqilin.policy_runtime_integration.client import PolicyRuntimeClient
     from openqilin.task_orchestrator.services.task_service import TaskDispatchService
 
@@ -63,7 +65,7 @@ class WorkflowServices:
     policy_runtime_client: PolicyRuntimeClient
     budget_reservation_service: BudgetReservationService
     task_dispatch_service: TaskDispatchService
-    runtime_state_repo: InMemoryRuntimeStateRepository | PostgresTaskRepository
+    runtime_state_repo: PostgresTaskRepository
     audit_writer: InMemoryAuditWriter | OTelAuditWriter
     metric_recorder: InMemoryMetricRecorder
     tracer: InMemoryTracer

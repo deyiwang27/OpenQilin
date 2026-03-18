@@ -1,9 +1,7 @@
 import pytest
 
-from openqilin.data_access.repositories.governance import (
-    GovernanceRepositoryError,
-    InMemoryGovernanceRepository,
-)
+from openqilin.data_access.repositories.governance import GovernanceRepositoryError
+from tests.testing.infra_stubs import InMemoryGovernanceRepository
 
 
 def _seed_active_project(repository: InMemoryGovernanceRepository, project_id: str) -> None:

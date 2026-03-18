@@ -5,34 +5,42 @@ from __future__ import annotations
 from dataclasses import dataclass
 from uuid import uuid4
 
-from openqilin.communication_gateway.delivery.dlq_writer import InMemoryDeadLetterWriter
-from openqilin.communication_gateway.delivery.publisher import InMemoryDeliveryPublisher
+from openqilin.budget_runtime.client import AlwaysAllowBudgetRuntimeClient
+from openqilin.communication_gateway.delivery.dlq_writer import LocalDeadLetterWriter
+from openqilin.communication_gateway.delivery.publisher import LocalDeliveryPublisher
 from openqilin.communication_gateway.storage.idempotency_store import (
     CommunicationIdempotencyRecord,
-    InMemoryCommunicationIdempotencyStore,
+    LocalCommunicationIdempotencyStore,
 )
-from openqilin.communication_gateway.storage.message_ledger import InMemoryMessageLedger
-from openqilin.budget_runtime.client import InMemoryBudgetRuntimeClient
-from openqilin.data_access.cache.idempotency_store import InMemoryIdempotencyCacheStore
-from openqilin.data_access.repositories.postgres.idempotency_cache_store import (
-    RedisIdempotencyCacheStore,
-)
-from openqilin.data_access.repositories.artifacts import InMemoryProjectArtifactRepository
+from openqilin.communication_gateway.storage.message_ledger import LocalMessageLedger
 from openqilin.data_access.repositories.communication import (
     CommunicationDeadLetterRecord,
     CommunicationMessageRecord,
-    InMemoryCommunicationRepository,
 )
-from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
+from openqilin.data_access.repositories.postgres.communication_repository import (
+    PostgresCommunicationRepository,
+)
+from openqilin.data_access.repositories.postgres.governance_artifact_repository import (
+    PostgresGovernanceArtifactRepository,
+)
+from openqilin.data_access.repositories.postgres.idempotency_cache_store import (
+    RedisIdempotencyCacheStore,
+)
+from openqilin.data_access.repositories.postgres.project_repository import PostgresProjectRepository
+from openqilin.data_access.repositories.postgres.task_repository import PostgresTaskRepository
 from openqilin.data_access.repositories.runtime_state import TaskRecord
-from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
 from openqilin.execution_sandbox.tools.read_tools import GovernedReadToolService
 from openqilin.execution_sandbox.tools.write_tools import GovernedWriteToolService
 from openqilin.llm_gateway.schemas.responses import LlmGatewayResponse
 from openqilin.llm_gateway.service import build_llm_gateway_service
-from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
-from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
+from openqilin.observability.audit.audit_writer import OTelAuditWriter
+from openqilin.observability.testing.stubs import InMemoryAuditWriter, InMemoryMetricRecorder
 from openqilin.retrieval_runtime.service import RetrievalQueryService, build_retrieval_query_service
+from openqilin.task_orchestrator.dispatch.communication_dispatch import (
+    CommunicationDispatchAdapter,
+    CommunicationDispatchRequest,
+    LocalCommunicationDispatchAdapter,
+)
 from openqilin.task_orchestrator.dispatch.llm_dispatch import (
     GovernanceProjectReader,
     LlmDispatchAdapter,
@@ -40,13 +48,8 @@ from openqilin.task_orchestrator.dispatch.llm_dispatch import (
     LlmGatewayDispatchAdapter,
     RetrievalGroundingService,
 )
-from openqilin.task_orchestrator.dispatch.communication_dispatch import (
-    CommunicationDispatchAdapter,
-    CommunicationDispatchRequest,
-    InMemoryCommunicationDispatchAdapter,
-)
 from openqilin.task_orchestrator.dispatch.sandbox_dispatch import (
-    InMemorySandboxExecutionAdapter,
+    LocalSandboxExecutionAdapter,
     SandboxDispatchRequest,
     SandboxExecutionAdapter,
 )
@@ -111,7 +114,7 @@ class TaskDispatchService:
         self._sandbox_execution_adapter = sandbox_execution_adapter
         self._llm_dispatch_adapter = llm_dispatch_adapter
         self._communication_dispatch_adapter = (
-            communication_dispatch_adapter or InMemoryCommunicationDispatchAdapter()
+            communication_dispatch_adapter or LocalCommunicationDispatchAdapter()
         )
         self._task_outcomes: dict[str, TaskDispatchOutcome] = {}
 
@@ -421,7 +424,7 @@ class TaskDispatchService:
         """Expose communication message ledger records for diagnostics/tests."""
 
         adapter = self._communication_dispatch_adapter
-        if isinstance(adapter, InMemoryCommunicationDispatchAdapter):
+        if isinstance(adapter, LocalCommunicationDispatchAdapter):
             return adapter.list_message_records(task_id=task_id)
         return ()
 
@@ -431,7 +434,7 @@ class TaskDispatchService:
         """Expose communication idempotency records for diagnostics/tests."""
 
         adapter = self._communication_dispatch_adapter
-        if isinstance(adapter, InMemoryCommunicationDispatchAdapter):
+        if isinstance(adapter, LocalCommunicationDispatchAdapter):
             return adapter.list_idempotency_records()
         return ()
 
@@ -439,7 +442,7 @@ class TaskDispatchService:
         """Expose communication dead-letter records for diagnostics/tests."""
 
         adapter = self._communication_dispatch_adapter
-        if isinstance(adapter, InMemoryCommunicationDispatchAdapter):
+        if isinstance(adapter, LocalCommunicationDispatchAdapter):
             return adapter.list_dead_letters()
         return ()
 
@@ -447,31 +450,38 @@ class TaskDispatchService:
 def build_task_dispatch_service(
     lifecycle_service: TaskLifecycleService,
     *,
-    audit_writer: InMemoryAuditWriter | None = None,
+    audit_writer: InMemoryAuditWriter | OTelAuditWriter | None = None,
     metric_recorder: InMemoryMetricRecorder | None = None,
-    communication_repository: InMemoryCommunicationRepository | None = None,
-    idempotency_cache_store: InMemoryIdempotencyCacheStore
-    | RedisIdempotencyCacheStore
-    | None = None,
+    communication_repository: PostgresCommunicationRepository | None = None,
+    idempotency_cache_store: RedisIdempotencyCacheStore | None = None,
     retrieval_query_service: RetrievalGroundingService | RetrievalQueryService | None = None,
     governance_project_reader: GovernanceProjectReader | None = None,
-    governance_repository: InMemoryGovernanceRepository | None = None,
-    project_artifact_repository: InMemoryProjectArtifactRepository | None = None,
-    runtime_state_repository: InMemoryRuntimeStateRepository | None = None,
-    budget_runtime_client: InMemoryBudgetRuntimeClient | None = None,
+    governance_repository: PostgresProjectRepository | None = None,
+    project_artifact_repository: PostgresGovernanceArtifactRepository | None = None,
+    runtime_state_repository: PostgresTaskRepository | None = None,
+    budget_runtime_client: AlwaysAllowBudgetRuntimeClient | None = None,
 ) -> TaskDispatchService:
     """Build task-dispatch service with default sandbox and llm adapters."""
 
-    communication_repository = communication_repository or InMemoryCommunicationRepository()
-    runtime_state_repository = runtime_state_repository or InMemoryRuntimeStateRepository()
+    if communication_repository is None:
+        raise RuntimeError(
+            "communication_repository is required; configure DATABASE_URL at startup"
+        )
+    if runtime_state_repository is None:
+        raise RuntimeError(
+            "runtime_state_repository is required; configure DATABASE_URL at startup"
+        )
     governance_repository = governance_repository or (
         governance_project_reader
-        if isinstance(governance_project_reader, InMemoryGovernanceRepository)
+        if isinstance(governance_project_reader, PostgresProjectRepository)
         else None
     )
     if governance_repository is None:
-        governance_repository = InMemoryGovernanceRepository()
-    project_artifact_repository = project_artifact_repository or InMemoryProjectArtifactRepository()
+        raise RuntimeError("governance_repository is required; configure DATABASE_URL at startup")
+    if project_artifact_repository is None:
+        raise RuntimeError(
+            "project_artifact_repository is required; configure DATABASE_URL at startup"
+        )
     retrieval_service_for_tools = (
         retrieval_query_service
         if isinstance(retrieval_query_service, RetrievalQueryService)
@@ -491,22 +501,19 @@ def build_task_dispatch_service(
         audit_writer=audit_writer or InMemoryAuditWriter(),
         budget_runtime_client=budget_runtime_client,
     )
-    message_ledger = InMemoryMessageLedger(repository=communication_repository)
-    dead_letter_writer = InMemoryDeadLetterWriter(
-        repository=communication_repository,
+    message_ledger = LocalMessageLedger()
+    dead_letter_writer = LocalDeadLetterWriter(
         audit_writer=audit_writer,
         metric_recorder=metric_recorder,
     )
-    communication_publisher = InMemoryDeliveryPublisher(
+    communication_publisher = LocalDeliveryPublisher(
         message_ledger=message_ledger,
         dead_letter_writer=dead_letter_writer,
-        idempotency_store=InMemoryCommunicationIdempotencyStore(
-            cache_store=idempotency_cache_store
-        ),
+        idempotency_store=LocalCommunicationIdempotencyStore(),
     )
     return TaskDispatchService(
         lifecycle_service=lifecycle_service,
-        sandbox_execution_adapter=InMemorySandboxExecutionAdapter(),
+        sandbox_execution_adapter=LocalSandboxExecutionAdapter(),
         llm_dispatch_adapter=LlmGatewayDispatchAdapter(
             llm_gateway_service=build_llm_gateway_service(),
             retrieval_query_service=retrieval_query_service,
@@ -514,7 +521,7 @@ def build_task_dispatch_service(
             read_tool_service=read_tool_service,
             write_tool_service=write_tool_service,
         ),
-        communication_dispatch_adapter=InMemoryCommunicationDispatchAdapter(
+        communication_dispatch_adapter=LocalCommunicationDispatchAdapter(
             publisher=communication_publisher,
         ),
     )

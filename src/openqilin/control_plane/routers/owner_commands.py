@@ -28,10 +28,6 @@ from openqilin.control_plane.identity.principal_resolver import (
     PrincipalResolutionError,
     resolve_principal,
 )
-from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
-from openqilin.data_access.repositories.identity_channels import (
-    InMemoryIdentityChannelRepository,
-)
 from openqilin.control_plane.schemas.owner_commands import (
     OwnerCommandAcceptedData,
     OwnerCommandError,
@@ -39,14 +35,14 @@ from openqilin.control_plane.schemas.owner_commands import (
     OwnerCommandResponse,
 )
 from openqilin.data_access.repositories.runtime_state import TaskRecord
-from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
-from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
+from openqilin.observability.testing.stubs import InMemoryAuditWriter
+from openqilin.observability.testing.stubs import InMemoryMetricRecorder
 from openqilin.observability.tracing.spans import (
     AUDIT_EMIT_SPAN,
     OWNER_COMMAND_INGRESS_SPAN,
     TASK_ORCHESTRATION_SPAN,
 )
-from openqilin.observability.tracing.tracer import InMemoryTracer
+from openqilin.observability.testing.stubs import InMemoryTracer
 from openqilin.task_orchestrator.admission.envelope_validator import (
     EnvelopeValidationError,
     validate_owner_command_envelope,
@@ -56,6 +52,10 @@ from openqilin.task_orchestrator.admission.service import (
     AdmissionService,
 )
 from openqilin.task_orchestrator.dispatch.target_selector import select_dispatch_target
+from openqilin.data_access.repositories.postgres.identity_repository import (
+    PostgresIdentityMappingRepository,
+)
+from openqilin.data_access.repositories.postgres.project_repository import PostgresProjectRepository
 
 router = APIRouter(prefix="/v1/owner/commands", tags=["owner_commands"])
 
@@ -401,8 +401,8 @@ def submit_owner_command(
     tracer: InMemoryTracer = Depends(get_tracer),
     audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
     metric_recorder: InMemoryMetricRecorder = Depends(get_metric_recorder),
-    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
-    identity_channel_repository: InMemoryIdentityChannelRepository = Depends(
+    governance_repository: PostgresProjectRepository = Depends(get_governance_repository),
+    identity_channel_repository: PostgresIdentityMappingRepository = Depends(
         get_identity_channel_repository
     ),
     x_openqilin_trace_id: Annotated[str | None, Header(alias="X-OpenQilin-Trace-Id")] = None,

@@ -9,10 +9,8 @@ from openqilin.control_plane.governance.project_lifecycle import (
     parse_project_status,
 )
 from openqilin.control_plane.schemas.governance import ProjectLifecycleTransitionRequest
-from openqilin.data_access.repositories.governance import (
-    GovernanceRepositoryError,
-    InMemoryGovernanceRepository,
-)
+from openqilin.data_access.repositories.governance import GovernanceRepositoryError
+from tests.testing.infra_stubs import InMemoryGovernanceRepository
 
 
 @pytest.mark.parametrize(

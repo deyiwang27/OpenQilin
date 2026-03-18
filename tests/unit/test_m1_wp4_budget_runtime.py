@@ -2,10 +2,8 @@ from openqilin.budget_runtime.client import InMemoryBudgetRuntimeClient
 from openqilin.budget_runtime.reservation_service import BudgetReservationService
 from openqilin.budget_runtime.threshold_evaluator import estimate_cost_units
 from openqilin.control_plane.identity.principal_resolver import resolve_principal
-from openqilin.data_access.repositories.runtime_state import (
-    InMemoryRuntimeStateRepository,
-    TaskRecord,
-)
+from openqilin.data_access.repositories.runtime_state import TaskRecord
+from tests.testing.infra_stubs import InMemoryRuntimeStateRepository
 from openqilin.task_orchestrator.admission.envelope_validator import validate_owner_command_envelope
 from openqilin.testing.owner_command import build_owner_command_request_model
 

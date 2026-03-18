@@ -2,7 +2,7 @@ import pytest
 
 from openqilin.control_plane.idempotency.ingress_dedupe import InMemoryIngressDedupe
 from openqilin.control_plane.identity.principal_resolver import resolve_principal
-from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
+from tests.testing.infra_stubs import InMemoryRuntimeStateRepository
 from openqilin.task_orchestrator.admission.envelope_validator import (
     AdmissionEnvelope,
     validate_owner_command_envelope,

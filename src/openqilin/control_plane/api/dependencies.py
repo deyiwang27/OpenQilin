@@ -8,7 +8,7 @@ from typing import cast
 from fastapi import Request
 from sqlalchemy.orm import sessionmaker
 
-from openqilin.budget_runtime.client import InMemoryBudgetRuntimeClient
+from openqilin.budget_runtime.client import AlwaysAllowBudgetRuntimeClient
 from openqilin.budget_runtime.reservation_service import BudgetReservationService
 from openqilin.communication_gateway.callbacks.outcome_notifier import CommunicationOutcomeNotifier
 from openqilin.control_plane.api.startup_recovery import (
@@ -20,24 +20,13 @@ from openqilin.agents.secretary.agent import SecretaryAgent
 from openqilin.control_plane.grammar.command_parser import CommandParser
 from openqilin.control_plane.grammar.free_text_router import FreeTextRouter
 from openqilin.control_plane.grammar.intent_classifier import IntentClassifier
-from openqilin.control_plane.idempotency.ingress_dedupe import InMemoryIngressDedupe
-from openqilin.data_access.cache.idempotency_store import InMemoryIdempotencyCacheStore
+from openqilin.control_plane.idempotency.ingress_dedupe import IngressDedupeStore
 from openqilin.data_access.repositories.postgres.idempotency_cache_store import (
     RedisIdempotencyCacheStore,
     build_redis_client,
 )
 from openqilin.data_access.db.engine import create_sqlalchemy_engine
 from openqilin.data_access.db.session import build_session_factory
-from openqilin.data_access.repositories.agent_registry import (
-    InMemoryAgentRegistryRepository,
-)
-from openqilin.data_access.repositories.artifacts import InMemoryProjectArtifactRepository
-from openqilin.data_access.repositories.communication import InMemoryCommunicationRepository
-from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
-from openqilin.data_access.repositories.identity_channels import (
-    InMemoryIdentityChannelRepository,
-)
-from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
 from openqilin.data_access.repositories.postgres.agent_registry_repository import (
     PostgresAgentRegistryRepository,
 )
@@ -59,15 +48,15 @@ from openqilin.data_access.repositories.postgres.audit_event_repository import (
 from openqilin.data_access.repositories.postgres.task_repository import (
     PostgresTaskRepository,
 )
-from openqilin.observability.audit.audit_writer import InMemoryAuditWriter, OTelAuditWriter
-from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
-from openqilin.observability.tracing.tracer import InMemoryTracer
+from openqilin.observability.audit.audit_writer import OTelAuditWriter
+from openqilin.observability.testing.stubs import (
+    InMemoryAuditWriter,
+    InMemoryMetricRecorder,
+    InMemoryTracer,
+)
 from openqilin.policy_runtime_integration.client import (
     OPAPolicyRuntimeClient,
     PolicyRuntimeClient,
-)
-from openqilin.policy_runtime_integration.testing.in_memory_client import (
-    InMemoryPolicyRuntimeClient,
 )
 from openqilin.retrieval_runtime.service import (
     RetrievalQueryService,
@@ -77,7 +66,7 @@ from openqilin.llm_gateway.service import LlmGatewayService, build_llm_gateway_s
 from openqilin.shared_kernel.config import RuntimeSettings
 from openqilin.task_orchestrator.admission.service import AdmissionService
 from openqilin.task_orchestrator.callbacks.delivery_events import (
-    InMemoryDeliveryEventCallbackProcessor,
+    LocalDeliveryEventCallbackProcessor,
 )
 from openqilin.task_orchestrator.services.lifecycle_service import TaskLifecycleService
 from openqilin.task_orchestrator.services.task_service import (
@@ -102,17 +91,17 @@ class RuntimeServices:
     grammar_router: FreeTextRouter
     secretary_agent: SecretaryAgent
     cso_agent: CSOAgent
-    ingress_dedupe: InMemoryIngressDedupe
-    runtime_state_repo: InMemoryRuntimeStateRepository | PostgresTaskRepository
-    communication_repo: InMemoryCommunicationRepository | PostgresCommunicationRepository
-    idempotency_cache_store: InMemoryIdempotencyCacheStore | RedisIdempotencyCacheStore
-    agent_registry_repo: InMemoryAgentRegistryRepository | PostgresAgentRegistryRepository
-    identity_channel_repo: InMemoryIdentityChannelRepository | PostgresIdentityMappingRepository
-    project_artifact_repo: InMemoryProjectArtifactRepository | PostgresGovernanceArtifactRepository
-    governance_repo: InMemoryGovernanceRepository | PostgresProjectRepository
+    ingress_dedupe: IngressDedupeStore
+    runtime_state_repo: PostgresTaskRepository
+    communication_repo: PostgresCommunicationRepository
+    idempotency_cache_store: RedisIdempotencyCacheStore
+    agent_registry_repo: PostgresAgentRegistryRepository
+    identity_channel_repo: PostgresIdentityMappingRepository
+    project_artifact_repo: PostgresGovernanceArtifactRepository
+    governance_repo: PostgresProjectRepository
     admission_service: AdmissionService
     policy_runtime_client: PolicyRuntimeClient
-    budget_runtime_client: InMemoryBudgetRuntimeClient
+    budget_runtime_client: AlwaysAllowBudgetRuntimeClient
     budget_reservation_service: BudgetReservationService
     lifecycle_service: TaskLifecycleService
     task_dispatch_service: TaskDispatchService
@@ -120,7 +109,7 @@ class RuntimeServices:
     tracer: InMemoryTracer
     audit_writer: InMemoryAuditWriter | OTelAuditWriter
     metric_recorder: InMemoryMetricRecorder
-    delivery_event_callback_processor: InMemoryDeliveryEventCallbackProcessor
+    delivery_event_callback_processor: LocalDeliveryEventCallbackProcessor
     communication_outcome_notifier: CommunicationOutcomeNotifier
     startup_recovery_report: StartupRecoveryReport
 
@@ -130,128 +119,73 @@ def build_runtime_services() -> RuntimeServices:
 
     Called exactly once at application startup (stored in app.state.runtime_services).
     H-4 fix: lazy init removed from get_runtime_services(); this is the single init path.
+    M13-WP9: fail-closed guards — all three infra URLs are required.
     """
 
     settings = RuntimeSettings()
+
+    if not settings.database_url:
+        raise RuntimeError(
+            "OPENQILIN_DATABASE_URL is required. Run: docker compose --profile core up -d"
+        )
+    if not settings.redis_url:
+        raise RuntimeError(
+            "OPENQILIN_REDIS_URL is required. Run: docker compose --profile core up -d"
+        )
+    if not settings.opa_url:
+        raise RuntimeError(
+            "OPENQILIN_OPA_URL is required. Run: docker compose --profile core up -d"
+        )
+
     llm_gateway: LlmGatewayService = build_llm_gateway_service()
     grammar_classifier = IntentClassifier(llm_gateway=llm_gateway)
     grammar_parser = CommandParser()
     grammar_router = FreeTextRouter()
     secretary_agent = SecretaryAgent(llm_gateway=llm_gateway)
-    # CSO activation guard: OPA must be wired when opa_url is set.
-    # In dev mode (no opa_url), CSO is built with the InMemory client — no guard.
-    _cso_opa_required = bool(settings.opa_url)
 
-    # --- repository tier selection -----------------------------------------
-    # If database_url is set, use PostgreSQL-backed repositories.
-    # Otherwise fall back to InMemory repositories (local dev / tests).
+    # --- repository tier -------------------------------------------------
+    engine = create_sqlalchemy_engine(settings.database_url)
+    session_factory: sessionmaker = build_session_factory(engine)
 
-    if settings.database_url:
-        engine = create_sqlalchemy_engine(settings.database_url)
-        session_factory: sessionmaker = build_session_factory(engine)
+    runtime_state_repo = PostgresTaskRepository(session_factory=session_factory)
+    communication_repo = PostgresCommunicationRepository(session_factory=session_factory)
+    agent_registry_repo = PostgresAgentRegistryRepository(session_factory=session_factory)
+    identity_channel_repo = PostgresIdentityMappingRepository(session_factory=session_factory)
+    project_artifact_repo = PostgresGovernanceArtifactRepository(session_factory=session_factory)
+    governance_repo = PostgresProjectRepository(session_factory=session_factory)
+    audit_event_repo = PostgresAuditEventRepository(session_factory=session_factory)
 
-        runtime_state_repo: InMemoryRuntimeStateRepository | PostgresTaskRepository = (
-            PostgresTaskRepository(session_factory=session_factory)
-        )
-        communication_repo: InMemoryCommunicationRepository | PostgresCommunicationRepository = (
-            PostgresCommunicationRepository(session_factory=session_factory)
-        )
-        agent_registry_repo: InMemoryAgentRegistryRepository | PostgresAgentRegistryRepository = (
-            PostgresAgentRegistryRepository(session_factory=session_factory)
-        )
-        identity_channel_repo: (
-            InMemoryIdentityChannelRepository | PostgresIdentityMappingRepository
-        ) = PostgresIdentityMappingRepository(session_factory=session_factory)
-        project_artifact_repo: (
-            InMemoryProjectArtifactRepository | PostgresGovernanceArtifactRepository
-        ) = PostgresGovernanceArtifactRepository(session_factory=session_factory)
-        governance_repo: InMemoryGovernanceRepository | PostgresProjectRepository = (
-            PostgresProjectRepository(session_factory=session_factory)
-        )
-        audit_event_repo: PostgresAuditEventRepository | None = PostgresAuditEventRepository(
-            session_factory=session_factory
-        )
-    else:
-        audit_event_repo = None
-        runtime_snapshot_path = (
-            settings.runtime_state_snapshot_path if settings.runtime_persistence_enabled else None
-        )
-        communication_snapshot_path = (
-            settings.communication_snapshot_path if settings.runtime_persistence_enabled else None
-        )
-        agent_registry_snapshot_path = (
-            settings.agent_registry_snapshot_path if settings.runtime_persistence_enabled else None
-        )
-        identity_channel_snapshot_path = (
-            settings.identity_channel_snapshot_path
-            if settings.runtime_persistence_enabled
-            else None
-        )
+    # --- idempotency (Redis required) ------------------------------------
+    idempotency_cache_store = RedisIdempotencyCacheStore(
+        client=build_redis_client(settings.redis_url),
+        ttl_seconds=settings.idempotency_ttl_seconds,
+    )
 
-        runtime_state_repo = InMemoryRuntimeStateRepository(snapshot_path=runtime_snapshot_path)
-        communication_repo = InMemoryCommunicationRepository(
-            snapshot_path=communication_snapshot_path
-        )
-        agent_registry_repo = InMemoryAgentRegistryRepository(
-            snapshot_path=agent_registry_snapshot_path
-        )
-        identity_channel_repo = InMemoryIdentityChannelRepository(
-            snapshot_path=identity_channel_snapshot_path
-        )
-        project_artifact_repo = InMemoryProjectArtifactRepository(
-            system_root=settings.system_root_path
-        )
-        governance_repo = InMemoryGovernanceRepository(
-            artifact_repository=project_artifact_repo  # type: ignore[arg-type]
-        )
-
-    # --- idempotency (M12-WP4: Redis when redis_url is set; InMemory otherwise) -
-    idempotency_cache_store: InMemoryIdempotencyCacheStore | RedisIdempotencyCacheStore
-    if settings.redis_url:
-        idempotency_cache_store = RedisIdempotencyCacheStore(
-            client=build_redis_client(settings.redis_url),
-            ttl_seconds=settings.idempotency_ttl_seconds,
-        )
-    else:
-        idempotency_snapshot_path = (
-            settings.idempotency_snapshot_path if settings.runtime_persistence_enabled else None
-        )
-        idempotency_cache_store = InMemoryIdempotencyCacheStore(
-            snapshot_path=idempotency_snapshot_path
-        )
-
-    ingress_dedupe = InMemoryIngressDedupe()
+    ingress_dedupe = IngressDedupeStore()
 
     # --- services ----------------------------------------------------------------
     admission_service = AdmissionService(
         dedupe_store=ingress_dedupe,
-        runtime_state_repo=runtime_state_repo,  # type: ignore[arg-type]
+        runtime_state_repo=runtime_state_repo,
     )
-    policy_runtime_client: PolicyRuntimeClient = (
-        OPAPolicyRuntimeClient(opa_url=settings.opa_url)
-        if settings.opa_url
-        else InMemoryPolicyRuntimeClient()
-    )
-    # M12-WP8: Activate CSO. If opa_url is set, enforce the OPA client guard.
-    if _cso_opa_required:
-        assert_opa_client_required(policy_runtime_client)
+    policy_runtime_client: PolicyRuntimeClient = OPAPolicyRuntimeClient(opa_url=settings.opa_url)
+    # CSO activation guard: OPA client must be the real client.
+    assert_opa_client_required(policy_runtime_client)
     cso_agent = CSOAgent(llm_gateway=llm_gateway, policy_client=policy_runtime_client)
 
-    budget_runtime_client = InMemoryBudgetRuntimeClient()
+    budget_runtime_client = AlwaysAllowBudgetRuntimeClient()
     budget_reservation_service = BudgetReservationService(client=budget_runtime_client)
-    lifecycle_service = TaskLifecycleService(runtime_state_repo=runtime_state_repo)  # type: ignore[arg-type]
+    lifecycle_service = TaskLifecycleService(runtime_state_repo=runtime_state_repo)
     retrieval_query_service = build_retrieval_query_service()
     tracer = InMemoryTracer()
-    # M12-WP5: OTelAuditWriter when Postgres is available; InMemory otherwise.
-    audit_writer: InMemoryAuditWriter | OTelAuditWriter = (
-        OTelAuditWriter(audit_repo=audit_event_repo)
-        if audit_event_repo is not None
-        else InMemoryAuditWriter()
+    # OTelAuditWriter with durable Postgres write (AUD-001).
+    audit_writer: InMemoryAuditWriter | OTelAuditWriter = OTelAuditWriter(
+        audit_repo=audit_event_repo
     )
     metric_recorder = InMemoryMetricRecorder()
-    delivery_event_callback_processor = InMemoryDeliveryEventCallbackProcessor(
-        runtime_state_repo=runtime_state_repo,  # type: ignore[arg-type]
-        audit_writer=audit_writer,  # type: ignore[arg-type]
+    delivery_event_callback_processor = LocalDeliveryEventCallbackProcessor(
+        runtime_state_repo=runtime_state_repo,
+        audit_writer=audit_writer,
         metric_recorder=metric_recorder,
     )
     communication_outcome_notifier = CommunicationOutcomeNotifier(
@@ -259,15 +193,15 @@ def build_runtime_services() -> RuntimeServices:
     )
     task_dispatch_service = build_task_dispatch_service(
         lifecycle_service=lifecycle_service,
-        audit_writer=audit_writer,  # type: ignore[arg-type]
+        audit_writer=audit_writer,
         metric_recorder=metric_recorder,
-        communication_repository=communication_repo,  # type: ignore[arg-type]
+        communication_repository=communication_repo,
         idempotency_cache_store=idempotency_cache_store,
         retrieval_query_service=retrieval_query_service,
-        governance_project_reader=governance_repo,  # type: ignore[arg-type]
-        governance_repository=governance_repo,  # type: ignore[arg-type]
-        project_artifact_repository=project_artifact_repo,  # type: ignore[arg-type]
-        runtime_state_repository=runtime_state_repo,  # type: ignore[arg-type]
+        governance_project_reader=governance_repo,
+        governance_repository=governance_repo,
+        project_artifact_repository=project_artifact_repo,
+        runtime_state_repository=runtime_state_repo,
         budget_runtime_client=budget_runtime_client,
     )
 
@@ -374,7 +308,7 @@ def get_budget_reservation_service(request: Request) -> BudgetReservationService
 
 def get_runtime_state_repository(
     request: Request,
-) -> InMemoryRuntimeStateRepository | PostgresTaskRepository:
+) -> PostgresTaskRepository:
     """Provide runtime-state repository for task status updates."""
 
     return get_runtime_services(request).runtime_state_repo
@@ -382,7 +316,7 @@ def get_runtime_state_repository(
 
 def get_governance_repository(
     request: Request,
-) -> InMemoryGovernanceRepository | PostgresProjectRepository:
+) -> PostgresProjectRepository:
     """Provide governance repository for project lifecycle and proposal contracts."""
 
     return get_runtime_services(request).governance_repo
@@ -390,7 +324,7 @@ def get_governance_repository(
 
 def get_identity_channel_repository(
     request: Request,
-) -> InMemoryIdentityChannelRepository | PostgresIdentityMappingRepository:
+) -> PostgresIdentityMappingRepository:
     """Provide connector identity/channel mapping repository for Discord ingress checks."""
 
     return get_runtime_services(request).identity_channel_repo
@@ -411,7 +345,7 @@ def get_retrieval_query_service(request: Request) -> RetrievalQueryService:
 def get_tracer(request: Request) -> InMemoryTracer:
     """Provide tracer for governed-path span emission."""
 
-    return get_runtime_services(request).tracer
+    return get_runtime_services(request).tracer  # type: ignore[return-value]
 
 
 def get_audit_writer(request: Request) -> InMemoryAuditWriter | OTelAuditWriter:

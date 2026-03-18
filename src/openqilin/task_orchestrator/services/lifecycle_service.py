@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-from openqilin.data_access.repositories.runtime_state import (
-    InMemoryRuntimeStateRepository,
-    TaskRecord,
-)
+from openqilin.data_access.repositories.runtime_state import TaskRecord
+from openqilin.data_access.repositories.postgres.task_repository import PostgresTaskRepository
 
 
 class TaskLifecycleService:
     """Apply lifecycle status transitions to runtime-state records."""
 
-    def __init__(self, runtime_state_repo: InMemoryRuntimeStateRepository) -> None:
+    def __init__(self, runtime_state_repo: PostgresTaskRepository) -> None:
         self._runtime_state_repo = runtime_state_repo
 
     def mark_dispatched(

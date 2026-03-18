@@ -345,59 +345,59 @@ Adopt LangGraph as the real orchestration engine, replacing the linear HTTP-hand
 
 #### Phase 1 — Delete Group 1 (infra stubs with real Postgres/Redis/OPA counterparts)
 
-- [ ] Delete `InMemoryRuntimeStateRepository` from `data_access/repositories/runtime_state.py`
-- [ ] Delete `InMemoryCommunicationRepository` from `data_access/repositories/communication.py`
-- [ ] Delete `InMemoryAgentRegistryRepository` from `data_access/repositories/agent_registry.py`
-- [ ] Delete `InMemoryProjectArtifactRepository` from `data_access/repositories/artifacts.py`
-- [ ] Delete `InMemoryGovernanceRepository` from `data_access/repositories/governance.py`
-- [ ] Delete `InMemoryIdentityChannelRepository` from `data_access/repositories/identity_channels.py`
-- [ ] Delete `InMemoryIdempotencyCacheStore` from `data_access/cache/idempotency_store.py`
-- [ ] Delete `InMemoryArtifactSearchReadModel` from `data_access/read_models/artifact_search.py`
-- [ ] Replace the `else` fallback branches in `build_runtime_services()` with `RuntimeError` guards for `DATABASE_URL`, `REDIS_URL`, `OPA_URL`
-- [ ] Narrow `RuntimeServices` dataclass union types to concrete Postgres/Redis types only
+- [x] Delete `InMemoryRuntimeStateRepository` from `data_access/repositories/runtime_state.py`
+- [x] Delete `InMemoryCommunicationRepository` from `data_access/repositories/communication.py`
+- [x] Delete `InMemoryAgentRegistryRepository` from `data_access/repositories/agent_registry.py`
+- [x] Delete `InMemoryProjectArtifactRepository` from `data_access/repositories/artifacts.py`
+- [x] Delete `InMemoryGovernanceRepository` from `data_access/repositories/governance.py`
+- [x] Delete `InMemoryIdentityChannelRepository` from `data_access/repositories/identity_channels.py`
+- [x] Delete `InMemoryIdempotencyCacheStore` from `data_access/cache/idempotency_store.py`
+- [x] Delete `InMemoryArtifactSearchReadModel` from `data_access/read_models/artifact_search.py`
+- [x] Replace the `else` fallback branches in `build_runtime_services()` with `RuntimeError` guards for `DATABASE_URL`, `REDIS_URL`, `OPA_URL`
+- [x] Narrow `RuntimeServices` dataclass union types to concrete Postgres/Redis types only
 
 #### Phase 2 — Rename Group 2 (simulation stubs with no real transport counterpart)
 
-- [ ] Rename `InMemoryDeliveryPublisher` → `LocalDeliveryPublisher`
-- [ ] Rename `InMemoryDeadLetterWriter` → `LocalDeadLetterWriter`
-- [ ] Rename `InMemoryMessageLedger` → `LocalMessageLedger`
-- [ ] Rename `InMemoryCommunicationIdempotencyStore` → `LocalCommunicationIdempotencyStore`
-- [ ] Rename `InMemoryAcpClient` → `LocalAcpClient`
-- [ ] Rename `InMemoryOrderingValidator` → `LocalOrderingValidator`
-- [ ] Rename `InMemoryCommunicationDispatchAdapter` → `LocalCommunicationDispatchAdapter`
-- [ ] Rename `InMemorySandboxExecutionAdapter` → `LocalSandboxExecutionAdapter`
-- [ ] Rename `InMemoryConversationStore` → `LocalConversationStore`
-- [ ] Rename `InMemoryLiteLLMAdapter` → `LocalLiteLLMAdapter`
-- [ ] Rename `InMemoryBudgetRuntimeClient` → `AlwaysAllowBudgetRuntimeClient`
-- [ ] Rename `InMemoryIngressDedupe` → `IngressDedupeStore`
-- [ ] Rename `InMemorySandboxEventCallbackProcessor` → `LocalSandboxEventCallbackProcessor`
-- [ ] Rename `InMemoryDeliveryEventCallbackProcessor` → `LocalDeliveryEventCallbackProcessor`
-- [ ] Update all callers and import sites for all renamed classes
+- [x] Rename `InMemoryDeliveryPublisher` → `LocalDeliveryPublisher`
+- [x] Rename `InMemoryDeadLetterWriter` → `LocalDeadLetterWriter`
+- [x] Rename `InMemoryMessageLedger` → `LocalMessageLedger`
+- [x] Rename `InMemoryCommunicationIdempotencyStore` → `LocalCommunicationIdempotencyStore`
+- [x] Rename `InMemoryAcpClient` → `LocalAcpClient`
+- [x] Rename `InMemoryOrderingValidator` → `LocalOrderingValidator`
+- [x] Rename `InMemoryCommunicationDispatchAdapter` → `LocalCommunicationDispatchAdapter`
+- [x] Rename `InMemorySandboxExecutionAdapter` → `LocalSandboxExecutionAdapter`
+- [x] Rename `InMemoryConversationStore` → `LocalConversationStore`
+- [x] Rename `InMemoryLiteLLMAdapter` → `LocalLiteLLMAdapter`
+- [x] Rename `InMemoryBudgetRuntimeClient` → `AlwaysAllowBudgetRuntimeClient`
+- [x] Rename `InMemoryIngressDedupe` → `IngressDedupeStore`
+- [x] Rename `InMemorySandboxEventCallbackProcessor` → `LocalSandboxEventCallbackProcessor`
+- [x] Rename `InMemoryDeliveryEventCallbackProcessor` → `LocalDeliveryEventCallbackProcessor`
+- [x] Update all callers and import sites for all renamed classes
 
 #### Phase 3 — Move Group 3 (observability introspection stubs) to `testing/`
 
-- [ ] Move `InMemoryAuditWriter` to `src/openqilin/observability/testing/stubs.py`
-- [ ] Move `InMemoryTracer` + `InMemorySpan` to `src/openqilin/observability/testing/stubs.py`
-- [ ] Move `InMemoryMetricRecorder` to `src/openqilin/observability/testing/stubs.py`
-- [ ] Move `InMemoryAlertEmitter` to `src/openqilin/observability/testing/stubs.py`
-- [ ] Update all import sites (tests, conftest files)
+- [x] Move `InMemoryAuditWriter` to `src/openqilin/observability/testing/stubs.py`
+- [x] Move `InMemoryTracer` + `InMemorySpan` to `src/openqilin/observability/testing/stubs.py`
+- [x] Move `InMemoryMetricRecorder` to `src/openqilin/observability/testing/stubs.py`
+- [x] Move `InMemoryAlertEmitter` to `src/openqilin/observability/testing/stubs.py`
+- [x] Update all import sites (tests, conftest files)
 
 #### Phase 4 — Harden test infrastructure
 
-- [ ] Add `tests/component/conftest.py` and `tests/integration/conftest.py`:
-  - `inject_test_observability` fixture: replace `app.state.runtime_services` audit_writer/tracer/metric_recorder with stubs from `observability/testing/stubs.py`
-  - Database cleanup fixture: truncate test-relevant tables between test functions
-- [ ] Add `@pytest.mark.no_infra` to all pure-logic unit tests (grammar, routing, state machine guards, schema validators)
-- [ ] Register `no_infra` marker in `pyproject.toml`
-- [ ] Rewrite the three tests that asserted "env var absent → InMemory selected" to assert `RuntimeError` is raised instead
+- [x] Add `tests/component/conftest.py`:
+  - `patch_build_runtime_services` autouse fixture: builds fully-wired in-memory `RuntimeServices` for component tests without compose stack
+- [ ] Add `tests/integration/conftest.py` with database cleanup fixture (requires compose — deferred to integration test phase)
+- [x] Add `@pytest.mark.no_infra` to all pure-logic unit tests via `tests/unit/conftest.py` (auto-applied to all except infra-requiring files)
+- [x] Register `no_infra` marker in `pyproject.toml`
+- [x] Rewrite the three tests that asserted "env var absent → InMemory selected" to assert `RuntimeError` is raised instead
 - [ ] Update `CLAUDE.md` test command table to document `no_infra` and compose-required tiers
 
 #### Phase 5 — Verify and gate
 
-- [ ] `grep -r --include="*.py" -l "class InMemory" src/ | grep -v "/testing/" | grep -v "tests/"` returns zero results
-- [ ] `uv run ruff check . && uv run mypy .` — clean
-- [ ] `uv run pytest -m no_infra tests/unit/` — passes without compose
-- [ ] `uv run pytest tests/unit tests/component tests/contract tests/integration tests/conformance` — passes with compose stack
+- [x] `grep -r --include="*.py" -l "class InMemory" src/ | grep -v "/testing/" | grep -v "tests/"` returns zero results
+- [x] `uv run ruff check . && uv run mypy .` — clean
+- [x] `uv run pytest -m no_infra tests/unit/` — passes without compose (413 tests)
+- [ ] `uv run pytest tests/unit tests/component tests/contract tests/integration tests/conformance` — passes with compose stack (deferred)
 
 ### Outputs
 
@@ -410,11 +410,11 @@ Adopt LangGraph as the real orchestration engine, replacing the linear HTTP-hand
 
 ### Done criteria
 
-- [ ] `grep -r --include="*.py" -l "class InMemory" src/ | grep -v "/testing/" | grep -v "tests/"` returns zero
-- [ ] `build_runtime_services()` raises `RuntimeError` when `DATABASE_URL`, `REDIS_URL`, or `OPA_URL` is absent
-- [ ] Full test suite passes against compose stack
-- [ ] `uv run pytest -m no_infra tests/unit/` passes without compose stack
-- [ ] `uv run ruff check . && uv run mypy .` — clean
+- [x] `grep -r --include="*.py" -l "class InMemory" src/ | grep -v "/testing/" | grep -v "tests/"` returns zero
+- [x] `build_runtime_services()` raises `RuntimeError` when `DATABASE_URL`, `REDIS_URL`, or `OPA_URL` is absent
+- [ ] Full test suite passes against compose stack (unit+component pass without compose; contract/integration/conformance require compose)
+- [x] `uv run pytest -m no_infra tests/unit/` passes without compose stack (413 tests, 2026-03-17)
+- [x] `uv run ruff check . && uv run mypy .` — clean
 
 ---
 

@@ -1,0 +1,192 @@
+"""Component-test conftest: patch ``build_runtime_services`` with in-memory stubs.
+
+All component tests that call ``create_control_plane_app()`` need a working
+``RuntimeServices`` container.  Production ``build_runtime_services()`` requires
+PostgreSQL, Redis and OPA — which are not available without the compose stack.
+
+This conftest auto-uses the ``patch_build_runtime_services`` fixture so every
+component test gets a fully-wired in-memory app without touching infra.
+"""
+
+from __future__ import annotations
+
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from openqilin.agents.cso.agent import CSOAgent
+from openqilin.agents.secretary.agent import SecretaryAgent
+from openqilin.budget_runtime.client import AlwaysAllowBudgetRuntimeClient
+from openqilin.budget_runtime.reservation_service import BudgetReservationService
+from openqilin.communication_gateway.callbacks.outcome_notifier import (
+    CommunicationOutcomeNotifier,
+)
+from openqilin.control_plane.api.dependencies import RuntimeServices
+from openqilin.control_plane.api.startup_recovery import StartupRecoveryReport
+from openqilin.control_plane.grammar.command_parser import CommandParser
+from openqilin.control_plane.grammar.free_text_router import FreeTextRouter
+from openqilin.control_plane.grammar.intent_classifier import IntentClassifier
+from openqilin.control_plane.idempotency.ingress_dedupe import IngressDedupeStore
+from openqilin.observability.testing.stubs import (
+    InMemoryAuditWriter,
+    InMemoryMetricRecorder,
+    InMemoryTracer,
+)
+from openqilin.policy_runtime_integration.testing.in_memory_client import (
+    InMemoryPolicyRuntimeClient,
+)
+from openqilin.retrieval_runtime.models import (
+    RetrievalArtifactHit,
+    RetrievalQueryRequest,
+    RetrievalRuntimeError,
+)
+from openqilin.retrieval_runtime.service import RetrievalQueryService
+from openqilin.task_orchestrator.admission.service import AdmissionService
+from openqilin.task_orchestrator.callbacks.delivery_events import (
+    LocalDeliveryEventCallbackProcessor,
+)
+from openqilin.task_orchestrator.services.lifecycle_service import TaskLifecycleService
+from openqilin.task_orchestrator.services.task_service import build_task_dispatch_service
+from tests.testing.infra_stubs import (
+    InMemoryAgentRegistryRepository,
+    InMemoryCommunicationRepository,
+    InMemoryGovernanceRepository,
+    InMemoryIdentityChannelRepository,
+    InMemoryIdempotencyCacheStore,
+    InMemoryProjectArtifactRepository,
+    InMemoryRuntimeStateRepository,
+)
+
+
+_SEED_RETRIEVAL_HITS: tuple[RetrievalArtifactHit, ...] = tuple(
+    RetrievalArtifactHit(
+        project_id=f"project_{i}",
+        artifact_id=f"artifact_{i}_001",
+        artifact_type="project_charter",
+        title=f"Project {i} Charter",
+        snippet=f"retrieval status rollout project {i}",
+        source_ref=f"projects/project_{i}/docs/project_charter--v001.md",
+        score=0.95,
+    )
+    for i in range(1, 5)
+)
+
+
+class _SimulatedRetrievalReadModel:
+    def search(self, request: RetrievalQueryRequest) -> tuple[RetrievalArtifactHit, ...]:
+        if "retrieval_error" in request.query:
+            raise RetrievalRuntimeError(
+                code="retrieval_backend_unavailable",
+                message="simulated retrieval backend error",
+                retryable=True,
+            )
+        return tuple(h for h in _SEED_RETRIEVAL_HITS if h.project_id == request.project_id)
+
+
+def _build_test_runtime_services() -> RuntimeServices:
+    """Build a fully-wired RuntimeServices using in-memory test stubs."""
+
+    runtime_state_repo = InMemoryRuntimeStateRepository()
+    communication_repo = InMemoryCommunicationRepository()
+    agent_registry_repo = InMemoryAgentRegistryRepository()
+    identity_channel_repo = InMemoryIdentityChannelRepository()
+    project_artifact_repo = InMemoryProjectArtifactRepository()
+    governance_repo = InMemoryGovernanceRepository()
+
+    idempotency_cache_store = InMemoryIdempotencyCacheStore()
+    ingress_dedupe = IngressDedupeStore()
+
+    llm_gateway = MagicMock()
+    grammar_classifier = IntentClassifier(llm_gateway=llm_gateway)
+    grammar_parser = CommandParser()
+    grammar_router = FreeTextRouter()
+    secretary_agent = SecretaryAgent(llm_gateway=llm_gateway)
+    policy_runtime_client = InMemoryPolicyRuntimeClient()
+    cso_agent = CSOAgent(llm_gateway=llm_gateway, policy_client=policy_runtime_client)
+
+    budget_runtime_client = AlwaysAllowBudgetRuntimeClient()
+    budget_reservation_service = BudgetReservationService(client=budget_runtime_client)
+    lifecycle_service = TaskLifecycleService(runtime_state_repo=runtime_state_repo)
+
+    admission_service = AdmissionService(
+        dedupe_store=ingress_dedupe,
+        runtime_state_repo=runtime_state_repo,
+    )
+
+    tracer = InMemoryTracer()
+    audit_writer: InMemoryAuditWriter = InMemoryAuditWriter()
+    metric_recorder = InMemoryMetricRecorder()
+
+    delivery_event_callback_processor = LocalDeliveryEventCallbackProcessor(
+        runtime_state_repo=runtime_state_repo,
+        audit_writer=audit_writer,
+        metric_recorder=metric_recorder,
+    )
+    communication_outcome_notifier = CommunicationOutcomeNotifier(
+        callback_processor=delivery_event_callback_processor
+    )
+
+    retrieval_query_service = RetrievalQueryService(read_model=_SimulatedRetrievalReadModel())
+
+    task_dispatch_service = build_task_dispatch_service(
+        lifecycle_service=lifecycle_service,
+        audit_writer=audit_writer,
+        metric_recorder=metric_recorder,
+        communication_repository=communication_repo,
+        idempotency_cache_store=idempotency_cache_store,  # type: ignore[arg-type]
+        retrieval_query_service=retrieval_query_service,
+        governance_project_reader=governance_repo,
+        governance_repository=governance_repo,
+        project_artifact_repository=project_artifact_repo,
+        runtime_state_repository=runtime_state_repo,
+        budget_runtime_client=budget_runtime_client,
+    )
+
+    startup_recovery_report = StartupRecoveryReport(
+        restored_task_count=0,
+        restored_terminal_task_count=0,
+        reconstructed_ingress_claims=0,
+        restored_communication_records=0,
+        restored_dead_letter_count=0,
+        restored_communication_idempotency_count=0,
+        institutional_agent_count=0,
+    )
+
+    return RuntimeServices(
+        grammar_classifier=grammar_classifier,
+        grammar_parser=grammar_parser,
+        grammar_router=grammar_router,
+        secretary_agent=secretary_agent,
+        cso_agent=cso_agent,
+        ingress_dedupe=ingress_dedupe,
+        runtime_state_repo=runtime_state_repo,
+        communication_repo=communication_repo,
+        idempotency_cache_store=idempotency_cache_store,  # type: ignore[arg-type]
+        agent_registry_repo=agent_registry_repo,  # type: ignore[arg-type]
+        identity_channel_repo=identity_channel_repo,  # type: ignore[arg-type]
+        project_artifact_repo=project_artifact_repo,  # type: ignore[arg-type]
+        governance_repo=governance_repo,  # type: ignore[arg-type]
+        admission_service=admission_service,
+        policy_runtime_client=policy_runtime_client,
+        budget_runtime_client=budget_runtime_client,
+        budget_reservation_service=budget_reservation_service,
+        lifecycle_service=lifecycle_service,
+        task_dispatch_service=task_dispatch_service,
+        retrieval_query_service=retrieval_query_service,
+        tracer=tracer,
+        audit_writer=audit_writer,
+        metric_recorder=metric_recorder,
+        delivery_event_callback_processor=delivery_event_callback_processor,
+        communication_outcome_notifier=communication_outcome_notifier,
+        startup_recovery_report=startup_recovery_report,
+    )
+
+
+@pytest.fixture(autouse=True)
+def patch_build_runtime_services():
+    """Replace build_runtime_services with test-stub factory for all component tests."""
+    with patch(
+        "openqilin.control_plane.api.app.build_runtime_services",
+        side_effect=_build_test_runtime_services,
+    ):
+        yield

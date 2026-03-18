@@ -29,7 +29,7 @@ class SandboxCallbackResult:
     message: str
 
 
-class InMemorySandboxEventCallbackProcessor:
+class LocalSandboxEventCallbackProcessor:
     """Duplicate-safe sandbox callback processor scaffold."""
 
     def __init__(self) -> None:
@@ -50,3 +50,7 @@ class InMemorySandboxEventCallbackProcessor:
             replayed=False,
             message=event.message,
         )
+
+
+# Backward-compatible alias retained for existing imports.
+InMemorySandboxEventCallbackProcessor = LocalSandboxEventCallbackProcessor

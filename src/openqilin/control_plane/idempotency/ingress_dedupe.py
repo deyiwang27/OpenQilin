@@ -15,8 +15,8 @@ class IngressDedupeRecord:
     task_id: str | None = None
 
 
-class InMemoryIngressDedupe:
-    """In-memory dedupe store for command ingress replay safety."""
+class IngressDedupeStore:
+    """Process-scoped dedupe store for command ingress replay safety."""
 
     def __init__(self) -> None:
         self._claims: dict[tuple[str, str], IngressDedupeRecord] = {}
@@ -64,3 +64,7 @@ class InMemoryIngressDedupe:
             payload_hash=existing.payload_hash,
             task_id=task_id,
         )
+
+
+# Backward-compat alias
+InMemoryIngressDedupe = IngressDedupeStore

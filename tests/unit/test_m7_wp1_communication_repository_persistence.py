@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from openqilin.data_access.repositories.communication import InMemoryCommunicationRepository
+from tests.testing.infra_stubs import InMemoryCommunicationRepository
 
 
 def test_communication_repository_persists_records_and_dead_letters(tmp_path: Path) -> None:

@@ -5,7 +5,7 @@ from openqilin.control_plane.handlers.governance_handler import (
     approve_project_proposal,
     submit_proposal_message,
 )
-from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
+from tests.testing.infra_stubs import InMemoryGovernanceRepository
 
 
 def _seed_project(

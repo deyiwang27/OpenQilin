@@ -10,7 +10,7 @@ from openqilin.llm_gateway.providers.base import (
 )
 
 
-class InMemoryLiteLLMAdapter(LiteLLMProvider):
+class LocalLiteLLMAdapter(LiteLLMProvider):
     """Deterministic provider adapter used for local and test runtime."""
 
     def complete(self, request: LiteLLMProviderRequest) -> LiteLLMProviderResult:
@@ -47,3 +47,7 @@ class InMemoryLiteLLMAdapter(LiteLLMProvider):
             provider_cost_usd=None,
             quota_limit_source="policy_guardrail",
         )
+
+
+# Backward-compatible alias retained for existing imports.
+InMemoryLiteLLMAdapter = LocalLiteLLMAdapter

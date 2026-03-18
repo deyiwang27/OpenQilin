@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Mapping
+from uuid import uuid4
 
 from openqilin.control_plane.governance.project_manager_template import (
     ProjectManagerTemplateError,
@@ -13,11 +15,15 @@ from openqilin.control_plane.governance.project_manager_template import (
 from openqilin.data_access.repositories.governance import (
     CompletionReportRecord,
     GovernanceRepositoryError,
-    InMemoryGovernanceRepository,
+    ProjectInitializationSnapshot,
     ProjectRecord,
     ProposalApprovalRecord,
     ProposalMessageRecord,
+    WorkforceBindingRecord,
 )
+from openqilin.data_access.repositories.postgres.project_repository import PostgresProjectRepository
+
+UTC = timezone.utc
 
 _TRIAD_ROLES = frozenset({"owner", "ceo", "cwo"})
 
@@ -103,7 +109,7 @@ class ProjectLifecycleTransitionOutcome:
 
 def submit_proposal_message(
     *,
-    repository: InMemoryGovernanceRepository,
+    repository: PostgresProjectRepository,
     project_id: str,
     actor_id: str,
     actor_role: str,
@@ -132,7 +138,7 @@ def submit_proposal_message(
 
 def create_project_proposal(
     *,
-    repository: InMemoryGovernanceRepository,
+    repository: PostgresProjectRepository,
     actor_id: str,
     actor_role: str,
     trace_id: str,
@@ -168,7 +174,7 @@ def create_project_proposal(
 
 def approve_project_proposal(
     *,
-    repository: InMemoryGovernanceRepository,
+    repository: PostgresProjectRepository,
     project_id: str,
     actor_id: str,
     actor_role: str,
@@ -215,7 +221,7 @@ def latest_approval_for_role(
 
 def initialize_project_by_cwo(
     *,
-    repository: InMemoryGovernanceRepository,
+    repository: PostgresProjectRepository,
     project_id: str,
     actor_id: str,
     actor_role: str,
@@ -234,17 +240,39 @@ def initialize_project_by_cwo(
             code="governance_role_forbidden",
             message="project initialization is limited to cwo",
         )
+
+    def _to_pair_tuple(m: Mapping[str, object] | None) -> tuple[tuple[str, str], ...]:
+        if m is None:
+            return ()
+        return tuple((str(k), str(v)) for k, v in m.items())
+
+    snapshot = ProjectInitializationSnapshot(
+        objective=objective,
+        budget_currency_total=budget_currency_total,
+        budget_quota_total=budget_quota_total,
+        metric_plan=_to_pair_tuple(metric_plan),
+        workforce_plan=_to_pair_tuple(workforce_plan),
+        actor_id=actor_id,
+        actor_role=normalized_role,
+        trace_id=trace_id,
+        charter_storage_uri=None,
+        charter_content_hash=None,
+        scope_statement_storage_uri=None,
+        scope_statement_content_hash=None,
+        budget_plan_storage_uri=None,
+        budget_plan_content_hash=None,
+        metric_plan_storage_uri=None,
+        metric_plan_content_hash=None,
+        workforce_plan_storage_uri=None,
+        workforce_plan_content_hash=None,
+        execution_plan_storage_uri=None,
+        execution_plan_content_hash=None,
+        initialized_at=datetime.now(tz=UTC),
+    )
     try:
-        project = repository.initialize_project(
+        project = repository.record_initialization(
             project_id=project_id,
-            objective=objective,
-            budget_currency_total=budget_currency_total,
-            budget_quota_total=budget_quota_total,
-            metric_plan=metric_plan,
-            workforce_plan=workforce_plan,
-            actor_id=actor_id,
-            actor_role=normalized_role,
-            trace_id=trace_id,
+            snapshot=snapshot,
         )
     except GovernanceRepositoryError as error:
         raise GovernanceHandlerError(code=error.code, message=error.message) from error
@@ -253,7 +281,7 @@ def initialize_project_by_cwo(
 
 def submit_completion_report_by_project_manager(
     *,
-    repository: InMemoryGovernanceRepository,
+    repository: PostgresProjectRepository,
     project_id: str,
     actor_id: str,
     actor_role: str,
@@ -291,7 +319,7 @@ def submit_completion_report_by_project_manager(
 
 def record_completion_approval_by_c_suite(
     *,
-    repository: InMemoryGovernanceRepository,
+    repository: PostgresProjectRepository,
     project_id: str,
     actor_id: str,
     actor_role: str,
@@ -327,7 +355,7 @@ def record_completion_approval_by_c_suite(
 
 def finalize_project_completion_by_c_suite(
     *,
-    repository: InMemoryGovernanceRepository,
+    repository: PostgresProjectRepository,
     project_id: str,
     actor_role: str,
     trace_id: str,
@@ -356,7 +384,7 @@ def finalize_project_completion_by_c_suite(
 
 def _transition_project_lifecycle(
     *,
-    repository: InMemoryGovernanceRepository,
+    repository: PostgresProjectRepository,
     project_id: str,
     actor_role: str,
     trace_id: str,
@@ -400,7 +428,7 @@ def _transition_project_lifecycle(
 
 def pause_project_by_governance(
     *,
-    repository: InMemoryGovernanceRepository,
+    repository: PostgresProjectRepository,
     project_id: str,
     actor_role: str,
     trace_id: str,
@@ -422,7 +450,7 @@ def pause_project_by_governance(
 
 def resume_project_by_governance(
     *,
-    repository: InMemoryGovernanceRepository,
+    repository: PostgresProjectRepository,
     project_id: str,
     actor_role: str,
     trace_id: str,
@@ -444,7 +472,7 @@ def resume_project_by_governance(
 
 def terminate_project_by_governance(
     *,
-    repository: InMemoryGovernanceRepository,
+    repository: PostgresProjectRepository,
     project_id: str,
     actor_role: str,
     trace_id: str,
@@ -466,7 +494,7 @@ def terminate_project_by_governance(
 
 def archive_project_by_governance(
     *,
-    repository: InMemoryGovernanceRepository,
+    repository: PostgresProjectRepository,
     project_id: str,
     actor_role: str,
     trace_id: str,
@@ -488,7 +516,7 @@ def archive_project_by_governance(
 
 def bind_workforce_template_by_cwo(
     *,
-    repository: InMemoryGovernanceRepository,
+    repository: PostgresProjectRepository,
     project_id: str,
     actor_id: str,
     actor_role: str,
@@ -516,36 +544,39 @@ def bind_workforce_template_by_cwo(
                 code=f"governance_{error.code}",
                 message=error.message,
             ) from error
-        mandatory_operations = validation.mandatory_operations
+        mandatory_operations = tuple(sorted(validation.mandatory_operations))
 
     system_prompt_hash = hashlib.sha256(system_prompt.encode("utf-8")).hexdigest()
+    # DL agent is declared_disabled until OPA policy runtime is live (M12 gate)
+    binding_status = "declared_disabled" if normalized_role == "domain_leader" else "active"
+    binding_record = WorkforceBindingRecord(
+        binding_id=str(uuid4()),
+        project_id=project_id,
+        role=normalized_role,
+        template_id=template_id,
+        llm_routing_profile=llm_routing_profile,
+        system_prompt_hash=system_prompt_hash,
+        mandatory_operations=mandatory_operations,
+        binding_status=binding_status,
+        actor_id=actor_id,
+        actor_role=normalized_actor_role,
+        trace_id=trace_id,
+        created_at=datetime.now(tz=UTC),
+    )
     try:
-        binding = repository.bind_workforce_template(
+        project = repository.bind_workforce(
             project_id=project_id,
-            role=normalized_role,
-            template_id=template_id,
-            llm_routing_profile=llm_routing_profile,
-            system_prompt_hash=system_prompt_hash,
-            mandatory_operations=mandatory_operations,
-            actor_id=actor_id,
-            actor_role=normalized_actor_role,
-            trace_id=trace_id,
+            binding=binding_record,
         )
     except GovernanceRepositoryError as error:
         raise GovernanceHandlerError(code=error.code, message=error.message) from error
 
-    project = repository.get_project(project_id)
-    if project is None:
-        raise GovernanceHandlerError(
-            code="governance_project_missing",
-            message=f"project not found: {project_id}",
-        )
     return WorkforceBindingOutcome(
         project=project,
-        role=binding.role,
-        binding_status=binding.binding_status,
-        template_id=binding.template_id,
-        llm_routing_profile=binding.llm_routing_profile,
-        system_prompt_hash=binding.system_prompt_hash,
-        mandatory_operations=binding.mandatory_operations,
+        role=binding_record.role,
+        binding_status=binding_record.binding_status,
+        template_id=binding_record.template_id,
+        llm_routing_profile=binding_record.llm_routing_profile,
+        system_prompt_hash=binding_record.system_prompt_hash,
+        mandatory_operations=binding_record.mandatory_operations,
     )
