@@ -6,11 +6,9 @@ import hashlib
 import json
 from dataclasses import dataclass
 
-from openqilin.control_plane.idempotency.ingress_dedupe import InMemoryIngressDedupe
-from openqilin.data_access.repositories.runtime_state import (
-    InMemoryRuntimeStateRepository,
-    TaskRecord,
-)
+from openqilin.control_plane.idempotency.ingress_dedupe import IngressDedupeStore
+from openqilin.data_access.repositories.runtime_state import TaskRecord
+from openqilin.data_access.repositories.postgres.task_repository import PostgresTaskRepository
 from openqilin.task_orchestrator.admission.envelope_validator import AdmissionEnvelope
 
 
@@ -52,8 +50,8 @@ class AdmissionIdempotencyCoordinator:
 
     def __init__(
         self,
-        dedupe_store: InMemoryIngressDedupe,
-        runtime_state_repo: InMemoryRuntimeStateRepository,
+        dedupe_store: IngressDedupeStore,
+        runtime_state_repo: PostgresTaskRepository,
     ) -> None:
         self._dedupe_store = dedupe_store
         self._runtime_state_repo = runtime_state_repo

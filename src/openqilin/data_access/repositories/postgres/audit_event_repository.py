@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from sqlalchemy import text
+from sqlalchemy import bindparam, String, text
 from sqlalchemy.orm import Session, sessionmaker
 
 
@@ -75,9 +75,12 @@ class PostgresAuditEventRepository:
                     ) VALUES (
                         :event_id, :event_type, :trace_id, :task_id, :principal_id,
                         :principal_role, :action, :target, :decision,
-                        :rule_ids::jsonb, :payload::jsonb, :created_at
+                        CAST(:rule_ids AS JSONB), CAST(:payload AS JSONB), :created_at
                     )
                     """
+                ).bindparams(
+                    bindparam("rule_ids", type_=String()),
+                    bindparam("payload", type_=String()),
                 ),
                 {
                     "event_id": record.event_id,

@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 
+from openqilin.apps.orchestrator_worker import drain_queued_tasks
 from openqilin.control_plane.api.dependencies import RuntimeServices
 from openqilin.control_plane.api.app import create_control_plane_app
 from openqilin.communication_gateway.callbacks.outcome_notifier import (
@@ -35,8 +36,13 @@ def test_callback_delivery_updates_task_state_and_is_duplicate_safe() -> None:
     body = response.json()
     assert response.status_code == 202
     task_id = body["data"]["task_id"]
-    dispatch_id = body["data"]["dispatch_id"]
     services = _runtime_services(app)
+
+    drain_queued_tasks(services)
+
+    task_body = client.get(f"/v1/tasks/{task_id}").json()
+    assert task_body["status"] == "dispatched"
+    dispatch_id = task_body["dispatch_id"]
 
     first = services.communication_outcome_notifier.notify_delivery_outcome(
         CommunicationOutcomeNotification(
@@ -103,10 +109,15 @@ def test_callback_dead_letter_transition_preserves_dead_letter_guarantee() -> No
         json=payload,
     )
     body = response.json()
-    assert response.status_code == 403
-    task_id = body["error"]["details"]["task_id"]
-    dead_letter_id = body["error"]["details"]["dead_letter_id"]
+    assert response.status_code == 202
+    task_id = body["data"]["task_id"]
     services = _runtime_services(app)
+
+    drain_queued_tasks(services)
+
+    dead_letters = services.task_dispatch_service.list_communication_dead_letters()
+    assert len(dead_letters) == 1
+    dead_letter_id = dead_letters[0].dead_letter_id
 
     callback_result = services.communication_outcome_notifier.notify_delivery_outcome(
         CommunicationOutcomeNotification(
@@ -128,6 +139,6 @@ def test_callback_dead_letter_transition_preserves_dead_letter_guarantee() -> No
     assert task.status == "blocked"
     assert task.outcome_source == "callback_communication_dead_letter"
     assert dict(task.outcome_details or ())["dead_letter_id"] == dead_letter_id
-    dead_letters = services.task_dispatch_service.list_communication_dead_letters()
-    assert len(dead_letters) == 1
-    assert dead_letters[0].dead_letter_id == dead_letter_id
+    dead_letters_after = services.task_dispatch_service.list_communication_dead_letters()
+    assert len(dead_letters_after) == 1
+    assert dead_letters_after[0].dead_letter_id == dead_letter_id

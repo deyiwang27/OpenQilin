@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from openqilin.communication_gateway.storage.message_ledger import InMemoryMessageLedger
+from openqilin.communication_gateway.storage.message_ledger import LocalMessageLedger
 from openqilin.communication_gateway.transport.acp_client import AcpSendReceipt
 
 
@@ -22,7 +22,7 @@ class AckHandlingResult:
 class MessageAckHandler:
     """Apply ACP ack/nack outcomes to message ledger and return dispatch result."""
 
-    def __init__(self, ledger: InMemoryMessageLedger) -> None:
+    def __init__(self, ledger: LocalMessageLedger) -> None:
         self._ledger = ledger
 
     def handle(self, *, ledger_id: str, send_receipt: AcpSendReceipt) -> AckHandlingResult:

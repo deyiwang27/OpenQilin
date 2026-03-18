@@ -1,4 +1,4 @@
-"""Append-only audit writers: in-memory for local/test, OTel+PostgreSQL for production."""
+"""Append-only audit writers: OTel+PostgreSQL for production; test stub re-exported from testing."""
 
 from __future__ import annotations
 
@@ -6,7 +6,6 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Iterable
-from uuid import uuid4
 
 from openqilin.observability.tracing.spans import normalize_attributes, utc_now
 
@@ -41,76 +40,6 @@ class AuditEvent:
     message: str
     attributes: tuple[tuple[str, str], ...]
     created_at: datetime
-
-
-class InMemoryAuditWriter:
-    """Stores audit events in memory for deterministic M1 tests."""
-
-    def __init__(self) -> None:
-        self._events: list[AuditEvent] = []
-
-    def write_event(
-        self,
-        *,
-        event_type: str,
-        outcome: str,
-        trace_id: str,
-        request_id: str | None,
-        task_id: str | None,
-        principal_id: str | None,
-        principal_role: str | None = None,
-        source: str,
-        reason_code: str | None,
-        message: str,
-        policy_version: str | None = None,
-        policy_hash: str | None = None,
-        rule_ids: Iterable[str] | None = None,
-        payload: dict[str, object] | None = None,
-        attributes: dict[str, object] | None = None,
-    ) -> AuditEvent:
-        """Append a normalized audit event and return it."""
-
-        timestamp = utc_now()
-        normalized_rule_ids = tuple(sorted(str(rule_id) for rule_id in (rule_ids or ())))
-        normalized_payload = normalize_attributes(
-            payload
-            or {
-                "outcome": outcome,
-                "source": source,
-                "message": message,
-                "request_id": request_id,
-                "task_id": task_id,
-                "reason_code": reason_code,
-            }
-        )
-        event = AuditEvent(
-            event_id=str(uuid4()),
-            event_type=event_type,
-            timestamp=timestamp,
-            outcome=outcome,
-            trace_id=trace_id,
-            actor_id=principal_id or "unknown-actor",
-            actor_role=principal_role or "unknown-role",
-            policy_version=policy_version or "policy-version-unknown",
-            policy_hash=policy_hash or "policy-hash-unknown",
-            rule_ids=normalized_rule_ids,
-            payload=normalized_payload,
-            request_id=request_id,
-            task_id=task_id,
-            principal_id=principal_id,
-            source=source,
-            reason_code=reason_code,
-            message=message,
-            attributes=normalize_attributes(attributes),
-            created_at=timestamp,
-        )
-        self._events.append(event)
-        return event
-
-    def get_events(self) -> tuple[AuditEvent, ...]:
-        """Return immutable snapshot of audit events."""
-
-        return tuple(self._events)
 
 
 class OTelAuditWriter:

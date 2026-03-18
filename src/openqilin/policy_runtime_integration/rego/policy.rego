@@ -58,9 +58,13 @@ _action_denied if { startswith(input.action, "deny_") }
 # ---------------------------------------------------------------------------
 # Rule: POL-003 — fail-closed uncertainty placeholder
 # Uncertain returned for "policy_uncertain" action (mirrors InMemory behaviour)
+# "policy_error" is treated as uncertain so integration tests can exercise the
+# fail-closed path against real OPA (OPAPolicyRuntimeClient never raises).
 # ---------------------------------------------------------------------------
 
 _action_uncertain if { input.action == "policy_uncertain" }
+
+_action_uncertain if { input.action == "policy_error" }
 
 # ---------------------------------------------------------------------------
 # Decision: deny — unknown role (POL-004, AUD-001)

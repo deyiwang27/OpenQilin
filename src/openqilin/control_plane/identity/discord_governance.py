@@ -5,11 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from openqilin.control_plane.schemas.owner_commands import OwnerCommandRequest
-from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
-from openqilin.data_access.repositories.identity_channels import (
-    IdentityChannelMappingRecord,
-    InMemoryIdentityChannelRepository,
+from openqilin.data_access.repositories.identity_channels import IdentityChannelMappingRecord
+from openqilin.data_access.repositories.postgres.identity_repository import (
+    PostgresIdentityMappingRepository,
 )
+from openqilin.data_access.repositories.postgres.project_repository import PostgresProjectRepository
 
 # secretary activated in M11; cso and domain_leader remain pending until M12/M13
 _PENDING_ROLE_FLAGS = frozenset({"cso", "domain_leader"})
@@ -63,8 +63,8 @@ def validate_discord_governance(
     *,
     payload: OwnerCommandRequest,
     principal_role: str,
-    identity_channel_repository: InMemoryIdentityChannelRepository,
-    governance_repository: InMemoryGovernanceRepository,
+    identity_channel_repository: PostgresIdentityMappingRepository,
+    governance_repository: PostgresProjectRepository,
 ) -> DiscordGovernanceDecision | None:
     """Validate Discord ingress context, identity/channel mapping, and chat governance."""
 

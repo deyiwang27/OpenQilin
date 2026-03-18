@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 from typing import Mapping
 from uuid import uuid4
 
-from sqlalchemy import text
+from sqlalchemy import bindparam, String, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from openqilin.control_plane.governance.project_lifecycle import (
@@ -422,10 +422,27 @@ class PostgresProjectRepository:
                 code="governance_project_missing",
                 message=f"project not found: {project_id}",
             )
+        try:
+            normalized_next = assert_project_transition(project.status, "active")
+        except ProjectLifecycleError as error:
+            raise GovernanceRepositoryError(code=error.code, message=error.message) from error
+        now = datetime.now(tz=UTC)
+        transition = ProjectStatusTransitionRecord(
+            project_id=project.project_id,
+            from_status=project.status,
+            to_status=normalized_next,
+            reason_code="cwo_initialization",
+            actor_role=snapshot.actor_role,
+            trace_id=snapshot.trace_id,
+            timestamp=now,
+            metadata=(),
+        )
         updated = replace(
             project,
-            updated_at=datetime.now(tz=UTC),
+            status=normalized_next,
+            updated_at=now,
             initialization=snapshot,
+            transitions=project.transitions + (transition,),
         )
         self._upsert_project(updated)
         return updated
@@ -473,12 +490,12 @@ class PostgresProjectRepository:
                         initialization, workforce_bindings,
                         created_at, updated_at
                     ) VALUES (
-                        :project_id, :name, :objective, :status, :metadata::jsonb,
-                        :transitions::jsonb, :proposal_messages::jsonb, :proposal_approvals::jsonb,
-                        :completion_report::jsonb, :completion_approvals::jsonb,
+                        :project_id, :name, :objective, :status, CAST(:metadata AS JSONB),
+                        CAST(:transitions AS JSONB), CAST(:proposal_messages AS JSONB), CAST(:proposal_approvals AS JSONB),
+                        CAST(:completion_report AS JSONB), CAST(:completion_approvals AS JSONB),
                         :completion_owner_notified_at,
                         :completion_owner_notification_trace_id,
-                        :initialization::jsonb, :workforce_bindings::jsonb,
+                        CAST(:initialization AS JSONB), CAST(:workforce_bindings AS JSONB),
                         :created_at, :updated_at
                     )
                     ON CONFLICT (project_id) DO UPDATE SET
@@ -497,6 +514,15 @@ class PostgresProjectRepository:
                         workforce_bindings                      = EXCLUDED.workforce_bindings,
                         updated_at                              = EXCLUDED.updated_at
                     """
+                ).bindparams(
+                    bindparam("metadata", type_=String()),
+                    bindparam("transitions", type_=String()),
+                    bindparam("proposal_messages", type_=String()),
+                    bindparam("proposal_approvals", type_=String()),
+                    bindparam("completion_report", type_=String()),
+                    bindparam("completion_approvals", type_=String()),
+                    bindparam("initialization", type_=String()),
+                    bindparam("workforce_bindings", type_=String()),
                 ),
                 row,
             )

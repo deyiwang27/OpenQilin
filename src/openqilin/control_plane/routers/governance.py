@@ -46,8 +46,8 @@ from openqilin.control_plane.schemas.governance import (
     ProposalApprovalRequest,
     WorkforceTemplateBindingRequest,
 )
-from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
-from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
+from openqilin.observability.testing.stubs import InMemoryAuditWriter
+from openqilin.data_access.repositories.postgres.project_repository import PostgresProjectRepository
 
 router = APIRouter(tags=["governance"])
 
@@ -269,7 +269,7 @@ def _map_handler_error(
 )
 def create_project(
     payload: ProjectCreateRequest,
-    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
+    governance_repository: PostgresProjectRepository = Depends(get_governance_repository),
     audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
     external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
     external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
@@ -374,7 +374,7 @@ def create_project(
 def approve_proposal(
     project_id: str,
     payload: ProposalApprovalRequest,
-    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
+    governance_repository: PostgresProjectRepository = Depends(get_governance_repository),
     audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
     external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
     external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
@@ -476,7 +476,7 @@ def approve_proposal(
 def initialize_project(
     project_id: str,
     payload: ProjectInitializationRequest,
-    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
+    governance_repository: PostgresProjectRepository = Depends(get_governance_repository),
     audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
     external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
     external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
@@ -621,7 +621,7 @@ def initialize_project(
 def bind_workforce_template(
     project_id: str,
     payload: WorkforceTemplateBindingRequest,
-    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
+    governance_repository: PostgresProjectRepository = Depends(get_governance_repository),
     audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
     external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
     external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
@@ -733,7 +733,7 @@ def bind_workforce_template(
 def submit_completion_report(
     project_id: str,
     payload: ProjectCompletionReportRequest,
-    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
+    governance_repository: PostgresProjectRepository = Depends(get_governance_repository),
     audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
     external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
     external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
@@ -836,7 +836,7 @@ def submit_completion_report(
 def approve_completion(
     project_id: str,
     payload: ProjectCompletionApprovalRequest,
-    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
+    governance_repository: PostgresProjectRepository = Depends(get_governance_repository),
     audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
     external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
     external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
@@ -937,7 +937,7 @@ def approve_completion(
 def finalize_completion(
     project_id: str,
     payload: ProjectCompletionFinalizeRequest,
-    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
+    governance_repository: PostgresProjectRepository = Depends(get_governance_repository),
     audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
     external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
     external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
@@ -1033,7 +1033,7 @@ def finalize_completion(
 def pause_project(
     project_id: str,
     payload: ProjectLifecycleActionRequest,
-    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
+    governance_repository: PostgresProjectRepository = Depends(get_governance_repository),
     audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
     external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
     external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
@@ -1131,7 +1131,7 @@ def pause_project(
 def resume_project(
     project_id: str,
     payload: ProjectLifecycleActionRequest,
-    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
+    governance_repository: PostgresProjectRepository = Depends(get_governance_repository),
     audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
     external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
     external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
@@ -1229,7 +1229,7 @@ def resume_project(
 def terminate_project(
     project_id: str,
     payload: ProjectLifecycleActionRequest,
-    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
+    governance_repository: PostgresProjectRepository = Depends(get_governance_repository),
     audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
     external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
     external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
@@ -1327,7 +1327,7 @@ def terminate_project(
 def archive_project(
     project_id: str,
     payload: ProjectLifecycleActionRequest,
-    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
+    governance_repository: PostgresProjectRepository = Depends(get_governance_repository),
     audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
     external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
     external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,

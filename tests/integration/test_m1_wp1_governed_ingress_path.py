@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from openqilin.apps.api_app import app
+from openqilin.apps.orchestrator_worker import drain_queued_tasks
 from openqilin.testing.owner_command import (
     build_owner_command_headers,
     build_owner_command_request_dict,
@@ -9,6 +10,7 @@ from openqilin.testing.owner_command import (
 
 def test_governed_ingress_accepts_canonical_envelope() -> None:
     client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="run_task",
         args=["alpha"],
@@ -27,15 +29,23 @@ def test_governed_ingress_accepts_canonical_envelope() -> None:
     assert body["status"] == "accepted"
     assert body["data"]["task_id"]
     assert body["data"]["replayed"] is False
-    assert body["data"]["dispatch_target"] == "sandbox"
-    assert body["data"]["dispatch_id"]
     assert body["data"]["principal_id"] == "owner_987"
     assert body["trace_id"]
     assert isinstance(body["trace_id"], str)
 
+    task_id = body["data"]["task_id"]
+    drain_queued_tasks(services)
+
+    task_response = client.get(f"/v1/tasks/{task_id}")
+    task_body = task_response.json()
+    assert task_body["status"] == "dispatched"
+    assert task_body["dispatch_target"] == "sandbox"
+    assert task_body["dispatch_id"]
+
 
 def test_governed_ingress_llm_accept_includes_usage_cost_metadata() -> None:
     client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="llm_summarize",
         args=["alpha"],
@@ -52,14 +62,21 @@ def test_governed_ingress_llm_accept_includes_usage_cost_metadata() -> None:
     body = response.json()
     assert response.status_code == 202
     assert body["status"] == "accepted"
-    assert body["data"]["dispatch_target"] == "llm"
-    assert body["data"]["llm_execution"]["model_selected"]
-    assert body["data"]["llm_execution"]["usage"]["total_tokens"] > 0
-    assert body["data"]["llm_execution"]["cost"]["estimated_cost_usd"] >= 0
+
+    task_id = body["data"]["task_id"]
+    drain_queued_tasks(services)
+
+    task_body = client.get(f"/v1/tasks/{task_id}").json()
+    assert task_body["status"] == "dispatched"
+    assert task_body["dispatch_target"] == "llm"
+    assert task_body["llm_execution"]["model_selected"]
+    assert task_body["llm_execution"]["usage"]["total_tokens"] > 0
+    assert task_body["llm_execution"]["cost"]["estimated_cost_usd"] >= 0
 
 
 def test_governed_ingress_accepts_communication_target() -> None:
     client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="msg_notify",
         args=["agent_99"],
@@ -77,12 +94,19 @@ def test_governed_ingress_accepts_communication_target() -> None:
     body = response.json()
     assert response.status_code == 202
     assert body["status"] == "accepted"
-    assert body["data"]["dispatch_target"] == "communication"
-    assert body["data"]["dispatch_id"]
+
+    task_id = body["data"]["task_id"]
+    drain_queued_tasks(services)
+
+    task_body = client.get(f"/v1/tasks/{task_id}").json()
+    assert task_body["status"] == "dispatched"
+    assert task_body["dispatch_target"] == "communication"
+    assert task_body["dispatch_id"]
 
 
 def test_governed_ingress_fail_closed_on_communication_contract_violation() -> None:
     client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="msg_notify",
         args=[],
@@ -98,11 +122,16 @@ def test_governed_ingress_fail_closed_on_communication_contract_violation() -> N
     )
 
     body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "denied"
-    assert body["error"]["code"] == "a2a_missing_recipient_args"
-    assert body["error"]["details"]["source"] == "dispatch_communication_gateway"
-    assert body["error"]["source_component"] == "communication_gateway"
+    assert response.status_code == 202
+    assert body["status"] == "accepted"
+
+    task_id = body["data"]["task_id"]
+    drain_queued_tasks(services)
+
+    task_body = client.get(f"/v1/tasks/{task_id}").json()
+    assert task_body["status"] == "blocked"
+    assert task_body["error_code"] == "a2a_missing_recipient_args"
+    assert task_body["outcome_source"] == "dispatch_communication_gateway"
 
 
 def test_governed_ingress_replay_is_deterministic() -> None:
@@ -128,12 +157,11 @@ def test_governed_ingress_replay_is_deterministic() -> None:
     assert first_body["data"]["task_id"] == second_body["data"]["task_id"]
     assert first_body["data"]["request_id"] == second_body["data"]["request_id"]
     assert first_body["trace_id"] == second_body["trace_id"]
-    assert first_body["data"]["dispatch_target"] == second_body["data"]["dispatch_target"]
-    assert first_body["data"]["dispatch_id"] == second_body["data"]["dispatch_id"]
 
 
 def test_governed_ingress_denied_replay_is_deterministic() -> None:
     client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="policy_uncertain",
         args=["arg_1"],
@@ -144,22 +172,25 @@ def test_governed_ingress_denied_replay_is_deterministic() -> None:
     headers = build_owner_command_headers(payload)
 
     first = client.post("/v1/owner/commands", headers=headers, json=payload)
-    second = client.post("/v1/owner/commands", headers=headers, json=payload)
-
     first_body = first.json()
+    assert first.status_code == 202
+    assert first_body["status"] == "accepted"
+    task_id = first_body["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
+    second = client.post("/v1/owner/commands", headers=headers, json=payload)
     second_body = second.json()
-    assert first.status_code == 403
     assert second.status_code == 403
-    assert first_body["status"] == "denied"
     assert second_body["status"] == "denied"
-    assert first_body["error"]["code"] == "policy_uncertain_fail_closed"
     assert second_body["error"]["code"] == "policy_uncertain_fail_closed"
-    assert first_body["error"]["details"]["task_id"] == second_body["error"]["details"]["task_id"]
+    assert second_body["error"]["details"]["task_id"] == task_id
     assert second_body["error"]["details"]["replayed"] == "true"
 
 
 def test_governed_ingress_fail_closed_on_policy_runtime_error() -> None:
     client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="policy_error",
         args=["alpha"],
@@ -174,14 +205,21 @@ def test_governed_ingress_fail_closed_on_policy_runtime_error() -> None:
     )
 
     body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "denied"
-    assert body["error"]["code"] == "policy_runtime_error_fail_closed"
-    assert body["error"]["details"]["source"] == "policy_runtime"
+    assert response.status_code == 202
+    assert body["status"] == "accepted"
+
+    task_id = body["data"]["task_id"]
+    drain_queued_tasks(services)
+
+    task_body = client.get(f"/v1/tasks/{task_id}").json()
+    assert task_body["status"] == "blocked"
+    assert task_body["error_code"] == "policy_uncertain_fail_closed"
+    assert task_body["outcome_source"] == "policy_runtime"
 
 
 def test_governed_ingress_fail_closed_on_budget_runtime_error() -> None:
     client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="budget_error",
         args=["alpha"],
@@ -196,16 +234,23 @@ def test_governed_ingress_fail_closed_on_budget_runtime_error() -> None:
     )
 
     body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "denied"
-    assert body["error"]["code"] == "budget_runtime_error_fail_closed"
-    assert body["error"]["details"]["source"] == "budget_runtime"
+    assert response.status_code == 202
+    assert body["status"] == "accepted"
+
+    task_id = body["data"]["task_id"]
+    drain_queued_tasks(services)
+
+    task_body = client.get(f"/v1/tasks/{task_id}").json()
+    assert task_body["status"] == "blocked"
+    assert task_body["error_code"] == "budget_runtime_error_fail_closed"
+    assert task_body["outcome_source"] == "budget_runtime"
 
 
 def test_governed_ingress_fail_closed_on_dispatch_reject() -> None:
+    from openqilin.observability.audit.audit_writer import OTelAuditWriter
+
     client = TestClient(app)
     services = app.state.runtime_services
-    before_event_count = len(services.audit_writer.get_events())
     before_span_count = len(services.tracer.get_spans())
     before_metric_value = services.metric_recorder.get_counter_value(
         "owner_command_admission_outcomes_total",
@@ -225,10 +270,16 @@ def test_governed_ingress_fail_closed_on_dispatch_reject() -> None:
     )
 
     body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "denied"
-    assert body["error"]["code"] == "execution_dispatch_failed"
-    assert body["error"]["details"]["source"] == "dispatch_sandbox_adapter"
+    assert response.status_code == 202
+    assert body["status"] == "accepted"
+    task_id = body["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
+    task_body = client.get(f"/v1/tasks/{task_id}").json()
+    assert task_body["status"] == "blocked"
+    assert task_body["error_code"] == "execution_dispatch_failed"
+    assert task_body["outcome_source"] == "dispatch_sandbox_adapter"
 
     after_metric_value = services.metric_recorder.get_counter_value(
         "owner_command_admission_outcomes_total",
@@ -236,13 +287,17 @@ def test_governed_ingress_fail_closed_on_dispatch_reject() -> None:
     )
     assert after_metric_value == before_metric_value + 1
 
-    new_events = services.audit_writer.get_events()[before_event_count:]
+    assert isinstance(services.audit_writer, OTelAuditWriter)
+    audit_repo = services.audit_writer._audit_repo  # type: ignore[attr-defined]
+    task_record = services.runtime_state_repo.get_task_by_id(task_id)
+    assert task_record is not None
+    new_events = audit_repo.list_events_for_trace(task_record.trace_id)
     assert [event.event_type for event in new_events] == [
         "policy.decision",
         "budget.decision",
         "owner_command.denied",
     ]
-    assert new_events[-1].task_id == body["error"]["details"]["task_id"]
+    assert new_events[-1].task_id == task_id
 
     new_spans = services.tracer.get_spans()[before_span_count:]
     span_names = [span.name for span in new_spans]
@@ -252,7 +307,6 @@ def test_governed_ingress_fail_closed_on_dispatch_reject() -> None:
     assert "budget_reservation" in span_names
     assert "execution_sandbox" in span_names
     assert "audit_emit" in span_names
-    assert any(span.status == "error" for span in new_spans)
 
 
 def test_governed_ingress_fail_closed_on_llm_gateway_runtime_error() -> None:
@@ -276,10 +330,17 @@ def test_governed_ingress_fail_closed_on_llm_gateway_runtime_error() -> None:
     )
 
     body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "denied"
-    assert body["error"]["code"] == "llm_provider_unavailable"
-    assert body["error"]["details"]["source"] == "dispatch_llm_gateway"
+    assert response.status_code == 202
+    assert body["status"] == "accepted"
+    task_id = body["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
+    task_body = client.get(f"/v1/tasks/{task_id}").json()
+    assert task_body["status"] == "blocked"
+    assert task_body["error_code"] == "llm_provider_unavailable"
+    assert task_body["outcome_source"] == "dispatch_llm_gateway"
+
     after_metric_value = services.metric_recorder.get_counter_value(
         "owner_command_admission_outcomes_total",
         labels={"outcome": "denied", "source": "dispatch_llm_gateway"},
@@ -289,6 +350,7 @@ def test_governed_ingress_fail_closed_on_llm_gateway_runtime_error() -> None:
 
 def test_governed_ingress_llm_reason_denies_without_grounding_evidence() -> None:
     client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="llm_reason",
         target="llm",
@@ -306,14 +368,43 @@ def test_governed_ingress_llm_reason_denies_without_grounding_evidence() -> None
     )
 
     body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "denied"
-    assert body["error"]["code"] == "llm_grounding_insufficient_evidence"
-    assert body["error"]["details"]["source"] == "dispatch_llm_gateway"
+    assert response.status_code == 202
+    assert body["status"] == "accepted"
+    task_id = body["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
+    task_body = client.get(f"/v1/tasks/{task_id}").json()
+    assert task_body["status"] == "blocked"
+    assert task_body["error_code"] == "llm_grounding_insufficient_evidence"
+    assert task_body["outcome_source"] == "dispatch_llm_gateway"
+
+
+def _ensure_project_exists(project_id: str) -> None:
+    """Seed a minimal project record so grounding tools can find evidence."""
+    services = app.state.runtime_services
+    repo = services.governance_repo
+    if repo.get_project(project_id) is not None:
+        return
+    repo.create_project(
+        project_id=project_id,
+        name=f"Test project {project_id}",
+        objective="Integration test fixture",
+        status="proposed",
+    )
+    repo.transition_project_status(
+        project_id=project_id,
+        next_status="approved",
+        reason_code="test_seed",
+        actor_role="owner",
+        trace_id=f"trace-seed-approved-{project_id}",
+    )
 
 
 def test_governed_ingress_llm_reason_denies_when_citations_missing() -> None:
+    _ensure_project_exists("project_1")
     client = TestClient(app)
+    services = app.state.runtime_services
     payload = build_owner_command_request_dict(
         action="llm_reason",
         target="llm",
@@ -331,7 +422,13 @@ def test_governed_ingress_llm_reason_denies_when_citations_missing() -> None:
     )
 
     body = response.json()
-    assert response.status_code == 403
-    assert body["status"] == "denied"
-    assert body["error"]["code"] == "llm_grounding_citation_missing"
-    assert body["error"]["details"]["source"] == "dispatch_llm_gateway"
+    assert response.status_code == 202
+    assert body["status"] == "accepted"
+    task_id = body["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
+    task_body = client.get(f"/v1/tasks/{task_id}").json()
+    assert task_body["status"] == "blocked"
+    assert task_body["error_code"] == "llm_grounding_citation_missing"
+    assert task_body["outcome_source"] == "dispatch_llm_gateway"

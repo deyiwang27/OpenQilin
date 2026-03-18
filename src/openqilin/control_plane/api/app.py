@@ -60,6 +60,3 @@ def create_control_plane_app() -> FastAPI:
     app.include_router(governance_router)
     app.include_router(discord_ingress_router)
     return app
-
-
-app = create_control_plane_app()

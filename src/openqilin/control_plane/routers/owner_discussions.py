@@ -29,8 +29,8 @@ from openqilin.control_plane.schemas.governance import (
     GovernanceApiResponse,
     ProposalDiscussionRequest,
 )
-from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
-from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
+from openqilin.observability.testing.stubs import InMemoryAuditWriter
+from openqilin.data_access.repositories.postgres.project_repository import PostgresProjectRepository
 
 router = APIRouter(tags=["owner_discussions"])
 
@@ -227,7 +227,7 @@ def _map_handler_error(
 def post_proposal_discussion_message(
     project_id: str,
     payload: ProposalDiscussionRequest,
-    governance_repository: InMemoryGovernanceRepository = Depends(get_governance_repository),
+    governance_repository: PostgresProjectRepository = Depends(get_governance_repository),
     audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
     external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
     external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,

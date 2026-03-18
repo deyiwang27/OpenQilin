@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
+from uuid import uuid4
 
 from openqilin.data_access.repositories.communication import (
     CommunicationDeadLetterRecord,
-    InMemoryCommunicationRepository,
 )
-from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
-from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
+from openqilin.observability.audit.audit_writer import OTelAuditWriter
+from openqilin.observability.testing.stubs import InMemoryAuditWriter
+from openqilin.observability.testing.stubs import InMemoryMetricRecorder
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,24 +35,24 @@ class DeadLetterWriteRequest:
     ledger_id: str | None
 
 
-class InMemoryDeadLetterWriter:
-    """Deterministic dead-letter writer with operator-visible observability signals."""
+class LocalDeadLetterWriter:
+    """Local in-process dead-letter writer with operator-visible observability signals."""
 
     def __init__(
         self,
         *,
-        repository: InMemoryCommunicationRepository | None = None,
-        audit_writer: InMemoryAuditWriter | None = None,
+        audit_writer: InMemoryAuditWriter | OTelAuditWriter | None = None,
         metric_recorder: InMemoryMetricRecorder | None = None,
     ) -> None:
-        self._repository = repository or InMemoryCommunicationRepository()
+        self._dead_letters: list[CommunicationDeadLetterRecord] = []
         self._audit_writer = audit_writer or InMemoryAuditWriter()
         self._metric_recorder = metric_recorder or InMemoryMetricRecorder()
 
     def write_dead_letter(self, payload: DeadLetterWriteRequest) -> CommunicationDeadLetterRecord:
         """Persist dead-letter record and emit audit/metric observability."""
 
-        record = self._repository.create_dead_letter_record(
+        record = CommunicationDeadLetterRecord(
+            dead_letter_id=str(uuid4()),
             task_id=payload.task_id,
             trace_id=payload.trace_id,
             principal_id=payload.principal_id,
@@ -66,7 +68,9 @@ class InMemoryDeadLetterWriter:
             error_message=payload.error_message,
             attempts=payload.attempts,
             ledger_id=payload.ledger_id,
+            created_at=datetime.now(tz=UTC),
         )
+        self._dead_letters.append(record)
         self._metric_recorder.increment_counter(
             "communication_dead_letter_total",
             labels={
@@ -105,4 +109,8 @@ class InMemoryDeadLetterWriter:
     def list_dead_letters(self) -> tuple[CommunicationDeadLetterRecord, ...]:
         """List persisted dead-letter records."""
 
-        return self._repository.list_dead_letters()
+        return tuple(self._dead_letters)
+
+
+# Backward-compat alias
+InMemoryDeadLetterWriter = LocalDeadLetterWriter

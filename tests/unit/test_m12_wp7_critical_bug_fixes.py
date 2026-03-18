@@ -14,10 +14,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from openqilin.data_access.repositories.runtime_state import (
-    InMemoryRuntimeStateRepository,
-    TaskRecord,
-)
+from openqilin.data_access.repositories.runtime_state import TaskRecord
+from tests.testing.infra_stubs import InMemoryRuntimeStateRepository
 from openqilin.task_orchestrator.dispatch.target_selector import DispatchTargetError
 from openqilin.task_orchestrator.services.lifecycle_service import TaskLifecycleService
 from openqilin.task_orchestrator.services.task_service import TaskDispatchService

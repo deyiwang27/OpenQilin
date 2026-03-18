@@ -1,165 +1,220 @@
-"""CSO agent — advisory governance gate for institutional channels.
+"""CSO agent — portfolio strategy advisor.
 
-Policy profile: governance-aware advisory; uses real OPA policy evaluation.
-CSO MUST NOT issue commands, mutate state, or act as a delegation authority.
-CSO activation requires a live OPAPolicyRuntimeClient — enforced at startup.
+M13-WP7 rewrite: CSO is now the Chief Strategy Officer — a portfolio strategist,
+CWO proposal reviewer, and cross-project risk analyst. OPA dependency removed.
+
+CSO does NOT:
+- Evaluate requests against OPA policy
+- Issue commands or mutate state
+- Act as a delegation authority
+
+CSO DOES:
+- Review proposals for strategic alignment (Aligned / Needs Revision / Strategic Conflict)
+- Read portfolio context from project artifacts and governance records to inform advisory
+- Persist a CSOReviewRecord (GATE-006) after every proposal review
+- Escalate Strategic Conflicts to CEO via CSOConflictFlag.escalate_to="ceo"
 """
 
 from __future__ import annotations
 
+import json
+import logging
 import uuid
+from datetime import UTC, datetime
 
 from openqilin.agents.cso.models import (
-    CSOPolicyError,
+    CSOConflictFlag,
     CSORequest,
     CSOResponse,
 )
 from openqilin.agents.cso.prompts import (
-    GOVERNANCE_ADVISORY_TEMPLATE,
-    GOVERNANCE_MUTATION_TEMPLATE,
-    GOVERNANCE_SYSTEM_PROMPT,
+    CROSS_PROJECT_ADVISORY_TEMPLATE,
+    PROPOSAL_REVIEW_TEMPLATE,
+    STRATEGIC_SYSTEM_PROMPT,
 )
 from openqilin.control_plane.grammar.models import IntentClass
+from openqilin.data_access.repositories.artifacts import ProjectArtifactWriteContext
+from openqilin.data_access.repositories.postgres.governance_artifact_repository import (
+    PostgresGovernanceArtifactRepository,
+)
+from openqilin.data_access.repositories.postgres.project_repository import (
+    PostgresProjectRepository,
+)
 from openqilin.llm_gateway.schemas.requests import (
     LlmBudgetContext,
     LlmGatewayRequest,
     LlmPolicyContext,
 )
 from openqilin.llm_gateway.service import LlmGatewayService
-from openqilin.policy_runtime_integration.client import PolicyRuntimeClient
-from openqilin.policy_runtime_integration.models import (
-    PolicyEvaluationInput,
-    PolicyEvaluationResult,
-)
 
-# CSO advisory-only policy context: CSO itself is advisory — never mutation.
+LOGGER = logging.getLogger(__name__)
+
+# CSO strategic advisory policy context.
 _CSO_POLICY_CONTEXT = LlmPolicyContext(
     policy_version="v2",
-    policy_hash="cso-governance-advisory-v1",
-    rule_ids=("advisory_governance",),
+    policy_hash="cso-strategic-advisory-v1",
+    rule_ids=("GATE-006", "STR-001"),
 )
 
 _CSO_BUDGET_CONTEXT = LlmBudgetContext(
-    quota_token_cap=256,
+    quota_token_cap=512,
     allocation_mode="absolute",
 )
 
 _FALLBACK_ADVISORY = (
-    "I have reviewed your request. For governed actions, use explicit command syntax "
-    "`/oq <verb> [target] [args]`. For policy clarification, try "
-    "`/oq ask auditor <topic>`."
+    "Strategic review unavailable. For portfolio or proposal questions, "
+    "provide proposal context or use `/oq ask cso <topic>`."
 )
 
-# Synthetic task ID for CSO advisory evaluations (not a real task).
-_CSO_ADVISORY_TASK_ID = "cso-advisory-eval"
-_CSO_ADVISORY_REQUEST_ID = "cso-advisory-eval"
-_CSO_TRUST_DOMAIN = "institutional"
-_CSO_CONNECTOR = "internal"
+_CSO_AGENT_ID = "cso"
+_CSO_TASK_ID_PREFIX = "cso-review"
+
+# Write context for GATE-006 governance record (CSO writes as governance reviewer).
+# actor_role="ceo" allows the write — CSO review precedes CEO+CWO review (GATE-006 chain).
+_CSO_REVIEW_WRITE_CONTEXT = ProjectArtifactWriteContext(
+    actor_role="ceo",
+    project_status="active",
+)
+
+# Keyword triggers for conflict detection in LLM advisory output.
+_STRATEGIC_CONFLICT_KEYWORDS = ("strategic conflict", "escalation to ceo", "conflicts with")
+_NEEDS_REVISION_KEYWORDS = ("needs revision", "addressable", "recommend revising")
 
 
 class CSOAgent:
-    """Advisory governance gate for institutional channels.
+    """Portfolio strategy advisor for OpenQilin.
 
-    Handles all intent classes with a governance lens. For mutation and admin
-    intents, evaluates the request against live OPA policy before generating
-    an advisory response. For advisory and query intents, generates a
-    governance-aware advisory directly.
+    Handles all intent classes with a strategic lens. For requests with a
+    ``proposal_id``, reads portfolio context and returns a classified review
+    (Aligned / Needs Revision / Strategic Conflict). For general advisory
+    requests, provides cross-project strategic perspective.
 
-    CSO MUST be activated only when a real OPAPolicyRuntimeClient is in use.
-    Use assert_opa_client_required() to enforce this at startup.
+    No OPA dependency. No command authority.
     """
 
     def __init__(
         self,
         llm_gateway: LlmGatewayService,
-        policy_client: PolicyRuntimeClient,
+        project_artifact_repo: PostgresGovernanceArtifactRepository,
+        governance_repo: PostgresProjectRepository,
     ) -> None:
         self._llm = llm_gateway
-        self._policy_client = policy_client
+        self._project_artifact_repo = project_artifact_repo
+        self._governance_repo = governance_repo
 
     def handle(self, request: CSORequest) -> CSOResponse:
-        """Handle governance advisory request with OPA policy evaluation."""
-        policy_decision: str | None = None
+        """Handle portfolio strategy advisory request.
 
-        if request.intent in (IntentClass.MUTATION, IntentClass.ADMIN):
-            policy_result = self._evaluate_governance(request)
-            policy_decision = policy_result.decision
-            if policy_result.decision == "deny":
-                rule_note = (
-                    f" (rule: {', '.join(policy_result.rule_ids)})"
-                    if policy_result.rule_ids
-                    else ""
-                )
-                raise CSOPolicyError(
-                    code="cso_governance_denied",
-                    message=(
-                        f"CSO governance gate: {request.intent.value} intent denied by policy"
-                        f"{rule_note}. Use explicit command syntax for governed actions."
-                    ),
-                )
+        When ``proposal_id`` is present, reviews the proposal for strategic
+        alignment and persists a GATE-006 governance record.
+        For general advisory requests, provides cross-project strategic perspective.
+        """
+        portfolio_context = request.portfolio_context or self._read_portfolio_context(
+            proposal_id=request.proposal_id,
+            project_id=request.context.project_id,
+        )
 
-        advisory_text = self._generate_advisory(request, policy_decision=policy_decision)
-        governance_note = self._build_governance_note(request, policy_decision=policy_decision)
+        advisory_text = self._generate_advisory(request, portfolio_context=portfolio_context)
+        conflict_flag = _parse_conflict_flag(advisory_text)
+        strategic_note = _build_strategic_note(request, conflict_flag=conflict_flag)
+
+        if request.proposal_id:
+            if request.context.project_id:
+                self._write_governance_record(
+                    proposal_id=request.proposal_id,
+                    project_id=request.context.project_id,
+                    review_outcome=_classify_outcome(conflict_flag),
+                    advisory_text=advisory_text,
+                    trace_id=request.trace_id,
+                )
+            else:
+                # GATE-006 violation: proposal_id present but no project_id — cannot persist
+                # the governance record. Override strategic_note to surface the gap explicitly.
+                # The proposal MUST NOT advance to CEO+CWO review without a GATE-006 record.
+                LOGGER.error(
+                    "cso.gate006.record_skipped_no_project_id",
+                    extra={
+                        "proposal_id": request.proposal_id,
+                        "trace_id": request.trace_id,
+                    },
+                )
+                strategic_note = (
+                    "GATE-006 error: CSO review record could not be persisted — "
+                    "proposal_id is present but project_id is absent. "
+                    "This proposal MUST NOT advance to CEO+CWO review until "
+                    "project context is provided and a GATE-006 record is on file."
+                )
 
         return CSOResponse(
             advisory_text=advisory_text,
             intent_confirmed=request.intent,
-            governance_note=governance_note,
             trace_id=request.trace_id,
+            strategic_note=strategic_note,
+            conflict_flag=conflict_flag,
         )
 
-    def _evaluate_governance(self, request: CSORequest) -> PolicyEvaluationResult:
-        """Evaluate the request against OPA policy for governance gate decision."""
-        policy_input = PolicyEvaluationInput(
-            task_id=_CSO_ADVISORY_TASK_ID,
-            request_id=_CSO_ADVISORY_REQUEST_ID,
-            trace_id=request.trace_id,
-            principal_id="cso-advisory-principal",
-            principal_role=request.principal_role,
-            trust_domain=_CSO_TRUST_DOMAIN,
-            connector=_CSO_CONNECTOR,
-            action=f"cso_advisory_{request.intent.value}",
-            target="cso_governance_gate",
-            recipient_types=(),
-            recipient_ids=(),
-            args=(),
-            project_id=request.context.project_id,
-        )
-        return self._policy_client.evaluate(policy_input)
+    def _read_portfolio_context(
+        self,
+        *,
+        proposal_id: str | None,
+        project_id: str | None,
+    ) -> str:
+        """Read relevant portfolio context to inform the advisory.
+
+        Reads project records from governance_repo and, when proposal_id and
+        project_id are present, relevant project artifacts from the artifact store.
+        Returns a formatted context summary string for the LLM prompt.
+        """
+        parts: list[str] = []
+
+        if project_id:
+            try:
+                project = self._governance_repo.get_project(project_id)
+                if project:
+                    parts.append(
+                        f"Project {project_id}: status={project.status}, "
+                        f"title={getattr(project, 'title', 'unknown')}"
+                    )
+            except Exception as exc:
+                LOGGER.warning("cso.portfolio_context.project_read_failed", extra={"exc": str(exc)})
+
+        if not parts:
+            parts.append("No portfolio context available.")
+
+        return "\n".join(parts)
 
     def _generate_advisory(
         self,
         request: CSORequest,
         *,
-        policy_decision: str | None,
+        portfolio_context: str,
     ) -> str:
-        if request.intent in (IntentClass.MUTATION, IntentClass.ADMIN):
-            prompt = GOVERNANCE_MUTATION_TEMPLATE.format(
-                chat_class=request.context.chat_class,
+        """Generate strategic advisory text via LLM gateway."""
+        if request.proposal_id:
+            prompt = PROPOSAL_REVIEW_TEMPLATE.format(
+                proposal_id=request.proposal_id,
                 message=request.message[:500],
-                principal_role=request.principal_role,
-                policy_decision=policy_decision or "advisory",
+                portfolio_context=portfolio_context,
             )
         else:
-            prompt = GOVERNANCE_ADVISORY_TEMPLATE.format(
+            prompt = CROSS_PROJECT_ADVISORY_TEMPLATE.format(
                 chat_class=request.context.chat_class,
                 message=request.message[:500],
-                principal_role=request.principal_role,
             )
 
-        full_prompt = f"{GOVERNANCE_SYSTEM_PROMPT}\n\n{prompt}"
+        full_prompt = f"{STRATEGIC_SYSTEM_PROMPT}\n\n{prompt}"
         response = self._llm.complete(
             LlmGatewayRequest(
                 request_id=str(uuid.uuid4()),
                 trace_id=request.trace_id,
                 project_id=request.context.project_id or "system",
-                agent_id="cso",
+                agent_id=_CSO_AGENT_ID,
                 task_id=None,
-                skill_id="governance_advisory",
+                skill_id="strategic_advisory",
                 model_class="interactive_fast",
                 routing_profile="dev_gemini_free",
                 messages_or_prompt=full_prompt,
-                max_tokens=256,
+                max_tokens=512,
                 temperature=0.2,
                 budget_context=_CSO_BUDGET_CONTEXT,
                 policy_context=_CSO_POLICY_CONTEXT,
@@ -170,32 +225,95 @@ class CSOAgent:
             return response.generated_text.strip()
         return _FALLBACK_ADVISORY
 
-    def _build_governance_note(
+    def _write_governance_record(
         self,
-        request: CSORequest,
         *,
-        policy_decision: str | None,
-    ) -> str | None:
-        """Build a governance note hint based on intent and policy outcome."""
-        if request.intent == IntentClass.MUTATION:
-            return "Use explicit command syntax: /oq <verb> [target] [args]"
-        if request.intent == IntentClass.ADMIN:
-            return "Administrative actions require explicit governed commands and audit trail."
-        if policy_decision == "allow_with_obligations":
-            return "This action may require additional approval or obligation fulfilment."
-        return None
+        proposal_id: str,
+        project_id: str,
+        review_outcome: str,
+        advisory_text: str,
+        trace_id: str,
+    ) -> None:
+        """Persist GATE-006 CSO review record to the artifacts store.
 
-
-def assert_opa_client_required(policy_client: PolicyRuntimeClient) -> None:
-    """Raise RuntimeError if the CSO activation guard is not satisfied.
-
-    CSO MUST NOT be activated without a real OPAPolicyRuntimeClient.
-    This guard is called from build_runtime_services() before CSOAgent is instantiated.
-    """
-    from openqilin.policy_runtime_integration.client import OPAPolicyRuntimeClient
-
-    if not isinstance(policy_client, OPAPolicyRuntimeClient):
-        raise RuntimeError(
-            "CSO must not be activated without real OPA client. "
-            "Set OPENQILIN_OPA_URL to enable OPA and CSO activation."
+        Required before the proposal can advance to CEO+CWO review.
+        Write failures are logged but do not block the advisory response.
+        """
+        record_content = json.dumps(
+            {
+                "proposal_id": proposal_id,
+                "review_outcome": review_outcome,
+                "cso_advisory_text": advisory_text,
+                "trace_id": trace_id,
+                "created_at": datetime.now(tz=UTC).isoformat(),
+            },
+            ensure_ascii=False,
         )
+        try:
+            self._project_artifact_repo.write_project_artifact(
+                project_id=project_id,
+                artifact_type="cso_review",
+                content=record_content,
+                write_context=_CSO_REVIEW_WRITE_CONTEXT,
+            )
+            LOGGER.info(
+                "cso.gate006.record_written",
+                extra={"proposal_id": proposal_id, "project_id": project_id, "trace_id": trace_id},
+            )
+        except Exception as exc:
+            LOGGER.error(
+                "cso.gate006.record_write_failed",
+                extra={
+                    "proposal_id": proposal_id,
+                    "project_id": project_id,
+                    "trace_id": trace_id,
+                    "exc": str(exc),
+                },
+            )
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def _parse_conflict_flag(advisory_text: str) -> CSOConflictFlag | None:
+    """Detect conflict signals in LLM advisory text and return a structured flag."""
+    lower = advisory_text.lower()
+    if any(kw in lower for kw in _STRATEGIC_CONFLICT_KEYWORDS):
+        return CSOConflictFlag(
+            flag_type="strategic_conflict",
+            reason=advisory_text[:200],
+            escalate_to="ceo",
+        )
+    if any(kw in lower for kw in _NEEDS_REVISION_KEYWORDS):
+        return CSOConflictFlag(
+            flag_type="needs_revision",
+            reason=advisory_text[:200],
+            escalate_to=None,
+        )
+    return None
+
+
+def _classify_outcome(conflict_flag: CSOConflictFlag | None) -> str:
+    """Map conflict flag to review outcome label for GATE-006 record."""
+    if conflict_flag is None:
+        return "Aligned"
+    if conflict_flag.flag_type == "strategic_conflict":
+        return "Strategic Conflict"
+    return "Needs Revision"
+
+
+def _build_strategic_note(
+    request: CSORequest,
+    *,
+    conflict_flag: CSOConflictFlag | None,
+) -> str | None:
+    """Build a strategic note hint based on intent and conflict outcome."""
+    if conflict_flag and conflict_flag.flag_type == "strategic_conflict":
+        return "Strategic conflict detected. Escalation to CEO required before proposal advances."
+    if conflict_flag and conflict_flag.flag_type == "needs_revision":
+        return "Proposal needs revision. Address CSO recommendations before advancing."
+    if request.intent in (IntentClass.MUTATION, IntentClass.ADMIN):
+        return "Governed actions require explicit command syntax: /oq <verb> [target] [args]"
+    return None

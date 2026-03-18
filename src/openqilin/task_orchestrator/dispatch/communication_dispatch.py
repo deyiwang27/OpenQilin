@@ -8,7 +8,7 @@ from typing import Protocol
 
 from openqilin.communication_gateway.delivery.publisher import (
     DeliveryPublisher,
-    InMemoryDeliveryPublisher,
+    LocalDeliveryPublisher,
     PublishRequest,
 )
 from openqilin.communication_gateway.storage.idempotency_store import CommunicationIdempotencyRecord
@@ -26,7 +26,7 @@ from openqilin.communication_gateway.validators.a2a_validator import (
     metadata_value,
 )
 from openqilin.communication_gateway.validators.ordering_validator import (
-    InMemoryOrderingValidator,
+    LocalOrderingValidator,
     OrderingValidationError,
 )
 
@@ -68,16 +68,16 @@ class CommunicationDispatchAdapter(Protocol):
         """Dispatch admitted communication task through ACP contract boundary."""
 
 
-class InMemoryCommunicationDispatchAdapter:
+class LocalCommunicationDispatchAdapter:
     """Deterministic ACP baseline adapter with A2A/ordering contract checks."""
 
     def __init__(
         self,
-        ordering_validator: InMemoryOrderingValidator | None = None,
+        ordering_validator: LocalOrderingValidator | None = None,
         publisher: DeliveryPublisher | None = None,
     ) -> None:
-        self._ordering_validator = ordering_validator or InMemoryOrderingValidator()
-        self._publisher = publisher or InMemoryDeliveryPublisher()
+        self._ordering_validator = ordering_validator or LocalOrderingValidator()
+        self._publisher = publisher or LocalDeliveryPublisher()
 
     def dispatch(self, payload: CommunicationDispatchRequest) -> CommunicationDispatchReceipt:
         """Validate A2A baseline contract and resolve ACP route before accept."""
@@ -153,7 +153,7 @@ class InMemoryCommunicationDispatchAdapter:
         """List persisted communication message records for diagnostics/tests."""
 
         publisher = self._publisher
-        if isinstance(publisher, InMemoryDeliveryPublisher):
+        if isinstance(publisher, LocalDeliveryPublisher):
             return publisher.list_message_records(task_id=task_id)
         return ()
 
@@ -161,7 +161,7 @@ class InMemoryCommunicationDispatchAdapter:
         """List communication idempotency records for diagnostics/tests."""
 
         publisher = self._publisher
-        if isinstance(publisher, InMemoryDeliveryPublisher):
+        if isinstance(publisher, LocalDeliveryPublisher):
             return publisher.list_idempotency_records()
         return ()
 
@@ -169,6 +169,10 @@ class InMemoryCommunicationDispatchAdapter:
         """List communication dead-letter records for diagnostics/tests."""
 
         publisher = self._publisher
-        if isinstance(publisher, InMemoryDeliveryPublisher):
+        if isinstance(publisher, LocalDeliveryPublisher):
             return publisher.list_dead_letters()
         return ()
+
+
+# Backward-compatible alias retained for existing imports.
+InMemoryCommunicationDispatchAdapter = LocalCommunicationDispatchAdapter

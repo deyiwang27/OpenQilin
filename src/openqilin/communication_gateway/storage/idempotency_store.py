@@ -4,16 +4,12 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from datetime import UTC, datetime
 from typing import Literal, Mapping
 
 from openqilin.data_access.cache.idempotency_store import (
-    CacheClaimStatus,
     CacheIdempotencyRecord,
-    InMemoryIdempotencyCacheStore,
-)
-from openqilin.data_access.repositories.postgres.idempotency_cache_store import (
-    RedisIdempotencyCacheStore,
 )
 
 CommunicationClaimStatus = Literal["new", "replay", "conflict", "in_progress"]
@@ -30,16 +26,15 @@ class CommunicationIdempotencyRecord:
     result: tuple[tuple[str, str], ...] | None
 
 
-class InMemoryCommunicationIdempotencyStore:
-    """Communication idempotency store backed by in-memory cache store."""
+class LocalCommunicationIdempotencyStore:
+    """Communication idempotency store backed by an in-process cache store."""
 
     def __init__(
         self,
-        cache_store: InMemoryIdempotencyCacheStore | RedisIdempotencyCacheStore | None = None,
         namespace: str = "communication_delivery",
     ) -> None:
-        self._cache_store = cache_store or InMemoryIdempotencyCacheStore()
         self._namespace = namespace
+        self._records: dict[str, CacheIdempotencyRecord] = {}
 
     def build_delivery_key(
         self,
@@ -78,20 +73,44 @@ class InMemoryCommunicationIdempotencyStore:
     ) -> tuple[CommunicationClaimStatus, CommunicationIdempotencyRecord]:
         """Claim communication delivery key for new/replay/conflict resolution."""
 
-        status, record = self._cache_store.claim(
-            namespace=self._namespace,
-            key=key,
-            payload_hash=payload_hash,
-        )
-        return _normalize_claim_status(status), _to_communication_record(record)
+        store_key = f"{self._namespace}:{key}"
+        existing = self._records.get(store_key)
+        if existing is None:
+            record = CacheIdempotencyRecord(
+                namespace=self._namespace,
+                key=key,
+                payload_hash=payload_hash,
+                status="in_progress",
+                attempt_count=0,
+                result=None,
+                created_at=datetime.now(tz=UTC),
+                updated_at=datetime.now(tz=UTC),
+            )
+            self._records[store_key] = record
+            return "new", _to_communication_record(record)
+
+        if existing.status == "in_progress":
+            return "in_progress", _to_communication_record(existing)
+
+        if existing.payload_hash != payload_hash:
+            return "conflict", _to_communication_record(existing)
+
+        return "replay", _to_communication_record(existing)
 
     def increment_attempt(self, *, key: str) -> CommunicationIdempotencyRecord | None:
         """Increment communication delivery attempt counter."""
 
-        record = self._cache_store.increment_attempt(namespace=self._namespace, key=key)
-        if record is None:
+        store_key = f"{self._namespace}:{key}"
+        existing = self._records.get(store_key)
+        if existing is None:
             return None
-        return _to_communication_record(record)
+        updated = replace(
+            existing,
+            attempt_count=existing.attempt_count + 1,
+            updated_at=datetime.now(tz=UTC),
+        )
+        self._records[store_key] = updated
+        return _to_communication_record(updated)
 
     def complete(
         self,
@@ -101,19 +120,27 @@ class InMemoryCommunicationIdempotencyStore:
     ) -> CommunicationIdempotencyRecord | None:
         """Store terminal communication delivery result."""
 
-        record = self._cache_store.complete(
-            namespace=self._namespace,
-            key=key,
-            result=result,
-        )
-        if record is None:
+        store_key = f"{self._namespace}:{key}"
+        existing = self._records.get(store_key)
+        if existing is None:
             return None
-        return _to_communication_record(record)
+        result_tuple: tuple[tuple[str, str], ...] = tuple(
+            (str(k), str(v)) for k, v in result.items()
+        )
+        updated = replace(
+            existing,
+            status="completed",
+            result=result_tuple,
+            updated_at=datetime.now(tz=UTC),
+        )
+        self._records[store_key] = updated
+        return _to_communication_record(updated)
 
     def get(self, *, key: str) -> CommunicationIdempotencyRecord | None:
         """Load one communication idempotency record."""
 
-        record = self._cache_store.get(namespace=self._namespace, key=key)
+        store_key = f"{self._namespace}:{key}"
+        record = self._records.get(store_key)
         if record is None:
             return None
         return _to_communication_record(record)
@@ -121,16 +148,7 @@ class InMemoryCommunicationIdempotencyStore:
     def list_records(self) -> tuple[CommunicationIdempotencyRecord, ...]:
         """List all communication idempotency records."""
 
-        return tuple(
-            _to_communication_record(record)
-            for record in self._cache_store.list_namespace(namespace=self._namespace)
-        )
-
-
-def _normalize_claim_status(value: CacheClaimStatus) -> CommunicationClaimStatus:
-    if value in {"new", "replay", "conflict", "in_progress"}:
-        return value
-    return "in_progress"
+        return tuple(_to_communication_record(record) for record in self._records.values())
 
 
 def _to_communication_record(record: CacheIdempotencyRecord) -> CommunicationIdempotencyRecord:
@@ -141,3 +159,7 @@ def _to_communication_record(record: CacheIdempotencyRecord) -> CommunicationIde
         attempt_count=record.attempt_count,
         result=record.result,
     )
+
+
+# Backward-compatible alias retained for existing imports.
+InMemoryCommunicationIdempotencyStore = LocalCommunicationIdempotencyStore

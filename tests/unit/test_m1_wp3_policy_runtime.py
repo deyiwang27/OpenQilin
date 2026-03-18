@@ -1,8 +1,6 @@
 from openqilin.control_plane.identity.principal_resolver import resolve_principal
-from openqilin.data_access.repositories.runtime_state import (
-    InMemoryRuntimeStateRepository,
-    TaskRecord,
-)
+from openqilin.data_access.repositories.runtime_state import TaskRecord
+from tests.testing.infra_stubs import InMemoryRuntimeStateRepository
 from openqilin.policy_runtime_integration.testing.in_memory_client import (
     InMemoryPolicyRuntimeClient,
 )

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from openqilin.budget_runtime.client import InMemoryBudgetRuntimeClient
+from openqilin.budget_runtime.client import AlwaysAllowBudgetRuntimeClient
 from openqilin.budget_runtime.models import BudgetReservationInput, BudgetReservationResult
 from openqilin.budget_runtime.threshold_evaluator import estimate_cost_units
 from openqilin.data_access.repositories.runtime_state import TaskRecord
@@ -23,7 +23,7 @@ class BudgetFailClosedOutcome:
 class BudgetReservationService:
     """Applies budget checks and fail-closed semantics for admitted tasks."""
 
-    def __init__(self, client: InMemoryBudgetRuntimeClient) -> None:
+    def __init__(self, client: AlwaysAllowBudgetRuntimeClient) -> None:
         self._client = client
         self._task_outcomes: dict[str, BudgetFailClosedOutcome] = {}
 

@@ -1,7 +1,7 @@
 from openqilin.control_plane.identity.principal_resolver import resolve_principal
-from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
-from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
-from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
+from tests.testing.infra_stubs import InMemoryRuntimeStateRepository
+from openqilin.observability.testing.stubs import InMemoryAuditWriter
+from openqilin.observability.testing.stubs import InMemoryMetricRecorder
 from openqilin.task_orchestrator.admission.envelope_validator import validate_owner_command_envelope
 from openqilin.task_orchestrator.callbacks.delivery_events import (
     DeliveryCallbackEvent,

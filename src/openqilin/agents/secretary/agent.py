@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import uuid
 
+from openqilin.agents.secretary.data_access import SecretaryDataAccessService
 from openqilin.agents.secretary.models import (
     SecretaryPolicyError,
     SecretaryRequest,
@@ -51,10 +52,18 @@ class SecretaryAgent:
 
     Handles discussion and query intents. Rejects mutation and admin intents
     at the advisory policy profile boundary before any LLM call.
+
+    When ``data_access`` is provided, enriches advisory prompts with live
+    project snapshot or task context from PostgreSQL when relevant.
     """
 
-    def __init__(self, llm_gateway: LlmGatewayService) -> None:
+    def __init__(
+        self,
+        llm_gateway: LlmGatewayService,
+        data_access: SecretaryDataAccessService | None = None,
+    ) -> None:
         self._llm = llm_gateway
+        self._data_access = data_access
 
     def handle(self, request: SecretaryRequest) -> SecretaryResponse:
         """Handle advisory request. Raises SecretaryPolicyError for mutation/admin intents."""
@@ -78,6 +87,17 @@ class SecretaryAgent:
         )
 
     def _generate_advisory(self, request: SecretaryRequest) -> str:
+        project_context = ""
+        if self._data_access and request.context.project_id:
+            snapshot = self._data_access.get_project_snapshot(request.context.project_id)
+            if snapshot:
+                project_context = (
+                    f"\nProject context: {snapshot.project_id} "
+                    f"status={snapshot.status} "
+                    f"active_tasks={snapshot.active_task_count} "
+                    f"blocked_tasks={snapshot.blocked_task_count}"
+                )
+
         if request.intent == IntentClass.QUERY:
             prompt = QUERY_ADVISORY_TEMPLATE.format(
                 chat_class=request.context.chat_class,
@@ -88,6 +108,8 @@ class SecretaryAgent:
                 chat_class=request.context.chat_class,
                 message=request.message[:500],
             )
+        if project_context:
+            prompt = f"{prompt}{project_context}"
 
         full_prompt = f"{ADVISORY_SYSTEM_PROMPT}\n\n{prompt}"
         response = self._llm.complete(

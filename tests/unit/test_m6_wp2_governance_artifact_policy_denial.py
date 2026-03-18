@@ -4,13 +4,11 @@ from pathlib import Path
 
 import pytest
 
-from openqilin.data_access.repositories.artifacts import (
-    InMemoryProjectArtifactRepository,
-    ProjectDocumentPolicy,
-)
-from openqilin.data_access.repositories.governance import (
-    GovernanceRepositoryError,
+from openqilin.data_access.repositories.artifacts import ProjectDocumentPolicy
+from openqilin.data_access.repositories.governance import GovernanceRepositoryError
+from tests.testing.infra_stubs import (
     InMemoryGovernanceRepository,
+    InMemoryProjectArtifactRepository,
 )
 
 

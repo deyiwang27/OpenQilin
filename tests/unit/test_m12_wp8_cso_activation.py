@@ -1,30 +1,31 @@
-"""M12-WP8: CSO Activation tests.
+"""M13-WP7: CSO Rewrite — Chief Strategy Officer unit tests.
+
+(File kept at m12_wp8 path for historical traceability; content updated for WP7.)
 
 Coverage:
-- CSO governance gate raises CSOPolicyError when policy returns deny
-- CSO governance gate returns CSOResponse when policy allows
-- Advisory/query intents skip policy evaluation and return a response directly
-- assert_opa_client_required raises RuntimeError for InMemoryPolicyRuntimeClient
-- assert_opa_client_required does NOT raise for OPAPolicyRuntimeClient
-- CSO is present in RuntimeServices built in dev mode (no OPA URL)
-- CSO activation guard fires when opa_url is set but OPA client is not real
+- CSOAgent handles proposal review when proposal_id present
+- CSOAgent handles cross-project advisory (no proposal_id)
+- Strategic Conflict detected → CSOConflictFlag with escalate_to="ceo"
+- Needs Revision detected → CSOConflictFlag with escalate_to=None
+- Aligned outcome → no conflict_flag
+- GATE-006: governance record persisted when proposal_id + project_id present
+- GATE-006: governance record NOT persisted when proposal_id absent
+- GATE-006: governance record NOT persisted when project_id absent
+- strategic_note set on Strategic Conflict
+- CSOAgent has no reference to PolicyRuntimeClient or OPAPolicyRuntimeClient
+- CSOAgent can be constructed without OPA (no assert_opa_client_required)
 """
 
 from __future__ import annotations
 
-import pytest
 from typing import Any
 from unittest.mock import MagicMock
 
-from openqilin.agents.cso.agent import CSOAgent, assert_opa_client_required
-from openqilin.agents.cso.models import CSOPolicyError, CSORequest, CSOResponse
+from openqilin.agents.cso.agent import CSOAgent
+from openqilin.agents.cso.models import CSORequest, CSOResponse
 from openqilin.control_plane.grammar.models import ChatContext, IntentClass
 from openqilin.llm_gateway.schemas.requests import LlmPolicyContext
 from openqilin.llm_gateway.schemas.responses import LlmGatewayResponse
-from openqilin.policy_runtime_integration.models import PolicyEvaluationResult
-from openqilin.policy_runtime_integration.testing.in_memory_client import (
-    InMemoryPolicyRuntimeClient,
-)
 
 
 # ---------------------------------------------------------------------------
@@ -55,242 +56,283 @@ def _llm_response(text: str) -> LlmGatewayResponse:
     )
 
 
-def _make_request(intent: IntentClass, message: str = "test message") -> CSORequest:
-    return CSORequest(
-        message=message,
-        intent=intent,
-        context=ChatContext(chat_class="institutional", channel_id="ch-001"),
-        principal_role="owner",
-        trace_id="trace-wp8-001",
-    )
-
-
-def _stub_deny_policy() -> Any:
-    """Return a policy client that always denies."""
-    client = MagicMock()
-    client.evaluate.return_value = PolicyEvaluationResult(
-        decision="deny",
-        reason_code="test_deny",
-        reason_message="denied by test",
-        policy_version="v2",
-        policy_hash="test-hash",
-        rule_ids=("TEST-RULE-001",),
-    )
-    return client
-
-
-def _stub_allow_policy() -> Any:
-    """Return a policy client that always allows."""
-    client = MagicMock()
-    client.evaluate.return_value = PolicyEvaluationResult(
-        decision="allow",
-        reason_code="test_allow",
-        reason_message="allowed by test",
-        policy_version="v2",
-        policy_hash="test-hash",
-        rule_ids=("TEST-RULE-001",),
-    )
-    return client
-
-
-def _stub_llm(text: str = "governance advisory response") -> Any:
-    """Return an LLM gateway that always returns the given text."""
+def _stub_llm(text: str = "This proposal is Aligned with portfolio strategy.") -> Any:
     llm = MagicMock()
     llm.complete.return_value = _llm_response(text)
     return llm
 
 
-# ---------------------------------------------------------------------------
-# CSOAgent: mutation intent — policy DENY → CSOPolicyError
-# ---------------------------------------------------------------------------
+def _stub_project_artifact_repo() -> Any:
+    return MagicMock()
 
 
-class TestCSOGovernanceDeny:
-    def test_mutation_intent_denied_by_policy_raises_cso_policy_error(self) -> None:
-        agent = CSOAgent(llm_gateway=_stub_llm(), policy_client=_stub_deny_policy())
-        request = _make_request(IntentClass.MUTATION, "delete all projects")
+def _stub_governance_repo(project_status: str = "active") -> Any:
+    repo = MagicMock()
+    project = MagicMock()
+    project.status = project_status
+    project.title = "Test Project"
+    repo.get_project.return_value = project
+    return repo
 
-        with pytest.raises(CSOPolicyError) as exc_info:
-            agent.handle(request)
 
-        assert exc_info.value.code == "cso_governance_denied"
+def _make_request(
+    intent: IntentClass = IntentClass.DISCUSSION,
+    message: str = "Should we expand project alpha?",
+    proposal_id: str | None = None,
+    project_id: str | None = "proj-001",
+    portfolio_context: str | None = None,
+) -> CSORequest:
+    return CSORequest(
+        message=message,
+        intent=intent,
+        context=ChatContext(chat_class="institutional", channel_id="ch-001", project_id=project_id),
+        trace_id="trace-wp7-001",
+        proposal_id=proposal_id,
+        portfolio_context=portfolio_context,
+    )
 
-    def test_mutation_deny_error_message_includes_rule_id(self) -> None:
-        agent = CSOAgent(llm_gateway=_stub_llm(), policy_client=_stub_deny_policy())
-        request = _make_request(IntentClass.MUTATION, "reset state")
 
-        with pytest.raises(CSOPolicyError) as exc_info:
-            agent.handle(request)
-
-        assert "TEST-RULE-001" in exc_info.value.message
-
-    def test_admin_intent_denied_by_policy_raises_cso_policy_error(self) -> None:
-        agent = CSOAgent(llm_gateway=_stub_llm(), policy_client=_stub_deny_policy())
-        request = _make_request(IntentClass.ADMIN, "promote user to administrator")
-
-        with pytest.raises(CSOPolicyError) as exc_info:
-            agent.handle(request)
-
-        assert exc_info.value.code == "cso_governance_denied"
-
-    def test_mutation_deny_does_not_call_llm(self) -> None:
-        llm = _stub_llm()
-        agent = CSOAgent(llm_gateway=llm, policy_client=_stub_deny_policy())
-        request = _make_request(IntentClass.MUTATION)
-
-        with pytest.raises(CSOPolicyError):
-            agent.handle(request)
-
-        llm.complete.assert_not_called()
+def _make_agent(
+    llm_text: str = "This proposal is Aligned with portfolio strategy.",
+) -> CSOAgent:
+    return CSOAgent(
+        llm_gateway=_stub_llm(llm_text),
+        project_artifact_repo=_stub_project_artifact_repo(),
+        governance_repo=_stub_governance_repo(),
+    )
 
 
 # ---------------------------------------------------------------------------
-# CSOAgent: mutation intent — policy ALLOW → CSOResponse
+# CSOAgent: general advisory (no proposal_id)
 # ---------------------------------------------------------------------------
 
 
-class TestCSOGovernanceAllow:
-    def test_mutation_intent_allowed_returns_cso_response(self) -> None:
-        agent = CSOAgent(llm_gateway=_stub_llm(), policy_client=_stub_allow_policy())
-        request = _make_request(IntentClass.MUTATION)
+class TestCSOCrossProjectAdvisory:
+    def test_discussion_intent_returns_cso_response(self) -> None:
+        agent = _make_agent()
+        request = _make_request(intent=IntentClass.DISCUSSION)
 
         response = agent.handle(request)
 
         assert isinstance(response, CSOResponse)
-        assert response.intent_confirmed == IntentClass.MUTATION
+        assert response.intent_confirmed == IntentClass.DISCUSSION
         assert response.trace_id == request.trace_id
 
-    def test_mutation_allowed_includes_governance_note(self) -> None:
-        agent = CSOAgent(llm_gateway=_stub_llm(), policy_client=_stub_allow_policy())
-        request = _make_request(IntentClass.MUTATION)
+    def test_query_intent_returns_cso_response(self) -> None:
+        agent = _make_agent()
+        request = _make_request(intent=IntentClass.QUERY)
 
         response = agent.handle(request)
 
-        assert response.governance_note is not None
-        assert "/oq" in response.governance_note
+        assert isinstance(response, CSOResponse)
+        assert response.advisory_text
 
-    def test_mutation_allowed_calls_llm(self) -> None:
-        llm = _stub_llm("advisory text")
-        agent = CSOAgent(llm_gateway=llm, policy_client=_stub_allow_policy())
-        request = _make_request(IntentClass.MUTATION)
+    def test_no_proposal_id_no_governance_record_written(self) -> None:
+        artifact_repo = _stub_project_artifact_repo()
+        agent = CSOAgent(
+            llm_gateway=_stub_llm(),
+            project_artifact_repo=artifact_repo,
+            governance_repo=_stub_governance_repo(),
+        )
+        request = _make_request(proposal_id=None)
+
+        agent.handle(request)
+
+        artifact_repo.write_project_artifact.assert_not_called()
+
+    def test_advisory_uses_llm(self) -> None:
+        llm = _stub_llm("Strategic perspective: balanced.")
+        agent = CSOAgent(
+            llm_gateway=llm,
+            project_artifact_repo=_stub_project_artifact_repo(),
+            governance_repo=_stub_governance_repo(),
+        )
+        request = _make_request()
 
         response = agent.handle(request)
 
         llm.complete.assert_called_once()
-        assert response.advisory_text == "advisory text"
+        assert response.advisory_text == "Strategic perspective: balanced."
 
 
 # ---------------------------------------------------------------------------
-# CSOAgent: advisory/query intents — skip policy evaluation
+# CSOAgent: proposal review (proposal_id present)
 # ---------------------------------------------------------------------------
 
 
-class TestCSOAdvisoryIntents:
-    def test_discussion_intent_skips_policy_evaluation(self) -> None:
-        policy_client = _stub_deny_policy()
-        agent = CSOAgent(llm_gateway=_stub_llm(), policy_client=policy_client)
-        request = _make_request(IntentClass.DISCUSSION)
-
-        # Should NOT raise even though the policy client would deny
-        response = agent.handle(request)
-
-        assert isinstance(response, CSOResponse)
-        policy_client.evaluate.assert_not_called()
-
-    def test_query_intent_skips_policy_evaluation(self) -> None:
-        policy_client = _stub_deny_policy()
-        agent = CSOAgent(llm_gateway=_stub_llm(), policy_client=policy_client)
-        request = _make_request(IntentClass.QUERY)
+class TestCSOProposalReview:
+    def test_proposal_review_returns_cso_response(self) -> None:
+        agent = _make_agent("This proposal is Aligned with the current portfolio.")
+        request = _make_request(proposal_id="prop-001")
 
         response = agent.handle(request)
 
         assert isinstance(response, CSOResponse)
-        policy_client.evaluate.assert_not_called()
+        assert response.conflict_flag is None  # Aligned → no flag
 
-    def test_advisory_response_has_no_governance_note_for_discussion(self) -> None:
-        agent = CSOAgent(llm_gateway=_stub_llm(), policy_client=_stub_allow_policy())
-        request = _make_request(IntentClass.DISCUSSION)
+    def test_strategic_conflict_sets_conflict_flag(self) -> None:
+        agent = _make_agent(
+            "Strategic Conflict: this proposal conflicts with the committed Q2 roadmap. "
+            "Escalation to CEO required."
+        )
+        request = _make_request(proposal_id="prop-002")
 
         response = agent.handle(request)
 
-        assert response.governance_note is None
+        assert response.conflict_flag is not None
+        assert response.conflict_flag.flag_type == "strategic_conflict"
+        assert response.conflict_flag.escalate_to == "ceo"
 
-    def test_admin_intent_evaluates_policy(self) -> None:
-        policy_client = _stub_allow_policy()
-        agent = CSOAgent(llm_gateway=_stub_llm(), policy_client=policy_client)
-        request = _make_request(IntentClass.ADMIN)
+    def test_needs_revision_sets_conflict_flag(self) -> None:
+        agent = _make_agent(
+            "This proposal needs revision before it can advance. "
+            "Addressable: timeline and resource allocation should be clarified."
+        )
+        request = _make_request(proposal_id="prop-003")
+
+        response = agent.handle(request)
+
+        assert response.conflict_flag is not None
+        assert response.conflict_flag.flag_type == "needs_revision"
+        assert response.conflict_flag.escalate_to is None
+
+    def test_aligned_outcome_no_conflict_flag(self) -> None:
+        agent = _make_agent("This proposal is fully Aligned with portfolio objectives.")
+        request = _make_request(proposal_id="prop-004")
+
+        response = agent.handle(request)
+
+        assert response.conflict_flag is None
+
+    def test_strategic_conflict_sets_strategic_note(self) -> None:
+        agent = _make_agent("Strategic Conflict: incompatible with existing commitments.")
+        request = _make_request(proposal_id="prop-005")
+
+        response = agent.handle(request)
+
+        assert response.strategic_note is not None
+        assert "CEO" in response.strategic_note
+
+
+# ---------------------------------------------------------------------------
+# GATE-006: governance record persistence
+# ---------------------------------------------------------------------------
+
+
+class TestGate006GovernanceRecordPersistence:
+    def test_proposal_review_writes_governance_record(self) -> None:
+        """GATE-006: CSO review record persisted when proposal_id + project_id present."""
+        artifact_repo = _stub_project_artifact_repo()
+        agent = CSOAgent(
+            llm_gateway=_stub_llm("Aligned."),
+            project_artifact_repo=artifact_repo,
+            governance_repo=_stub_governance_repo(),
+        )
+        request = _make_request(proposal_id="prop-gate006", project_id="proj-001")
 
         agent.handle(request)
 
-        policy_client.evaluate.assert_called_once()
+        artifact_repo.write_project_artifact.assert_called_once()
+        call_kwargs = artifact_repo.write_project_artifact.call_args.kwargs
+        assert call_kwargs["project_id"] == "proj-001"
+        assert call_kwargs["artifact_type"] == "cso_review"
+        assert "prop-gate006" in call_kwargs["content"]
+
+    def test_no_governance_record_when_project_id_absent(self) -> None:
+        """GATE-006: record cannot be written without project_id; error surfaced in strategic_note."""
+        artifact_repo = _stub_project_artifact_repo()
+        agent = CSOAgent(
+            llm_gateway=_stub_llm("Aligned."),
+            project_artifact_repo=artifact_repo,
+            governance_repo=_stub_governance_repo(),
+        )
+        request = _make_request(proposal_id="prop-gate006", project_id=None)
+
+        response = agent.handle(request)
+
+        artifact_repo.write_project_artifact.assert_not_called()
+        assert response.strategic_note is not None
+        assert "GATE-006" in response.strategic_note
+        assert "MUST NOT advance" in response.strategic_note
+
+    def test_governance_record_content_includes_trace_id(self) -> None:
+        artifact_repo = _stub_project_artifact_repo()
+        agent = CSOAgent(
+            llm_gateway=_stub_llm("Aligned."),
+            project_artifact_repo=artifact_repo,
+            governance_repo=_stub_governance_repo(),
+        )
+        request = _make_request(proposal_id="prop-trace", project_id="proj-001")
+
+        agent.handle(request)
+
+        call_kwargs = artifact_repo.write_project_artifact.call_args.kwargs
+        assert request.trace_id in call_kwargs["content"]
+
+    def test_governance_record_content_includes_review_outcome(self) -> None:
+        artifact_repo = _stub_project_artifact_repo()
+        agent = CSOAgent(
+            llm_gateway=_stub_llm("Strategic Conflict detected. Escalation to CEO required."),
+            project_artifact_repo=artifact_repo,
+            governance_repo=_stub_governance_repo(),
+        )
+        request = _make_request(proposal_id="prop-conflict", project_id="proj-001")
+
+        agent.handle(request)
+
+        call_kwargs = artifact_repo.write_project_artifact.call_args.kwargs
+        assert "Strategic Conflict" in call_kwargs["content"]
+
+    def test_governance_record_write_failure_does_not_block_advisory(self) -> None:
+        """GATE-006 write failure is logged but does not raise; advisory still returned."""
+        artifact_repo = _stub_project_artifact_repo()
+        artifact_repo.write_project_artifact.side_effect = RuntimeError("db down")
+        agent = CSOAgent(
+            llm_gateway=_stub_llm("Aligned."),
+            project_artifact_repo=artifact_repo,
+            governance_repo=_stub_governance_repo(),
+        )
+        request = _make_request(proposal_id="prop-failwrite", project_id="proj-001")
+
+        # Should not raise even if write fails
+        response = agent.handle(request)
+
+        assert isinstance(response, CSOResponse)
 
 
 # ---------------------------------------------------------------------------
-# assert_opa_client_required: startup guard
+# CSOAgent: no OPA dependency
 # ---------------------------------------------------------------------------
 
 
-class TestAssertOpaClientRequired:
-    def test_raises_for_in_memory_policy_client(self) -> None:
-        in_memory = InMemoryPolicyRuntimeClient()
+class TestCSONoOpaDependency:
+    def test_cso_constructed_without_opa_client(self) -> None:
+        """CSOAgent must not require an OPAPolicyRuntimeClient (WP7: OPA dep removed)."""
+        agent = CSOAgent(
+            llm_gateway=_stub_llm(),
+            project_artifact_repo=_stub_project_artifact_repo(),
+            governance_repo=_stub_governance_repo(),
+        )
+        assert isinstance(agent, CSOAgent)
 
-        with pytest.raises(RuntimeError) as exc_info:
-            assert_opa_client_required(in_memory)
+    def test_cso_agent_module_has_no_assert_opa_client_required(self) -> None:
+        """assert_opa_client_required must not exist in the CSO agent module (WP7 removal)."""
+        import openqilin.agents.cso.agent as cso_module
 
-        assert "CSO must not be activated without real OPA client" in str(exc_info.value)
+        assert not hasattr(cso_module, "assert_opa_client_required")
 
-    def test_raises_for_arbitrary_mock_client(self) -> None:
-        fake_client = MagicMock()
+    def test_cso_agent_has_no_policy_client_attribute(self) -> None:
+        agent = CSOAgent(
+            llm_gateway=_stub_llm(),
+            project_artifact_repo=_stub_project_artifact_repo(),
+            governance_repo=_stub_governance_repo(),
+        )
+        assert not hasattr(agent, "_policy_client")
 
-        with pytest.raises(RuntimeError):
-            assert_opa_client_required(fake_client)
-
-    def test_does_not_raise_for_opa_runtime_client(self) -> None:
-        from openqilin.policy_runtime_integration.client import OPAPolicyRuntimeClient
-
-        real_opa = OPAPolicyRuntimeClient(opa_url="http://localhost:8181")
-
-        # Guard should pass — no exception
-        assert_opa_client_required(real_opa)
-
-
-# ---------------------------------------------------------------------------
-# CSO wired into RuntimeServices (dev mode — no opa_url)
-# ---------------------------------------------------------------------------
-
-
-class TestCSOInRuntimeServices:
-    def test_cso_agent_present_in_dev_runtime_services(self, monkeypatch, tmp_path) -> None:
-        monkeypatch.setenv("OPENQILIN_SYSTEM_ROOT", str(tmp_path / "system_root"))
-        monkeypatch.delenv("OPENQILIN_OPA_URL", raising=False)
-
-        from openqilin.control_plane.api.dependencies import build_runtime_services
-
-        services = build_runtime_services()
-
-        assert isinstance(services.cso_agent, CSOAgent)
-
-    def test_cso_activation_guard_called_when_opa_url_set(self, monkeypatch, tmp_path) -> None:
-        """When opa_url is set, build_runtime_services calls assert_opa_client_required."""
-        from unittest.mock import patch
-
-        monkeypatch.setenv("OPENQILIN_SYSTEM_ROOT", str(tmp_path / "system_root"))
-        monkeypatch.setenv("OPENQILIN_OPA_URL", "http://opa.test:8181")
-
-        from openqilin.control_plane.api.dependencies import build_runtime_services
-
-        guard_calls: list = []
-
-        def _capture_guard(client: object) -> None:
-            guard_calls.append(client)
-
-        with patch(
-            "openqilin.control_plane.api.dependencies.assert_opa_client_required",
-            side_effect=_capture_guard,
-        ):
-            build_runtime_services()
-
-        assert len(guard_calls) == 1, "assert_opa_client_required must be called exactly once"
-        from openqilin.policy_runtime_integration.client import OPAPolicyRuntimeClient
-
-        assert isinstance(guard_calls[0], OPAPolicyRuntimeClient)
+    def test_cso_handles_all_intent_classes_without_opa(self) -> None:
+        """All intent classes must be handled without OPA evaluation."""
+        for intent in IntentClass:
+            agent = _make_agent()
+            request = _make_request(intent=intent)
+            response = agent.handle(request)
+            assert isinstance(response, CSOResponse)

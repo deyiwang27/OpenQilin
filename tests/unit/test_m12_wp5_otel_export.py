@@ -16,7 +16,6 @@ import pytest
 
 from openqilin.observability.audit.audit_writer import (
     AuditEvent,
-    InMemoryAuditWriter,
     OTelAuditWriter,
     _is_hex_trace_id,
 )
@@ -283,18 +282,18 @@ def test_runtime_settings_otlp_endpoint_from_env(monkeypatch: pytest.MonkeyPatch
 # ---------------------------------------------------------------------------
 
 
-def test_build_runtime_services_uses_inmemory_audit_when_no_database_url(
+def test_build_runtime_services_raises_when_no_database_url(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """When database_url is empty, InMemoryAuditWriter is used."""
+    """When database_url is empty, build_runtime_services raises RuntimeError (fail-closed)."""
     monkeypatch.setenv("OPENQILIN_DATABASE_URL", "")
     monkeypatch.setenv("OPENQILIN_REDIS_URL", "")
     monkeypatch.setenv("OPENQILIN_OPA_URL", "")
 
     from openqilin.control_plane.api.dependencies import build_runtime_services
 
-    services = build_runtime_services()
-    assert isinstance(services.audit_writer, InMemoryAuditWriter)
+    with pytest.raises(RuntimeError, match="OPENQILIN_DATABASE_URL is required"):
+        build_runtime_services()
 
 
 def test_dependencies_audit_writer_union_type() -> None:

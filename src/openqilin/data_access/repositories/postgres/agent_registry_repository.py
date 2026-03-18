@@ -7,9 +7,15 @@ from datetime import UTC, datetime
 from sqlalchemy import text
 from sqlalchemy.orm import Session, sessionmaker
 
-from openqilin.data_access.repositories.agent_registry import AgentRecord
+from openqilin.data_access.repositories.agent_registry import (
+    AgentRecord,
+    AgentRegistryRepositoryError,
+)
 
-_INSTITUTIONAL_ROLES = ("administrator", "auditor", "ceo", "cwo", "cso")
+_INSTITUTIONAL_ROLES = ("administrator", "auditor", "ceo", "cwo", "cso", "secretary")
+
+# Secretary is advisory-only: it must never be registered with a non-institutional type.
+_ADVISORY_ONLY_ROLES: frozenset[str] = frozenset({"secretary"})
 
 
 class PostgresAgentRegistryRepository:
@@ -24,6 +30,17 @@ class PostgresAgentRegistryRepository:
         now = datetime.now(tz=UTC)
         for role in _INSTITUTIONAL_ROLES:
             existing = self.get_agent_by_role(role)
+            if existing is not None and role in _ADVISORY_ONLY_ROLES:
+                if existing.agent_type != "institutional":
+                    raise AgentRegistryRepositoryError(
+                        code="agent_registry_advisory_only_violation",
+                        message=(
+                            f"Role '{role}' must be registered with advisory-only capability "
+                            f"(agent_type='institutional'). "
+                            f"Found agent_type='{existing.agent_type}'. "
+                            "Secretary cannot be granted command or mutation capabilities."
+                        ),
+                    )
             if existing is None:
                 with self._session_factory() as session:
                     session.execute(

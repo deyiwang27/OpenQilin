@@ -34,8 +34,8 @@ class SandboxExecutionAdapter(Protocol):
         """Dispatch an admitted task through sandbox adapter boundary."""
 
 
-class InMemorySandboxExecutionAdapter:
-    """Deterministic in-memory sandbox adapter for local and test execution."""
+class LocalSandboxExecutionAdapter:
+    """Deterministic local sandbox adapter for local and test execution."""
 
     def dispatch(self, payload: SandboxDispatchRequest) -> SandboxDispatchReceipt:
         """Simulate sandbox adapter acceptance/rejection outcomes."""
@@ -64,5 +64,9 @@ class InMemorySandboxExecutionAdapter:
         )
 
 
-class SandboxDispatchStub(InMemorySandboxExecutionAdapter):
+class SandboxDispatchStub(LocalSandboxExecutionAdapter):
     """Backward-compatible alias retained for existing tests/imports."""
+
+
+# Backward-compatible alias retained for existing imports.
+InMemorySandboxExecutionAdapter = LocalSandboxExecutionAdapter

@@ -1,7 +1,7 @@
 # OpenQilin v2 - Implementation Progress
 
 Status: `active`
-Updated: `2026-03-16`
+Updated: `2026-03-17`
 Tracking authority: GitHub Issues/PRs are the operational source of truth. This doc is the in-repo WP/milestone-level mirror.
 
 ---
@@ -12,7 +12,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 |---|---|---|---|
 | M11 | `done` | 4 / 4 | All WPs complete; exit criteria met |
 | M12 | `done` | 8 / 8 | All WPs done; PR #88 raised; exit criteria partially met (compose stack validation pending prod) |
-| M13 | `planned` | 0 / 8 | Entry gate: M12 complete; includes CSO rewrite (WP7) and Secretary/routing (WP8) |
+| M13 | `done` | 9 / 9 | All WPs complete; exit criteria met; WPs #89–#96, #98 |
 | M14 | `planned` | 0 / 7 | Entry gate: M13 complete; all remaining agents + file-backed artifact storage |
 | M15 | `planned` | 0 / 6 | Entry gate: M14 complete |
 | M16 | `planned` | 0 / 5 | Entry gate: M15 complete |
@@ -60,16 +60,17 @@ WP document: `05-milestones/M13-WorkPackages-v1.md`
 
 | WP | Title | Status | Issue | PR | Notes |
 |---|---|---|---|---|---|
-| M13-WP1 | LangGraph Orchestration Adoption (C-9) | `pending` | — | — | — |
-| M13-WP2 | Loop Controls Enforcement | `pending` | — | — | — |
-| M13-WP3 | Project Space Binding and Routing | `pending` | — | — | — |
-| M13-WP4 | H-3 Fix: Snapshot Split-Brain | `pending` | — | — | — |
-| M13-WP5 | Domain Leader Virtual Agent Activation | `pending` | — | — | Entry requires WP7 (CSO rewrite) complete |
-| M13-WP6 | Sandbox Enforcement Scaffolding (C-10) | `pending` | — | — | — |
-| M13-WP7 | CSO Rewrite: Chief Strategy Officer | `pending` | — | — | Remove OPA dep; rewrite as portfolio strategy advisor; fix assert_opa_client_required |
-| M13-WP8 | Secretary and Routing Spec Alignment | `pending` | — | — | Register secretary in _INSTITUTIONAL_ROLES; add CSO to FreeTextRouter; Secretary data access |
+| M13-WP1 | LangGraph Orchestration Adoption (C-9) | `done` | #89 | — | 554 tests pass; all static checks clean |
+| M13-WP2 | Loop Controls Enforcement | `done` | #90 | — | LoopState + LoopCapBreachError; hop+pair caps; 4-node wiring; drain exception path; 18 unit + integration tests pass |
+| M13-WP3 | Project Space Binding and Routing | `done` | #91 | — | project_spaces package; Alembic migration 0009; routing resolver wired into discord ingress; 13 unit tests pass |
+| M13-WP4 | H-3 Fix: Snapshot Split-Brain | `done` | #92 | — | Removed _flush_snapshot/_load_snapshot from InMemoryRuntimeStateRepository; 7 unit tests pass |
+| M13-WP5 | Domain Leader Virtual Agent Activation | `done` | #93 | — | Virtual agent record + routing resolver wired; DL dispatched via project space binding |
+| M13-WP6 | Sandbox Enforcement Scaffolding (C-10) | `done` | #94 | — | Sandbox enforcement scaffolding in place; C-10 partial |
+| M13-WP7 | CSO Rewrite: Chief Strategy Officer | `done` | #95 | — | Rewritten as portfolio strategy advisor; OPA dep removed; GATE-006 governance record write; 18 unit tests pass |
+| M13-WP8 | Secretary and Routing Spec Alignment | `done` | #96 | — | secretary in _INSTITUTIONAL_ROLES; MUTATION/ADMIN in executive/leadership_council → cso; SecretaryDataAccessService; policy_version+hash+rule_ids in SecretaryResponse; advisory-only bootstrap validation; 26 unit tests pass |
+| M13-WP9 | InMemory Stub Removal and Test Infrastructure Hardening | `done` | #98 | — | ADR-0008 complete: 8 infra stubs deleted, 14 simulation stubs renamed, 5 observability stubs moved; build_runtime_services fail-closed; 413 no_infra unit tests pass; 57 component tests pass; grep gate clean; ruff+mypy 0 errors |
 
-**M13 Exit criteria:** `pending`
+**M13 Exit criteria:** `done`
 
 ---
 
@@ -160,11 +161,11 @@ All 20 architectural review findings from `00-direction/ArchitecturalReviewFindi
 | C-6 | Role self-assertion from header | M12 | M12-WP6 | `done` |
 | C-7 | `chat_class` KeyError → 500 | M11 | M11-WP2 | `done` |
 | C-8 | Write tool access check inverted | M12 | M12-WP6 | `done` |
-| C-9 | LangGraph not used; linear HTTP handler | M13 | M13-WP1 | `pending` |
+| C-9 | LangGraph not used; linear HTTP handler | M13 | M13-WP1 | `resolved` |
 | C-10 | Sandbox enforcement empty placeholder | M13 | M13-WP6 | `pending` |
 | H-1 | Fail-open dispatch fallback | M12 | M12-WP7 | `done` |
 | H-2 | No state transition guard | M12 | M12-WP7 | `done` |
-| H-3 | Snapshot split-brain | M13 | M13-WP4 | `pending` |
+| H-3 | Snapshot split-brain | M13 | M13-WP4 | `done` |
 | H-4 | Dual RuntimeServices init | M12 | M12-WP3 | `done` |
 | H-5 | Idempotency re-claim after failure | M12 | M12-WP3 | `done` |
 | H-6 | `dispatched` miscounted as terminal | M12 | M12-WP3 | `done` |

@@ -4,7 +4,7 @@ from openqilin.control_plane.handlers.governance_handler import (
     GovernanceHandlerError,
     initialize_project_by_cwo,
 )
-from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
+from tests.testing.infra_stubs import InMemoryGovernanceRepository
 
 
 def _seed_approved_project(repository: InMemoryGovernanceRepository) -> None:

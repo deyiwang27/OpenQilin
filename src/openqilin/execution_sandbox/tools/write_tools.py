@@ -8,7 +8,7 @@ import json
 from typing import Mapping
 from uuid import uuid4
 
-from openqilin.budget_runtime.client import InMemoryBudgetRuntimeClient
+from openqilin.budget_runtime.client import AlwaysAllowBudgetRuntimeClient
 from openqilin.budget_runtime.models import BudgetReservationInput
 from openqilin.control_plane.handlers.governance_handler import (
     GovernanceHandlerError,
@@ -19,21 +19,22 @@ from openqilin.control_plane.handlers.governance_handler import (
     terminate_project_by_governance,
 )
 from openqilin.data_access.repositories.artifacts import (
-    InMemoryProjectArtifactRepository,
     ProjectArtifactRepositoryError,
     ProjectArtifactWriteContext,
 )
-from openqilin.data_access.repositories.governance import (
-    InMemoryGovernanceRepository,
-    ProjectRecord,
+from openqilin.data_access.repositories.governance import ProjectRecord
+from openqilin.data_access.repositories.postgres.governance_artifact_repository import (
+    PostgresGovernanceArtifactRepository,
 )
+from openqilin.data_access.repositories.postgres.project_repository import PostgresProjectRepository
 from openqilin.execution_sandbox.tools.access_policy import is_write_tool_allowed
 from openqilin.execution_sandbox.tools.contracts import (
     ToolCallContext,
     ToolResult,
     ToolSourceDescriptor,
 )
-from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
+from openqilin.observability.audit.audit_writer import OTelAuditWriter
+from openqilin.observability.testing.stubs import InMemoryAuditWriter
 
 _WRITE_TOOL_COST_UNITS: Mapping[str, int] = {
     "transition_project_lifecycle": 40,
@@ -49,10 +50,10 @@ class GovernedWriteToolService:
     def __init__(
         self,
         *,
-        governance_repository: InMemoryGovernanceRepository,
-        project_artifact_repository: InMemoryProjectArtifactRepository,
-        audit_writer: InMemoryAuditWriter,
-        budget_runtime_client: InMemoryBudgetRuntimeClient | None = None,
+        governance_repository: PostgresProjectRepository,
+        project_artifact_repository: PostgresGovernanceArtifactRepository,
+        audit_writer: InMemoryAuditWriter | OTelAuditWriter,
+        budget_runtime_client: AlwaysAllowBudgetRuntimeClient | None = None,
     ) -> None:
         self._governance_repository = governance_repository
         self._project_artifact_repository = project_artifact_repository

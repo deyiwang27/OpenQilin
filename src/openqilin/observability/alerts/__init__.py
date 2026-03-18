@@ -4,7 +4,7 @@ from openqilin.observability.alerts.alert_emitter import (
     AlertEmissionRequest,
     AlertEmissionResult,
     AlertEvent,
-    InMemoryAlertEmitter,
+    AlertSeverity,
 )
 from openqilin.observability.alerts.release_readiness import (
     AlertRouteDefinition,
@@ -21,7 +21,7 @@ __all__ = [
     "AlertEmissionRequest",
     "AlertEmissionResult",
     "AlertEvent",
-    "InMemoryAlertEmitter",
+    "AlertSeverity",
     "AlertRouteDefinition",
     "AlertThresholdDefinition",
     "DashboardDefinition",

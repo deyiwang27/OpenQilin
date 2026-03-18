@@ -20,8 +20,8 @@ from openqilin.control_plane.schemas.owner_commands import (
     OwnerCommandRecipient,
 )
 from openqilin.control_plane.schemas.owner_commands import OwnerCommandRequest
-from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
-from openqilin.data_access.repositories.identity_channels import InMemoryIdentityChannelRepository
+from tests.testing.infra_stubs import InMemoryGovernanceRepository
+from tests.testing.infra_stubs import InMemoryIdentityChannelRepository
 from openqilin.testing.owner_command import build_owner_command_request_model
 
 

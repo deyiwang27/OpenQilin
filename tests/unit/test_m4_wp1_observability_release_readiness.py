@@ -1,13 +1,10 @@
-from openqilin.observability.alerts.alert_emitter import (
-    AlertEmissionRequest,
-    InMemoryAlertEmitter,
-)
+from openqilin.observability.testing.stubs import AlertEmissionRequest, InMemoryAlertEmitter
 from openqilin.observability.alerts.release_readiness import (
     build_release_alert_catalog,
     build_release_dashboard_catalog,
 )
-from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
-from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
+from openqilin.observability.testing.stubs import InMemoryAuditWriter
+from openqilin.observability.testing.stubs import InMemoryMetricRecorder
 
 
 def test_release_dashboard_catalog_has_minimum_v1_dashboards() -> None:

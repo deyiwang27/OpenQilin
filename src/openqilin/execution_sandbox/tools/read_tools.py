@@ -8,24 +8,25 @@ from typing import Mapping
 from uuid import uuid4
 
 from openqilin.control_plane.governance.project_lifecycle import allowed_project_status_transitions
-from openqilin.data_access.repositories.artifacts import (
-    InMemoryProjectArtifactRepository,
-    ProjectArtifactRepositoryError,
-)
-from openqilin.data_access.repositories.communication import InMemoryCommunicationRepository
+from openqilin.data_access.repositories.artifacts import ProjectArtifactRepositoryError
 from openqilin.data_access.repositories.communication import CommunicationDeadLetterRecord
-from openqilin.data_access.repositories.governance import (
-    InMemoryGovernanceRepository,
-    ProjectRecord,
+from openqilin.data_access.repositories.governance import ProjectRecord
+from openqilin.data_access.repositories.postgres.communication_repository import (
+    PostgresCommunicationRepository,
 )
-from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
+from openqilin.data_access.repositories.postgres.governance_artifact_repository import (
+    PostgresGovernanceArtifactRepository,
+)
+from openqilin.data_access.repositories.postgres.project_repository import PostgresProjectRepository
+from openqilin.data_access.repositories.postgres.task_repository import PostgresTaskRepository
 from openqilin.execution_sandbox.tools.access_policy import is_read_tool_allowed
 from openqilin.execution_sandbox.tools.contracts import (
     ToolCallContext,
     ToolResult,
     ToolSourceDescriptor,
 )
-from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
+from openqilin.observability.audit.audit_writer import OTelAuditWriter
+from openqilin.observability.testing.stubs import InMemoryAuditWriter
 from openqilin.retrieval_runtime.models import RetrievalQueryRequest
 from openqilin.retrieval_runtime.service import RetrievalQueryService
 
@@ -36,12 +37,12 @@ class GovernedReadToolService:
     def __init__(
         self,
         *,
-        governance_repository: InMemoryGovernanceRepository,
-        project_artifact_repository: InMemoryProjectArtifactRepository,
-        runtime_state_repository: InMemoryRuntimeStateRepository,
+        governance_repository: PostgresProjectRepository,
+        project_artifact_repository: PostgresGovernanceArtifactRepository,
+        runtime_state_repository: PostgresTaskRepository,
         retrieval_query_service: RetrievalQueryService,
-        audit_writer: InMemoryAuditWriter,
-        communication_repository: InMemoryCommunicationRepository | None = None,
+        audit_writer: InMemoryAuditWriter | OTelAuditWriter,
+        communication_repository: PostgresCommunicationRepository | None = None,
     ) -> None:
         self._governance_repository = governance_repository
         self._project_artifact_repository = project_artifact_repository
@@ -518,9 +519,14 @@ class GovernedReadToolService:
         limit = _normalize_int(arguments.get("limit"), default=20, minimum=1, maximum=100)
         raw_types = str(arguments.get("event_types") or "").strip().lower()
         event_types = {value.strip() for value in raw_types.split(",") if value.strip()}
+        all_audit_events = (
+            self._audit_writer.get_events()
+            if isinstance(self._audit_writer, InMemoryAuditWriter)
+            else ()
+        )
         matched = [
             event
-            for event in self._audit_writer.get_events()
+            for event in all_audit_events
             if (event.task_id in task_ids if event.task_id is not None else False)
             and (len(event_types) == 0 or event.event_type in event_types)
         ]
@@ -599,7 +605,8 @@ class GovernedReadToolService:
 
         dead_letters: tuple[CommunicationDeadLetterRecord, ...] = ()
         if self._communication_repository is not None:
-            dead_letters = self._communication_repository.list_dead_letters_for_task(task.task_id)
+            all_dead_letters = self._communication_repository.list_dead_letter_records()
+            dead_letters = tuple(r for r in all_dead_letters if r.task_id == task.task_id)
         data = {
             "task_id": task.task_id,
             "status": task.status,

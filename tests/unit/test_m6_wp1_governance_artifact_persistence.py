@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from openqilin.data_access.repositories.artifacts import InMemoryProjectArtifactRepository
-from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
+from tests.testing.infra_stubs import InMemoryProjectArtifactRepository
+from tests.testing.infra_stubs import InMemoryGovernanceRepository
 
 
 def _seed_approved_project(repository: InMemoryGovernanceRepository) -> None:

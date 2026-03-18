@@ -2,19 +2,24 @@
 
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, Header, status
 from fastapi.responses import JSONResponse
 
-from openqilin.control_plane.api.dependencies import get_retrieval_query_service
-from openqilin.control_plane.api.dependencies import get_policy_runtime_client
+from openqilin.control_plane.api.dependencies import (
+    get_policy_runtime_client,
+    get_retrieval_query_service,
+    get_runtime_state_repository,
+    get_task_dispatch_service,
+)
 from openqilin.control_plane.handlers.query_handler import map_retrieval_result
 from openqilin.control_plane.identity.principal_resolver import (
     PrincipalResolutionError,
     resolve_principal,
 )
+from openqilin.data_access.repositories.postgres.task_repository import PostgresTaskRepository
 from openqilin.policy_runtime_integration.client import PolicyRuntimeClient
 from openqilin.policy_runtime_integration.fail_closed import evaluate_with_fail_closed
 from openqilin.policy_runtime_integration.models import PolicyEvaluationInput
@@ -25,6 +30,7 @@ from openqilin.control_plane.schemas.queries import (
 )
 from openqilin.retrieval_runtime.models import RetrievalQueryRequest
 from openqilin.retrieval_runtime.service import RetrievalQueryService
+from openqilin.task_orchestrator.services.task_service import TaskDispatchService
 
 router = APIRouter(tags=["queries"])
 
@@ -212,4 +218,76 @@ def search_project_artifacts(
         policy_version=policy_version,
         policy_hash=policy_hash,
         rule_ids=rule_ids,
+    )
+
+
+@router.get("/v1/tasks/{task_id}")
+def get_task_status(
+    task_id: str,
+    runtime_state_repo: PostgresTaskRepository | PostgresTaskRepository = Depends(
+        get_runtime_state_repository
+    ),
+    task_dispatch_service: TaskDispatchService = Depends(get_task_dispatch_service),
+) -> JSONResponse:
+    """Return the current status of a task by task_id.
+
+    Used by callers to poll for the result after the HTTP handler returns 202 accepted.
+    """
+    task = runtime_state_repo.get_task_by_id(task_id)
+    if task is None:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"status": "not_found", "task_id": task_id},
+        )
+    dispatch_outcome = task_dispatch_service.get_dispatch_outcome(task_id)
+    outcome_details = dict(task.outcome_details or ())
+    llm_execution: dict[str, Any] | None = None
+    if dispatch_outcome is not None and dispatch_outcome.llm_metadata is not None:
+        meta = dispatch_outcome.llm_metadata
+        llm_execution = {
+            "decision": meta.decision,
+            "model_selected": meta.model_selected,
+            "routing_profile": meta.routing_profile,
+            "quota_limit_source": meta.quota_limit_source,
+            "usage": {
+                "input_tokens": meta.input_tokens,
+                "output_tokens": meta.output_tokens,
+                "total_tokens": meta.total_tokens,
+                "request_units": meta.request_units,
+            },
+            "cost": {
+                "estimated_cost_usd": meta.estimated_cost_usd,
+                "actual_cost_usd": meta.actual_cost_usd,
+                "cost_source": meta.cost_source,
+            },
+            "budget_usage": {
+                "currency_delta_usd": meta.currency_delta_usd,
+                "quota_token_units": meta.quota_token_units,
+            },
+            "generated_text": meta.generated_text,
+            "recipient_role": meta.recipient_role,
+            "recipient_id": meta.recipient_id,
+            "grounding_sources": list(meta.grounding_source_ids),
+        }
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "task_id": task_id,
+            "trace_id": task.trace_id,
+            "status": task.status,
+            "principal_id": task.principal_id,
+            "principal_role": task.principal_role,
+            "command": task.command,
+            "dispatch_target": task.dispatch_target,
+            "dispatch_id": task.dispatch_id,
+            "error_code": task.outcome_error_code,
+            "error_message": task.outcome_message,
+            "outcome_source": task.outcome_source,
+            "policy_version": outcome_details.get("policy_version"),
+            "policy_hash": outcome_details.get("policy_hash"),
+            "rule_ids": outcome_details.get("rule_ids", "").split(",")
+            if outcome_details.get("rule_ids")
+            else [],
+            "llm_execution": llm_execution,
+        },
     )

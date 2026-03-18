@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from openqilin.apps.api_app import create_app
+from openqilin.apps.orchestrator_worker import drain_queued_tasks
 from openqilin.communication_gateway.callbacks.outcome_notifier import (
     CommunicationOutcomeNotification,
 )
@@ -31,7 +32,12 @@ def test_m3_reliability_conformance_callback_at_least_once_duplicate_safe() -> N
     assert response.status_code == 202
     services = app.state.runtime_services
     task_id = body["data"]["task_id"]
-    dispatch_id = body["data"]["dispatch_id"]
+
+    drain_queued_tasks(services)
+
+    task_body = client.get(f"/v1/tasks/{task_id}").json()
+    assert task_body["status"] == "dispatched"
+    dispatch_id = task_body["dispatch_id"]
 
     first = services.communication_outcome_notifier.notify_delivery_outcome(
         CommunicationOutcomeNotification(
@@ -92,10 +98,15 @@ def test_m3_reliability_conformance_dead_letter_callback_guarantees() -> None:
         json=payload,
     )
     body = response.json()
-    assert response.status_code == 403
+    assert response.status_code == 202
     services = app.state.runtime_services
-    task_id = body["error"]["details"]["task_id"]
-    dead_letter_id = body["error"]["details"]["dead_letter_id"]
+    task_id = body["data"]["task_id"]
+
+    drain_queued_tasks(services)
+
+    dead_letters = services.task_dispatch_service.list_communication_dead_letters()
+    assert len(dead_letters) == 1
+    dead_letter_id = dead_letters[0].dead_letter_id
 
     callback = services.communication_outcome_notifier.notify_delivery_outcome(
         CommunicationOutcomeNotification(
@@ -111,9 +122,9 @@ def test_m3_reliability_conformance_dead_letter_callback_guarantees() -> None:
     )
 
     assert callback.applied is True
-    dead_letters = services.task_dispatch_service.list_communication_dead_letters()
-    assert len(dead_letters) == 1
-    assert dead_letters[0].dead_letter_id == dead_letter_id
+    dead_letters_after = services.task_dispatch_service.list_communication_dead_letters()
+    assert len(dead_letters_after) == 1
+    assert dead_letters_after[0].dead_letter_id == dead_letter_id
     assert (
         services.metric_recorder.get_counter_value(
             "communication_dead_letter_total",

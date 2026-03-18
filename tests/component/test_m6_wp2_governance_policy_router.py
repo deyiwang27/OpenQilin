@@ -1,11 +1,11 @@
 from fastapi.testclient import TestClient
 
 from openqilin.control_plane.api.app import create_control_plane_app
-from openqilin.data_access.repositories.artifacts import (
+from openqilin.data_access.repositories.artifacts import ProjectDocumentPolicy
+from tests.testing.infra_stubs import (
+    InMemoryGovernanceRepository,
     InMemoryProjectArtifactRepository,
-    ProjectDocumentPolicy,
 )
-from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
 from openqilin.testing.governance_api import build_governance_headers
 
 

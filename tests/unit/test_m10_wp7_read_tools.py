@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from openqilin.data_access.repositories.artifacts import InMemoryProjectArtifactRepository
-from openqilin.data_access.repositories.communication import InMemoryCommunicationRepository
-from openqilin.data_access.repositories.governance import InMemoryGovernanceRepository
-from openqilin.data_access.repositories.runtime_state import InMemoryRuntimeStateRepository
+from tests.testing.infra_stubs import InMemoryProjectArtifactRepository
+from tests.testing.infra_stubs import InMemoryCommunicationRepository
+from tests.testing.infra_stubs import InMemoryGovernanceRepository
+from tests.testing.infra_stubs import InMemoryRuntimeStateRepository
 from openqilin.execution_sandbox.tools.contracts import ToolCallContext
 from openqilin.execution_sandbox.tools.read_tools import GovernedReadToolService
-from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
+from openqilin.observability.testing.stubs import InMemoryAuditWriter
 from openqilin.retrieval_runtime.service import build_retrieval_query_service
 
 

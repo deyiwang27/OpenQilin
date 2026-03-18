@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from typing import Mapping
 from uuid import uuid4
 
-from sqlalchemy import text
+from sqlalchemy import bindparam, String, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from openqilin.data_access.repositories.runtime_state import TaskRecord
@@ -51,10 +51,13 @@ class PostgresTaskRepository:
                         project_id, idempotency_key, status, created_at
                     ) VALUES (
                         :task_id, :request_id, :trace_id, :principal_id, :principal_role,
-                        :trust_domain, :connector, :command, :target, :args::jsonb, :metadata::jsonb,
+                        :trust_domain, :connector, :command, :target, CAST(:args AS JSONB), CAST(:metadata AS JSONB),
                         :project_id, :idempotency_key, :status, :created_at
                     )
                     """
+                ).bindparams(
+                    bindparam("args", type_=String()),
+                    bindparam("metadata", type_=String()),
                 ),
                 _task_to_params(task),
             )
@@ -140,13 +143,15 @@ class PostgresTaskRepository:
                         outcome_message     = COALESCE(:outcome_message, outcome_message),
                         outcome_details     = CASE
                             WHEN :outcome_details IS NOT NULL
-                            THEN :outcome_details::jsonb
+                            THEN CAST(:outcome_details AS JSONB)
                             ELSE outcome_details
                         END,
                         dispatch_target     = COALESCE(:dispatch_target, dispatch_target),
                         dispatch_id         = COALESCE(:dispatch_id, dispatch_id)
                     WHERE task_id = :task_id
                     """
+                ).bindparams(
+                    bindparam("outcome_details", type_=String()),
                 ),
                 {
                     "task_id": task_id,

@@ -3,17 +3,36 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, Protocol
 
-from openqilin.data_access.repositories.runtime_state import (
-    InMemoryRuntimeStateRepository,
-    TaskRecord,
-)
-from openqilin.observability.audit.audit_writer import InMemoryAuditWriter
-from openqilin.observability.metrics.recorder import InMemoryMetricRecorder
+from openqilin.data_access.repositories.runtime_state import TaskRecord
+from openqilin.observability.audit.audit_writer import OTelAuditWriter
+from openqilin.observability.testing.stubs import InMemoryAuditWriter
+from openqilin.observability.testing.stubs import InMemoryMetricRecorder
 
 DeliveryOutcome = Literal["delivered", "nacked", "dead_lettered"]
 IMMUTABLE_TASK_STATUSES = frozenset({"completed", "failed", "cancelled"})
+
+
+class _RuntimeStateRepo(Protocol):
+    """Protocol for runtime state repository used by delivery callback processor."""
+
+    def get_task_by_id(self, task_id: str) -> TaskRecord | None:
+        """Return one task record by id."""
+
+    def update_task_status(
+        self,
+        task_id: str,
+        status: str,
+        *,
+        outcome_source: str,
+        outcome_error_code: str | None,
+        outcome_message: str,
+        outcome_details: dict[str, object],
+        dispatch_target: str,
+        dispatch_id: str | None,
+    ) -> TaskRecord | None:
+        """Transition task status and return updated record."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,14 +61,14 @@ class DeliveryCallbackResult:
     reason_code: str | None
 
 
-class InMemoryDeliveryEventCallbackProcessor:
+class LocalDeliveryEventCallbackProcessor:
     """Duplicate-safe callback processor for communication delivery lifecycle events."""
 
     def __init__(
         self,
         *,
-        runtime_state_repo: InMemoryRuntimeStateRepository,
-        audit_writer: InMemoryAuditWriter,
+        runtime_state_repo: _RuntimeStateRepo,
+        audit_writer: InMemoryAuditWriter | OTelAuditWriter,
         metric_recorder: InMemoryMetricRecorder,
     ) -> None:
         self._runtime_state_repo = runtime_state_repo
@@ -209,3 +228,7 @@ class InMemoryDeliveryEventCallbackProcessor:
         if updated is None:
             raise RuntimeError(f"callback update failed for task {task.task_id}")
         return updated
+
+
+# Backward-compatible alias retained for existing imports.
+InMemoryDeliveryEventCallbackProcessor = LocalDeliveryEventCallbackProcessor

@@ -4,11 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from openqilin.control_plane.idempotency.ingress_dedupe import InMemoryIngressDedupe
-from openqilin.data_access.repositories.runtime_state import (
-    InMemoryRuntimeStateRepository,
-    TaskRecord,
-)
+from openqilin.control_plane.idempotency.ingress_dedupe import IngressDedupeStore
+from openqilin.data_access.repositories.runtime_state import TaskRecord
+from openqilin.data_access.repositories.postgres.task_repository import PostgresTaskRepository
 from openqilin.task_orchestrator.admission.envelope_validator import AdmissionEnvelope
 from openqilin.task_orchestrator.admission.idempotency import (
     AdmissionIdempotencyCoordinator,
@@ -29,8 +27,8 @@ class AdmissionService:
 
     def __init__(
         self,
-        dedupe_store: InMemoryIngressDedupe,
-        runtime_state_repo: InMemoryRuntimeStateRepository,
+        dedupe_store: IngressDedupeStore,
+        runtime_state_repo: PostgresTaskRepository,
     ) -> None:
         self._idempotency = AdmissionIdempotencyCoordinator(
             dedupe_store=dedupe_store,
