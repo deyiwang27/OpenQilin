@@ -14,6 +14,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from openqilin.agents.administrator.agent import AdministratorAgent
+from openqilin.agents.administrator.document_policy import DocumentPolicyEnforcer
+from openqilin.agents.administrator.retention import RetentionEnforcer
 from openqilin.agents.auditor.agent import AuditorAgent
 from openqilin.agents.auditor.enforcement import AuditorEnforcementService
 from openqilin.agents.ceo.agent import CeoAgent
@@ -165,6 +168,19 @@ def _build_test_runtime_services() -> RuntimeServices:
         governance_repo=project_artifact_repo,
         audit_writer=audit_writer,
     )
+    administrator_agent = AdministratorAgent(
+        document_policy=DocumentPolicyEnforcer(
+            governance_repo=project_artifact_repo,
+            audit_writer=audit_writer,
+        ),
+        retention=RetentionEnforcer(
+            governance_repo=project_artifact_repo,
+            audit_writer=audit_writer,
+        ),
+        governance_repo=project_artifact_repo,
+        agent_registry_repo=agent_registry_repo,  # type: ignore[arg-type]
+        audit_writer=audit_writer,
+    )
     metric_recorder = InMemoryMetricRecorder()
 
     delivery_event_callback_processor = LocalDeliveryEventCallbackProcessor(
@@ -220,6 +236,7 @@ def _build_test_runtime_services() -> RuntimeServices:
         ceo_agent=ceo_agent,
         cwo_agent=cwo_agent,
         auditor_agent=auditor_agent,
+        administrator_agent=administrator_agent,
         domain_leader_agent=domain_leader_agent,
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,

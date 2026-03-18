@@ -32,6 +32,11 @@ _MVP_ARTIFACT_TYPE_CAPS: Mapping[str, int] = MappingProxyType(
         "auditor_owner_escalation": 32,
         "auditor_ceo_notification": 32,
         "auditor_owner_alert": 32,
+        "administrator_retention": 32,
+        "administrator_containment": 32,
+        "administrator_owner_notification": 32,
+        "administrator_ceo_notification": 32,
+        "administrator_owner_alert": 32,
     }
 )
 _MVP_PROJECT_TOTAL_ACTIVE_DOCUMENT_CAP = 20
@@ -49,6 +54,11 @@ _APPEND_ONLY_ARTIFACT_TYPES = frozenset(
         "auditor_owner_escalation",
         "auditor_ceo_notification",
         "auditor_owner_alert",
+        "administrator_retention",
+        "administrator_containment",
+        "administrator_owner_notification",
+        "administrator_ceo_notification",
+        "administrator_owner_alert",
     }
 )
 _GOVERNANCE_EVENT_ARTIFACT_TYPES = frozenset(
@@ -65,6 +75,13 @@ _GOVERNANCE_EVENT_ARTIFACT_TYPES = frozenset(
         "auditor_owner_escalation",
         "auditor_ceo_notification",
         "auditor_owner_alert",
+        # Administrator oversight evidence — excluded from project total-document cap.
+        # Containment and retention writes must never be blocked by normal project accounting.
+        "administrator_retention",
+        "administrator_containment",
+        "administrator_owner_notification",
+        "administrator_ceo_notification",
+        "administrator_owner_alert",
     }
 )
 _PROJECT_WRITABLE_STATES = frozenset({"proposed", "approved", "active", "paused"})

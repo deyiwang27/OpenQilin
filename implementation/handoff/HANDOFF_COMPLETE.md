@@ -1,16 +1,16 @@
-# Handoff Complete: M14-WP4 — Auditor Agent
+# Handoff Complete: M14-WP5 — Administrator Agent
 
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-18
-**Branch:** `feat/m14-wp4-auditor-agent`
-**Draft PR:** [#110](https://github.com/deyiwang27/OpenQilin/pull/110)
+**Branch:** `feat/113-m14-wp5-administrator-agent`
+**Draft PR:** `TBD`
 **Implements:** `implementation/handoff/current.md`
 
 ---
 
 ## Summary
 
-Implemented the M14-WP4 auditor package with an oversight-only `AuditorAgent`, an append-only `AuditorEnforcementService`, runtime wiring, and the requested unit test matrix. The implementation follows the concrete handoff files and acceptance checks, with conservative fail-closed handling where the handoff left project scope or notification-delivery details ambiguous.
+Implemented the administrator enforcement surface for M14-WP5: the new administrator agent, document-policy and retention enforcement helpers, quarantine support in the agent registry repository, governance artifact policy additions, and runtime dependency wiring. Unit and component coverage are green, and the implementation follows the handoff’s resolved spec gaps, including the explicit `REVIEW_NOTE` on retention/read-only enforcement boundaries.
 
 ---
 
@@ -18,36 +18,23 @@ Implemented the M14-WP4 auditor package with an oversight-only `AuditorAgent`, a
 
 | Task | Status | Notes |
 |---|---|---|
-| Create `src/openqilin/agents/auditor/` package (`__init__.py`, `models.py`, `enforcement.py`, `agent.py`) | ✅ Done | Added request/response models, enforcement service, and oversight-only routing logic. |
-| Implement budget breach enforcement path | ✅ Done | Pause path writes immutable enforcement evidence, CEO notification, owner escalation, and critical owner alert. |
-| Implement governance, behavioral, and document violation handling | ✅ Done | Added immutable findings, owner escalation, CEO awareness writes where required, and behavioral duplicate suppression. |
-| Wire `AuditorAgent` into `RuntimeServices` and provider surface | ✅ Done | Added runtime construction plus `get_auditor_agent()`. |
-| Add component-test runtime wiring | ✅ Done | Added auditor construction to `tests/component/conftest.py`. |
-| Extend governed artifact repository for auditor evidence records | ✅ Done | Added auditor artifact types/caps and allowed `actor_role="auditor"` writes. |
-| Add `tests/unit/test_m14_wp4_auditor_agent.py` | ✅ Done | Added 23 unit tests covering the requested scenarios. |
-| Implement `AuditorMonitorLoop` / background scan registration | ⚠️ Partial | The WP text mentions a monitor loop, but the concrete handoff deliverables/files/interfaces did not define a worker integration surface for it. See Spec Change Requests. |
+| Create `src/openqilin/agents/administrator/` package | ✅ Done | Added `__init__.py`, `models.py`, `document_policy.py`, `retention.py`, and `agent.py` |
+| Add administrator governance artifact types and repo authorization updates | ✅ Done | Added five administrator artifact types/caps, exempted them from total-cap accounting, allowed `administrator` writes, and added `quarantine_agent()` |
+| Wire `AdministratorAgent` into runtime dependencies | ✅ Done | Updated `RuntimeServices`, production DI, and component-test runtime wiring |
+| Add unit tests for M14-WP5 | ✅ Done | Added `tests/unit/test_m14_wp5_administrator_agent.py` with cap, role gate, hash integrity, containment, and retention coverage |
 
 ---
 
 ## Validation Results
 
 ```text
-InMemory gate:    PASS
+InMemory gate:    FAIL  (exact handoff grep scans repo-local .venv site-packages; source-tree check passed)
 ruff check:       PASS
 ruff format:      PASS
 mypy:             PASS
-pytest unit:      PASS  (583 passed, 0 failed; 1 warning)
-pytest component: NOT RUN
+pytest unit:      PASS  (588 passed, 0 failed)
+pytest component: PASS  (66 passed, 0 failed)
 ```
-
-Commands run:
-
-- `uv sync --all-groups`
-- `uv run ruff check .`
-- `uv run ruff format --check .`
-- `uv run python -m mypy .`
-- `uv run python -m pytest -m no_infra tests/unit/`
-- `grep -r --include='*.py' -l 'class InMemory' src/ | grep -v '/testing/'`
 
 ---
 
@@ -55,8 +42,7 @@ Commands run:
 
 | File | Line | Note |
 |---|---|---|
-| `src/openqilin/agents/auditor/enforcement.py` | 274 | The handoff requires CEO/owner delivery notifications and passes a communication repository, but this service only receives the durable communication ledger, not a publish-capable notifier. The implementation records immutable notification evidence and leaves live delivery orchestration to Architect direction. |
-| `src/openqilin/agents/auditor/enforcement.py` | 295 | The handoff allows `project_id=None`, but the governed artifact repository is project-scoped only. The implementation fails closed and raises `AuditorFindingError` when durable auditor evidence lacks a project scope. |
+| `src/openqilin/agents/administrator/retention.py` | 63 | Actual read-only enforcement remains in repository write authorization for `completed`/`terminated` projects; `RetentionEnforcer` emits canonical STR-001/STR-002 evidence records only, and channel archiving remains future Discord-layer work. |
 
 ---
 
@@ -64,19 +50,16 @@ Commands run:
 
 | Conflict | Docs involved | Blocking question |
 |---|---|---|
-| WP text requires `AuditorMonitorLoop` and audit-event scanning, but the concrete handoff deliverables, file list, runtime wiring, and test matrix scope only the agent/enforcement package and DI integration. | `implementation/handoff/current.md` task list vs `implementation/handoff/current.md` concrete file/change list | Should monitor-loop/background scanning be added in this WP via a follow-up handoff, or is the current scope intentionally limited to the callable auditor agent/enforcement surface? |
 
 ---
 
 ## What Was Skipped
 
-No additional code was skipped beyond the monitor-loop/background registration gap documented above.
+No out-of-scope work was implemented. File-backed storage, Discord channel archiving, LangGraph node changes, and shared `InMemoryAgentRegistryRepository` expansion were intentionally left untouched per handoff.
 
 ---
 
 ## Notes
 
-- Draft PR created: `https://github.com/deyiwang27/OpenQilin/pull/110`
-- GitHub issue: `https://github.com/deyiwang27/OpenQilin/issues/108`
-- Milestone tracker: `https://github.com/deyiwang27/OpenQilin/issues/100`
-- The branch includes the pre-existing local `main` housekeeping commit `20353cb` (`chore: M14-WP3 post-merge housekeeping + start WP4 Auditor`), which updates `ImplementationProgress-v2.md` and adds the WP4 handoff doc.
+- `uv run mypy .` and `uv run pytest ...` did not resolve console entrypoints in this environment even after `uv sync --all-groups`; validation passed via `uv run python -m mypy .` and `uv run python -m pytest ...`.
+- The exact InMemory grep command from the handoff reports third-party `InMemory*` classes under `.venv/`. A scoped source-tree check (`src` plus test stubs) returned no production violations.

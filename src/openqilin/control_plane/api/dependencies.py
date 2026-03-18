@@ -15,6 +15,9 @@ from openqilin.control_plane.api.startup_recovery import (
     StartupRecoveryReport,
     payload_hash_for_task,
 )
+from openqilin.agents.administrator.agent import AdministratorAgent
+from openqilin.agents.administrator.document_policy import DocumentPolicyEnforcer
+from openqilin.agents.administrator.retention import RetentionEnforcer
 from openqilin.agents.auditor.agent import AuditorAgent
 from openqilin.agents.auditor.enforcement import AuditorEnforcementService
 from openqilin.agents.ceo.agent import CeoAgent
@@ -107,6 +110,7 @@ class RuntimeServices:
     ceo_agent: CeoAgent
     cwo_agent: CwoAgent
     auditor_agent: AuditorAgent
+    administrator_agent: AdministratorAgent
     domain_leader_agent: DomainLeaderAgent
     ingress_dedupe: IngressDedupeStore
     runtime_state_repo: PostgresTaskRepository
@@ -242,6 +246,21 @@ def build_runtime_services() -> RuntimeServices:
         governance_repo=project_artifact_repo,
         audit_writer=audit_writer,
     )
+    document_policy_enforcer = DocumentPolicyEnforcer(
+        governance_repo=project_artifact_repo,
+        audit_writer=audit_writer,
+    )
+    retention_enforcer = RetentionEnforcer(
+        governance_repo=project_artifact_repo,
+        audit_writer=audit_writer,
+    )
+    administrator_agent = AdministratorAgent(
+        document_policy=document_policy_enforcer,
+        retention=retention_enforcer,
+        governance_repo=project_artifact_repo,
+        agent_registry_repo=agent_registry_repo,
+        audit_writer=audit_writer,
+    )
     metric_recorder = InMemoryMetricRecorder()
     delivery_event_callback_processor = LocalDeliveryEventCallbackProcessor(
         runtime_state_repo=runtime_state_repo,
@@ -320,6 +339,7 @@ def build_runtime_services() -> RuntimeServices:
         ceo_agent=ceo_agent,
         cwo_agent=cwo_agent,
         auditor_agent=auditor_agent,
+        administrator_agent=administrator_agent,
         domain_leader_agent=domain_leader_agent,
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
@@ -492,6 +512,12 @@ def get_auditor_agent(request: Request) -> AuditorAgent:
     """Provide Auditor oversight agent for governance escalation paths."""
 
     return get_runtime_services(request).auditor_agent
+
+
+def get_administrator_agent(request: Request) -> AdministratorAgent:
+    """Provide Administrator enforcement agent for infrastructure control paths."""
+
+    return get_runtime_services(request).administrator_agent
 
 
 def get_routing_resolver(request: Request) -> ProjectSpaceRoutingResolver:
