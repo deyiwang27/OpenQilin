@@ -239,7 +239,7 @@ class TestGate006GovernanceRecordPersistence:
         assert "prop-gate006" in call_kwargs["content"]
 
     def test_no_governance_record_when_project_id_absent(self) -> None:
-        """GATE-006 record requires project_id; if absent, write is skipped."""
+        """GATE-006: record cannot be written without project_id; error surfaced in strategic_note."""
         artifact_repo = _stub_project_artifact_repo()
         agent = CSOAgent(
             llm_gateway=_stub_llm("Aligned."),
@@ -248,9 +248,12 @@ class TestGate006GovernanceRecordPersistence:
         )
         request = _make_request(proposal_id="prop-gate006", project_id=None)
 
-        agent.handle(request)
+        response = agent.handle(request)
 
         artifact_repo.write_project_artifact.assert_not_called()
+        assert response.strategic_note is not None
+        assert "GATE-006" in response.strategic_note
+        assert "MUST NOT advance" in response.strategic_note
 
     def test_governance_record_content_includes_trace_id(self) -> None:
         artifact_repo = _stub_project_artifact_repo()

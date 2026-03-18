@@ -68,6 +68,17 @@ def check_and_increment_hop(loop_state: LoopState, limit: int = 5) -> None:
 
     Raises:
         LoopCapBreachError: When hop_count exceeds limit after increment.
+
+    M14 entry criteria — deferred spec rules:
+
+    LOOP-005 (AgentLoopControls §4): cap limits MUST be configurable via governed policy
+    without requiring code changes. Currently limits are Python default arguments with no
+    policy binding or env-var override. Wire via RuntimeSettings or a policy-read path in M14.
+
+    LOOP-006 (AgentLoopControls §4): escalation messages (message.type == 'escalation')
+    MUST be exempt from per-trace hop counting and MUST open a fresh trace with a new
+    trace_id. No exemption exists yet. This applies across all A2A communication paths.
+    Implement in M14 when PM→DL→Specialist escalation paths are wired.
     """
     loop_state.hop_count += 1
     if loop_state.hop_count > limit:

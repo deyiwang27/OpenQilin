@@ -118,14 +118,32 @@ class CSOAgent:
         conflict_flag = _parse_conflict_flag(advisory_text)
         strategic_note = _build_strategic_note(request, conflict_flag=conflict_flag)
 
-        if request.proposal_id and request.context.project_id:
-            self._write_governance_record(
-                proposal_id=request.proposal_id,
-                project_id=request.context.project_id,
-                review_outcome=_classify_outcome(conflict_flag),
-                advisory_text=advisory_text,
-                trace_id=request.trace_id,
-            )
+        if request.proposal_id:
+            if request.context.project_id:
+                self._write_governance_record(
+                    proposal_id=request.proposal_id,
+                    project_id=request.context.project_id,
+                    review_outcome=_classify_outcome(conflict_flag),
+                    advisory_text=advisory_text,
+                    trace_id=request.trace_id,
+                )
+            else:
+                # GATE-006 violation: proposal_id present but no project_id — cannot persist
+                # the governance record. Override strategic_note to surface the gap explicitly.
+                # The proposal MUST NOT advance to CEO+CWO review without a GATE-006 record.
+                LOGGER.error(
+                    "cso.gate006.record_skipped_no_project_id",
+                    extra={
+                        "proposal_id": request.proposal_id,
+                        "trace_id": request.trace_id,
+                    },
+                )
+                strategic_note = (
+                    "GATE-006 error: CSO review record could not be persisted — "
+                    "proposal_id is present but project_id is absent. "
+                    "This proposal MUST NOT advance to CEO+CWO review until "
+                    "project context is provided and a GATE-006 record is on file."
+                )
 
         return CSOResponse(
             advisory_text=advisory_text,
