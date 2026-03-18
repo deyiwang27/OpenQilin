@@ -1731,6 +1731,27 @@ class InMemoryAgentRegistryRepository:
             )
         )
 
+    def bind_project_workforce(
+        self,
+        *,
+        project_id: str,
+        template: str,
+        llm_profile: str,
+        system_prompt_package: str,
+    ) -> object:
+        now = datetime.now(tz=UTC)
+        role = f"cwo:{project_id.strip().lower()}"
+        record = self._AgentRecord(
+            agent_id=f"cwo_workforce_{project_id.strip().lower()}",
+            role=role,
+            agent_type="project_workforce",
+            status="active",
+            created_at=now,
+            updated_at=now,
+        )
+        self._agents[role] = record
+        return record
+
 
 # ---------------------------------------------------------------------------
 # InMemoryProjectSpaceBindingRepository

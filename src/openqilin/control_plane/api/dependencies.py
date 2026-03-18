@@ -18,6 +18,8 @@ from openqilin.control_plane.api.startup_recovery import (
 from openqilin.agents.ceo.agent import CeoAgent
 from openqilin.agents.ceo.decision_writer import CeoDecisionWriter
 from openqilin.agents.cso.agent import CSOAgent
+from openqilin.agents.cwo.agent import CwoAgent
+from openqilin.agents.cwo.workforce_initializer import WorkforceInitializer
 from openqilin.agents.project_manager.agent import ProjectManagerAgent
 from openqilin.agents.project_manager.artifact_writer import PMProjectArtifactWriter
 from openqilin.agents.secretary.data_access import SecretaryDataAccessService
@@ -101,6 +103,7 @@ class RuntimeServices:
     project_manager_agent: ProjectManagerAgent
     cso_agent: CSOAgent
     ceo_agent: CeoAgent
+    cwo_agent: CwoAgent
     domain_leader_agent: DomainLeaderAgent
     ingress_dedupe: IngressDedupeStore
     runtime_state_repo: PostgresTaskRepository
@@ -203,6 +206,18 @@ def build_runtime_services() -> RuntimeServices:
         governance_repo=project_artifact_repo,
         cso_agent=cso_agent,
     )
+    workforce_initializer = WorkforceInitializer(
+        governance_repo=project_artifact_repo,
+        agent_registry_repo=agent_registry_repo,
+    )
+    cwo_agent = CwoAgent(
+        llm_gateway=llm_gateway,
+        cso_agent=cso_agent,
+        ceo_agent=ceo_agent,
+        workforce_initializer=workforce_initializer,
+        governance_repo=project_artifact_repo,
+        data_access=secretary_data_access,
+    )
 
     budget_runtime_client = AlwaysAllowBudgetRuntimeClient()
     budget_reservation_service = BudgetReservationService(client=budget_runtime_client)
@@ -289,6 +304,7 @@ def build_runtime_services() -> RuntimeServices:
         project_manager_agent=project_manager_agent,
         cso_agent=cso_agent,
         ceo_agent=ceo_agent,
+        cwo_agent=cwo_agent,
         domain_leader_agent=domain_leader_agent,
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
@@ -449,6 +465,12 @@ def get_ceo_agent(request: Request) -> CeoAgent:
     """Provide CEO executive-decision agent for institutional routing."""
 
     return get_runtime_services(request).ceo_agent
+
+
+def get_cwo_agent(request: Request) -> CwoAgent:
+    """Provide CWO workforce-command agent for institutional routing."""
+
+    return get_runtime_services(request).cwo_agent
 
 
 def get_routing_resolver(request: Request) -> ProjectSpaceRoutingResolver:

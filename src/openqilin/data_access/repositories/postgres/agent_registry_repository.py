@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, datetime
 
 from sqlalchemy import text
@@ -116,6 +117,60 @@ class PostgresAgentRegistryRepository:
                     .all()
                 )
         return tuple(_agent_from_row(dict(row)) for row in rows)
+
+    def bind_project_workforce(
+        self,
+        *,
+        project_id: str,
+        template: str,
+        llm_profile: str,
+        system_prompt_package: str,
+    ) -> AgentRecord:
+        """Persist a project-scoped workforce activation record."""
+
+        normalized_project_id = project_id.strip().lower()
+        binding_hash = hashlib.sha256(
+            f"{template}\0{llm_profile}\0{system_prompt_package}".encode("utf-8")
+        ).hexdigest()
+        role = f"cwo:{normalized_project_id}"
+        agent_id = f"cwo_workforce_{normalized_project_id}_{binding_hash[:12]}"
+        now = datetime.now(tz=UTC)
+
+        # REVIEW_NOTE: The current agent registry schema only has role/type/status fields and no
+        # dedicated project_scope or template/profile columns. Persist a project-scoped CWO
+        # activation record keyed by project_id here, and keep the full binding package in the
+        # governed workforce_plan artifact until the Architect extends the registry schema.
+        with self._session_factory() as session:
+            session.execute(
+                text(
+                    """
+                    INSERT INTO agents (agent_id, role, agent_type, status, created_at, updated_at)
+                    VALUES (:agent_id, :role, :agent_type, :status, :created_at, :updated_at)
+                    ON CONFLICT (role) DO UPDATE SET
+                        agent_id = EXCLUDED.agent_id,
+                        agent_type = EXCLUDED.agent_type,
+                        status = EXCLUDED.status,
+                        updated_at = EXCLUDED.updated_at
+                    """
+                ),
+                {
+                    "agent_id": agent_id,
+                    "role": role,
+                    "agent_type": "project_workforce",
+                    "status": "active",
+                    "created_at": now,
+                    "updated_at": now,
+                },
+            )
+            session.commit()
+        return AgentRecord(
+            agent_id=agent_id,
+            role=role,
+            agent_type="project_workforce",
+            status="active",
+            created_at=now,
+            updated_at=now,
+        )
 
 
 def _agent_from_row(row: dict[str, object]) -> AgentRecord:
