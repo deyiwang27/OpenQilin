@@ -1,19 +1,18 @@
-# Handoff Complete: M14-WP2 — CEO Agent
+# Handoff Complete: M14-WP3 — CWO Agent
 
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-18
-**Branch:** `feat/m14-wp2-ceo-agent`
-**Draft PR:** #104
-**PR URL:** `https://github.com/deyiwang27/OpenQilin/pull/104`
+**Branch:** `feat/m14-wp3-cwo-agent`
+**Draft PR:** #106
 **Implements:** `implementation/handoff/current.md`
 
 ---
 
 ## Summary
 
-Implemented the new `src/openqilin/agents/ceo/` package with proposal review gating, executive directive routing, co-approval enforcement, and durable governance record writing. The runtime wiring, repository support, and component-test service container were updated so CEO behavior follows the handoff and reads prior gate-chain state from the repository layer instead of embedding raw SQL in the agent.
+Implemented the CWO agent package, workforce initializer, runtime dependency wiring, and the full M14-WP3 unit test file. The CWO flow now drafts workforce proposals, enforces CSO-before-CEO gate sequencing, blocks initialization without approval-chain evidence, records CWO coapproval evidence, and routes strategy/execution/budget status requests to the correct owner.
 
-The required unit and static validation gates passed. One conservative REVIEW_NOTE remains where the handoff allows `project_id=None` for CEO decision records but the governed artifact repository requires a durable project scope.
+Draft PR URL: https://github.com/deyiwang27/OpenQilin/pull/106
 
 ---
 
@@ -21,37 +20,33 @@ The required unit and static validation gates passed. One conservative REVIEW_NO
 
 | Task | Status | Notes |
 |---|---|---|
-| Create `src/openqilin/agents/ceo/` package | ✅ Done | Added `__init__.py`, `agent.py`, `models.py`, `prompts.py`, `decision_writer.py` |
-| Implement `CeoRequest` / `CeoResponse` and gate-specific errors | ✅ Done | Added executive request/response dataclasses plus `CeoProposalGateError` and `CeoCoApprovalError` |
-| Implement `CeoAgent.handle(request)` | ✅ Done | Routes `DISCUSSION`/`QUERY`/`MUTATION`/`ADMIN`, enforces directive-only framing, and persists CEO gate decisions |
-| Enforce GATE-005 CSO-record prerequisite | ✅ Done | Proposal review hard-blocks when no durable CSO review record exists |
-| Enforce GATE-003 strategic-conflict revision cap | ✅ Done | Reads revision-cycle count from durable records and blocks at `>= 3` without override |
-| Implement `CeoDecisionWriter` | ✅ Done | Persists `ceo_proposal_decision` and `ceo_coapproval` governance records with required audit fields |
-| Implement executive routing and ORCH-005 co-approval checks | ✅ Done | Routes workforce intents to CWO, strategy questions to CSO, structural exceptions to owner, and blocks co-approval without CWO evidence |
-| Wire `CeoAgent` in `dependencies.py` | ✅ Done | Added `RuntimeServices.ceo_agent`, construction wiring, provider function, and component-test runtime wiring |
-| Extend repository support for governance-event history reads | ✅ Done | Added governance event artifact types plus repository methods to list historical artifact documents without raw SQL in the agent |
-| Add unit tests for M14-WP2 | ✅ Done | Added `tests/unit/test_m14_wp2_ceo_agent.py` with 16 CEO-focused tests |
-| Open draft PR and prepare handoff output | ✅ Done | Draft PR #104 opened against `main`; this file records results and REVIEW_NOTE |
+| Create `src/openqilin/agents/cwo/` package with `agent.py`, `models.py`, `prompts.py`, `workforce_initializer.py` | ✅ Done | Added exports in `__init__.py` as well |
+| Implement `CwoRequest` and `CwoResponse` models plus command/approval errors | ✅ Done | `CwoCommandError` and `CwoApprovalChainError` added |
+| Implement `CwoAgent.handle()` for status, proposal flow, initialization, and coapproval | ✅ Done | Includes command-only framing and route handling for CSO/PM/CEO |
+| Enforce proposal gate ordering: CSO review before CEO review | ✅ Done | CWO verifies a recorded `cso_review_outcome` before calling CEO |
+| Implement `WorkforceInitializer` approval-chain verification and artifact writes | ✅ Done | Writes `workforce_plan`, conditionally writes `project_charter`, binds project workforce registry record |
+| Wire `CwoAgent` into `RuntimeServices` and dependency providers | ✅ Done | Added `cwo_agent` field and `get_cwo_agent()` |
+| Update component-test runtime stubs for new `RuntimeServices.cwo_agent` field | ✅ Done | Added CWO construction in `tests/component/conftest.py` and registry stub support |
+| Add `tests/unit/test_m14_wp3_cwo_agent.py` coverage | ✅ Done | 18 unit tests covering proposal flow, initialization, coapproval, and status routing |
 
 ---
 
 ## Validation Results
 
-```
+```text
 InMemory gate:    PASS
 ruff check:       PASS
 ruff format:      PASS
 mypy:             PASS
-pytest unit:      PASS  (542 passed, 0 failed)
-pytest component: NOT RUN
+pytest unit:      PASS  (560 passed, 1 warning)
+pytest component: NOT RUN  (not requested in this handoff)
 ```
 
-Validation commands executed:
+Commands run:
 - `uv run python -m pytest -m no_infra tests/unit/`
 - `uv run ruff check .`
 - `uv run ruff format --check .`
 - `uv run python -m mypy .`
-- `grep -r --include="*.py" -l "class InMemory" src/ | grep -v "/testing/"`
 
 ---
 
@@ -59,7 +54,7 @@ Validation commands executed:
 
 | File | Line | Note |
 |---|---|---|
-| `src/openqilin/agents/ceo/decision_writer.py` | 86 | The handoff allows `project_id=None` in `CeoDecisionWriter.write_proposal_decision(...)`, but the governed artifact repository requires a durable project scope. The implementation fails closed and raises until Architect specifies proposal-only storage semantics for CEO gate records. |
+| `src/openqilin/data_access/repositories/postgres/agent_registry_repository.py` | 139 | The current agent registry schema lacks dedicated `project_scope` / template / profile / prompt-package columns. I persisted a project-scoped CWO activation record keyed by project id and kept the full binding package in the governed `workforce_plan` artifact until the schema is extended. |
 
 ---
 
@@ -73,14 +68,12 @@ Validation commands executed:
 
 ## What Was Skipped
 
-- `pytest component` was not run because it was not required by the handoff acceptance matrix.
-- The exact wrapper commands `uv run pytest -m no_infra tests/unit/` and `uv run mypy .` did not spawn in this environment (`os error 2`) even though the tools were installed in `.venv`; equivalent module-form invocations under `uv run python -m ...` completed successfully and are recorded above.
+None.
 
 ---
 
 ## Notes
 
-- `src/openqilin/agents/cso/agent.py` was updated so CSO review records now include `event_type="cso_review_outcome"`, which allows the CEO gate reader to enforce GATE-005 against durable records without inferring schema from position alone.
-- Governance-event artifact types (`cso_review`, `ceo_proposal_decision`, `ceo_coapproval`, `cwo_coapproval`) were added to the repository policy and excluded from the project-document total-cap accounting so governance audit chains do not consume PM document capacity.
-- Unrelated local changes in `implementation/v2/planning/ImplementationProgress-v2.md` and the untracked `implementation/handoff/current.md` were left untouched.
-- `grep -r --include="*.py" -l "class InMemory" src/ | grep -v "/testing/"` returned empty output.
+- `grep -r --include="*.py" -l "class InMemory" src/ | grep -v "/testing/"` returned empty.
+- In this environment, `uv run pytest ...` and `uv run mypy ...` failed to spawn the script entrypoints directly, so I used the equivalent module invocations via `uv run python -m pytest ...` and `uv run python -m mypy ...`.
+- I left unrelated user changes in `implementation/v2/planning/ImplementationProgress-v2.md` and the untracked `implementation/handoff/current.md` untouched.
