@@ -15,6 +15,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from openqilin.agents.cso.agent import CSOAgent
+from openqilin.agents.project_manager.agent import ProjectManagerAgent
+from openqilin.agents.project_manager.artifact_writer import PMProjectArtifactWriter
 from openqilin.agents.secretary.data_access import SecretaryDataAccessService
 from openqilin.agents.domain_leader.agent import DomainLeaderAgent
 from openqilin.agents.secretary.agent import SecretaryAgent
@@ -156,6 +158,14 @@ def _build_test_runtime_services() -> RuntimeServices:
         runtime_state_repository=runtime_state_repo,
         budget_runtime_client=budget_runtime_client,
     )
+    project_manager_agent = ProjectManagerAgent(
+        llm_gateway=llm_gateway,
+        artifact_writer=PMProjectArtifactWriter(project_artifact_repo=project_artifact_repo),
+        data_access=secretary_data_access,
+        domain_leader_agent=domain_leader_agent,
+        task_dispatch_service=task_dispatch_service,  # type: ignore[arg-type]
+        project_artifact_repo=project_artifact_repo,
+    )
 
     startup_recovery_report = StartupRecoveryReport(
         restored_task_count=0,
@@ -172,6 +182,7 @@ def _build_test_runtime_services() -> RuntimeServices:
         grammar_parser=grammar_parser,
         grammar_router=grammar_router,
         secretary_agent=secretary_agent,
+        project_manager_agent=project_manager_agent,
         cso_agent=cso_agent,
         domain_leader_agent=domain_leader_agent,
         ingress_dedupe=ingress_dedupe,
