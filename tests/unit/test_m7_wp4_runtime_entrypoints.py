@@ -12,9 +12,14 @@ from openqilin.control_plane.api.app import create_control_plane_app
 
 
 def test_m7_wp4_api_exposes_container_health_endpoints() -> None:
-    with patch(
-        "openqilin.control_plane.api.app.build_runtime_services",
-        return_value=MagicMock(),
+    with (
+        patch(
+            "openqilin.control_plane.api.app.build_runtime_services",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "openqilin.control_plane.api.app.verify_opa_bundle_loaded",
+        ),
     ):
         app = create_control_plane_app()
     client = TestClient(app)
