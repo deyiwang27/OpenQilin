@@ -16,6 +16,8 @@ from openqilin.control_plane.api.startup_recovery import (
     payload_hash_for_task,
 )
 from openqilin.agents.cso.agent import CSOAgent
+from openqilin.agents.project_manager.agent import ProjectManagerAgent
+from openqilin.agents.project_manager.artifact_writer import PMProjectArtifactWriter
 from openqilin.agents.secretary.data_access import SecretaryDataAccessService
 from openqilin.agents.domain_leader.agent import DomainLeaderAgent
 from openqilin.agents.secretary.agent import SecretaryAgent
@@ -94,6 +96,7 @@ class RuntimeServices:
     grammar_parser: CommandParser
     grammar_router: FreeTextRouter
     secretary_agent: SecretaryAgent
+    project_manager_agent: ProjectManagerAgent
     cso_agent: CSOAgent
     domain_leader_agent: DomainLeaderAgent
     ingress_dedupe: IngressDedupeStore
@@ -169,6 +172,7 @@ def build_runtime_services() -> RuntimeServices:
         runtime_state_repo=runtime_state_repo,
     )
     secretary_agent = SecretaryAgent(llm_gateway=llm_gateway, data_access=secretary_data_access)
+    artifact_writer = PMProjectArtifactWriter(project_artifact_repo=project_artifact_repo)
 
     # --- idempotency (Redis required) ------------------------------------
     idempotency_cache_store = RedisIdempotencyCacheStore(
@@ -221,6 +225,14 @@ def build_runtime_services() -> RuntimeServices:
         runtime_state_repository=runtime_state_repo,
         budget_runtime_client=budget_runtime_client,
     )
+    project_manager_agent = ProjectManagerAgent(
+        llm_gateway=llm_gateway,
+        artifact_writer=artifact_writer,
+        data_access=secretary_data_access,
+        domain_leader_agent=domain_leader_agent,
+        task_dispatch_service=task_dispatch_service,
+        project_artifact_repo=project_artifact_repo,
+    )
 
     # --- startup recovery --------------------------------------------------------
     # H-5 fix: only re-claim tasks in active statuses (queued/dispatched/running).
@@ -264,6 +276,7 @@ def build_runtime_services() -> RuntimeServices:
         grammar_parser=grammar_parser,
         grammar_router=grammar_router,
         secretary_agent=secretary_agent,
+        project_manager_agent=project_manager_agent,
         cso_agent=cso_agent,
         domain_leader_agent=domain_leader_agent,
         ingress_dedupe=ingress_dedupe,
@@ -407,6 +420,12 @@ def get_secretary_agent(request: Request) -> SecretaryAgent:
     """Provide Secretary advisory agent for institutional channel routing."""
 
     return get_runtime_services(request).secretary_agent
+
+
+def get_project_manager_agent(request: Request) -> ProjectManagerAgent:
+    """Provide Project Manager agent for project channel routing."""
+
+    return get_runtime_services(request).project_manager_agent
 
 
 def get_cso_agent(request: Request) -> CSOAgent:
