@@ -27,6 +27,11 @@ _MVP_ARTIFACT_TYPE_CAPS: Mapping[str, int] = MappingProxyType(
         "ceo_proposal_decision": 12,
         "ceo_coapproval": 8,
         "cwo_coapproval": 8,
+        "auditor_finding": 32,
+        "auditor_enforcement": 32,
+        "auditor_owner_escalation": 32,
+        "auditor_ceo_notification": 32,
+        "auditor_owner_alert": 32,
     }
 )
 _MVP_PROJECT_TOTAL_ACTIVE_DOCUMENT_CAP = 20
@@ -39,6 +44,11 @@ _APPEND_ONLY_ARTIFACT_TYPES = frozenset(
         "ceo_proposal_decision",
         "ceo_coapproval",
         "cwo_coapproval",
+        "auditor_finding",
+        "auditor_enforcement",
+        "auditor_owner_escalation",
+        "auditor_ceo_notification",
+        "auditor_owner_alert",
     }
 )
 _GOVERNANCE_EVENT_ARTIFACT_TYPES = frozenset(

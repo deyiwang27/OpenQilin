@@ -14,6 +14,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from openqilin.agents.auditor.agent import AuditorAgent
+from openqilin.agents.auditor.enforcement import AuditorEnforcementService
 from openqilin.agents.ceo.agent import CeoAgent
 from openqilin.agents.ceo.decision_writer import CeoDecisionWriter
 from openqilin.agents.cso.agent import CSOAgent
@@ -153,6 +155,16 @@ def _build_test_runtime_services() -> RuntimeServices:
 
     tracer = InMemoryTracer()
     audit_writer: InMemoryAuditWriter = InMemoryAuditWriter()
+    auditor_agent = AuditorAgent(
+        enforcement=AuditorEnforcementService(
+            lifecycle_service=lifecycle_service,
+            governance_repo=project_artifact_repo,
+            audit_writer=audit_writer,
+            communication_repo=communication_repo,  # type: ignore[arg-type]
+        ),
+        governance_repo=project_artifact_repo,
+        audit_writer=audit_writer,
+    )
     metric_recorder = InMemoryMetricRecorder()
 
     delivery_event_callback_processor = LocalDeliveryEventCallbackProcessor(
@@ -207,6 +219,7 @@ def _build_test_runtime_services() -> RuntimeServices:
         cso_agent=cso_agent,
         ceo_agent=ceo_agent,
         cwo_agent=cwo_agent,
+        auditor_agent=auditor_agent,
         domain_leader_agent=domain_leader_agent,
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,

@@ -15,6 +15,8 @@ from openqilin.control_plane.api.startup_recovery import (
     StartupRecoveryReport,
     payload_hash_for_task,
 )
+from openqilin.agents.auditor.agent import AuditorAgent
+from openqilin.agents.auditor.enforcement import AuditorEnforcementService
 from openqilin.agents.ceo.agent import CeoAgent
 from openqilin.agents.ceo.decision_writer import CeoDecisionWriter
 from openqilin.agents.cso.agent import CSOAgent
@@ -104,6 +106,7 @@ class RuntimeServices:
     cso_agent: CSOAgent
     ceo_agent: CeoAgent
     cwo_agent: CwoAgent
+    auditor_agent: AuditorAgent
     domain_leader_agent: DomainLeaderAgent
     ingress_dedupe: IngressDedupeStore
     runtime_state_repo: PostgresTaskRepository
@@ -228,6 +231,17 @@ def build_runtime_services() -> RuntimeServices:
     audit_writer: InMemoryAuditWriter | OTelAuditWriter = OTelAuditWriter(
         audit_repo=audit_event_repo
     )
+    auditor_enforcement = AuditorEnforcementService(
+        lifecycle_service=lifecycle_service,
+        governance_repo=project_artifact_repo,
+        audit_writer=audit_writer,
+        communication_repo=communication_repo,
+    )
+    auditor_agent = AuditorAgent(
+        enforcement=auditor_enforcement,
+        governance_repo=project_artifact_repo,
+        audit_writer=audit_writer,
+    )
     metric_recorder = InMemoryMetricRecorder()
     delivery_event_callback_processor = LocalDeliveryEventCallbackProcessor(
         runtime_state_repo=runtime_state_repo,
@@ -305,6 +319,7 @@ def build_runtime_services() -> RuntimeServices:
         cso_agent=cso_agent,
         ceo_agent=ceo_agent,
         cwo_agent=cwo_agent,
+        auditor_agent=auditor_agent,
         domain_leader_agent=domain_leader_agent,
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
@@ -471,6 +486,12 @@ def get_cwo_agent(request: Request) -> CwoAgent:
     """Provide CWO workforce-command agent for institutional routing."""
 
     return get_runtime_services(request).cwo_agent
+
+
+def get_auditor_agent(request: Request) -> AuditorAgent:
+    """Provide Auditor oversight agent for governance escalation paths."""
+
+    return get_runtime_services(request).auditor_agent
 
 
 def get_routing_resolver(request: Request) -> ProjectSpaceRoutingResolver:
