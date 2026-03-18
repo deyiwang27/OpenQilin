@@ -17,8 +17,129 @@ on:
       - main
 
 jobs:
-  quality-and-tests:
+
+  # ── Job 1: Static checks ──────────────────────────────────────────────────
+  # No services. Runs in parallel with unit-component.
+  # Covers: lint, format, type-check, governance gates, Rego lint, ops scripts.
+  static-checks:
+    name: Static Checks
     runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Install dependencies (frozen)
+        run: uv sync --all-groups --frozen
+
+      - name: Ruff lint
+        run: uv run ruff check .
+
+      - name: Ruff format check
+        run: uv run ruff format --check .
+
+      - name: Mypy
+        run: uv run mypy .
+
+      - name: InMemory production path check
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '\.py$' || true)
+          else
+            CHANGED=$(git diff --name-only HEAD~1...HEAD | grep '\.py$' || true)
+          fi
+
+          if [ -z "$CHANGED" ]; then
+            echo "No Python files changed. InMemory check: PASS"
+            exit 0
+          fi
+
+          HITS=$(echo "$CHANGED" | xargs grep -l "class InMemory" 2>/dev/null \
+              | grep -v "/testing/" \
+              | grep -v "tests/" \
+              | grep -v "test_" || true)
+
+          if [ -n "$HITS" ]; then
+            echo "ERROR: New InMemory* class introduced in production code path:"
+            echo "$HITS"
+            echo "Move stub implementations under a testing/ subpackage."
+            exit 1
+          fi
+          echo "InMemory production path check: PASS"
+
+      - name: Rego bundle lint
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}/constitution:/constitution" \
+            openpolicyagent/opa:0.69.0-static \
+            check /constitution
+          echo "Rego bundle lint: PASS"
+
+      - name: Spec integrity checks
+        run: uv run python ops/scripts/check_spec_integrity.py
+
+      - name: Migration rollback readiness checks
+        run: uv run python ops/scripts/check_migration_rollback_readiness.py
+
+      - name: Release gate matrix checks
+        run: uv run python ops/scripts/check_release_gate_matrix.py
+
+      - name: Release artifact package checks
+        run: uv run python ops/scripts/check_release_artifact_package.py
+
+  # ── Job 2: Unit and component tests ──────────────────────────────────────
+  # No services. Runs in parallel with static-checks.
+  # unit/     — @pytest.mark.no_infra; pure logic, no I/O.
+  # component/ — in-process stubs via patch_build_runtime_services fixture.
+  unit-component:
+    name: Unit and Component Tests
+    runs-on: ubuntu-latest
+
+    env:
+      # Required by RuntimeSettings fail-closed guards even though no real
+      # services are present. unit/component tests patch build_runtime_services
+      # and never actually connect to these endpoints.
+      OPENQILIN_DATABASE_URL: postgresql+psycopg://openqilin:openqilin@localhost:5432/openqilin
+      OPENQILIN_REDIS_URL: redis://localhost:6379/0
+      OPENQILIN_OPA_URL: http://localhost:8181
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Install dependencies (frozen)
+        run: uv sync --all-groups --frozen
+
+      - name: Unit and component tests
+        run: uv run pytest tests/unit tests/component
+
+  # ── Job 3: Integration tests ──────────────────────────────────────────────
+  # Requires jobs 1 + 2 to pass first.
+  # Spins up PostgreSQL, Redis, and OPA. Runs all infra-dependent test tiers.
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [static-checks, unit-component]
 
     services:
       postgres:
@@ -51,7 +172,6 @@ jobs:
       REDIS_URL: redis://localhost:6379/0
       OPA_URL: http://localhost:8181
       # OPENQILIN_ prefixed: read by RuntimeSettings (env_prefix="OPENQILIN_")
-      # Required by build_runtime_services() fail-closed guards (M13-WP9)
       OPENQILIN_DATABASE_URL: postgresql+psycopg://openqilin:openqilin@localhost:5432/openqilin
       OPENQILIN_REDIS_URL: redis://localhost:6379/0
       OPENQILIN_OPA_URL: http://localhost:8181
@@ -67,53 +187,15 @@ jobs:
 
       - name: Setup uv
         uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
 
       - name: Install dependencies (frozen)
         run: uv sync --all-groups --frozen
 
-      - name: Ruff lint
-        run: uv run ruff check .
-
-      - name: Ruff format check
-        run: uv run ruff format --check .
-
-      - name: Mypy
-        run: uv run mypy .
-
-      - name: InMemory production path check
-        run: |
-          # Block newly introduced InMemory* classes in production code paths.
-          # Pre-existing stubs are tracked as C/H/M-series WP work items and exempt here.
-          # Only scan files changed in this PR or push — not the full tree.
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '\.py$' || true)
-          else
-            CHANGED=$(git diff --name-only HEAD~1...HEAD | grep '\.py$' || true)
-          fi
-
-          if [ -z "$CHANGED" ]; then
-            echo "No Python files changed. InMemory check: PASS"
-            exit 0
-          fi
-
-          HITS=$(echo "$CHANGED" | xargs grep -l "class InMemory" 2>/dev/null \
-              | grep -v "/testing/" \
-              | grep -v "tests/" \
-              | grep -v "test_" || true)
-
-          if [ -n "$HITS" ]; then
-            echo "ERROR: New InMemory* class introduced in production code path:"
-            echo "$HITS"
-            echo "Move stub implementations under a testing/ subpackage."
-            exit 1
-          fi
-          echo "InMemory production path check: PASS"
-
       - name: Start OPA server
         run: |
-          # Use the pinned version from compose.yml (0.69.0-static)
           docker compose up -d opa
-          # Wait for OPA to be ready
           for i in $(seq 1 15); do
             if curl -sf http://localhost:8181/health; then
               echo "OPA ready."
@@ -123,34 +205,10 @@ jobs:
             sleep 2
           done
 
-      - name: Rego bundle lint
-        run: |
-          docker run --rm \
-            -v "${{ github.workspace }}/constitution:/constitution" \
-            openpolicyagent/opa:0.69.0-static \
-            check /constitution
-          echo "Rego bundle lint: PASS"
-
-      - name: Spec integrity checks
-        run: uv run python ops/scripts/check_spec_integrity.py
-
-      - name: Migration rollback readiness checks
-        run: uv run python ops/scripts/check_migration_rollback_readiness.py
-
-      - name: Release gate matrix checks
-        run: uv run python ops/scripts/check_release_gate_matrix.py
-
-      - name: Release artifact package checks
-        run: uv run python ops/scripts/check_release_artifact_package.py
-
       - name: Alembic migration forward-apply
         run: |
-          # Verify all migrations apply cleanly on a fresh database.
           uv run alembic upgrade head
           echo "Alembic migration forward-apply: PASS"
-
-      - name: Unit and component tests
-        run: uv run pytest tests/unit tests/component
 
       - name: Contract and integration tests
         run: uv run pytest tests/contract tests/integration
