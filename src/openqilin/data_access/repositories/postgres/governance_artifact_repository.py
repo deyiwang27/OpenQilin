@@ -14,6 +14,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session, sessionmaker
 
 from openqilin.data_access.repositories.artifacts import (
+    _GOVERNANCE_EVENT_ARTIFACT_TYPES,
     ProjectArtifactDocument,
     ProjectArtifactPointer,
     ProjectArtifactRepositoryError,
@@ -109,11 +110,11 @@ class PostgresGovernanceArtifactRepository:
                         f"{normalized_type} ({current_count}/{per_type_cap})"
                     ),
                 )
-            if current_count == 0:
+            if current_count == 0 and normalized_type not in _GOVERNANCE_EVENT_ARTIFACT_TYPES:
                 _assert_total_cap(total_count, self._policy.total_active_document_cap)
             revision_no = current_count + 1
         else:
-            if current_count == 0:
+            if current_count == 0 and normalized_type not in _GOVERNANCE_EVENT_ARTIFACT_TYPES:
                 _assert_total_cap(total_count, self._policy.total_active_document_cap)
             revision_no = current_count + 1
 
@@ -254,6 +255,68 @@ class PostgresGovernanceArtifactRepository:
                 .all()
             )
         return tuple(_pointer_from_row(dict(row)) for row in rows)
+
+    def list_artifact_documents(
+        self,
+        *,
+        project_id: str,
+        artifact_type: str,
+    ) -> tuple[ProjectArtifactDocument, ...]:
+        """List all artifact revisions for a project/type pair, oldest first."""
+
+        normalized_project_id = _validate_project_id(project_id)
+        normalized_type = _validate_artifact_type(artifact_type)
+        with self._session_factory() as session:
+            rows = (
+                session.execute(
+                    text(
+                        """
+                    SELECT * FROM artifacts
+                    WHERE project_id = :project_id AND artifact_type = :artifact_type
+                    ORDER BY revision_no ASC
+                    """
+                    ),
+                    {"project_id": normalized_project_id, "artifact_type": normalized_type},
+                )
+                .mappings()
+                .all()
+            )
+        return tuple(
+            ProjectArtifactDocument(
+                pointer=_pointer_from_row(dict(row)), content=str(row["content"])
+            )
+            for row in rows
+        )
+
+    def list_artifact_documents_by_type(
+        self,
+        *,
+        artifact_type: str,
+    ) -> tuple[ProjectArtifactDocument, ...]:
+        """List all artifact revisions for one artifact type across all projects."""
+
+        normalized_type = _validate_artifact_type(artifact_type)
+        with self._session_factory() as session:
+            rows = (
+                session.execute(
+                    text(
+                        """
+                    SELECT * FROM artifacts
+                    WHERE artifact_type = :artifact_type
+                    ORDER BY created_at ASC, project_id ASC, revision_no ASC
+                    """
+                    ),
+                    {"artifact_type": normalized_type},
+                )
+                .mappings()
+                .all()
+            )
+        return tuple(
+            ProjectArtifactDocument(
+                pointer=_pointer_from_row(dict(row)), content=str(row["content"])
+            )
+            for row in rows
+        )
 
 
 # ---------------------------------------------------------------------------

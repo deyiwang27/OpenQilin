@@ -1,19 +1,19 @@
-# Handoff Complete: M14-WP1 — Project Manager Agent
+# Handoff Complete: M14-WP2 — CEO Agent
 
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-18
-**Branch:** `feat/m14-wp1-project-manager-agent`
-**Draft PR:** #102
-**PR URL:** `https://github.com/deyiwang27/OpenQilin/pull/102`
+**Branch:** `feat/m14-wp2-ceo-agent`
+**Draft PR:** `TBD`
+**PR URL:** `TBD`
 **Implements:** `implementation/handoff/current.md`
 
 ---
 
 ## Summary
 
-Implemented the new `ProjectManagerAgent` package, wired it into runtime dependency construction, and added unit coverage for PM context validation, directive-only status/decision handling, specialist dispatch, artifact write rules, DL escalation synthesis, admin approval enforcement, and budget-risk escalation events.
+Implemented the new `src/openqilin/agents/ceo/` package with proposal review gating, executive directive routing, co-approval enforcement, and durable governance record writing. The runtime wiring, repository support, and component-test service container were updated so CEO behavior follows the handoff and reads prior gate-chain state from the repository layer instead of embedding raw SQL in the agent.
 
-The implementation follows the handoff and project governance constraints, with two conservative REVIEW_NOTEs left where the current runtime interfaces do not yet expose the exact sink or creation seam described by the handoff.
+The required unit and static validation gates passed. One conservative REVIEW_NOTE remains where the handoff allows `project_id=None` for CEO decision records but the governed artifact repository requires a durable project scope.
 
 ---
 
@@ -21,16 +21,17 @@ The implementation follows the handoff and project governance constraints, with 
 
 | Task | Status | Notes |
 |---|---|---|
-| Create `src/openqilin/agents/project_manager/` package | ✅ Done | Added `__init__.py`, `agent.py`, `models.py`, `prompts.py`, `artifact_writer.py` |
-| Implement `ProjectManagerRequest` / `ProjectManagerResponse` | ✅ Done | Added request/response dataclasses and PM-specific error types |
-| Implement `ProjectManagerAgent.handle(request)` | ✅ Done | Enforces project context, routes `DISCUSSION`/`QUERY`/`MUTATION`/`ADMIN`, and keeps PM replies directive-only |
-| Implement `PMProjectArtifactWriter` | ✅ Done | Enforces prohibited types, active-only writes, approval-gated controlled docs, and append-only behavior |
-| Implement Specialist dispatch | ✅ Done | Enforces `AUTH-001` project-bound scope and creates `target="specialist"` tasks through the current runtime seam |
-| Implement DL escalation synthesis | ✅ Done | Calls `DomainLeaderAgent.handle_escalation()` and returns a PM-written summary, not raw DL text |
-| Implement PM budget-risk escalation | ✅ Done | Emits an escalation event when a sink is available; otherwise persists a durable governed fallback record |
-| Wire `ProjectManagerAgent` in `dependencies.py` | ✅ Done | Added `RuntimeServices.project_manager_agent`, construction wiring, provider function, and component-test runtime wiring |
-| Add unit tests for M14-WP1 | ✅ Done | Added `tests/unit/test_m14_wp1_project_manager.py` with 21 PM-focused tests |
-| Open draft PR and prepare handoff output | ✅ Done | Draft PR opened against `main`; this file records results and REVIEW_NOTEs |
+| Create `src/openqilin/agents/ceo/` package | ✅ Done | Added `__init__.py`, `agent.py`, `models.py`, `prompts.py`, `decision_writer.py` |
+| Implement `CeoRequest` / `CeoResponse` and gate-specific errors | ✅ Done | Added executive request/response dataclasses plus `CeoProposalGateError` and `CeoCoApprovalError` |
+| Implement `CeoAgent.handle(request)` | ✅ Done | Routes `DISCUSSION`/`QUERY`/`MUTATION`/`ADMIN`, enforces directive-only framing, and persists CEO gate decisions |
+| Enforce GATE-005 CSO-record prerequisite | ✅ Done | Proposal review hard-blocks when no durable CSO review record exists |
+| Enforce GATE-003 strategic-conflict revision cap | ✅ Done | Reads revision-cycle count from durable records and blocks at `>= 3` without override |
+| Implement `CeoDecisionWriter` | ✅ Done | Persists `ceo_proposal_decision` and `ceo_coapproval` governance records with required audit fields |
+| Implement executive routing and ORCH-005 co-approval checks | ✅ Done | Routes workforce intents to CWO, strategy questions to CSO, structural exceptions to owner, and blocks co-approval without CWO evidence |
+| Wire `CeoAgent` in `dependencies.py` | ✅ Done | Added `RuntimeServices.ceo_agent`, construction wiring, provider function, and component-test runtime wiring |
+| Extend repository support for governance-event history reads | ✅ Done | Added governance event artifact types plus repository methods to list historical artifact documents without raw SQL in the agent |
+| Add unit tests for M14-WP2 | ✅ Done | Added `tests/unit/test_m14_wp2_ceo_agent.py` with 16 CEO-focused tests |
+| Open draft PR and prepare handoff output | ⚠️ Partial | Handoff file written now; PR details will be updated after `gh pr create` |
 
 ---
 
@@ -41,7 +42,7 @@ InMemory gate:    PASS
 ruff check:       PASS
 ruff format:      PASS
 mypy:             PASS
-pytest unit:      PASS  (526 passed, 0 failed)
+pytest unit:      PASS  (542 passed, 0 failed)
 pytest component: NOT RUN
 ```
 
@@ -58,8 +59,7 @@ Validation commands executed:
 
 | File | Line | Note |
 |---|---|---|
-| `src/openqilin/agents/project_manager/agent.py` | 265 | The handoff requires PM specialist dispatch via `TaskDispatchService`, but the current runtime only exposes dispatch for already-admitted tasks. The implementation conservatively creates the project-bound specialist task through the existing runtime-state repository behind `TaskLifecycleService`, then dispatches it through `TaskDispatchService`. |
-| `src/openqilin/agents/project_manager/agent.py` | 350 | The handoff requires a budget-risk escalation event sink via governance or audit wiring, but `ProjectManagerAgent` is not currently injected with one. The implementation uses a dedicated sink when present and otherwise persists a durable append-only `decision_log` fallback record for the PM → CWO escalation. |
+| `src/openqilin/agents/ceo/decision_writer.py` | 86 | The handoff allows `project_id=None` in `CeoDecisionWriter.write_proposal_decision(...)`, but the governed artifact repository requires a durable project scope. The implementation fails closed and raises until Architect specifies proposal-only storage semantics for CEO gate records. |
 
 ---
 
@@ -67,18 +67,20 @@ Validation commands executed:
 
 | Conflict | Docs involved | Blocking question |
 |---|---|---|
-| `completion_report` is specified as append-only with revisions before owner approval, but the PostgreSQL artifact repository currently caps append-only rows by active-document count in a way that can block a second persisted revision. | `spec/orchestration/memory/ProjectArtifactModel.md` vs `src/openqilin/data_access/repositories/postgres/governance_artifact_repository.py` | Should the repository treat singleton append-only types like `completion_report` as revisable versions under one active document, matching the spec and the in-memory test repository? |
+| None |  |  |
 
 ---
 
 ## What Was Skipped
 
 - `pytest component` was not run because it was not required by the handoff acceptance matrix.
-- The exact binary-form commands `uv run pytest -m no_infra tests/unit/` and `uv run mypy .` failed to spawn in this environment with `os error 2` before tool startup. Equivalent module-form invocations under `uv run python -m ...` completed successfully and are recorded above.
+- The exact wrapper commands `uv run pytest -m no_infra tests/unit/` and `uv run mypy .` did not spawn in this environment (`os error 2`) even though the tools were installed in `.venv`; equivalent module-form invocations under `uv run python -m ...` completed successfully and are recorded above.
 
 ---
 
 ## Notes
 
+- `src/openqilin/agents/cso/agent.py` was updated so CSO review records now include `event_type="cso_review_outcome"`, which allows the CEO gate reader to enforce GATE-005 against durable records without inferring schema from position alone.
+- Governance-event artifact types (`cso_review`, `ceo_proposal_decision`, `ceo_coapproval`, `cwo_coapproval`) were added to the repository policy and excluded from the project-document total-cap accounting so governance audit chains do not consume PM document capacity.
 - Unrelated local changes in `implementation/v2/planning/ImplementationProgress-v2.md` and the untracked `implementation/handoff/current.md` were left untouched.
 - `grep -r --include="*.py" -l "class InMemory" src/ | grep -v "/testing/"` returned empty output.

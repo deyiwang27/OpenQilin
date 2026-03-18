@@ -23,6 +23,10 @@ _MVP_ARTIFACT_TYPE_CAPS: Mapping[str, int] = MappingProxyType(
         "risk_register": 3,
         "progress_report": 6,
         "completion_report": 1,
+        "cso_review": 12,
+        "ceo_proposal_decision": 12,
+        "ceo_coapproval": 8,
+        "cwo_coapproval": 8,
     }
 )
 _MVP_PROJECT_TOTAL_ACTIVE_DOCUMENT_CAP = 20
@@ -31,6 +35,18 @@ _APPEND_ONLY_ARTIFACT_TYPES = frozenset(
         "decision_log",
         "progress_report",
         "completion_report",
+        "cso_review",
+        "ceo_proposal_decision",
+        "ceo_coapproval",
+        "cwo_coapproval",
+    }
+)
+_GOVERNANCE_EVENT_ARTIFACT_TYPES = frozenset(
+    {
+        "cso_review",
+        "ceo_proposal_decision",
+        "ceo_coapproval",
+        "cwo_coapproval",
     }
 )
 _PROJECT_WRITABLE_STATES = frozenset({"proposed", "approved", "active", "paused"})

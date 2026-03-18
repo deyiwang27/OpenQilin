@@ -15,6 +15,8 @@ from openqilin.control_plane.api.startup_recovery import (
     StartupRecoveryReport,
     payload_hash_for_task,
 )
+from openqilin.agents.ceo.agent import CeoAgent
+from openqilin.agents.ceo.decision_writer import CeoDecisionWriter
 from openqilin.agents.cso.agent import CSOAgent
 from openqilin.agents.project_manager.agent import ProjectManagerAgent
 from openqilin.agents.project_manager.artifact_writer import PMProjectArtifactWriter
@@ -98,6 +100,7 @@ class RuntimeServices:
     secretary_agent: SecretaryAgent
     project_manager_agent: ProjectManagerAgent
     cso_agent: CSOAgent
+    ceo_agent: CeoAgent
     domain_leader_agent: DomainLeaderAgent
     ingress_dedupe: IngressDedupeStore
     runtime_state_repo: PostgresTaskRepository
@@ -193,6 +196,13 @@ def build_runtime_services() -> RuntimeServices:
         project_artifact_repo=project_artifact_repo,
         governance_repo=governance_repo,
     )
+    ceo_decision_writer = CeoDecisionWriter(governance_repo=project_artifact_repo)
+    ceo_agent = CeoAgent(
+        llm_gateway=llm_gateway,
+        decision_writer=ceo_decision_writer,
+        governance_repo=project_artifact_repo,
+        cso_agent=cso_agent,
+    )
 
     budget_runtime_client = AlwaysAllowBudgetRuntimeClient()
     budget_reservation_service = BudgetReservationService(client=budget_runtime_client)
@@ -278,6 +288,7 @@ def build_runtime_services() -> RuntimeServices:
         secretary_agent=secretary_agent,
         project_manager_agent=project_manager_agent,
         cso_agent=cso_agent,
+        ceo_agent=ceo_agent,
         domain_leader_agent=domain_leader_agent,
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
@@ -432,6 +443,12 @@ def get_cso_agent(request: Request) -> CSOAgent:
     """Provide CSO governance advisory agent for institutional channel routing."""
 
     return get_runtime_services(request).cso_agent
+
+
+def get_ceo_agent(request: Request) -> CeoAgent:
+    """Provide CEO executive-decision agent for institutional routing."""
+
+    return get_runtime_services(request).ceo_agent
 
 
 def get_routing_resolver(request: Request) -> ProjectSpaceRoutingResolver:

@@ -19,6 +19,7 @@ from uuid import uuid4
 
 from openqilin.control_plane.governance.project_lifecycle import ProjectStatus
 from openqilin.data_access.repositories.artifacts import (
+    _GOVERNANCE_EVENT_ARTIFACT_TYPES,
     ProjectArtifactDocument,
     ProjectArtifactPointer,
     ProjectArtifactRepositoryError,
@@ -861,7 +862,11 @@ class InMemoryProjectArtifactRepository(PostgresGovernanceArtifactRepository):
         # Determine if this write would add to total
         is_singleton = cap == 1
         adds_to_total = not (is_singleton and len(existing_of_type) > 0)
-        if adds_to_total and active_total >= self._policy.total_active_document_cap:
+        if (
+            adds_to_total
+            and artifact_type not in _GOVERNANCE_EVENT_ARTIFACT_TYPES
+            and active_total >= self._policy.total_active_document_cap
+        ):
             raise ProjectArtifactRepositoryError(
                 code="artifact_project_total_cap_exceeded",
                 message="total active document cap exceeded for project",
@@ -942,6 +947,39 @@ class InMemoryProjectArtifactRepository(PostgresGovernanceArtifactRepository):
             if a.project_id == project_id
             and (artifact_type is None or a.artifact_type == artifact_type)
         )
+
+    def list_artifact_documents(
+        self,
+        *,
+        project_id: str,
+        artifact_type: str,
+    ) -> tuple[ProjectArtifactDocument, ...]:
+        documents: list[ProjectArtifactDocument] = []
+        for pointer in self.list_project_artifacts(project_id, artifact_type=artifact_type):
+            try:
+                content = Path(pointer.storage_uri).read_text(encoding="utf-8")
+            except OSError:
+                content = self._content_store.get(pointer.storage_uri, "")
+            documents.append(ProjectArtifactDocument(pointer=pointer, content=content))
+        return tuple(documents)
+
+    def list_artifact_documents_by_type(
+        self,
+        *,
+        artifact_type: str,
+    ) -> tuple[ProjectArtifactDocument, ...]:
+        matching = [a for a in self._artifacts if a.artifact_type == artifact_type]
+        documents: list[ProjectArtifactDocument] = []
+        for pointer in sorted(
+            matching,
+            key=lambda item: (item.created_at, item.project_id, item.revision_no),
+        ):
+            try:
+                content = Path(pointer.storage_uri).read_text(encoding="utf-8")
+            except OSError:
+                content = self._content_store.get(pointer.storage_uri, "")
+            documents.append(ProjectArtifactDocument(pointer=pointer, content=content))
+        return tuple(documents)
 
 
 def _validate_artifact_write_context(artifact_type: str, ctx: ProjectArtifactWriteContext) -> None:
