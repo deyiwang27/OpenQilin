@@ -13,7 +13,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 | M11 | `done` | 4 / 4 | All WPs complete; exit criteria met |
 | M12 | `done` | 8 / 8 | All WPs done; PR #88 raised; exit criteria partially met (compose stack validation pending prod) |
 | M13 | `done` | 9 / 9 | All WPs complete; exit criteria met; WPs #89–#96, #98 |
-| M14 | `in_progress` | 5 / 7 | Entry gate: M13 complete; all remaining agents + file-backed artifact storage |
+| M14 | `done` | 7 / 7 | All WPs complete; exit criteria met |
 | M15 | `planned` | 0 / 6 | Entry gate: M14 complete |
 | M16 | `planned` | 0 / 5 | Entry gate: M15 complete |
 | M17 | `planned` | 0 / 6 | Entry gate: M16 complete |
@@ -85,10 +85,10 @@ WP document: `05-milestones/M14-WorkPackages-v1.md`
 | M14-WP3 | CWO Agent | `done` | #105 | #106 | Command authority (decision=deny+advisory=deny); reads completion_report before co-approval; project_charter write; full DecisionReviewGates; 560 unit tests pass |
 | M14-WP4 | Auditor Agent | `done` | #108 | #110 | ESC-005/006 CEO+owner pause notification; project-doc compliance monitoring; behavioral violation path; 583 unit tests pass |
 | M14-WP5 | Administrator Agent | `done` | #113 | #114 | AdministratorAgent + DocumentPolicyEnforcer + RetentionEnforcer; quarantine_agent; 5 administrator artifact types; 666 unit+component tests pass; Node.js 24 CI fix |
-| M14-WP6 | Specialist Agent and Task Execution Engine | `pending` | — | — | Writes task_execution_results NOT project artifacts (spec conflict resolved); Specialist→DL path |
-| M14-WP7 | File-Backed Artifact Storage | `pending` | — | — | Canonical OPENQILIN_SYSTEM_ROOT path; storage_uri + content_hash in DB; ProjectArtifactModel §2.1/§7 |
+| M14-WP6 | Specialist Agent and Task Execution Engine | `done` | #116 | #117 | Writes task_execution_results NOT project artifacts (spec conflict resolved); Specialist→DL path; 683 unit tests pass |
+| M14-WP7 | File-Backed Artifact Storage | `done` | #118 | #119 | ArtifactFileStore; file:// storage_uri + content_hash in DB; verify_storage_uri_hash in DocumentPolicyEnforcer; 693 unit+component tests pass |
 
-**M14 Exit criteria:** `in_progress`
+**M14 Exit criteria:** `done`
 
 ---
 

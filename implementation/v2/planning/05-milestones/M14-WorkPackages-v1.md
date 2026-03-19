@@ -317,16 +317,16 @@ Activate all remaining institutional and operational agents as real runtime part
 
 ### Tasks
 
-- [ ] Define canonical runtime root: `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/` (default: `${HOME}/.openqilin/projects/<project_id>/`); add `OPENQILIN_SYSTEM_ROOT` to `RuntimeSettings` and `.env.example`
-- [ ] Add `storage_uri`, `content_hash` (sha256), and `revision_no` fields to `project_artifact_version` table via Alembic migration
-- [ ] Implement `ArtifactFileStore` in `src/openqilin/data_access/artifact_file_store.py`:
+- [x] Define canonical runtime root: `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/` (default: `${HOME}/.openqilin/projects/<project_id>/`); add `OPENQILIN_SYSTEM_ROOT` to `RuntimeSettings` and `.env.example`
+- [x] Add `storage_uri`, `content_hash` (sha256), and `revision_no` fields to `project_artifact_version` table via Alembic migration
+- [x] Implement `ArtifactFileStore` in `src/openqilin/data_access/artifact_file_store.py`:
   - `write(project_id, artifact_type, version_no, content_md)` → writes file to `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/<artifact_type>-v{version_no}.md`; computes sha256; returns `(storage_uri, content_hash)`
   - `read(storage_uri)` → returns file content as string
   - Files must never be written to the source repository tree
-- [ ] Wire `ArtifactFileStore` into `project_artifact_repo` write path: every artifact version write calls `ArtifactFileStore.write()` before DB insert; stores `storage_uri` and `content_hash` in DB record
-- [ ] Implement hash integrity check in `DocumentPolicyEnforcer` (WP M14-05): on every artifact write/update, re-compute sha256 of file at `storage_uri`; if mismatch with DB `content_hash`, deny write fail-closed and emit immutable audit event (ProjectArtifactModel §7)
-- [ ] Add unit test: artifact write produces file at canonical path + matching DB `storage_uri` and `content_hash`
-- [ ] Add unit test: hash mismatch between file and DB `content_hash` → write denied; audit event emitted
+- [x] Wire `ArtifactFileStore` into `project_artifact_repo` write path: every artifact version write calls `ArtifactFileStore.write()` before DB insert; stores `storage_uri` and `content_hash` in DB record
+- [x] Implement hash integrity check in `DocumentPolicyEnforcer` (WP M14-05): on every artifact write/update, re-compute sha256 of file at `storage_uri`; if mismatch with DB `content_hash`, deny write fail-closed and emit immutable audit event (ProjectArtifactModel §7)
+- [x] Add unit test: artifact write produces file at canonical path + matching DB `storage_uri` and `content_hash`
+- [x] Add unit test: hash mismatch between file and DB `content_hash` → write denied; audit event emitted
 
 ### Outputs
 
@@ -336,10 +336,10 @@ Activate all remaining institutional and operational agents as real runtime part
 
 ### Done criteria
 
-- [ ] Artifact write produces file at `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/` path
-- [ ] `storage_uri` and `content_hash` stored in `project_artifact_version` DB row
-- [ ] No project artifact file written under the source repository directory
-- [ ] Hash mismatch between DB and file → write denied fail-closed; audit event emitted (ProjectArtifactModel §7)
+- [x] Artifact write produces file at `${OPENQILIN_SYSTEM_ROOT}/projects/<project_id>/` path
+- [x] `storage_uri` and `content_hash` stored in `project_artifact_version` DB row
+- [x] No project artifact file written under the source repository directory
+- [x] Hash mismatch between DB and file → write denied fail-closed; audit event emitted (ProjectArtifactModel §7)
 
 ---
 
