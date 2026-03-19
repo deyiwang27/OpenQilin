@@ -36,6 +36,7 @@ from openqilin.control_plane.grammar.command_parser import CommandParser
 from openqilin.control_plane.grammar.free_text_router import FreeTextRouter
 from openqilin.control_plane.grammar.intent_classifier import IntentClassifier
 from openqilin.control_plane.idempotency.ingress_dedupe import IngressDedupeStore
+from openqilin.data_access.artifact_file_store import ArtifactFileStore
 from openqilin.data_access.repositories.postgres.idempotency_cache_store import (
     RedisIdempotencyCacheStore,
     build_redis_client,
@@ -118,6 +119,7 @@ class RuntimeServices:
     administrator_agent: AdministratorAgent
     specialist_agent: SpecialistAgent
     task_execution_results_repo: InProcessTaskExecutionResultsRepository
+    artifact_file_store: ArtifactFileStore
     domain_leader_agent: DomainLeaderAgent
     ingress_dedupe: IngressDedupeStore
     runtime_state_repo: PostgresTaskRepository
@@ -152,6 +154,7 @@ def build_runtime_services() -> RuntimeServices:
     """
 
     settings = RuntimeSettings()
+    artifact_file_store = ArtifactFileStore(system_root=settings.system_root_path)
 
     if not settings.database_url:
         raise RuntimeError(
@@ -180,7 +183,10 @@ def build_runtime_services() -> RuntimeServices:
     communication_repo = PostgresCommunicationRepository(session_factory=session_factory)
     agent_registry_repo = PostgresAgentRegistryRepository(session_factory=session_factory)
     identity_channel_repo = PostgresIdentityMappingRepository(session_factory=session_factory)
-    project_artifact_repo = PostgresGovernanceArtifactRepository(session_factory=session_factory)
+    project_artifact_repo = PostgresGovernanceArtifactRepository(
+        session_factory=session_factory,
+        artifact_file_store=artifact_file_store,
+    )
     governance_repo = PostgresProjectRepository(session_factory=session_factory)
     audit_event_repo = PostgresAuditEventRepository(session_factory=session_factory)
     project_space_binding_repo = PostgresProjectSpaceBindingRepository(
@@ -256,6 +262,7 @@ def build_runtime_services() -> RuntimeServices:
     document_policy_enforcer = DocumentPolicyEnforcer(
         governance_repo=project_artifact_repo,
         audit_writer=audit_writer,
+        artifact_file_store=artifact_file_store,
     )
     retention_enforcer = RetentionEnforcer(
         governance_repo=project_artifact_repo,
@@ -357,6 +364,7 @@ def build_runtime_services() -> RuntimeServices:
         administrator_agent=administrator_agent,
         specialist_agent=specialist_agent,
         task_execution_results_repo=task_execution_results_repo,
+        artifact_file_store=artifact_file_store,
         domain_leader_agent=domain_leader_agent,
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,

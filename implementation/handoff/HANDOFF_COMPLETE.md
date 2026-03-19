@@ -1,16 +1,16 @@
-# Handoff Complete: M14-WP6 — Specialist Agent and Task Execution Engine
+# Handoff Complete: M14-WP7 — File-Backed Artifact Storage
 
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-18
-**Branch:** `feat/116-m14-wp6-specialist-agent`
-**Draft PR:** #117
+**Branch:** `feat/118-m14-wp7-file-backed-storage`
+**Draft PR:** #119
 **Implements:** `implementation/handoff/current.md`
 
 ---
 
 ## Summary
 
-Implemented the Specialist execution path end-to-end for M14-WP6: added the new specialist agent package, task execution result repository contract and migration, and wired specialist dispatch through runtime services and `TaskDispatchService`. Added the requested unit coverage and updated component-test runtime wiring so the new services are available in the in-memory app container.
+Implemented canonical file-backed artifact storage under `OPENQILIN_SYSTEM_ROOT/projects/...`, wired it into the Postgres governance artifact repository, and added administrator-side file/hash verification with immutable audit events on failure. Runtime dependency wiring, component test wiring, environment documentation, and the WP7 unit coverage were updated to match the handoff.
 
 ---
 
@@ -18,27 +18,25 @@ Implemented the Specialist execution path end-to-end for M14-WP6: added the new 
 
 | Task | Status | Notes |
 |---|---|---|
-| Add `SpecialistAgent` package (`agent.py`, `models.py`, `task_executor.py`, `prompts.py`, `__init__.py`) | ✅ Done | PM-dispatch-only enforcement, clarification path, tool authorization, result writes, and behavioral violation reporting implemented |
-| Add `task_execution_results` repository contract and in-process implementation | ✅ Done | Added `TaskExecutionResult`, `TaskExecutionResultsRepository`, and `InProcessTaskExecutionResultsRepository` |
-| Add Alembic migration `20260318_0010_create_task_execution_results_table.py` | ✅ Done | Creates table and `task_id` index |
-| Update `target_selector.py` for `specialist` dispatch routing | ✅ Done | `task.target == "specialist"` now wins before command-prefix routing |
-| Update `TaskDispatchService` for specialist dispatch and PM helper method | ✅ Done | Added specialist branch, fail-closed missing-agent path, and `create_specialist_task()` |
-| Update `RuntimeServices` wiring in production and component test containers | ✅ Done | Added `specialist_agent` and `task_execution_results_repo` fields and construction |
-| Add test stub repo support in `tests/testing/infra_stubs.py` | ✅ Done | Added `InMemoryTaskExecutionResultsRepository` |
-| Add `tests/unit/test_m14_wp6_specialist_agent.py` | ✅ Done | Covers dispatch auth, execution results, clarification, behavioral violation, and target selector behavior |
-| Open draft PR linked to GitHub issue | ✅ Done | Draft PR opened as `#117` referencing issue `#116` |
+| Add `ArtifactFileStore` in `src/openqilin/data_access/artifact_file_store.py` | ✅ Done | Added canonical write/read path, SHA-256 hashing, and path-traversal guards |
+| Extend `PostgresGovernanceArtifactRepository` to use file-backed writes when configured | ✅ Done | Falls back to existing `db://` URI path when no file store is injected |
+| Extend `DocumentPolicyEnforcer` with `verify_storage_uri_hash()` | ✅ Done | Emits immutable audit events on read failure or hash mismatch |
+| Wire `ArtifactFileStore` into `RuntimeServices` and `build_runtime_services()` | ✅ Done | Runtime container now constructs and passes one shared file store |
+| Update component test runtime wiring | ✅ Done | `tests/component/conftest.py` now builds and injects a temp-root file store |
+| Document `OPENQILIN_SYSTEM_ROOT` in `.env.example` | ✅ Done | Added the M14-WP7 env block |
+| Add WP7 unit tests | ✅ Done | Added 10 tests for writes, reads, traversal guard, and integrity verification |
 
 ---
 
 ## Validation Results
 
 ```
-InMemory gate:   FAIL
+InMemory gate:   PASS
 ruff check:      PASS
 ruff format:     PASS
 mypy:            PASS
-pytest unit:     PASS  (683 passed, 0 failed; command run with tests/unit tests/component -x)
-pytest component: PASS
+pytest unit:     PASS  (627 passed, 0 failed)
+pytest component: PASS  (66 passed, 0 failed)
 ```
 
 ---
@@ -47,7 +45,6 @@ pytest component: PASS
 
 | File | Line | Note |
 |---|---|---|
-| None | None | None |
 
 ---
 
@@ -55,17 +52,16 @@ pytest component: PASS
 
 | Conflict | Docs involved | Blocking question |
 |---|---|---|
-| None | None | None |
 
 ---
 
 ## What Was Skipped
 
-Nothing was intentionally skipped from the handoff scope.
+Nothing.
 
 ---
 
 ## Notes
 
-- The raw InMemory grep from the handoff (`grep -r ... .`) reports `InMemory` classes from the repo-local `.venv/` site-packages directory, so the exact command does not return clean output in this workspace.
-- A source-tree-only variant over `src tests` returned no production-path matches, which confirms the new task code did not introduce `InMemory*` classes under production `src/`.
+- The literal grep command from the handoff began matching third-party packages under `.venv/` after dependency sync, so the production-code gate was executed with `--exclude-dir='.venv'`.
+- `uv run pytest ...` and `uv run mypy .` failed because the local venv wrapper scripts have stale shebangs; validation was executed successfully via `uv run python -m pytest ...` and `uv run python -m mypy .`.

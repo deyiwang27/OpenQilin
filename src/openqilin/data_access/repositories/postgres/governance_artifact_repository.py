@@ -1,8 +1,4 @@
-"""PostgreSQL-backed project artifact repository replacing InMemoryProjectArtifactRepository.
-
-Stores artifact content directly in PostgreSQL (TEXT column) rather than on disk.
-Pointer/hash semantics and governance authorization are preserved.
-"""
+"""PostgreSQL-backed project artifact repository with optional file-backed writes."""
 
 from __future__ import annotations
 
@@ -13,6 +9,7 @@ from datetime import UTC, datetime
 from sqlalchemy import text
 from sqlalchemy.orm import Session, sessionmaker
 
+from openqilin.data_access.artifact_file_store import ArtifactFileStore
 from openqilin.data_access.repositories.artifacts import (
     _GOVERNANCE_EVENT_ARTIFACT_TYPES,
     ProjectArtifactDocument,
@@ -44,9 +41,11 @@ class PostgresGovernanceArtifactRepository:
         *,
         session_factory: sessionmaker[Session],
         policy: ProjectDocumentPolicy | None = None,
+        artifact_file_store: ArtifactFileStore | None = None,
     ) -> None:
         self._session_factory = session_factory
         self._policy = policy or ProjectDocumentPolicy.mvp_defaults()
+        self._artifact_file_store = artifact_file_store
 
     @property
     def policy(self) -> ProjectDocumentPolicy:
@@ -118,9 +117,20 @@ class PostgresGovernanceArtifactRepository:
                 _assert_total_cap(total_count, self._policy.total_active_document_cap)
             revision_no = current_count + 1
 
-        payload = content.encode("utf-8")
-        content_hash = hashlib.sha256(payload).hexdigest()
-        storage_uri = f"db://artifacts/{normalized_project_id}/{normalized_type}/v{revision_no:03d}"
+        if self._artifact_file_store is not None:
+            storage_uri, content_hash = self._artifact_file_store.write(
+                project_id=normalized_project_id,
+                artifact_type=normalized_type,
+                version_no=revision_no,
+                content_md=content,
+            )
+            payload = content.encode("utf-8")
+        else:
+            payload = content.encode("utf-8")
+            content_hash = hashlib.sha256(payload).hexdigest()
+            storage_uri = (
+                f"db://artifacts/{normalized_project_id}/{normalized_type}/v{revision_no:03d}"
+            )
         now = datetime.now(tz=UTC)
         pointer = ProjectArtifactPointer(
             project_id=normalized_project_id,
