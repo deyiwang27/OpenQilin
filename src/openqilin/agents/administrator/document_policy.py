@@ -9,6 +9,7 @@ from uuid import uuid4
 from sqlalchemy import text
 from sqlalchemy.orm import Session, sessionmaker
 
+from openqilin.data_access.artifact_file_store import ArtifactFileStore, ArtifactFileStoreError
 from openqilin.data_access.repositories.artifacts import (
     _GOVERNANCE_EVENT_ARTIFACT_TYPES,
     ProjectArtifactPointer,
@@ -47,6 +48,7 @@ class DocumentPolicyEnforcer:
         governance_repo: "PostgresGovernanceArtifactRepository",
         audit_writer: "AuditWriter",
         trace_id_factory: Callable[[], str] | None = None,
+        artifact_file_store: ArtifactFileStore | None = None,
     ) -> None:
         self._governance_repo = governance_repo
         self._audit_writer = audit_writer
@@ -55,6 +57,7 @@ class DocumentPolicyEnforcer:
             getattr(governance_repo, "_session_factory", None),
         )
         self._trace_id_factory = trace_id_factory or (lambda: str(uuid4()))
+        self._artifact_file_store = artifact_file_store
 
     def check_artifact_cap(
         self,
@@ -179,6 +182,77 @@ class DocumentPolicyEnforcer:
                     f"content_hash mismatch: stored={stored_hash!r}, provided={provided_hash!r}"
                 ),
             )
+        return HashIntegrityResult(integrity_ok=True, denial_reason=None)
+
+    def verify_storage_uri_hash(
+        self,
+        *,
+        storage_uri: str,
+        db_content_hash: str,
+        trace_id: str,
+    ) -> HashIntegrityResult:
+        """Verify file at storage_uri has hash matching db_content_hash."""
+
+        if self._artifact_file_store is None:
+            return HashIntegrityResult(integrity_ok=True, denial_reason=None)
+
+        effective_trace_id = trace_id or self._trace_id_factory()
+
+        try:
+            content = self._artifact_file_store.read(storage_uri)
+        except ArtifactFileStoreError as exc:
+            self._audit_writer.write_event(
+                event_type="hash_integrity_failure",
+                outcome="denied",
+                trace_id=effective_trace_id,
+                request_id=None,
+                task_id=None,
+                principal_id="administrator",
+                principal_role="administrator",
+                source="administrator",
+                reason_code="artifact_file_store_read_error",
+                message=exc.message,
+                policy_version="v2",
+                policy_hash="administrator-v1",
+                rule_ids=["STR-007", "STR-010"],
+                payload={
+                    "storage_uri": storage_uri,
+                    "db_content_hash": db_content_hash,
+                    "error": exc.code,
+                },
+            )
+            return HashIntegrityResult(
+                integrity_ok=False,
+                denial_reason=f"file read error: {exc.message}",
+            )
+
+        file_hash = self._artifact_file_store.compute_hash(content)
+        if file_hash != db_content_hash:
+            self._audit_writer.write_event(
+                event_type="hash_integrity_failure",
+                outcome="denied",
+                trace_id=effective_trace_id,
+                request_id=None,
+                task_id=None,
+                principal_id="administrator",
+                principal_role="administrator",
+                source="administrator",
+                reason_code="hash_integrity_failure",
+                message="content_hash mismatch",
+                policy_version="v2",
+                policy_hash="administrator-v1",
+                rule_ids=["STR-007", "STR-010"],
+                payload={
+                    "storage_uri": storage_uri,
+                    "db_content_hash": db_content_hash,
+                    "file_hash": file_hash,
+                },
+            )
+            return HashIntegrityResult(
+                integrity_ok=False,
+                denial_reason=f"content_hash mismatch: db={db_content_hash!r}, file={file_hash!r}",
+            )
+
         return HashIntegrityResult(integrity_ok=True, denial_reason=None)
 
 

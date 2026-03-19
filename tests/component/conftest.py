@@ -10,7 +10,9 @@ component test gets a fully-wired in-memory app without touching infra.
 
 from __future__ import annotations
 
+import tempfile
 from unittest.mock import MagicMock, patch
+from pathlib import Path
 
 import pytest
 
@@ -42,6 +44,7 @@ from openqilin.control_plane.grammar.command_parser import CommandParser
 from openqilin.control_plane.grammar.free_text_router import FreeTextRouter
 from openqilin.control_plane.grammar.intent_classifier import IntentClassifier
 from openqilin.control_plane.idempotency.ingress_dedupe import IngressDedupeStore
+from openqilin.data_access.artifact_file_store import ArtifactFileStore
 from openqilin.data_access.repositories.task_execution_results import (
     InProcessTaskExecutionResultsRepository,
 )
@@ -106,6 +109,7 @@ class _SimulatedRetrievalReadModel:
 def _build_test_runtime_services() -> RuntimeServices:
     """Build a fully-wired RuntimeServices using in-memory test stubs."""
 
+    artifact_file_store = ArtifactFileStore(system_root=Path(tempfile.mkdtemp()))
     runtime_state_repo = InMemoryRuntimeStateRepository()
     communication_repo = InMemoryCommunicationRepository()
     agent_registry_repo = InMemoryAgentRegistryRepository()
@@ -177,6 +181,7 @@ def _build_test_runtime_services() -> RuntimeServices:
         document_policy=DocumentPolicyEnforcer(
             governance_repo=project_artifact_repo,
             audit_writer=audit_writer,
+            artifact_file_store=artifact_file_store,
         ),
         retention=RetentionEnforcer(
             governance_repo=project_artifact_repo,
@@ -252,6 +257,7 @@ def _build_test_runtime_services() -> RuntimeServices:
         administrator_agent=administrator_agent,
         specialist_agent=specialist_agent,
         task_execution_results_repo=task_execution_results_repo,
+        artifact_file_store=artifact_file_store,
         domain_leader_agent=domain_leader_agent,
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
