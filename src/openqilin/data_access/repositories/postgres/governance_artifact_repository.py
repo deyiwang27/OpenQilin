@@ -344,7 +344,7 @@ def _assert_write_authorization(
                 message=f"project_manager cannot write artifact type: {artifact_type}",
             )
         return
-    if actor_role in {"owner", "ceo", "cwo", "auditor"}:
+    if actor_role in {"owner", "ceo", "cwo", "auditor", "administrator"}:
         return
     raise ProjectArtifactRepositoryError(
         code="artifact_write_role_forbidden",

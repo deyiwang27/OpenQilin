@@ -172,6 +172,57 @@ class PostgresAgentRegistryRepository:
             updated_at=now,
         )
 
+    def quarantine_agent(
+        self,
+        *,
+        agent_id: str,
+        reason: str,
+        trace_id: str,
+    ) -> AgentRecord:
+        """Set an agent's status to inactive as a containment action."""
+
+        del reason, trace_id
+        normalized_agent_id = agent_id.strip()
+        if not normalized_agent_id:
+            raise AgentRegistryRepositoryError(
+                code="agent_registry_quarantine_invalid_id",
+                message="agent_id must not be blank for quarantine",
+            )
+
+        with self._session_factory() as session:
+            row = (
+                session.execute(
+                    text("SELECT * FROM agents WHERE agent_id = :agent_id"),
+                    {"agent_id": normalized_agent_id},
+                )
+                .mappings()
+                .first()
+            )
+            if row is None:
+                raise AgentRegistryRepositoryError(
+                    code="agent_registry_not_found",
+                    message=f"agent not found for quarantine: {normalized_agent_id}",
+                )
+            now = datetime.now(tz=UTC)
+            session.execute(
+                text(
+                    """
+                    UPDATE agents
+                    SET status = 'inactive', updated_at = :updated_at
+                    WHERE agent_id = :agent_id
+                    """
+                ),
+                {
+                    "agent_id": normalized_agent_id,
+                    "updated_at": now,
+                },
+            )
+            session.commit()
+        row_dict = dict(row)
+        row_dict["status"] = "inactive"
+        row_dict["updated_at"] = now
+        return _agent_from_row(row_dict)
+
 
 def _agent_from_row(row: dict[str, object]) -> AgentRecord:
     created_at = row["created_at"]
