@@ -6,7 +6,7 @@ from typing import Literal
 
 from openqilin.data_access.repositories.runtime_state import TaskRecord
 
-DispatchTarget = Literal["sandbox", "llm", "communication"]
+DispatchTarget = Literal["sandbox", "llm", "communication", "specialist"]
 
 
 class DispatchTargetError(ValueError):
@@ -18,8 +18,13 @@ class DispatchTargetError(ValueError):
 
 
 def select_dispatch_target(task: TaskRecord) -> DispatchTarget:
-    """Select dispatch target based on admitted task command."""
+    """Select dispatch target based on admitted task target and command.
 
+    Specialist target is checked first - task.target == "specialist" always wins.
+    """
+
+    if task.target == "specialist":
+        return "specialist"
     if task.command.startswith("llm_"):
         return "llm"
     if task.command.startswith("tool_"):

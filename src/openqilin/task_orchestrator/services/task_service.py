@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 from uuid import uuid4
 
 from openqilin.budget_runtime.client import AlwaysAllowBudgetRuntimeClient
@@ -60,6 +61,8 @@ from openqilin.task_orchestrator.dispatch.target_selector import (
 )
 from openqilin.task_orchestrator.services.lifecycle_service import TaskLifecycleService
 
+_SYSTEM_PROJECT_ID = "system"
+
 
 @dataclass(frozen=True, slots=True)
 class TaskDispatchLlmMetadata:
@@ -109,6 +112,7 @@ class TaskDispatchService:
         sandbox_execution_adapter: SandboxExecutionAdapter,
         llm_dispatch_adapter: LlmDispatchAdapter,
         communication_dispatch_adapter: CommunicationDispatchAdapter | None = None,
+        specialist_agent: Any | None = None,
     ) -> None:
         self._lifecycle_service = lifecycle_service
         self._sandbox_execution_adapter = sandbox_execution_adapter
@@ -116,6 +120,7 @@ class TaskDispatchService:
         self._communication_dispatch_adapter = (
             communication_dispatch_adapter or LocalCommunicationDispatchAdapter()
         )
+        self._specialist_agent = specialist_agent
         self._task_outcomes: dict[str, TaskDispatchOutcome] = {}
 
     def dispatch_admitted_task(
@@ -399,6 +404,103 @@ class TaskDispatchService:
                     dead_letter_id=communication_receipt.dead_letter_id,
                     llm_metadata=None,
                 )
+        elif target == "specialist":
+            if self._specialist_agent is None:
+                self._lifecycle_service.mark_failed(
+                    task.task_id,
+                    error_code="specialist_agent_not_configured",
+                    message="specialist dispatch requires specialist_agent to be configured",
+                    outcome_source="task_dispatch_service",
+                )
+                raise DispatchTargetError(
+                    "specialist dispatch requires specialist_agent to be configured"
+                )
+            from openqilin.agents.specialist.models import (
+                SpecialistDispatchAuthError,
+                SpecialistRequest,
+            )
+
+            metadata = dict(task.metadata)
+            dispatch_source_role = metadata.get("dispatch_source", "unknown")
+            approved_tools_raw = metadata.get("approved_tools", "")
+            approved_tools: tuple[str, ...] = (
+                tuple(tool.strip() for tool in approved_tools_raw.split(",") if tool.strip())
+                if approved_tools_raw
+                else ()
+            )
+            try:
+                specialist_response = self._specialist_agent.handle(
+                    SpecialistRequest(
+                        task_id=task.task_id,
+                        project_id=task.project_id or _SYSTEM_PROJECT_ID,
+                        task_description=task.command,
+                        approved_tools=approved_tools,
+                        dispatch_source_role=dispatch_source_role,
+                        trace_id=task.trace_id,
+                    )
+                )
+            except SpecialistDispatchAuthError as exc:
+                self._lifecycle_service.mark_failed(
+                    task.task_id,
+                    error_code="specialist_dispatch_auth_denied",
+                    message=str(exc),
+                    outcome_source="task_dispatch_service",
+                )
+                outcome = TaskDispatchOutcome(
+                    accepted=False,
+                    target=target,
+                    dispatch_id=None,
+                    error_code="specialist_dispatch_auth_denied",
+                    message=str(exc),
+                    replayed=False,
+                    source="specialist_agent",
+                    retryable=False,
+                    dead_letter_id=None,
+                    llm_metadata=None,
+                )
+                self._task_outcomes[task.task_id] = outcome
+                return outcome
+            if specialist_response.execution_status == "completed":
+                dispatch_id = specialist_response.artifact_id or f"specialist-{uuid4()}"
+                self._lifecycle_service.mark_dispatched(
+                    task.task_id,
+                    dispatch_target=target,
+                    dispatch_id=dispatch_id,
+                    message="specialist task execution completed",
+                )
+                outcome = TaskDispatchOutcome(
+                    accepted=True,
+                    target=target,
+                    dispatch_id=dispatch_id,
+                    error_code=None,
+                    message="specialist task execution completed",
+                    replayed=False,
+                    source="specialist_agent",
+                    retryable=False,
+                    dead_letter_id=None,
+                    llm_metadata=None,
+                )
+            else:
+                error_code = specialist_response.blocker or "specialist_task_blocked"
+                self._lifecycle_service.mark_blocked_dispatch(
+                    task.task_id,
+                    error_code=error_code,
+                    message=specialist_response.output_text,
+                    dispatch_target=target,
+                    outcome_source="specialist_agent",
+                )
+                outcome = TaskDispatchOutcome(
+                    accepted=False,
+                    target=target,
+                    dispatch_id=None,
+                    error_code=error_code,
+                    message=specialist_response.output_text,
+                    replayed=False,
+                    source="specialist_agent",
+                    retryable=False,
+                    dead_letter_id=None,
+                    llm_metadata=None,
+                )
         else:
             # H-1: Unknown dispatch targets are fail-closed — never fake a successful dispatch.
             self._lifecycle_service.mark_failed(
@@ -446,6 +548,49 @@ class TaskDispatchService:
             return adapter.list_dead_letters()
         return ()
 
+    def create_specialist_task(
+        self,
+        *,
+        task_id: str,
+        project_id: str,
+        trace_id: str,
+    ) -> str:
+        """Create and dispatch a specialist subtask for the given parent task_id."""
+
+        from openqilin.task_orchestrator.admission.envelope_validator import AdmissionEnvelope
+
+        runtime_state_repo = getattr(self._lifecycle_service, "_runtime_state_repo", None)
+        if runtime_state_repo is None:
+            raise RuntimeError(
+                "create_specialist_task requires _runtime_state_repo on lifecycle_service"
+            )
+        envelope = AdmissionEnvelope(
+            request_id=str(uuid4()),
+            trace_id=trace_id,
+            principal_id="project_manager",
+            principal_role="project_manager",
+            trust_domain="project",
+            connector="internal",
+            command="execute_specialist_task",
+            target="specialist",
+            args=(task_id,),
+            metadata=(
+                ("dispatch_source", "project_manager"),
+                ("source_task_id", task_id),
+                ("target_role", "specialist"),
+            ),
+            project_id=project_id,
+            idempotency_key=f"pm-specialist-{project_id}-{task_id}-{trace_id}",
+        )
+        created_task = runtime_state_repo.create_task_from_envelope(envelope)
+        outcome = self.dispatch_admitted_task(
+            created_task,
+            policy_version="v2",
+            policy_hash="project-manager-v1",
+            rule_ids=("AUTH-001", "AUTH-002", "ORCH-001", "ORCH-002"),
+        )
+        return outcome.dispatch_id or created_task.task_id
+
 
 def build_task_dispatch_service(
     lifecycle_service: TaskLifecycleService,
@@ -460,6 +605,7 @@ def build_task_dispatch_service(
     project_artifact_repository: PostgresGovernanceArtifactRepository | None = None,
     runtime_state_repository: PostgresTaskRepository | None = None,
     budget_runtime_client: AlwaysAllowBudgetRuntimeClient | None = None,
+    specialist_agent: Any | None = None,
 ) -> TaskDispatchService:
     """Build task-dispatch service with default sandbox and llm adapters."""
 
@@ -524,6 +670,7 @@ def build_task_dispatch_service(
         communication_dispatch_adapter=LocalCommunicationDispatchAdapter(
             publisher=communication_publisher,
         ),
+        specialist_agent=specialist_agent,
     )
 
 
