@@ -1,112 +1,142 @@
 # OpenQilin
 
-OpenQilin is a governance-first AI workforce orchestration architecture.
+OpenQilin is a governance-first multi-agent runtime for operating a long-running AI workforce.
+It treats authority, policy, audit, budget, and project-state transitions as runtime constraints, not after-the-fact documentation.
 
-The goal is to help a solopreneur operate a coordinated, long-running AI organization with clear authority, safety controls, and budget discipline.
+## What OpenQilin Is
+
+- A control plane for governed AI work, built around explicit roles such as `owner`, `administrator`, `auditor`, `ceo`, `cwo`, `project_manager`, `domain_leader`, and `specialist`
+- A fail-closed orchestration runtime with constitutional policy enforcement, immutable audit evidence, and durable project artifacts
+- A local-first implementation stack using FastAPI, LangGraph, PostgreSQL, Redis, OPA, OpenTelemetry, and file-backed storage
+- A repo where `constitution/`, `spec/`, and implementation code stay tightly linked so behavior is traceable to written rules
 
 ## Current Status
 
-This repository is currently in **implementation kickoff**.
+OpenQilin is in active implementation, not just planning.
 
-- Define and Design phases are complete for v1 baseline.
-- v1 implementation scaffold is initialized (`src/`, `tests/`, `migrations/`, `ops/`).
-- Active work is M0/M1 implementation delivery with issue/PR-driven execution.
+- Milestones `M11` through `M14` are complete, including Secretary, CSO, Project Manager, CEO, CWO, Auditor, Administrator, Specialist, and file-backed artifact storage.
+- Milestones `M15` through `M17` are planned next, covering budget persistence, runtime polish, and public open-source readiness.
+- The canonical in-repo status tracker is [`implementation/v2/planning/ImplementationProgress-v2.md`](implementation/v2/planning/ImplementationProgress-v2.md).
 
-## Core Idea
+This means the repo already contains a working control plane, workers, governance agents, persistence layer, migrations, and tests. The public-facing packaging is still being improved.
 
-OpenQilin models AI operation as a constitutional governance system:
+## Runtime Overview
 
-- Strategic and operational roles are separated.
-- Governance is independent from execution.
-- Policies are explicit, versioned, and auditable.
-- Runtime actions are constrained by authority, budget, and safety rules.
+At a high level, the runtime is organized like this:
 
-## Development Flow
+- `src/openqilin/control_plane/`: FastAPI routers, request schemas, identity/governance checks, dependency wiring
+- `src/openqilin/task_orchestrator/`: admission, dispatch, LangGraph workflow, lifecycle handling
+- `src/openqilin/agents/`: institutional and project-role agents
+- `src/openqilin/data_access/repositories/postgres/`: PostgreSQL-backed repositories and persistence adapters
+- `src/openqilin/policy_runtime_integration/rego/`: OPA policy bundle used by the policy runtime
+- `src/openqilin/apps/`: runnable entrypoints for the API, workers, and admin CLI
 
-OpenQilin follows:
-1. `Define` (constitution + implementation contracts in `spec/`)
-2. `Design` (technical design artifacts in `design/`)
-3. `Implementation` (code/services/tests)
+## Quick Start
 
-## v1 Architecture Baseline
+Prerequisites:
 
-The implementation kickoff baseline is:
-- [`spec/architecture/ArchitectureBaseline-v1.md`](spec/architecture/ArchitectureBaseline-v1.md)
+- Python `3.12`
+- [`uv`](https://github.com/astral-sh/uv)
+- Docker Compose
 
-It locks:
-- selected stack decisions
-- component boundary mapping
-- authoritative v1 interfaces (`policy`, `task`, `a2a+acp`, `llm_gateway`, `memory`, `audit`)
-- deployment phase posture (`local-first`, then cloud promotion)
+### 1. Install dependencies
 
-## Repository Structure
+```bash
+uv sync --all-groups
+```
 
-- `spec/`: implementation-level specifications for AI engineering agents
-- `docs/`: concise human-facing documentation for GitHub users
-- `constitution/`: constitutional runtime rules that agents must follow
-- `design/`: technical design artifacts and readiness records
-- `implementation/`: implementation execution docs (planning, workflow, quality, TODO tracking)
-- `src/`: OpenQilin runtime implementation packages
-- `tests/`: unit/component/contract/integration/conformance test suites
-- `migrations/`: forward-only schema migration assets
-- `ops/`: docker/bootstrap/scripts assets for local and CI operations
+### 2. Create local environment config
 
-Precedence:
+```bash
+cp .env.example .env
+```
 
-1. `constitution/` (runtime constitutional source of truth)
-2. `spec/` (implementation contract)
-3. `design/` (technical design, must not violate constitution/spec)
-4. `docs/` (human-readable guidance)
+Notes:
 
-## Start Here
+- Set `OPENQILIN_GEMINI_API_KEY` if you want to use the Gemini-backed LLM path.
+- Set Discord bot credentials only if you plan to run the Discord worker.
+- Keep `OPENQILIN_SYSTEM_ROOT` outside the source tree.
 
-If you are new to the project:
+### 3. Start core infrastructure
 
-1. Read [`docs/SystemOverview.md`](docs/SystemOverview.md)
-2. Read [`docs/QuickStart.md`](docs/QuickStart.md)
-3. Read [`spec/architecture/ArchitectureBaseline-v1.md`](spec/architecture/ArchitectureBaseline-v1.md)
-4. Read [`spec/governance/architecture/GovernanceArchitecture.md`](spec/governance/architecture/GovernanceArchitecture.md)
-5. Read [`spec/infrastructure/architecture/RuntimeArchitecture.md`](spec/infrastructure/architecture/RuntimeArchitecture.md)
-6. Read constitutional files in `constitution/`
+```bash
+docker compose --profile core up -d
+uv run alembic upgrade head
+uv run python -m openqilin.apps.admin_cli bootstrap --smoke-in-process
+```
 
-## Key Specifications
+### 4. Run the app locally
 
-- Architecture baseline: [`spec/architecture/ArchitectureBaseline-v1.md`](spec/architecture/ArchitectureBaseline-v1.md)
-- Governance architecture: [`spec/governance/architecture/GovernanceArchitecture.md`](spec/governance/architecture/GovernanceArchitecture.md)
-- Runtime architecture: [`spec/infrastructure/architecture/RuntimeArchitecture.md`](spec/infrastructure/architecture/RuntimeArchitecture.md)
-- Policy engine: [`spec/constitution/PolicyEngineContract.md`](spec/constitution/PolicyEngineContract.md)
-- Task orchestration: [`spec/orchestration/control/TaskOrchestrator.md`](spec/orchestration/control/TaskOrchestrator.md)
-- Execution sandbox: [`spec/infrastructure/security/ExecutionSandbox.md`](spec/infrastructure/security/ExecutionSandbox.md)
-- Observability: [`spec/observability/ObservabilityArchitecture.md`](spec/observability/ObservabilityArchitecture.md)
+Use the local developer loop when you want fast iteration without running every service in containers:
 
-## Constitution Layer
+```bash
+uv run python -m openqilin.apps.api_app
+uv run python -m openqilin.apps.orchestrator_worker
+uv run python -m openqilin.apps.communication_worker
+```
 
-The `constitution/` folder defines enforceable constitutional policy artifacts, including:
+Optional:
 
-- authority matrix
-- policy rules
-- escalation policy
-- budget policy
-- safety policy
-- policy change control
+```bash
+uv run python -m openqilin.apps.discord_bot_worker
+```
 
-These artifacts are expected to be versioned and referenced at runtime via policy version/hash metadata.
+### 5. Run the full container stack
 
-Version snapshot example:
-- `constitution/versions/v0.1.0/`
+If your `.env` is fully configured and you want the complete local runtime:
 
-## Contributing
+```bash
+docker compose --profile full up -d
+```
 
-At this stage, contributions should prioritize:
+## Development Checks
 
-- clarity and consistency of rules
-- deterministic contracts (inputs/outputs/errors)
-- explicit state transitions and escalation paths
-- conformance-test readiness
-- consistency between `constitution/`, `spec/`, and conformance artifacts
+Run these before opening or updating a PR:
 
-For major changes, keep PRs scoped to one layer (`constitution`, `spec`, or `docs`) where possible.
+```bash
+uv run ruff check .
+uv run ruff format --check .
+uv run mypy .
+uv run pytest tests/unit tests/component
+```
+
+Useful admin commands:
+
+```bash
+uv run python -m openqilin.apps.admin_cli diagnostics --check-db
+uv run python -m openqilin.apps.admin_cli smoke --in-process
+```
+
+## Repository Map
+
+- `constitution/`: runtime constitutional rules and versioned policy bundles
+- `spec/`: implementation contracts and authoritative architecture/specification docs
+- `design/`: design artifacts and implementation-facing technical decisions
+- `implementation/`: milestone planning, handoffs, workflow guides, and progress tracking
+- `src/`: Python runtime implementation
+- `tests/`: unit, component, contract, integration, and conformance coverage
+- `migrations/`: Alembic migrations
+- `ops/`: local stack, observability, and operational scripts
+
+Document precedence:
+
+1. `constitution/`
+2. `spec/`
+3. `design/`
+4. `docs/`
+
+## Start Reading Here
+
+If you are new to the project, use this order:
+
+1. [`docs/SystemOverview.md`](docs/SystemOverview.md)
+2. [`docs/QuickStart.md`](docs/QuickStart.md)
+3. [`spec/architecture/ArchitectureBaseline-v1.md`](spec/architecture/ArchitectureBaseline-v1.md)
+4. [`spec/governance/architecture/GovernanceArchitecture.md`](spec/governance/architecture/GovernanceArchitecture.md)
+5. [`spec/infrastructure/architecture/RuntimeArchitecture.md`](spec/infrastructure/architecture/RuntimeArchitecture.md)
+6. [`constitution/core/PolicyManifest.yaml`](constitution/core/PolicyManifest.yaml)
+7. [`implementation/v2/planning/ImplementationProgress-v2.md`](implementation/v2/planning/ImplementationProgress-v2.md)
 
 ## License
 
-This project is licensed under the terms of the [LICENSE](LICENSE) file.
+OpenQilin is licensed under the terms of the [LICENSE](LICENSE) file.
