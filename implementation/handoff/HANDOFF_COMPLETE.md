@@ -1,16 +1,16 @@
-# Handoff Complete: M14-WP5 — Administrator Agent
+# Handoff Complete: M14-WP6 — Specialist Agent and Task Execution Engine
 
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-18
-**Branch:** `feat/113-m14-wp5-administrator-agent`
-**Draft PR:** #114
+**Branch:** `feat/116-m14-wp6-specialist-agent`
+**Draft PR:** #117
 **Implements:** `implementation/handoff/current.md`
 
 ---
 
 ## Summary
 
-Implemented the administrator enforcement surface for M14-WP5: the new administrator agent, document-policy and retention enforcement helpers, quarantine support in the agent registry repository, governance artifact policy additions, and runtime dependency wiring. Unit and component coverage are green, and the implementation follows the handoff’s resolved spec gaps, including the explicit `REVIEW_NOTE` on retention/read-only enforcement boundaries.
+Implemented the Specialist execution path end-to-end for M14-WP6: added the new specialist agent package, task execution result repository contract and migration, and wired specialist dispatch through runtime services and `TaskDispatchService`. Added the requested unit coverage and updated component-test runtime wiring so the new services are available in the in-memory app container.
 
 ---
 
@@ -18,22 +18,27 @@ Implemented the administrator enforcement surface for M14-WP5: the new administr
 
 | Task | Status | Notes |
 |---|---|---|
-| Create `src/openqilin/agents/administrator/` package | ✅ Done | Added `__init__.py`, `models.py`, `document_policy.py`, `retention.py`, and `agent.py` |
-| Add administrator governance artifact types and repo authorization updates | ✅ Done | Added five administrator artifact types/caps, exempted them from total-cap accounting, allowed `administrator` writes, and added `quarantine_agent()` |
-| Wire `AdministratorAgent` into runtime dependencies | ✅ Done | Updated `RuntimeServices`, production DI, and component-test runtime wiring |
-| Add unit tests for M14-WP5 | ✅ Done | Added `tests/unit/test_m14_wp5_administrator_agent.py` with cap, role gate, hash integrity, containment, and retention coverage |
+| Add `SpecialistAgent` package (`agent.py`, `models.py`, `task_executor.py`, `prompts.py`, `__init__.py`) | ✅ Done | PM-dispatch-only enforcement, clarification path, tool authorization, result writes, and behavioral violation reporting implemented |
+| Add `task_execution_results` repository contract and in-process implementation | ✅ Done | Added `TaskExecutionResult`, `TaskExecutionResultsRepository`, and `InProcessTaskExecutionResultsRepository` |
+| Add Alembic migration `20260318_0010_create_task_execution_results_table.py` | ✅ Done | Creates table and `task_id` index |
+| Update `target_selector.py` for `specialist` dispatch routing | ✅ Done | `task.target == "specialist"` now wins before command-prefix routing |
+| Update `TaskDispatchService` for specialist dispatch and PM helper method | ✅ Done | Added specialist branch, fail-closed missing-agent path, and `create_specialist_task()` |
+| Update `RuntimeServices` wiring in production and component test containers | ✅ Done | Added `specialist_agent` and `task_execution_results_repo` fields and construction |
+| Add test stub repo support in `tests/testing/infra_stubs.py` | ✅ Done | Added `InMemoryTaskExecutionResultsRepository` |
+| Add `tests/unit/test_m14_wp6_specialist_agent.py` | ✅ Done | Covers dispatch auth, execution results, clarification, behavioral violation, and target selector behavior |
+| Open draft PR linked to GitHub issue | ✅ Done | Draft PR opened as `#117` referencing issue `#116` |
 
 ---
 
 ## Validation Results
 
-```text
-InMemory gate:    FAIL  (exact handoff grep scans repo-local .venv site-packages; source-tree check passed)
-ruff check:       PASS
-ruff format:      PASS
-mypy:             PASS
-pytest unit:      PASS  (588 passed, 0 failed)
-pytest component: PASS  (66 passed, 0 failed)
+```
+InMemory gate:   FAIL
+ruff check:      PASS
+ruff format:     PASS
+mypy:            PASS
+pytest unit:     PASS  (683 passed, 0 failed; command run with tests/unit tests/component -x)
+pytest component: PASS
 ```
 
 ---
@@ -42,7 +47,7 @@ pytest component: PASS  (66 passed, 0 failed)
 
 | File | Line | Note |
 |---|---|---|
-| `src/openqilin/agents/administrator/retention.py` | 63 | Actual read-only enforcement remains in repository write authorization for `completed`/`terminated` projects; `RetentionEnforcer` emits canonical STR-001/STR-002 evidence records only, and channel archiving remains future Discord-layer work. |
+| None | None | None |
 
 ---
 
@@ -50,16 +55,17 @@ pytest component: PASS  (66 passed, 0 failed)
 
 | Conflict | Docs involved | Blocking question |
 |---|---|---|
+| None | None | None |
 
 ---
 
 ## What Was Skipped
 
-No out-of-scope work was implemented. File-backed storage, Discord channel archiving, LangGraph node changes, and shared `InMemoryAgentRegistryRepository` expansion were intentionally left untouched per handoff.
+Nothing was intentionally skipped from the handoff scope.
 
 ---
 
 ## Notes
 
-- `uv run mypy .` and `uv run pytest ...` did not resolve console entrypoints in this environment even after `uv sync --all-groups`; validation passed via `uv run python -m mypy .` and `uv run python -m pytest ...`.
-- The exact InMemory grep command from the handoff reports third-party `InMemory*` classes under `.venv/`. A scoped source-tree check (`src` plus test stubs) returned no production violations.
+- The raw InMemory grep from the handoff (`grep -r ... .`) reports `InMemory` classes from the repo-local `.venv/` site-packages directory, so the exact command does not return clean output in this workspace.
+- A source-tree-only variant over `src tests` returned no production-path matches, which confirms the new task code did not introduce `InMemory*` classes under production `src/`.
