@@ -24,6 +24,8 @@ from openqilin.agents.ceo.decision_writer import CeoDecisionWriter
 from openqilin.agents.cso.agent import CSOAgent
 from openqilin.agents.cwo.agent import CwoAgent
 from openqilin.agents.cwo.workforce_initializer import WorkforceInitializer
+from openqilin.agents.specialist.agent import SpecialistAgent
+from openqilin.agents.specialist.task_executor import SpecialistTaskExecutor
 from openqilin.agents.project_manager.agent import ProjectManagerAgent
 from openqilin.agents.project_manager.artifact_writer import PMProjectArtifactWriter
 from openqilin.agents.secretary.data_access import SecretaryDataAccessService
@@ -40,6 +42,9 @@ from openqilin.control_plane.grammar.command_parser import CommandParser
 from openqilin.control_plane.grammar.free_text_router import FreeTextRouter
 from openqilin.control_plane.grammar.intent_classifier import IntentClassifier
 from openqilin.control_plane.idempotency.ingress_dedupe import IngressDedupeStore
+from openqilin.data_access.repositories.task_execution_results import (
+    InProcessTaskExecutionResultsRepository,
+)
 from openqilin.observability.testing.stubs import (
     InMemoryAuditWriter,
     InMemoryMetricRecorder,
@@ -181,6 +186,13 @@ def _build_test_runtime_services() -> RuntimeServices:
         agent_registry_repo=agent_registry_repo,  # type: ignore[arg-type]
         audit_writer=audit_writer,
     )
+    task_execution_results_repo = InProcessTaskExecutionResultsRepository()
+    specialist_agent = SpecialistAgent(
+        executor=SpecialistTaskExecutor(),
+        task_execution_results_repo=task_execution_results_repo,
+        governance_repo=project_artifact_repo,
+        audit_writer=audit_writer,
+    )
     metric_recorder = InMemoryMetricRecorder()
 
     delivery_event_callback_processor = LocalDeliveryEventCallbackProcessor(
@@ -206,6 +218,7 @@ def _build_test_runtime_services() -> RuntimeServices:
         project_artifact_repository=project_artifact_repo,
         runtime_state_repository=runtime_state_repo,
         budget_runtime_client=budget_runtime_client,
+        specialist_agent=specialist_agent,
     )
     project_manager_agent = ProjectManagerAgent(
         llm_gateway=llm_gateway,
@@ -237,6 +250,8 @@ def _build_test_runtime_services() -> RuntimeServices:
         cwo_agent=cwo_agent,
         auditor_agent=auditor_agent,
         administrator_agent=administrator_agent,
+        specialist_agent=specialist_agent,
+        task_execution_results_repo=task_execution_results_repo,
         domain_leader_agent=domain_leader_agent,
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,

@@ -25,6 +25,8 @@ from openqilin.agents.ceo.decision_writer import CeoDecisionWriter
 from openqilin.agents.cso.agent import CSOAgent
 from openqilin.agents.cwo.agent import CwoAgent
 from openqilin.agents.cwo.workforce_initializer import WorkforceInitializer
+from openqilin.agents.specialist.agent import SpecialistAgent
+from openqilin.agents.specialist.task_executor import SpecialistTaskExecutor
 from openqilin.agents.project_manager.agent import ProjectManagerAgent
 from openqilin.agents.project_manager.artifact_writer import PMProjectArtifactWriter
 from openqilin.agents.secretary.data_access import SecretaryDataAccessService
@@ -60,6 +62,9 @@ from openqilin.data_access.repositories.postgres.audit_event_repository import (
 )
 from openqilin.data_access.repositories.postgres.task_repository import (
     PostgresTaskRepository,
+)
+from openqilin.data_access.repositories.task_execution_results import (
+    InProcessTaskExecutionResultsRepository,
 )
 from openqilin.observability.audit.audit_writer import OTelAuditWriter
 from openqilin.observability.testing.stubs import (
@@ -111,6 +116,8 @@ class RuntimeServices:
     cwo_agent: CwoAgent
     auditor_agent: AuditorAgent
     administrator_agent: AdministratorAgent
+    specialist_agent: SpecialistAgent
+    task_execution_results_repo: InProcessTaskExecutionResultsRepository
     domain_leader_agent: DomainLeaderAgent
     ingress_dedupe: IngressDedupeStore
     runtime_state_repo: PostgresTaskRepository
@@ -261,6 +268,13 @@ def build_runtime_services() -> RuntimeServices:
         agent_registry_repo=agent_registry_repo,
         audit_writer=audit_writer,
     )
+    task_execution_results_repo = InProcessTaskExecutionResultsRepository()
+    specialist_agent = SpecialistAgent(
+        executor=SpecialistTaskExecutor(),
+        task_execution_results_repo=task_execution_results_repo,
+        governance_repo=project_artifact_repo,
+        audit_writer=audit_writer,
+    )
     metric_recorder = InMemoryMetricRecorder()
     delivery_event_callback_processor = LocalDeliveryEventCallbackProcessor(
         runtime_state_repo=runtime_state_repo,
@@ -282,6 +296,7 @@ def build_runtime_services() -> RuntimeServices:
         project_artifact_repository=project_artifact_repo,
         runtime_state_repository=runtime_state_repo,
         budget_runtime_client=budget_runtime_client,
+        specialist_agent=specialist_agent,
     )
     project_manager_agent = ProjectManagerAgent(
         llm_gateway=llm_gateway,
@@ -340,6 +355,8 @@ def build_runtime_services() -> RuntimeServices:
         cwo_agent=cwo_agent,
         auditor_agent=auditor_agent,
         administrator_agent=administrator_agent,
+        specialist_agent=specialist_agent,
+        task_execution_results_repo=task_execution_results_repo,
         domain_leader_agent=domain_leader_agent,
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
@@ -518,6 +535,12 @@ def get_administrator_agent(request: Request) -> AdministratorAgent:
     """Provide Administrator enforcement agent for infrastructure control paths."""
 
     return get_runtime_services(request).administrator_agent
+
+
+def get_specialist_agent(request: Request) -> SpecialistAgent:
+    """Provide Specialist task-execution agent for PM dispatch paths."""
+
+    return get_runtime_services(request).specialist_agent
 
 
 def get_routing_resolver(request: Request) -> ProjectSpaceRoutingResolver:

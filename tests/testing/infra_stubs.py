@@ -57,6 +57,7 @@ from openqilin.data_access.repositories.postgres.project_repository import (
 from openqilin.data_access.repositories.postgres.task_repository import (
     PostgresTaskRepository,
 )
+from openqilin.data_access.repositories.task_execution_results import TaskExecutionResult
 from openqilin.data_access.cache.idempotency_store import (
     CacheIdempotencyRecord,
     CacheIdempotencyStatus,
@@ -1456,6 +1457,20 @@ class InMemoryIdentityChannelRepository(PostgresIdentityMappingRepository):
         self._snapshot_path.write_text(
             json.dumps(payload, sort_keys=True, indent=2), encoding="utf-8"
         )
+
+
+class InMemoryTaskExecutionResultsRepository:
+    """In-memory simulation stub for task_execution_results; used in tests only."""
+
+    def __init__(self) -> None:
+        self._results: list[TaskExecutionResult] = []
+
+    def write_result(self, result: TaskExecutionResult) -> TaskExecutionResult:
+        self._results.append(result)
+        return result
+
+    def get_results_for_task(self, task_id: str) -> tuple[TaskExecutionResult, ...]:
+        return tuple(result for result in self._results if result.task_id == task_id)
 
 
 def _mapping_to_dict(m: IdentityChannelMappingRecord) -> dict[str, object]:
