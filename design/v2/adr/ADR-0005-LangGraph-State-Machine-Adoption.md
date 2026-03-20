@@ -30,16 +30,15 @@ Adopt **LangGraph `StateGraph`** as the task orchestration runtime, running in a
 **Architecture:**
 - The HTTP handler (`owner_commands.py`) becomes admission-only: it validates the request, enqueues a task with status `queued` in PostgreSQL, and returns `202 Accepted`.
 - A separate `orchestrator_worker.py` process polls PostgreSQL for `queued` tasks and invokes the LangGraph graph for each.
-- The graph (`task_orchestrator/workflow/graph.py`) defines four nodes with conditional edges:
+- The graph (`task_orchestrator/workflow/graph.py`) defines three nodes with conditional edges:
   ```
   policy_evaluation_node
     → (denied/error) END
     → (authorized) obligation_check_node
         → (not satisfied) END
-        → (satisfied) budget_reservation_node
-            → (denied/error) END
-            → (approved) dispatch_node → END
+        → (satisfied) dispatch_node → END
   ```
+  Note: a standalone `budget_reservation_node` existed between obligation_check_node and dispatch_node until M15-WP3, when it was removed. Budget reservation is now handled exclusively via the `reserve_budget` obligation within obligation_check_node.
 - Each node is a **closure over `WorkflowServices`**, making the graph stateless across invocations and safe to reuse between polling cycles.
 - Task state is typed as `TaskState` (TypedDict), flowing through the graph as an immutable snapshot updated by each node.
 

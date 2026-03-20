@@ -102,10 +102,10 @@ Replace the in-memory integer budget counter with a real PostgreSQL-backed budge
 
 ### Tasks
 
-- [ ] Replace the M12 `reserve_budget` stub handler in `ObligationDispatcher` with the real handler: calls `PostgresBudgetRuntimeClient.reserve()`; fails closed if `uncertain`
-- [ ] Confirm obligation order: `reserve_budget` fires only after `emit_audit_event` and `require_owner_approval`
-- [ ] Add integration test: task with policy decision `allow` (no `reserve_budget` obligation) → budget NOT reserved; task with obligation → budget IS reserved
-- [ ] Add integration test: budget `uncertain` result → task blocked; obligation chain stops
+- [x] Replace the M12 `reserve_budget` stub handler in `ObligationDispatcher` with the real handler: calls `PostgresBudgetRuntimeClient.reserve()`; fails closed if `uncertain`
+- [x] Confirm obligation order: `reserve_budget` fires only after `emit_audit_event` and `require_owner_approval`
+- [x] Add integration test: task with policy decision `allow` (no `reserve_budget` obligation) → budget NOT reserved; task with obligation → budget IS reserved
+- [x] Add integration test: budget `uncertain` result → task blocked; obligation chain stops
 
 ### Outputs
 
@@ -114,9 +114,9 @@ Replace the in-memory integer budget counter with a real PostgreSQL-backed budge
 
 ### Done criteria
 
-- [ ] Budget reserved only when `reserve_budget` appears in the obligations list from OPA
-- [ ] Budget NOT reserved for tasks with plain `allow` decision
-- [ ] `uncertain` from budget → task blocked
+- [x] Budget reserved only when `reserve_budget` appears in the obligations list from OPA
+- [x] Budget NOT reserved for tasks with plain `allow` decision
+- [x] `uncertain` from budget → task blocked
 
 ---
 
