@@ -8,8 +8,11 @@ import json
 from typing import Mapping
 from uuid import uuid4
 
-from openqilin.budget_runtime.client import AlwaysAllowBudgetRuntimeClient
-from openqilin.budget_runtime.models import BudgetReservationInput
+from openqilin.budget_runtime.models import (
+    DEFAULT_BUDGET_PROJECT_ID,
+    BudgetReservationInput,
+    BudgetRuntimeClientProtocol,
+)
 from openqilin.control_plane.handlers.governance_handler import (
     GovernanceHandlerError,
     archive_project_by_governance,
@@ -53,7 +56,7 @@ class GovernedWriteToolService:
         governance_repository: PostgresProjectRepository,
         project_artifact_repository: PostgresGovernanceArtifactRepository,
         audit_writer: InMemoryAuditWriter | OTelAuditWriter,
-        budget_runtime_client: AlwaysAllowBudgetRuntimeClient | None = None,
+        budget_runtime_client: BudgetRuntimeClientProtocol | None = None,
     ) -> None:
         self._governance_repository = governance_repository
         self._project_artifact_repository = project_artifact_repository
@@ -411,6 +414,11 @@ class GovernedWriteToolService:
                 request_id=context.request_id,
                 trace_id=context.trace_id,
                 principal_id=context.principal_id,
+                project_id=(
+                    context.project_id
+                    or str(arguments.get("project_id") or "").strip()
+                    or DEFAULT_BUDGET_PROJECT_ID
+                ),
                 command=f"tool_write:{tool_name}",
                 args=(json.dumps(arguments, sort_keys=True, ensure_ascii=True),),
                 estimated_cost_units=estimated_cost_units,
@@ -418,7 +426,7 @@ class GovernedWriteToolService:
         )
         if reservation.decision == "allow":
             return None
-        if reservation.decision == "deny":
+        if reservation.decision in {"deny", "hard_breach"}:
             return self._deny(
                 tool_name=tool_name,
                 context=context,

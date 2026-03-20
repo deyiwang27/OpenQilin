@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 from uuid import uuid4
 
-from openqilin.budget_runtime.client import AlwaysAllowBudgetRuntimeClient
+from openqilin.budget_runtime.models import BudgetRuntimeClientProtocol
 from openqilin.communication_gateway.delivery.dlq_writer import LocalDeadLetterWriter
 from openqilin.communication_gateway.delivery.publisher import LocalDeliveryPublisher
 from openqilin.communication_gateway.storage.idempotency_store import (
@@ -604,7 +604,7 @@ def build_task_dispatch_service(
     governance_repository: PostgresProjectRepository | None = None,
     project_artifact_repository: PostgresGovernanceArtifactRepository | None = None,
     runtime_state_repository: PostgresTaskRepository | None = None,
-    budget_runtime_client: AlwaysAllowBudgetRuntimeClient | None = None,
+    budget_runtime_client: BudgetRuntimeClientProtocol | None = None,
     specialist_agent: Any | None = None,
 ) -> TaskDispatchService:
     """Build task-dispatch service with default sandbox and llm adapters."""
