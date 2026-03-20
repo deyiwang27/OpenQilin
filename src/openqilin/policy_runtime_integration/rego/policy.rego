@@ -136,7 +136,7 @@ else := {
 # ---------------------------------------------------------------------------
 
 else := {
-    "decision": "allow",
+    "decision": "allow_with_obligations",
     "reason_code": "policy_allowed",
     "reason_message": "command allowed by policy rule",
     "policy_version": _policy_version,

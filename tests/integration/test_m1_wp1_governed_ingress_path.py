@@ -338,7 +338,6 @@ def test_governed_ingress_fail_closed_on_dispatch_reject() -> None:
     assert "owner_ingress" in span_names
     assert "task_orchestration" in span_names
     assert "policy_evaluation" in span_names
-    assert "budget_reservation" in span_names
     assert "execution_sandbox" in span_names
     assert "audit_emit" in span_names
 

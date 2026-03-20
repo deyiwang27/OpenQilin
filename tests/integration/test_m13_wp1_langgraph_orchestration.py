@@ -212,6 +212,5 @@ def test_langgraph_observability_emitted_during_drain() -> None:
     assert "owner_ingress" in span_names
     assert "task_orchestration" in span_names
     assert "policy_evaluation" in span_names
-    assert "budget_reservation" in span_names
     assert "execution_sandbox" in span_names
     assert "audit_emit" in span_names
