@@ -185,7 +185,14 @@ def _handle_require_owner_approval(context: ObligationContext) -> ObligationOutc
 
 
 def _handle_reserve_budget(context: ObligationContext) -> ObligationOutcome:
-    """Reserve budget for costed action (M12 stub; real ledger wired in M14-WP1)."""
+    """
+    Reserves budget via the PostgreSQL-backed budget client.
+
+    Calls context.budget_reservation_service.reserve_with_fail_closed(context.task_record).
+    Returns allowed=True on approval, allowed=False (blocking=True) on hard_breach or
+    uncertain result. This handler is the sole budget reservation path; the former
+    dedicated budget reservation graph node has been removed (M15-WP3).
+    """
     try:
         outcome = context.budget_reservation_service.reserve_with_fail_closed(context.task_record)
     except Exception as exc:

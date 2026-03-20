@@ -11,8 +11,11 @@ Tests:
 
 from __future__ import annotations
 
+from typing import cast
 from unittest.mock import MagicMock
 
+from openqilin.budget_runtime.models import BudgetReservationResult
+from openqilin.budget_runtime.reservation_service import BudgetFailClosedOutcome
 from openqilin.policy_runtime_integration.obligations import (
     ObligationContext,
     ObligationDispatcher,
@@ -118,6 +121,29 @@ class TestReserveBudgetObligation:
         result = ObligationDispatcher().apply(("reserve_budget",), ctx)
         assert not result.all_satisfied
         assert result.blocking_obligation == "reserve_budget"
+
+    def test_reserve_budget_uncertain_outcome_is_blocking(self) -> None:
+        ctx = _make_context()
+        budget_service = cast(MagicMock, ctx.budget_reservation_service)
+        budget_service.reserve_with_fail_closed.return_value = BudgetFailClosedOutcome(
+            allowed=False,
+            error_code="budget_uncertain_fail_closed",
+            message="budget decision uncertain; fail-closed block applied",
+            reservation=BudgetReservationResult(
+                decision="uncertain",
+                reason_code="uncertain",
+                reason_message="uncertain budget decision",
+                reservation_id=None,
+                remaining_units=None,
+                budget_version="budget-v1",
+            ),
+        )
+        result = ObligationDispatcher().apply(("reserve_budget",), ctx)
+        assert not result.all_satisfied
+        assert result.blocking_obligation == "reserve_budget"
+        outcome = result.outcomes[0]
+        assert not outcome.satisfied
+        assert outcome.blocking
 
     def test_reserve_budget_fail_closed_on_exception(self) -> None:
         ctx = _make_context()

@@ -25,20 +25,10 @@ def route_after_policy(
 
 def route_after_obligation(
     state: TaskState,
-) -> Literal["budget_reservation_node", "__end__"]:
-    """Route to budget reservation when obligations are satisfied; terminate otherwise."""
+) -> Literal["dispatch_node", "__end__"]:
+    """Route to dispatch when obligations are satisfied; terminate otherwise."""
     if not state.get("obligation_satisfied", False):
         return "__end__"
-    final = state.get("final_state", "")
-    if final in _TERMINAL:
-        return "__end__"
-    return "budget_reservation_node"
-
-
-def route_after_budget(
-    state: TaskState,
-) -> Literal["dispatch_node", "__end__"]:
-    """Route to dispatch when budget is approved; terminate otherwise."""
     final = state.get("final_state", "")
     if final in _TERMINAL:
         return "__end__"

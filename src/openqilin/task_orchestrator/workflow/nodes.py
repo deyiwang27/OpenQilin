@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any
 
 from openqilin.observability.tracing.spans import (
     AUDIT_EMIT_SPAN,
-    BUDGET_RESERVATION_SPAN,
     EXECUTION_SANDBOX_SPAN,
     POLICY_EVALUATION_SPAN,
 )
@@ -315,89 +314,6 @@ def make_obligation_check_node(services: WorkflowServices) -> Any:
         return {"obligation_satisfied": True, "blocking_obligation": None}
 
     return obligation_check_node
-
-
-def make_budget_reservation_node(services: WorkflowServices) -> Any:
-    def budget_reservation_node(state: TaskState) -> dict[str, Any]:
-        check_and_increment_hop(state["loop_state"])
-        task_id = state["task_id"]
-        task = services.runtime_state_repo.get_task_by_id(task_id)
-        if task is None:
-            return {"budget_decision": "error", "final_state": "failed"}
-        policy_version = state.get("policy_version", "policy-version-unknown")
-        policy_hash = state.get("policy_hash", "policy-hash-unknown")
-        rule_ids = state.get("rule_ids", ())
-        with services.tracer.start_span(
-            trace_id=task.trace_id,
-            name=BUDGET_RESERVATION_SPAN,
-            attributes={"stage": "budget_reservation"},
-        ) as budget_span:
-            budget_span.set_attribute("correlation.task_id", task_id)
-            budget_outcome = services.budget_reservation_service.reserve_with_fail_closed(task)
-        budget_decision = (
-            budget_outcome.reservation.decision if budget_outcome.reservation else "error"
-        )
-        budget_reason = (
-            budget_outcome.reservation.reason_code
-            if budget_outcome.reservation
-            else budget_outcome.error_code
-        )
-        budget_version = (
-            budget_outcome.reservation.budget_version
-            if budget_outcome.reservation
-            else "budget-version-unknown"
-        )
-        _emit_stage_audit(
-            services=services,
-            task_id=task_id,
-            trace_id=task.trace_id,
-            request_id=task.request_id,
-            principal_id=task.principal_id,
-            principal_role=task.principal_role,
-            stage="budget",
-            decision=budget_decision,
-            source="budget_runtime",
-            reason_code=budget_reason,
-            message=budget_outcome.message,
-            policy_version=policy_version,
-            policy_hash=policy_hash,
-            rule_ids=rule_ids,
-        )
-        if not budget_outcome.allowed:
-            services.runtime_state_repo.update_task_status(
-                task_id,
-                "blocked",
-                outcome_source="budget_runtime",
-                outcome_error_code=budget_outcome.error_code or "budget_blocked",
-                outcome_message=budget_outcome.message,
-                outcome_details={
-                    "budget_version": budget_version,
-                    "source": "budget_reservation_node",
-                    "policy_version": policy_version,
-                    "policy_hash": policy_hash,
-                    "rule_ids": ",".join(rule_ids),
-                },
-            )
-            _emit_outcome_audit(
-                services=services,
-                task_id=task_id,
-                trace_id=task.trace_id,
-                request_id=task.request_id,
-                principal_id=task.principal_id,
-                principal_role=task.principal_role,
-                outcome="denied",
-                error_code=budget_outcome.error_code or "budget_blocked",
-                message=budget_outcome.message,
-                source="budget_runtime",
-                policy_version=policy_version,
-                policy_hash=policy_hash,
-                rule_ids=rule_ids,
-                attributes={"decision": budget_decision, "budget_version": budget_version},
-            )
-            return {"budget_decision": budget_decision, "final_state": "blocked"}
-        return {"budget_decision": budget_decision}
-
-    return budget_reservation_node
 
 
 def make_dispatch_node(services: WorkflowServices) -> Any:
