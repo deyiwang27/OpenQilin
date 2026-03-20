@@ -52,6 +52,11 @@ class PostgresBudgetLedgerRepository:
     def __init__(self, *, session_factory: sessionmaker[Session]) -> None:
         self._session_factory = session_factory
 
+    @property
+    def session_factory(self) -> sessionmaker[Session]:
+        """Public accessor for the session factory (used by PostgresBudgetRuntimeClient)."""
+        return self._session_factory
+
     def get_allocation(self, project_id: str) -> BudgetAllocationRecord | None:
         """Return allocation row for project_id, or None if not found."""
         with self._session_factory() as session:

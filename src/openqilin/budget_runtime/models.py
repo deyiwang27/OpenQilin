@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal, Protocol, runtime_checkable
 
+DEFAULT_BUDGET_PROJECT_ID: str = "project-default"
+
 BudgetDecision = Literal["allow", "deny", "uncertain", "hard_breach"]
 
 

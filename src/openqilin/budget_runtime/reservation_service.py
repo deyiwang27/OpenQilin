@@ -5,12 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from openqilin.budget_runtime.models import (
+    DEFAULT_BUDGET_PROJECT_ID,
     BudgetReservationInput,
     BudgetReservationResult,
     BudgetRuntimeClientProtocol,
-)
-from openqilin.data_access.repositories.postgres.budget_repository import (
-    PostgresBudgetLedgerRepository,
 )
 from openqilin.budget_runtime.threshold_evaluator import estimate_cost_units
 from openqilin.data_access.repositories.runtime_state import TaskRecord
@@ -45,7 +43,7 @@ class BudgetReservationService:
             request_id=task.request_id,
             trace_id=task.trace_id,
             principal_id=task.principal_id,
-            project_id=task.project_id or PostgresBudgetLedgerRepository.DEFAULT_PROJECT_ID,
+            project_id=task.project_id or DEFAULT_BUDGET_PROJECT_ID,
             command=task.command,
             args=task.args,
             estimated_cost_units=estimate_cost_units(task.command, task.args),

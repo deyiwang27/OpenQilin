@@ -92,7 +92,7 @@ class PostgresBudgetRuntimeClient:
         estimate_tokens = max(payload.estimated_cost_units, 0)
         estimate_usd = Decimal(estimate_tokens) * _COST_UNIT_TO_USD
 
-        with self._ledger_repo._session_factory() as session:
+        with self._ledger_repo.session_factory() as session:
             allocation_row = session.execute(
                 text(
                     "SELECT currency_limit_usd, quota_limit_tokens "

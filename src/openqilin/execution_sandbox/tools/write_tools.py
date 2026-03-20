@@ -8,7 +8,11 @@ import json
 from typing import Mapping
 from uuid import uuid4
 
-from openqilin.budget_runtime.models import BudgetReservationInput, BudgetRuntimeClientProtocol
+from openqilin.budget_runtime.models import (
+    DEFAULT_BUDGET_PROJECT_ID,
+    BudgetReservationInput,
+    BudgetRuntimeClientProtocol,
+)
 from openqilin.control_plane.handlers.governance_handler import (
     GovernanceHandlerError,
     archive_project_by_governance,
@@ -24,9 +28,6 @@ from openqilin.data_access.repositories.artifacts import (
 from openqilin.data_access.repositories.governance import ProjectRecord
 from openqilin.data_access.repositories.postgres.governance_artifact_repository import (
     PostgresGovernanceArtifactRepository,
-)
-from openqilin.data_access.repositories.postgres.budget_repository import (
-    PostgresBudgetLedgerRepository,
 )
 from openqilin.data_access.repositories.postgres.project_repository import PostgresProjectRepository
 from openqilin.execution_sandbox.tools.access_policy import is_write_tool_allowed
@@ -416,7 +417,7 @@ class GovernedWriteToolService:
                 project_id=(
                     context.project_id
                     or str(arguments.get("project_id") or "").strip()
-                    or PostgresBudgetLedgerRepository.DEFAULT_PROJECT_ID
+                    or DEFAULT_BUDGET_PROJECT_ID
                 ),
                 command=f"tool_write:{tool_name}",
                 args=(json.dumps(arguments, sort_keys=True, ensure_ascii=True),),
