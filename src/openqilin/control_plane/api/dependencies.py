@@ -9,6 +9,7 @@ from fastapi import Request
 from sqlalchemy.orm import sessionmaker
 
 from openqilin.budget_runtime.client import PostgresBudgetRuntimeClient
+from openqilin.budget_runtime.cost_evaluator import TokenCostEvaluator
 from openqilin.budget_runtime.models import BudgetRuntimeClientProtocol
 from openqilin.budget_runtime.reservation_service import BudgetReservationService
 from openqilin.communication_gateway.callbacks.outcome_notifier import CommunicationOutcomeNotifier
@@ -245,7 +246,10 @@ def build_runtime_services() -> RuntimeServices:
     )
 
     budget_ledger_repo.seed_default_allocation()
-    budget_runtime_client = PostgresBudgetRuntimeClient(ledger_repo=budget_ledger_repo)
+    budget_runtime_client = PostgresBudgetRuntimeClient(
+        ledger_repo=budget_ledger_repo,
+        cost_evaluator=TokenCostEvaluator(),
+    )
     budget_reservation_service = BudgetReservationService(client=budget_runtime_client)
     lifecycle_service = TaskLifecycleService(runtime_state_repo=runtime_state_repo)
     retrieval_query_service = build_retrieval_query_service()

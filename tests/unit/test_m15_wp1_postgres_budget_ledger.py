@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 from openqilin.budget_runtime.client import AlwaysAllowBudgetRuntimeClient
 from openqilin.budget_runtime.models import (
     BudgetReservationInput,
@@ -25,10 +27,21 @@ class _HardBreachClient:
             budget_version="test",
         )
 
-    def settle(self, task_id: str, reservation_id: str, actual_units: int) -> None:
+    def settle(
+        self,
+        task_id: str,
+        actual_tokens: int,
+        actual_cost_usd: Decimal,
+        *,
+        project_id: str = "",
+        role: str = "",
+        model_class: str = "",
+    ) -> None:
+        _ = (task_id, actual_tokens, actual_cost_usd, project_id, role, model_class)
         return None
 
-    def release(self, task_id: str, reservation_id: str) -> None:
+    def release(self, task_id: str) -> None:
+        _ = task_id
         return None
 
 
@@ -47,10 +60,21 @@ class _CaptureClient:
             budget_version="test",
         )
 
-    def settle(self, task_id: str, reservation_id: str, actual_units: int) -> None:
+    def settle(
+        self,
+        task_id: str,
+        actual_tokens: int,
+        actual_cost_usd: Decimal,
+        *,
+        project_id: str = "",
+        role: str = "",
+        model_class: str = "",
+    ) -> None:
+        _ = (task_id, actual_tokens, actual_cost_usd, project_id, role, model_class)
         return None
 
-    def release(self, task_id: str, reservation_id: str) -> None:
+    def release(self, task_id: str) -> None:
+        _ = task_id
         return None
 
 
@@ -124,13 +148,13 @@ def test_always_allow_client_reserve_returns_allow() -> None:
 def test_always_allow_client_settle_is_noop() -> None:
     client = AlwaysAllowBudgetRuntimeClient()
 
-    client.settle("t1", "r1", 100)
+    client.settle("t1", 100, Decimal("0.1"))
 
 
 def test_always_allow_client_release_is_noop() -> None:
     client = AlwaysAllowBudgetRuntimeClient()
 
-    client.release("t1", "r1")
+    client.release("t1")
 
 
 def test_always_allow_client_conforms_to_protocol() -> None:

@@ -666,6 +666,7 @@ def build_task_dispatch_service(
             governance_project_reader=governance_repository,
             read_tool_service=read_tool_service,
             write_tool_service=write_tool_service,
+            budget_client=budget_runtime_client,
         ),
         communication_dispatch_adapter=LocalCommunicationDispatchAdapter(
             publisher=communication_publisher,

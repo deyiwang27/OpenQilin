@@ -41,7 +41,7 @@ class PostgresBudgetLedgerRepository:
     get_allocation() and get_spent_tokens() open their own sessions (read-only).
     insert_reservation() accepts a caller-owned session so it participates in the
     SELECT FOR UPDATE transaction held by PostgresBudgetRuntimeClient.
-    settle_reservation() and release_reservation() open their own sessions.
+    settle_reservation(), release_reservation(), and insert_event() open their own sessions.
     """
 
     DEFAULT_CURRENCY_LIMIT_USD: Decimal = Decimal("10.00")
@@ -93,6 +93,18 @@ class PostgresBudgetLedgerRepository:
             ).fetchone()
             return int(row.total) if row else 0
 
+    def find_active_reservation_id(self, task_id: str) -> str | None:
+        """Return id of the active (status='reserved') reservation for task_id, or None."""
+        with self._session_factory() as session:
+            row = session.execute(
+                text(
+                    "SELECT id FROM budget_reservations "
+                    "WHERE task_id = :task_id AND status = 'reserved'"
+                ),
+                {"task_id": task_id},
+            ).fetchone()
+            return str(row.id) if row is not None else None
+
     def insert_reservation(
         self,
         *,
@@ -137,9 +149,8 @@ class PostgresBudgetLedgerRepository:
         )
         return record
 
-    def settle_reservation(self, *, reservation_id: str, actual_units: int) -> None:
+    def settle_reservation(self, *, reservation_id: str) -> None:
         """Mark a reservation settled. No-op if id missing or already settled."""
-        _ = actual_units
         with self._session_factory() as session:
             session.execute(
                 text(

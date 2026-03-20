@@ -7,12 +7,11 @@ from uuid import uuid4
 
 from sqlalchemy import text
 
+from openqilin.budget_runtime.cost_evaluator import TokenCostEvaluator
 from openqilin.budget_runtime.models import BudgetReservationInput, BudgetReservationResult
 from openqilin.data_access.repositories.postgres.budget_repository import (
     PostgresBudgetLedgerRepository,
 )
-
-_COST_UNIT_TO_USD = Decimal("0.0001")
 
 
 class BudgetRuntimeClientError(RuntimeError):
@@ -26,9 +25,11 @@ class PostgresBudgetRuntimeClient:
         self,
         *,
         ledger_repo: PostgresBudgetLedgerRepository,
+        cost_evaluator: TokenCostEvaluator,
         budget_version: str = "m15-budget-postgres-v1",
     ) -> None:
         self._ledger_repo = ledger_repo
+        self._cost_evaluator = cost_evaluator
         self._budget_version = budget_version
 
     def reserve(self, payload: BudgetReservationInput) -> BudgetReservationResult:
@@ -64,22 +65,39 @@ class PostgresBudgetRuntimeClient:
                 budget_version=self._budget_version,
             )
 
-    def settle(self, task_id: str, reservation_id: str, actual_units: int) -> None:
-        """Settle a reservation after task completion."""
+    def settle(
+        self,
+        task_id: str,
+        actual_tokens: int,
+        actual_cost_usd: Decimal,
+        *,
+        project_id: str = "",
+        role: str = "",
+        model_class: str = "",
+    ) -> None:
+        """Settle reservation and insert budget_events row. No-op if no active reservation."""
 
-        _ = task_id
-        if not reservation_id.strip():
+        try:
+            reservation_id = self._ledger_repo.find_active_reservation_id(task_id)
+            if reservation_id is None:
+                return
+            self._ledger_repo.settle_reservation(reservation_id=reservation_id)
+            self._ledger_repo.insert_event(
+                task_id=task_id,
+                project_id=project_id or self._ledger_repo.DEFAULT_PROJECT_ID,
+                role=role,
+                model_class=model_class,
+                actual_tokens=max(actual_tokens, 0),
+                actual_cost_usd=actual_cost_usd,
+            )
+        except Exception:
             return
-        self._ledger_repo.settle_reservation(
-            reservation_id=reservation_id,
-            actual_units=max(actual_units, 0),
-        )
 
-    def release(self, task_id: str, reservation_id: str) -> None:
-        """Release a reservation when task execution is cancelled."""
+    def release(self, task_id: str) -> None:
+        """Release the active reservation for task_id. No-op if not found."""
 
-        _ = task_id
-        if not reservation_id.strip():
+        reservation_id = self._ledger_repo.find_active_reservation_id(task_id)
+        if reservation_id is None:
             return
         self._ledger_repo.release_reservation(reservation_id=reservation_id)
 
@@ -89,8 +107,12 @@ class PostgresBudgetRuntimeClient:
         payload: BudgetReservationInput,
         project_id: str,
     ) -> BudgetReservationResult | None:
-        estimate_tokens = max(payload.estimated_cost_units, 0)
-        estimate_usd = Decimal(estimate_tokens) * _COST_UNIT_TO_USD
+        cost_estimate = self._cost_evaluator.estimate(
+            payload.model_class,
+            max(payload.estimated_cost_units, 0),
+        )
+        estimate_tokens = cost_estimate.quota_tokens_estimate
+        estimate_usd = cost_estimate.usd_estimate
 
         with self._ledger_repo.session_factory() as session:
             allocation_row = session.execute(
@@ -226,12 +248,21 @@ class AlwaysAllowBudgetRuntimeClient:
             budget_version=self._budget_version,
         )
 
-    def settle(self, task_id: str, reservation_id: str, actual_units: int) -> None:
+    def settle(
+        self,
+        task_id: str,
+        actual_tokens: int,
+        actual_cost_usd: Decimal,
+        *,
+        project_id: str = "",
+        role: str = "",
+        model_class: str = "",
+    ) -> None:
         """No-op in simulation client."""
 
-        _ = (task_id, reservation_id, actual_units)
+        _ = (task_id, actual_tokens, actual_cost_usd, project_id, role, model_class)
 
-    def release(self, task_id: str, reservation_id: str) -> None:
+    def release(self, task_id: str) -> None:
         """No-op in simulation client."""
 
-        _ = (task_id, reservation_id)
+        _ = task_id

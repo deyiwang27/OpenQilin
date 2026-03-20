@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Literal, Protocol, runtime_checkable
 
 DEFAULT_BUDGET_PROJECT_ID: str = "project-default"
@@ -22,6 +23,7 @@ class BudgetReservationInput:
     command: str
     args: tuple[str, ...]
     estimated_cost_units: int
+    model_class: str = "interactive_fast"
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,10 +46,29 @@ class BudgetRuntimeClientProtocol(Protocol):
         """Evaluate and reserve budget for an admitted task."""
         ...
 
-    def settle(self, task_id: str, reservation_id: str, actual_units: int) -> None:
-        """Settle a prior reservation when task execution completes."""
+    def settle(
+        self,
+        task_id: str,
+        actual_tokens: int,
+        actual_cost_usd: Decimal,
+        *,
+        project_id: str = "",
+        role: str = "",
+        model_class: str = "",
+    ) -> None:
+        """
+        Settle the reservation for task_id and record actual usage.
+
+        Looks up the active reservation for task_id internally.
+        Also inserts a budget_events row with actual usage data.
+        No-op if no active reservation is found (idempotent).
+        """
         ...
 
-    def release(self, task_id: str, reservation_id: str) -> None:
-        """Release a prior reservation when task execution is cancelled."""
+    def release(self, task_id: str) -> None:
+        """
+        Release the active reservation for task_id (task cancelled).
+
+        No-op if no active reservation found.
+        """
         ...

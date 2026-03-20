@@ -1,11 +1,11 @@
+from openqilin.budget_runtime.cost_evaluator import TokenCostEvaluator
 from openqilin.budget_runtime.reservation_service import BudgetReservationService
-from openqilin.budget_runtime.threshold_evaluator import estimate_cost_units
 from openqilin.control_plane.identity.principal_resolver import resolve_principal
 from openqilin.data_access.repositories.runtime_state import TaskRecord
-from tests.testing.infra_stubs import InMemoryRuntimeStateRepository
-from tests.testing.stubs import InMemoryBudgetRuntimeClient
 from openqilin.task_orchestrator.admission.envelope_validator import validate_owner_command_envelope
 from openqilin.testing.owner_command import build_owner_command_request_model
+from tests.testing.infra_stubs import InMemoryRuntimeStateRepository
+from tests.testing.stubs import InMemoryBudgetRuntimeClient
 
 
 def _build_task(command: str) -> TaskRecord:
@@ -27,9 +27,8 @@ def _build_task(command: str) -> TaskRecord:
     return repository.create_task_from_envelope(envelope)
 
 
-def test_estimate_cost_units_is_positive() -> None:
-    units = estimate_cost_units("run_task", ("arg1", "arg2"))
-    assert units > 0
+def test_default_estimated_input_tokens_is_positive() -> None:
+    assert TokenCostEvaluator.DEFAULT_ESTIMATED_INPUT_TOKENS > 0
 
 
 def test_budget_reservation_allows_and_is_replay_safe() -> None:
