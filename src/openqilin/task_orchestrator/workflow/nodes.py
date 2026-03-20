@@ -306,6 +306,19 @@ def make_obligation_check_node(services: WorkflowServices) -> Any:
             context=obligation_context,
         )
         if not obligation_result.all_satisfied and obligation_result.blocking_obligation:
+            services.runtime_state_repo.update_task_status(
+                task_id,
+                "blocked",
+                outcome_source="obligation_dispatcher",
+                outcome_error_code=obligation_result.blocking_obligation,
+                outcome_message=f"obligation '{obligation_result.blocking_obligation}' blocked task",
+                outcome_details={
+                    "blocking_obligation": obligation_result.blocking_obligation,
+                    "policy_version": policy_version,
+                    "policy_hash": policy_hash,
+                    "rule_ids": ",".join(rule_ids),
+                },
+            )
             return {
                 "obligation_satisfied": False,
                 "blocking_obligation": obligation_result.blocking_obligation,

@@ -277,8 +277,8 @@ def test_governed_ingress_fail_closed_on_budget_runtime_error() -> None:
 
     task_body = client.get(f"/v1/tasks/{task_id}").json()
     assert task_body["status"] == "blocked"
-    assert task_body["error_code"] == "budget_quota_hard_breach"
-    assert task_body["outcome_source"] == "budget_runtime"
+    assert task_body["error_code"] == "reserve_budget"
+    assert task_body["outcome_source"] == "obligation_dispatcher"
 
 
 def test_governed_ingress_fail_closed_on_dispatch_reject() -> None:
@@ -329,6 +329,7 @@ def test_governed_ingress_fail_closed_on_dispatch_reject() -> None:
     new_events = audit_repo.list_events_for_trace(task_record.trace_id)
     assert [event.event_type for event in new_events] == [
         "policy.decision",
+        "obligation.emit_audit_event",
         "owner_command.denied",
     ]
     assert new_events[-1].task_id == task_id
