@@ -23,18 +23,18 @@ Replace the in-memory integer budget counter with a real PostgreSQL-backed budge
 
 ### Tasks
 
-- [ ] Write and run Alembic migrations:
+- [x] Write and run Alembic migrations:
   - `0008_create_budget_allocations_table.py` — `(id, project_id, currency_limit_usd, quota_limit_tokens, window_type, created_at, updated_at)`
   - `0009_create_budget_reservations_table.py` — `(id, task_id, project_id, reserved_usd, reserved_tokens, status, created_at, settled_at)`
   - `0010_create_budget_events_table.py` — `(id, task_id, project_id, role, model_class, actual_tokens, actual_cost_usd, created_at)`
-- [ ] Implement `src/openqilin/data_access/repositories/postgres/budget_repository.py` — `PostgresBudgetLedgerRepository`:
+- [x] Implement `src/openqilin/data_access/repositories/postgres/budget_repository.py` — `PostgresBudgetLedgerRepository`:
   - `get_allocation(project_id)`, `insert_reservation()`, `settle_reservation()`, `release_reservation()`, `insert_event()`, `get_spent(project_id, status)`
-- [ ] Implement `src/openqilin/budget_runtime/client.py` — `PostgresBudgetRuntimeClient`:
+- [x] Implement `src/openqilin/budget_runtime/client.py` — `PostgresBudgetRuntimeClient`:
   - `reserve(task_id, project_id, estimate)` — atomic `SELECT ... FOR UPDATE` on allocation row; check `spent + estimate ≤ limit`; insert reservation on success; return `hard_breach` on limit exceeded
   - `settle(task_id, actual_cost)` — update reservation to `settled`; insert `budget_events` row
   - `release(task_id)` — update reservation to `released` on task cancellation
-- [ ] Wire `PostgresBudgetRuntimeClient` in `dependencies.py`; remove `InMemoryBudgetRuntimeClient` from production
-- [ ] Populate a default `budget_allocations` row on first startup for the default project (or via seeding script)
+- [x] Wire `PostgresBudgetRuntimeClient` in `dependencies.py`; remove `InMemoryBudgetRuntimeClient` from production
+- [x] Populate a default `budget_allocations` row on first startup for the default project (or via seeding script)
 
 ### Outputs
 
@@ -44,10 +44,10 @@ Replace the in-memory integer budget counter with a real PostgreSQL-backed budge
 
 ### Done criteria
 
-- [ ] Concurrent reservation: two tasks race near budget limit; only one succeeds
-- [ ] Reservation persists across process restart
-- [ ] `hard_breach` returned when `spent + estimate > currency_limit_usd`
-- [ ] PostgreSQL unavailable during reservation → returns `uncertain` → task blocked
+- [x] Concurrent reservation: two tasks race near budget limit; only one succeeds
+- [x] Reservation persists across process restart
+- [x] `hard_breach` returned when `spent + estimate > currency_limit_usd`
+- [x] PostgreSQL unavailable during reservation → returns `uncertain` → task blocked
 
 ---
 
