@@ -42,8 +42,6 @@ class TaskState(TypedDict):
     # Obligation gate output
     obligation_satisfied: bool
     blocking_obligation: str | None
-    # Budget gate output
-    budget_decision: str | None
     # Dispatch output
     dispatch_accepted: bool
     dispatch_target: str | None

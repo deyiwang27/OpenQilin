@@ -1,8 +1,8 @@
-# Handoff Complete: M15-WP2 — Token-Based Cost Model
+# Handoff Complete: M15-WP3 — Budget Obligation Enforcement
 
 **Completed by:** CodeX (engineer)
-**Date:** 2026-03-19
-**Branch:** `feat/127-m15-wp2-token-cost-model`
+**Date:** 2026-03-20
+**Branch:** `feat/130-m15-wp3-obligation-budget-enforcement`
 **Draft PR:** _Not opened in this run_
 **Implements:** `implementation/handoff/current.md`
 
@@ -10,7 +10,7 @@
 
 ## Summary
 
-Implemented the WP2 token-based budget cost model with a new `TokenCostEvaluator`, removed the character-count estimator, and rewired PostgreSQL budget settlement to resolve active reservations by `task_id`. Integrated settlement into `LlmGatewayDispatchAdapter` for served LLM responses and updated DI wiring plus protocol/repository contracts accordingly. Added the requested WP2 unit coverage and updated existing tests for the new budget client signatures.
+Removed the standalone `budget_reservation_node` path from the LangGraph workflow so budget reservation is only applied through obligation handling. Updated state/routing models and worker initial state to remove legacy `budget_decision` plumbing. Added WP3 unit coverage for obligation-conditioned budget behavior and aligned existing component expectations with the new graph topology.
 
 ---
 
@@ -18,17 +18,14 @@ Implemented the WP2 token-based budget cost model with a new `TokenCostEvaluator
 
 | Task | Status | Notes |
 |---|---|---|
-| Add `src/openqilin/budget_runtime/cost_evaluator.py` | ✅ Done | Added constants, routing-tier mapping, `CostEstimate`, `ActualCost`, `TokenCostEvaluator.estimate()`, `TokenCostEvaluator.settle()` |
-| Update `BudgetReservationInput` and budget protocol signatures | ✅ Done | Added `model_class` default; changed `settle()`/`release()` to task-id based protocol with actual token/USD fields |
-| Update `PostgresBudgetRuntimeClient` | ✅ Done | Added evaluator dependency, removed `_COST_UNIT_TO_USD`, switched reserve computation to evaluator, task-id-based `settle()`/`release()`, and event insertion on settle |
-| Update `PostgresBudgetLedgerRepository` | ✅ Done | Added `find_active_reservation_id(task_id)`, removed unused `actual_units` from `settle_reservation()` |
-| Update `BudgetReservationService` | ✅ Done | Removed `estimate_cost_units`; now uses fixed token estimate constant and `model_class="interactive_fast"` |
-| Wire settle in LLM dispatch adapter | ✅ Done | Added optional `budget_client` dependency and `settle()` call for served/fallback-served LLM responses |
-| Update task-service and dependency wiring | ✅ Done | Passed `budget_client` into `LlmGatewayDispatchAdapter`; injected `TokenCostEvaluator()` into `PostgresBudgetRuntimeClient` construction |
-| Remove legacy estimator module | ✅ Done | Deleted `src/openqilin/budget_runtime/threshold_evaluator.py` |
-| Add WP2 evaluator unit tests | ✅ Done | Added `tests/unit/budget_runtime/test_m15_wp2_token_cost_evaluator.py` with all requested scenarios |
-| Add WP2 postgres settle unit tests | ✅ Done | Added `tests/unit/budget_runtime/test_m15_wp2_postgres_budget_settle.py` with all requested scenarios |
-| Update existing tests for new signatures/removals | ✅ Done | Updated `tests/unit/test_m1_wp4_budget_runtime.py` and `tests/unit/test_m15_wp1_postgres_budget_ledger.py` |
+| Remove standalone budget reservation node from graph topology | ✅ Done | Updated graph imports/nodes/edges; `obligation_check_node` now routes directly to `dispatch_node` or `END` |
+| Update post-obligation routing and remove budget route helper | ✅ Done | `route_after_obligation` now returns `dispatch_node`/`__end__`; removed `route_after_budget` |
+| Delete obsolete budget node implementation | ✅ Done | Removed `make_budget_reservation_node` and unused budget-reservation span import |
+| Remove `budget_decision` from workflow state model and runtime initial state | ✅ Done | Removed from `TaskState` and both orchestrator worker initial state dictionaries |
+| Update `_handle_reserve_budget` docstring | ✅ Done | Replaced stale “stub” wording; logic unchanged |
+| Add new WP3 tests file | ✅ Done | Added `tests/unit/test_m15_wp3_obligation_budget_enforcement.py` with 7 tests requested by handoff |
+| Add uncertain-outcome blocking test in existing dispatcher tests | ✅ Done | Added `test_reserve_budget_uncertain_outcome_is_blocking` in `tests/unit/test_m12_wp2_obligation_dispatcher.py` |
+| Reconcile affected component expectations after topology change | ✅ Done | Updated `tests/component/test_m1_wp1_owner_command_router.py` expectations that assumed unconditional budget stage |
 
 ---
 
@@ -36,20 +33,20 @@ Implemented the WP2 token-based budget cost model with a new `TokenCostEvaluator
 
 ```
 InMemory gate:    PASS
-estimate_cost_units grep: PASS
-_COST_UNIT_TO_USD grep: PASS
-threshold_evaluator deleted: PASS
+budget_reservation_node grep: PASS
+route_after_budget grep: PASS
+budget_decision grep: PASS
 ruff check:       PASS
 ruff format:      PASS
 mypy:             PASS
-pytest unit+component: PASS (717 passed, 0 failed)
+pytest unit+component: PASS (725 passed, 0 failed)
 ```
 
 Commands executed:
 - `grep -r --exclude-dir=.venv --include="*.py" -l "class InMemory" . | grep -v "/testing/" | grep -v "tests/"`
-- `grep -r --exclude-dir=.venv --include="*.py" "estimate_cost_units" .`
-- `grep -r --exclude-dir=.venv --include="*.py" "_COST_UNIT_TO_USD" .`
-- `test ! -f src/openqilin/budget_runtime/threshold_evaluator.py && echo "PASS"`
+- `grep -r --include="*.py" "budget_reservation_node" src/`
+- `grep -r --include="*.py" "route_after_budget" src/`
+- `grep -r --include="*.py" "budget_decision" src/`
 - `uv run ruff check .`
 - `uv run ruff format --check .`
 - `uv run python -m mypy .`
@@ -68,15 +65,17 @@ Commands executed:
 
 | Conflict | Docs involved | Blocking question |
 |---|---|---|
+| Handoff listed `src/openqilin/task_orchestrator/workflow/state_machine.py`, but repository path is `src/openqilin/task_orchestrator/state/state_machine.py`. | `implementation/handoff/current.md` vs codebase layout | Should future handoffs reference `state/state_machine.py` explicitly to avoid path ambiguity? |
+| Handoff-provided replacement docstring included literal `budget_reservation_node`, while acceptance criteria required zero `budget_reservation_node` matches under `src/`. Implemented semantically equivalent wording without that literal token. | `implementation/handoff/current.md` (Interfaces vs Acceptance Criteria) | Should acceptance criteria or exact docstring text be treated as authoritative when they conflict? |
 
 ---
 
 ## What Was Skipped
 
-- Draft PR creation/push workflow was not executed in this run.
+- Draft PR creation was not performed in this run.
 
 ---
 
 ## Notes
 
-- In this environment, `uv run mypy .` and `uv run pytest ...` executable shims were unavailable; equivalent validated commands were run via `uv run python -m mypy .` and `uv run python -m pytest ...`.
+- The handoff test note mentioned async test style, but `ObligationDispatcher.apply()` is synchronous in the current codebase; tests were implemented synchronously against the current interface.

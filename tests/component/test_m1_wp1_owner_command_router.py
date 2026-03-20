@@ -161,7 +161,6 @@ def test_submit_owner_command_replay_returns_same_task() -> None:
     events = services.audit_writer.get_events()
     assert [event.event_type for event in events] == [
         "policy.decision",
-        "budget.decision",
         "owner_command.accepted",
         "owner_command.replayed",
     ]
@@ -272,7 +271,7 @@ def test_submit_owner_command_denies_policy_deny() -> None:
     assert status_response.json()["error_code"] == "policy_denied"
 
 
-def test_submit_owner_command_denies_budget_deny() -> None:
+def test_submit_owner_command_budget_deny_command_dispatches_without_budget_obligation() -> None:
     app = create_control_plane_app()
     client = TestClient(app)
     services = app.state.runtime_services
@@ -297,8 +296,8 @@ def test_submit_owner_command_denies_budget_deny() -> None:
 
     task = services.runtime_state_repo.get_task_by_id(task_id)
     assert task is not None
-    assert task.status == "blocked"
-    assert task.outcome_error_code == "budget_denied"
+    assert task.status == "dispatched"
+    assert task.outcome_error_code is None
 
 
 def test_submit_owner_command_denies_dispatch_reject() -> None:
@@ -549,7 +548,6 @@ def test_submit_owner_command_emits_observability_on_accept() -> None:
     audit_events = services.audit_writer.get_events()
     assert [event.event_type for event in audit_events] == [
         "policy.decision",
-        "budget.decision",
         "owner_command.accepted",
     ]
     accepted_event = audit_events[-1]
@@ -561,7 +559,6 @@ def test_submit_owner_command_emits_observability_on_accept() -> None:
     assert "owner_ingress" in span_names
     assert "task_orchestration" in span_names
     assert "policy_evaluation" in span_names
-    assert "budget_reservation" in span_names
     assert "execution_sandbox" in span_names
     assert "audit_emit" in span_names
 

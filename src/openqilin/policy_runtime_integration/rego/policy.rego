@@ -136,13 +136,13 @@ else := {
 # ---------------------------------------------------------------------------
 
 else := {
-    "decision": "allow",
+    "decision": "allow_with_obligations",
     "reason_code": "policy_allowed",
     "reason_message": "command allowed by policy rule",
     "policy_version": _policy_version,
     "policy_hash": _policy_hash,
     "rule_ids": ["AUTH-001", "AUTH-002", "POL-001"],
-    "obligations": ["emit_audit_event"]
+    "obligations": ["emit_audit_event", "reserve_budget"]
 }
 
 # ---------------------------------------------------------------------------
