@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from decimal import Decimal
 import json
 import re
 from threading import Lock
 from typing import Mapping, Protocol, cast
 from uuid import uuid4
 
+from openqilin.budget_runtime.models import BudgetRuntimeClientProtocol
 from openqilin.execution_sandbox.tools.contracts import ToolCallContext, ToolResult
 from openqilin.execution_sandbox.tools.invocation_adapter import invoke_tool_command
 from openqilin.execution_sandbox.tools.read_tools import GovernedReadToolService
@@ -142,6 +144,7 @@ class LlmGatewayDispatchAdapter:
         governance_project_reader: GovernanceProjectReader | None = None,
         read_tool_service: GovernedReadToolService | None = None,
         write_tool_service: GovernedWriteToolService | None = None,
+        budget_client: BudgetRuntimeClientProtocol | None = None,
     ) -> None:
         self._llm_gateway_service = llm_gateway_service
         self._settings = settings or RuntimeSettings()
@@ -152,6 +155,7 @@ class LlmGatewayDispatchAdapter:
             read_tools=read_tool_service,
             write_tools=write_tool_service,
         )
+        self._budget_client = budget_client
 
     def dispatch(self, payload: LlmDispatchRequest) -> LlmDispatchReceipt:
         """Dispatch llm task and map gateway decision to dispatch receipt."""
@@ -274,6 +278,22 @@ class LlmGatewayDispatchAdapter:
 
         response = self._llm_gateway_service.complete(request)
         if response.decision in {"served", "fallback_served"}:
+            if (
+                self._budget_client is not None
+                and response.budget_usage is not None
+                and payload.task_id
+            ):
+                try:
+                    self._budget_client.settle(
+                        payload.task_id,
+                        response.budget_usage.token_units,
+                        Decimal(str(response.budget_usage.currency_delta_usd)),
+                        project_id=payload.project_id or "project-default",
+                        role=payload.principal_role,
+                        model_class=str(model_class),
+                    )
+                except Exception:
+                    pass
             role_aligned_text = _enforce_role_fidelity(response.generated_text, recipient_role)
             if grounding_evidence and skill_binding.citation_required:
                 grounded_text, grounding_error = _validate_grounded_response(

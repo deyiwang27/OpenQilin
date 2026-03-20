@@ -99,7 +99,7 @@ WP document: `05-milestones/M15-WorkPackages-v1.md`
 | WP | Title | Status | Issue | PR | Notes |
 |---|---|---|---|---|---|
 | M15-WP1 | PostgreSQL Budget Ledger (C-3) | `done` | #124 | #125 | PostgresBudgetRuntimeClient; 3 migrations; atomic SELECT FOR UPDATE; 757 tests pass |
-| M15-WP2 | Token-Based Cost Model | `pending` | — | — | — |
+| M15-WP2 | Token-Based Cost Model | `in_progress` | #127 | — | — |
 | M15-WP3 | Budget Obligation Enforcement | `pending` | — | — | — |
 | M15-WP4 | Bug Fixes: M-4 and M-5 | `pending` | — | — | — |
 | M15-WP5 | Grafana Dashboard Build | `pending` | — | — | — |

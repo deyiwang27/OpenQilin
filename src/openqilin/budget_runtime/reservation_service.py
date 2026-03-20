@@ -10,7 +10,7 @@ from openqilin.budget_runtime.models import (
     BudgetReservationResult,
     BudgetRuntimeClientProtocol,
 )
-from openqilin.budget_runtime.threshold_evaluator import estimate_cost_units
+from openqilin.budget_runtime.cost_evaluator import TokenCostEvaluator
 from openqilin.data_access.repositories.runtime_state import TaskRecord
 
 
@@ -46,7 +46,8 @@ class BudgetReservationService:
             project_id=task.project_id or DEFAULT_BUDGET_PROJECT_ID,
             command=task.command,
             args=task.args,
-            estimated_cost_units=estimate_cost_units(task.command, task.args),
+            estimated_cost_units=TokenCostEvaluator.DEFAULT_ESTIMATED_INPUT_TOKENS,
+            model_class="interactive_fast",
         )
 
         try:
