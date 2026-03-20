@@ -1,4 +1,8 @@
+from datetime import UTC, datetime
+from uuid import uuid4
+
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 
 from openqilin.apps.api_app import app
 from openqilin.apps.orchestrator_worker import drain_queued_tasks
@@ -217,14 +221,45 @@ def test_governed_ingress_fail_closed_on_policy_runtime_error() -> None:
     assert task_body["outcome_source"] == "policy_runtime"
 
 
+def _seed_tiny_budget(project_id: str) -> None:
+    """Insert a budget allocation row with quota=1 for hard-breach testing."""
+    services = app.state.runtime_services
+    repo = services.budget_runtime_client._ledger_repo
+    if repo.get_allocation(project_id) is not None:
+        return
+
+    now = datetime.now(tz=UTC)
+    with repo._session_factory() as session:
+        session.execute(
+            text(
+                "INSERT INTO budget_allocations "
+                "(id, project_id, currency_limit_usd, quota_limit_tokens, "
+                "window_type, created_at, updated_at) "
+                "VALUES (:id, :project_id, :currency_limit_usd, :quota_limit_tokens, "
+                ":window_type, :created_at, :updated_at)"
+            ),
+            {
+                "id": str(uuid4()),
+                "project_id": project_id,
+                "currency_limit_usd": "0.10",
+                "quota_limit_tokens": 1,
+                "window_type": "per_project",
+                "created_at": now,
+                "updated_at": now,
+            },
+        )
+        session.commit()
+
+
 def test_governed_ingress_fail_closed_on_budget_runtime_error() -> None:
     client = TestClient(app)
     services = app.state.runtime_services
+    _seed_tiny_budget("test-budget-breach-001")
     payload = build_owner_command_request_dict(
-        action="budget_error",
+        action="run_task",
         args=["alpha"],
         actor_id="owner_budget_error_integration",
-        idempotency_key="idem-integration-budget-error-12345",
+        project_id="test-budget-breach-001",
     )
 
     response = client.post(
@@ -242,7 +277,7 @@ def test_governed_ingress_fail_closed_on_budget_runtime_error() -> None:
 
     task_body = client.get(f"/v1/tasks/{task_id}").json()
     assert task_body["status"] == "blocked"
-    assert task_body["error_code"] == "budget_runtime_error_fail_closed"
+    assert task_body["error_code"] == "budget_quota_hard_breach"
     assert task_body["outcome_source"] == "budget_runtime"
 
 
