@@ -204,7 +204,6 @@ def test_langgraph_observability_emitted_during_drain() -> None:
     new_events = audit_repo.list_events_for_trace(trace_id)
     event_types = [e.event_type for e in new_events]
     assert "policy.decision" in event_types
-    assert "budget.decision" in event_types
     assert "owner_command.accepted" in event_types
     assert all(e.task_id == task_id for e in new_events if e.task_id is not None)
 

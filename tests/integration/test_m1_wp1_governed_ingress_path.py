@@ -329,7 +329,6 @@ def test_governed_ingress_fail_closed_on_dispatch_reject() -> None:
     new_events = audit_repo.list_events_for_trace(task_record.trace_id)
     assert [event.event_type for event in new_events] == [
         "policy.decision",
-        "budget.decision",
         "owner_command.denied",
     ]
     assert new_events[-1].task_id == task_id

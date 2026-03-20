@@ -142,7 +142,7 @@ else := {
     "policy_version": _policy_version,
     "policy_hash": _policy_hash,
     "rule_ids": ["AUTH-001", "AUTH-002", "POL-001"],
-    "obligations": ["emit_audit_event"]
+    "obligations": ["emit_audit_event", "reserve_budget"]
 }
 
 # ---------------------------------------------------------------------------
