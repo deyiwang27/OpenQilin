@@ -14,7 +14,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 | M12 | `done` | 8 / 8 | All WPs done; PR #88 raised; exit criteria partially met (compose stack validation pending prod) |
 | M13 | `done` | 9 / 9 | All WPs complete; exit criteria met; WPs #89–#96, #98 |
 | M14 | `done` | 7 / 7 | All WPs complete; exit criteria met |
-| M15 | `active` | 0 / 6 | Entry gate: M14 complete ✅ |
+| M15 | `active` | 1 / 6 | Entry gate: M14 complete ✅ |
 | M16 | `planned` | 0 / 5 | Entry gate: M15 complete |
 | M17 | `planned` | 0 / 6 | Entry gate: M16 complete |
 
@@ -98,7 +98,7 @@ WP document: `05-milestones/M15-WorkPackages-v1.md`
 
 | WP | Title | Status | Issue | PR | Notes |
 |---|---|---|---|---|---|
-| M15-WP1 | PostgreSQL Budget Ledger (C-3) | `in_progress` | #124 | — | — |
+| M15-WP1 | PostgreSQL Budget Ledger (C-3) | `done` | #124 | #125 | PostgresBudgetRuntimeClient; 3 migrations; atomic SELECT FOR UPDATE; 757 tests pass |
 | M15-WP2 | Token-Based Cost Model | `pending` | — | — | — |
 | M15-WP3 | Budget Obligation Enforcement | `pending` | — | — | — |
 | M15-WP4 | Bug Fixes: M-4 and M-5 | `pending` | — | — | — |
@@ -156,7 +156,7 @@ All 20 architectural review findings from `00-direction/ArchitecturalReviewFindi
 |---|---|---|---|---|
 | C-1 | OPA never contacted | M12 | M12-WP1 | `done` |
 | C-2 | Obligations empty placeholder | M12 | M12-WP2 | `done` |
-| C-3 | In-memory integer budget counter | M15 | M15-WP1 | `pending` |
+| C-3 | In-memory integer budget counter | M15 | M15-WP1 | `done` |
 | C-5 | OTel export not wired | M12 | M12-WP5 | `done` |
 | C-6 | Role self-assertion from header | M12 | M12-WP6 | `done` |
 | C-7 | `chat_class` KeyError → 500 | M11 | M11-WP2 | `done` |
