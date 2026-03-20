@@ -8,7 +8,8 @@ from typing import cast
 from fastapi import Request
 from sqlalchemy.orm import sessionmaker
 
-from openqilin.budget_runtime.client import AlwaysAllowBudgetRuntimeClient
+from openqilin.budget_runtime.client import PostgresBudgetRuntimeClient
+from openqilin.budget_runtime.models import BudgetRuntimeClientProtocol
 from openqilin.budget_runtime.reservation_service import BudgetReservationService
 from openqilin.communication_gateway.callbacks.outcome_notifier import CommunicationOutcomeNotifier
 from openqilin.control_plane.api.startup_recovery import (
@@ -51,6 +52,9 @@ from openqilin.data_access.repositories.postgres.communication_repository import
 )
 from openqilin.data_access.repositories.postgres.governance_artifact_repository import (
     PostgresGovernanceArtifactRepository,
+)
+from openqilin.data_access.repositories.postgres.budget_repository import (
+    PostgresBudgetLedgerRepository,
 )
 from openqilin.data_access.repositories.postgres.identity_repository import (
     PostgresIdentityMappingRepository,
@@ -131,7 +135,7 @@ class RuntimeServices:
     governance_repo: PostgresProjectRepository
     admission_service: AdmissionService
     policy_runtime_client: PolicyRuntimeClient
-    budget_runtime_client: AlwaysAllowBudgetRuntimeClient
+    budget_runtime_client: BudgetRuntimeClientProtocol
     budget_reservation_service: BudgetReservationService
     lifecycle_service: TaskLifecycleService
     task_dispatch_service: TaskDispatchService
@@ -189,6 +193,7 @@ def build_runtime_services() -> RuntimeServices:
     )
     governance_repo = PostgresProjectRepository(session_factory=session_factory)
     audit_event_repo = PostgresAuditEventRepository(session_factory=session_factory)
+    budget_ledger_repo = PostgresBudgetLedgerRepository(session_factory=session_factory)
     project_space_binding_repo = PostgresProjectSpaceBindingRepository(
         session_factory=session_factory
     )
@@ -239,7 +244,8 @@ def build_runtime_services() -> RuntimeServices:
         data_access=secretary_data_access,
     )
 
-    budget_runtime_client = AlwaysAllowBudgetRuntimeClient()
+    budget_ledger_repo.seed_default_allocation()
+    budget_runtime_client = PostgresBudgetRuntimeClient(ledger_repo=budget_ledger_repo)
     budget_reservation_service = BudgetReservationService(client=budget_runtime_client)
     lifecycle_service = TaskLifecycleService(runtime_state_repo=runtime_state_repo)
     retrieval_query_service = build_retrieval_query_service()
