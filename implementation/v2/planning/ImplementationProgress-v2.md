@@ -14,7 +14,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 | M12 | `done` | 8 / 8 | All WPs done; PR #88 raised; exit criteria partially met (compose stack validation pending prod) |
 | M13 | `done` | 9 / 9 | All WPs complete; exit criteria met; WPs #89–#96, #98 |
 | M14 | `done` | 7 / 7 | All WPs complete; exit criteria met |
-| M15 | `active` | 1 / 6 | Entry gate: M14 complete ✅ |
+| M15 | `active` | 2 / 6 | Entry gate: M14 complete ✅ |
 | M16 | `planned` | 0 / 5 | Entry gate: M15 complete |
 | M17 | `planned` | 0 / 6 | Entry gate: M16 complete |
 
@@ -99,7 +99,7 @@ WP document: `05-milestones/M15-WorkPackages-v1.md`
 | WP | Title | Status | Issue | PR | Notes |
 |---|---|---|---|---|---|
 | M15-WP1 | PostgreSQL Budget Ledger (C-3) | `done` | #124 | #125 | PostgresBudgetRuntimeClient; 3 migrations; atomic SELECT FOR UPDATE; 757 tests pass |
-| M15-WP2 | Token-Based Cost Model | `in_progress` | #127 | — | — |
+| M15-WP2 | Token-Based Cost Model | `done` | #127 | #128 | TokenCostEvaluator; settle() wired; threshold_evaluator deleted; 717 tests pass |
 | M15-WP3 | Budget Obligation Enforcement | `pending` | — | — | — |
 | M15-WP4 | Bug Fixes: M-4 and M-5 | `pending` | — | — | — |
 | M15-WP5 | Grafana Dashboard Build | `pending` | — | — | — |

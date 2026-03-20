@@ -61,16 +61,16 @@ Replace the in-memory integer budget counter with a real PostgreSQL-backed budge
 
 ### Tasks
 
-- [ ] Implement `src/openqilin/budget_runtime/cost_evaluator.py` — `TokenCostEvaluator`:
+- [x] Implement `src/openqilin/budget_runtime/cost_evaluator.py` — `TokenCostEvaluator`:
   - `estimate(model_class, estimated_input_tokens)` — returns `CostEstimate(usd_estimate, quota_tokens_estimate)` using `COST_PER_1K_TOKENS` lookup; rough output multiplier 2×; **both currency and quota dimensions required** (TaskOrchestrator ORCH-002: dual-dimension budget)
   - `settle(response_metadata)` — returns `ActualCost(usd_actual, quota_tokens_actual)` using `response_metadata.total_tokens` and `response_metadata.cost_usd`
   - `COST_PER_1K_TOKENS = {"gemini_flash_free": 0.0, "gemini_flash": 0.000035, "gemini_pro": 0.00125}`
   - Free-tier models (`gemini_flash_free`): `usd_estimate=0.0` but `quota_tokens_estimate` is still non-zero and enforced (ORCH-002: free-tier is still budget-governed through quota limits)
-- [ ] Update `PostgresBudgetRuntimeClient.reserve()` to enforce both currency AND quota dimensions atomically: check `spent_usd + estimate_usd ≤ currency_limit_usd` AND `spent_tokens + estimate_tokens ≤ quota_limit_tokens`; return `hard_breach` if either dimension exceeded
-- [ ] Add `quota_spent_tokens` and `quota_limit_tokens` columns to `budget_allocations` table via Alembic migration (if not already present from M15-WP1)
-- [ ] Update `LlmGatewayService` to call `TokenCostEvaluator.estimate()` before dispatch and `settle()` after LLM response is received; call `budget_client.settle()` with actual cost (both dimensions)
-- [ ] Remove the character-count cost formula from all code paths
-- [ ] Add unit tests:
+- [x] Update `PostgresBudgetRuntimeClient.reserve()` to enforce both currency AND quota dimensions atomically: check `spent_usd + estimate_usd ≤ currency_limit_usd` AND `spent_tokens + estimate_tokens ≤ quota_limit_tokens`; return `hard_breach` if either dimension exceeded
+- [x] Add `quota_spent_tokens` and `quota_limit_tokens` columns to `budget_allocations` table via Alembic migration (if not already present from M15-WP1)
+- [x] Update `LlmGatewayService` to call `TokenCostEvaluator.estimate()` before dispatch and `settle()` after LLM response is received; call `budget_client.settle()` with actual cost (both dimensions)
+- [x] Remove the character-count cost formula from all code paths
+- [x] Add unit tests:
   - `estimate()` returns `CostEstimate` with both USD and token quota dimensions
   - `settle()` uses `response_metadata.total_tokens`, not character count
   - Free-tier model: `usd=0` but `quota_tokens > 0`; quota breach still returns `hard_breach`
@@ -84,11 +84,11 @@ Replace the in-memory integer budget counter with a real PostgreSQL-backed budge
 
 ### Done criteria
 
-- [ ] `settle()` uses `total_tokens` from LLM response, not character count
-- [ ] Character-count formula no longer present in any code path
-- [ ] Budget ledger `budget_events` rows contain real token and USD values
-- [ ] Free-tier dispatch with `cost_usd=0` still enforces quota limit before dispatch (ORCH-002)
-- [ ] `reserve()` checks both currency and quota dimensions; either breach returns `hard_breach`
+- [x] `settle()` uses `total_tokens` from LLM response, not character count
+- [x] Character-count formula no longer present in any code path
+- [x] Budget ledger `budget_events` rows contain real token and USD values
+- [x] Free-tier dispatch with `cost_usd=0` still enforces quota limit before dispatch (ORCH-002)
+- [x] `reserve()` checks both currency and quota dimensions; either breach returns `hard_breach`
 
 ---
 
