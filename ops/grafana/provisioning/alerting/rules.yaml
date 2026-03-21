@@ -1,0 +1,175 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: openqilin-threshold-alerts
+    folder: OpenQilin
+    interval: 1m
+    rules:
+
+      # Rule 1: Budget Hard Breach
+      - uid: openqilin-budget-hard-breach
+        title: Budget Hard Breach
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: postgresql
+            model:
+              rawSql: |
+                SELECT COUNT(*) AS value
+                FROM budget_reservations
+                WHERE status = 'hard_breach'
+                  AND created_at >= NOW() - INTERVAL '5 minutes'
+              format: table
+          - refId: B
+            datasourceUid: "-100"
+            model:
+              conditions: []
+              datasource:
+                type: __expr__
+                uid: "-100"
+              expression: A
+              reducer: last
+              type: reduce
+          - refId: C
+            datasourceUid: "-100"
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: "-100"
+              expression: B
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        annotations:
+          summary: "Budget hard breach detected"
+          description: "A budget reservation has been rejected with status 'hard_breach' in the last 5 minutes."
+        labels:
+          severity: critical
+
+      # Rule 2: Error Rate Spike
+      - uid: openqilin-error-rate-spike
+        title: Error Rate Spike
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: "rate(http_server_request_duration_seconds_count{http_response_status_code=~\"5..\"}[5m])"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: "-100"
+            model:
+              conditions: []
+              datasource:
+                type: __expr__
+                uid: "-100"
+              expression: A
+              reducer: last
+              type: reduce
+          - refId: C
+            datasourceUid: "-100"
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0.1
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: "-100"
+              expression: B
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: "HTTP 5xx error rate spike"
+          description: "HTTP 5xx error rate exceeds 0.1 req/s for 2 minutes."
+        labels:
+          severity: warning
+
+      # Rule 3: Agent Liveness Failure
+      - uid: openqilin-agent-liveness-failure
+        title: Agent Liveness Failure
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 120
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: "up{job=\"openqilin_worker\"}"
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: "-100"
+            model:
+              conditions: []
+              datasource:
+                type: __expr__
+                uid: "-100"
+              expression: A
+              reducer: last
+              type: reduce
+          - refId: C
+            datasourceUid: "-100"
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: "-100"
+              expression: B
+              type: threshold
+        noDataState: Alerting
+        execErrState: Alerting
+        for: 2m
+        annotations:
+          summary: "Orchestrator worker liveness failure"
+          description: "The openqilin_worker Prometheus target has been unreachable for 2 minutes."
+        labels:
+          severity: critical
