@@ -14,7 +14,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 | M12 | `done` | 8 / 8 | All WPs done; PR #88 raised; exit criteria partially met (compose stack validation pending prod) |
 | M13 | `done` | 9 / 9 | All WPs complete; exit criteria met; WPs #89–#96, #98 |
 | M14 | `done` | 7 / 7 | All WPs complete; exit criteria met |
-| M15 | `active` | 5 / 6 | Entry gate: M14 complete ✅; WP6 in_progress |
+| M15 | `done` | 6 / 6 | All WPs complete; exit criteria met |
 | M16 | `planned` | 0 / 5 | Entry gate: M15 complete |
 | M17 | `planned` | 0 / 6 | Entry gate: M16 complete |
 
@@ -103,7 +103,7 @@ WP document: `05-milestones/M15-WorkPackages-v1.md`
 | M15-WP3 | Budget Obligation Enforcement | `done` | #130 | #131 | reserve_budget obligation wired; budget_reservation_node removed; Rego allow→allow_with_obligations; 725 tests pass |
 | M15-WP4 | Bug Fixes: M-4 and M-5 | `done` | #133 | #134 | BudgetConfigurationError on None client; bootstrap idempotency; 731 tests pass |
 | M15-WP5 | Grafana Dashboard Build | `done` | #136 | #137 | 7-panel dashboard JSON + provisioner config + compose mount; 731 tests pass |
-| M15-WP6 | Grafana Alerting and Discord Webhook | `in_progress` | #139 | — | — |
+| M15-WP6 | Grafana Alerting and Discord Webhook | `done` | #139 | #140 | 3 alerting YAMLs + discord_automator + 6 unit tests; 737 tests pass |
 
 **M15 Exit criteria:** `pending`
 
@@ -172,8 +172,8 @@ All 20 architectural review findings from `00-direction/ArchitecturalReviewFindi
 | M-1 | Multiple RuntimeSettings instances | M16 | M16-WP1 | `pending` |
 | M-2 | Conversation history lost on restart | M16 | M16-WP2 | `pending` |
 | M-3 | Idempotency namespace collision | M16 | M16-WP3 | `pending` |
-| M-4 | Budget check silently skipped | M15 | M15-WP4 | `pending` |
-| M-5 | Agent registry bootstrap overwrites records | M15 | M15-WP4 | `pending` |
+| M-4 | Budget check silently skipped | M15 | M15-WP4 | `done` |
+| M-5 | Agent registry bootstrap overwrites records | M15 | M15-WP4 | `done` |
 
 ---
 

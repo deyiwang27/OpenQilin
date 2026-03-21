@@ -198,16 +198,16 @@ Replace the in-memory integer budget counter with a real PostgreSQL-backed budge
 
 ### Tasks
 
-- [ ] Create `ops/grafana/provisioning/alerting/contact_points.yaml` — Discord webhook contact point; URL from `${DISCORD_ALERT_WEBHOOK_URL}` env var
-- [ ] Create `ops/grafana/provisioning/alerting/notification_policy.yaml` — route all threshold alerts to Discord contact point
-- [ ] Create `ops/grafana/provisioning/alerting/rules.yaml` — alert rules:
+- [x] Create `ops/grafana/provisioning/alerting/contact_points.yaml` — Discord webhook contact point; URL from `${DISCORD_ALERT_WEBHOOK_URL}` env var
+- [x] Create `ops/grafana/provisioning/alerting/notification_policy.yaml` — route all threshold alerts to Discord contact point
+- [x] Create `ops/grafana/provisioning/alerting/rules.yaml` — alert rules:
   - Budget hard breach: any `budget_reservations.status = 'hard_breach'` in last 5 min
   - Error rate spike: `rate(errors_total[5m]) > 0.1`
   - Agent liveness failure: no heartbeat in last 2 min
-- [ ] Add `DISCORD_ALERT_WEBHOOK_URL` to `.env.example`
-- [ ] Add dashboard link pinning: on app startup, `discord_automator.py` pins Grafana URL in `leadership_council` channel topic or pinned message; URL from `settings.grafana_public_url`
-- [ ] Add `GRAFANA_PUBLIC_URL` to `settings.py` and `.env.example`
-- [ ] Test alert routing: trigger a test alert rule; verify Discord webhook receives the message
+- [x] Add `DISCORD_ALERT_WEBHOOK_URL` to `.env.example`
+- [x] Add dashboard link pinning: on app startup, `discord_automator.py` pins Grafana URL in `leadership_council` channel topic or pinned message; URL from `settings.grafana_public_url`
+- [x] Add `GRAFANA_PUBLIC_URL` to `settings.py` and `.env.example`
+- [x] Test alert routing: trigger a test alert rule; verify Discord webhook receives the message
 
 ### Outputs
 
@@ -217,22 +217,22 @@ Replace the in-memory integer budget counter with a real PostgreSQL-backed budge
 
 ### Done criteria
 
-- [ ] Budget breach alert fires and reaches `#leadership_council` Discord webhook
-- [ ] Grafana dashboard URL is pinned in `leadership_council` on app startup
-- [ ] Alert rules load from provisioning YAML (not manual Grafana UI configuration)
-- [ ] Alerts route to Discord only (not email or other channels)
+- [x] Budget breach alert fires and reaches `#leadership_council` Discord webhook
+- [x] Grafana dashboard URL is pinned in `leadership_council` on app startup
+- [x] Alert rules load from provisioning YAML (not manual Grafana UI configuration)
+- [x] Alerts route to Discord only (not email or other channels)
 
 ---
 
 ## M15 Exit Criteria
 
-- [ ] All six WPs above are marked done
-- [ ] Budget ledger in PostgreSQL; reservation survives process restart
-- [ ] Token-based cost model active; character-count formula gone
-- [ ] Budget obligation conditioned on policy decision
-- [ ] M-4 and M-5 bugs closed
-- [ ] Grafana dashboard with 6 panels live and provisioned as code
-- [ ] Grafana alerting routes to Discord; dashboard URL pinned in `leadership_council`
+- [x] All six WPs above are marked done
+- [x] Budget ledger in PostgreSQL; reservation survives process restart
+- [x] Token-based cost model active; character-count formula gone
+- [x] Budget obligation conditioned on policy decision
+- [x] M-4 and M-5 bugs closed
+- [x] Grafana dashboard with 6 panels live and provisioned as code
+- [x] Grafana alerting routes to Discord; dashboard URL pinned in `leadership_council`
 
 ## References
 
