@@ -1,8 +1,8 @@
-# Handoff Complete: M15-WP5 — Grafana Dashboard Build
+# Handoff Complete: M15-WP6 — Grafana Alerting and Discord Webhook
 
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-21
-**Branch:** `feat/136-m15-wp5-grafana-dashboard`
+**Branch:** `feat/139-m15-wp6-grafana-alerting`
 **Draft PR:** N/A (not opened in this run)
 **Implements:** `implementation/handoff/current.md`
 
@@ -10,7 +10,7 @@
 
 ## Summary
 
-Implemented the Grafana dashboard provisioning for M15-WP5 as pure infra/config changes with no Python source modifications. Added a provisioned read-only dashboard config, built `operator-main.json` (Grafana 11.x schemaVersion 39) with the architect-specified 7-panel layout (including the budget split decision), and mounted the dashboards directory in `compose.yml`. Static checks and unit+component tests remain green.
+Implemented M15-WP6 end-to-end: added Grafana alerting provisioning for Discord webhook delivery, wired `grafana_public_url` through runtime settings and Discord worker config, and added startup dashboard announcement via a new `discord_automator` module. Added six unit tests covering success and fail-safe paths for dashboard URL announcement behavior. All static checks, mypy, and unit+component tests pass.
 
 ---
 
@@ -18,26 +18,26 @@ Implemented the Grafana dashboard provisioning for M15-WP5 as pure infra/config 
 
 | Task | Status | Notes |
 |---|---|---|
-| Create `ops/grafana/provisioning/dashboards/dashboard.yaml` | ✅ Done | Added file-provider config with `disableDeletion: true`, `allowUiUpdates: false`, and path `/var/lib/grafana/dashboards` |
-| Build `ops/grafana/dashboards/operator-main.json` | ✅ Done | Added dashboard UID `openqilin-main`, refresh `30s`, template variable `project_id`, and panels 1-7 per handoff |
-| Set dashboard refresh and panel structure per handoff | ✅ Done | Implemented `refresh: 30s`, schemaVersion 39, panel IDs/grid positions, and required Postgres/Prometheus queries |
-| Update `compose.yml` Grafana volumes mount | ✅ Done | Added `./ops/grafana/dashboards:/var/lib/grafana/dashboards:ro` as second Grafana volume |
-| Run smoke test procedure in handoff | ⚠️ Partial | Automated acceptance matrix completed; manual UI/data-insert smoke procedure was not executed in this run |
+| Create `ops/grafana/provisioning/alerting/contact_points.yaml` | ✅ Done | Added Discord webhook contact point using `${DISCORD_ALERT_WEBHOOK_URL}` |
+| Create `ops/grafana/provisioning/alerting/notification_policy.yaml` | ✅ Done | Added root policy routing all alerts to `discord-leadership-council` |
+| Create `ops/grafana/provisioning/alerting/rules.yaml` | ✅ Done | Added all 3 rules: budget hard breach, error-rate spike, agent liveness failure |
+| Add `src/openqilin/apps/discord_automator.py` | ✅ Done | Added `announce_grafana_dashboard_url()` and channel lookup helper (best-effort, never raises) |
+| Add `grafana_public_url` to `RuntimeSettings` | ✅ Done | Added `grafana_public_url: str = ""` field in config |
+| Update `discord_bot_worker.py` config + startup wiring | ✅ Done | Added config field, populated from settings, invoked announcer in `on_ready()` for `runtime_agent` only |
+| Update `.env.example` with Grafana alert/URL variables | ✅ Done | Added `DISCORD_ALERT_WEBHOOK_URL` and `OPENQILIN_GRAFANA_PUBLIC_URL` |
+| Add `tests/unit/test_m15_wp6_discord_automator.py` | ✅ Done | Added 6 async tests per handoff |
 
 ---
 
 ## Validation Results
 
 ```
-InMemory gate (exact command): PASS with .venv noise (only third-party site-packages matches)
-InMemory gate (repo src scope): PASS (no matches)
-ruff check:      PASS
-ruff format:     PASS
-mypy:            PASS
-pytest unit+component: PASS (731 passed, 0 failed)
-Dashboard JSON load: PASS
-Provisioner config exists: PASS
-compose dashboards mount grep: PASS
+InMemory gate (exact command): PASS with .venv third-party matches (no repo src violations)
+InMemory gate (src scope):     PASS
+ruff check:                    PASS
+ruff format:                   PASS
+mypy:                          PASS
+pytest unit+component:         PASS (737 passed, 0 failed)
 ```
 
 Commands executed:
@@ -47,9 +47,12 @@ Commands executed:
 - `uv run ruff format --check .`
 - `uv run python -m mypy .`
 - `uv run python -m pytest tests/unit tests/component -x`
-- `python3 -c "import json; json.load(open('ops/grafana/dashboards/operator-main.json'))"`
-- `test -f ops/grafana/provisioning/dashboards/dashboard.yaml`
-- `grep "ops/grafana/dashboards" compose.yml`
+- `test -f ops/grafana/provisioning/alerting/contact_points.yaml`
+- `test -f ops/grafana/provisioning/alerting/notification_policy.yaml`
+- `test -f ops/grafana/provisioning/alerting/rules.yaml`
+- `grep "DISCORD_ALERT_WEBHOOK_URL" .env.example`
+- `grep "OPENQILIN_GRAFANA_PUBLIC_URL" .env.example`
+- `grep "grafana_public_url" src/openqilin/shared_kernel/config.py`
 
 ---
 
@@ -69,10 +72,10 @@ Commands executed:
 
 ## What Was Skipped
 
-- The manual Grafana UI + SQL insert smoke procedure from the handoff was not executed in this run.
+- Draft PR creation was not executed in this run.
 
 ---
 
 ## Notes
 
-- The dashboard includes 7 panels (not 6) due the architect decision in `current.md` splitting Budget into utilization table (id 4) and spend-over-time timeseries (id 5).
+- `uv run pytest ...` entrypoint is unavailable in this environment; tests were run via `uv run python -m pytest ...`.

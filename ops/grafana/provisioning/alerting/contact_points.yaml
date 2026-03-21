@@ -1,0 +1,13 @@
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: discord-leadership-council
+    receivers:
+      - uid: discord-leadership-council-webhook
+        type: discord
+        settings:
+          url: ${DISCORD_ALERT_WEBHOOK_URL}
+          use_discord_username: false
+          message: "{{ len .Alerts.Firing }} alert(s) firing: {{ range .Alerts.Firing }}{{ .Labels.alertname }}: {{ .Annotations.summary }}\n{{ end }}"
+        disableResolveMessage: false

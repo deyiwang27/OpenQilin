@@ -58,6 +58,7 @@ class DiscordBotWorkerConfig:
     response_chunk_size_chars: int
     response_retry_attempts: int
     response_retry_base_delay_seconds: float
+    grafana_public_url: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -590,6 +591,7 @@ def _build_worker_config_from_identity(
         response_retry_base_delay_seconds=max(
             0.1, settings.discord_response_retry_base_delay_seconds
         ),
+        grafana_public_url=settings.grafana_public_url,
     )
 
 
@@ -675,6 +677,12 @@ class OpenQilinDiscordClient(discord.Client):
             bot_id=self._config.bot_id,
             control_plane_base_url=self._config.control_plane_base_url,
         )
+        # M15-WP6: Announce Grafana dashboard URL in #leadership_council on startup.
+        # Only the runtime_agent bot announces — avoids duplicate messages in multi-bot mode.
+        if self._config.bot_role == "runtime_agent" and self._config.grafana_public_url:
+            from openqilin.apps.discord_automator import announce_grafana_dashboard_url
+
+            await announce_grafana_dashboard_url(self, self._config.grafana_public_url)
 
     async def on_disconnect(self) -> None:
         await self._readiness.mark_offline(role=self._config.bot_role)

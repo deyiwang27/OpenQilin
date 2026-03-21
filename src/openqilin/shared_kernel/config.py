@@ -58,6 +58,9 @@ class RuntimeSettings(BaseSettings):
     otlp_endpoint: str = (
         ""  # Empty = no OTel export (local/test). Set to http://otel_collector:4317 in compose.
     )
+    grafana_public_url: str = (
+        ""  # Empty = no dashboard URL announcement. Set to http://grafana:3000 in compose.
+    )
 
     @property
     def system_root_path(self) -> Path:
