@@ -160,17 +160,17 @@ Replace the in-memory integer budget counter with a real PostgreSQL-backed budge
 
 ### Tasks
 
-- [ ] Create `ops/grafana/provisioning/dashboards/dashboard.yaml` — dashboard provisioning config pointing to `ops/grafana/dashboards/`
-- [ ] Build `ops/grafana/dashboards/operator-main.json` with 6 required panels:
+- [x] Create `ops/grafana/provisioning/dashboards/dashboard.yaml` — dashboard provisioning config pointing to `ops/grafana/dashboards/`
+- [x] Build `ops/grafana/dashboards/operator-main.json` with 6 required panels:
   - **Owner Inbox** — pending approvals, escalations, proposals from `tasks` and `governance_artifacts` (PostgreSQL)
   - **Projects Overview** — all projects: status, blockers, lifecycle state (PostgreSQL)
   - **Project Detail** — per-project activity, task counts, cost (PostgreSQL; project selector variable)
   - **Budget and Cost** — `budget_events` by project, by role, over time; active reservations (PostgreSQL)
   - **System and Runtime Health** — agent liveness, LLM call latency, error rates (Prometheus); span traces (Tempo)
   - **Audit and Governance Events** — `audit_events`: event_type, principal, policy_version, rule_ids (PostgreSQL)
-- [ ] Set dashboard refresh: 30s default; budget/audit panels configurable to 5m
-- [ ] Update `compose.yml` Grafana service: volume-mount `ops/grafana/provisioning` and `ops/grafana/dashboards`
-- [ ] Smoke test: all 6 panels return data after inserting test rows into PostgreSQL and emitting test spans
+- [x] Set dashboard refresh: 30s default; budget/audit panels configurable to 5m
+- [x] Update `compose.yml` Grafana service: volume-mount `ops/grafana/provisioning` and `ops/grafana/dashboards`
+- [x] Smoke test: all 6 panels return data after inserting test rows into PostgreSQL and emitting test spans
 
 ### Outputs
 
@@ -179,12 +179,12 @@ Replace the in-memory integer budget counter with a real PostgreSQL-backed budge
 
 ### Done criteria
 
-- [ ] All 6 panels render without errors after minimal test data insertion
-- [ ] Owner Inbox panel shows pending tasks from `tasks` table
-- [ ] Budget panel shows cost by project from `budget_events`
-- [ ] System Health panel shows metrics from Prometheus
-- [ ] Audit panel shows events from `audit_events`
-- [ ] Owner can identify blocked projects, pending decisions, budget risk, and system health in under 2 minutes
+- [x] All 6 panels render without errors after minimal test data insertion
+- [x] Owner Inbox panel shows pending tasks from `tasks` table
+- [x] Budget panel shows cost by project from `budget_events`
+- [x] System Health panel shows metrics from Prometheus
+- [x] Audit panel shows events from `audit_events`
+- [x] Owner can identify blocked projects, pending decisions, budget risk, and system health in under 2 minutes
 
 ---
 
