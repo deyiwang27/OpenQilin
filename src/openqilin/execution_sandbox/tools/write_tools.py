@@ -10,6 +10,7 @@ from uuid import uuid4
 
 from openqilin.budget_runtime.models import (
     DEFAULT_BUDGET_PROJECT_ID,
+    BudgetConfigurationError,
     BudgetReservationInput,
     BudgetRuntimeClientProtocol,
 )
@@ -406,7 +407,9 @@ class GovernedWriteToolService:
         context: ToolCallContext,
     ) -> ToolResult | None:
         if self._budget_runtime_client is None:
-            return None
+            raise BudgetConfigurationError(
+                "budget_runtime_client is required for governed write tools"
+            )
         estimated_cost_units = _WRITE_TOOL_COST_UNITS.get(tool_name, 25)
         reservation = self._budget_runtime_client.reserve(
             BudgetReservationInput(

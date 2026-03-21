@@ -1,16 +1,16 @@
-# Handoff Complete: M15-WP3 — Budget Obligation Enforcement
+# Handoff Complete: M15-WP4 — Bug Fixes: M-4 and M-5
 
 **Completed by:** CodeX (engineer)
-**Date:** 2026-03-20
-**Branch:** `feat/130-m15-wp3-obligation-budget-enforcement`
-**Draft PR:** _Not opened in this run_
+**Date:** 2026-03-21
+**Branch:** `feat/133-m15-wp4-m4-m5-bug-fixes`
+**Draft PR:** #134
 **Implements:** `implementation/handoff/current.md`
 
 ---
 
 ## Summary
 
-Removed the standalone `budget_reservation_node` path from the LangGraph workflow so budget reservation is only applied through obligation handling. Updated state/routing models and worker initial state to remove legacy `budget_decision` plumbing. Added WP3 unit coverage for obligation-conditioned budget behavior and aligned existing component expectations with the new graph topology.
+Implemented both scoped bug fixes from the handoff. `GovernedWriteToolService` now fails closed with `BudgetConfigurationError` when no budget runtime client is configured, and `PostgresAgentRegistryRepository.bootstrap_institutional_agents()` is now strictly additive (no status overwrite of existing agents). Added a dedicated M15-WP4 unit test file and adjusted one existing security-hardening test helper to inject an allow-budget client so prior access-control assertions remain valid under the new fail-closed behavior.
 
 ---
 
@@ -18,35 +18,33 @@ Removed the standalone `budget_reservation_node` path from the LangGraph workflo
 
 | Task | Status | Notes |
 |---|---|---|
-| Remove standalone budget reservation node from graph topology | ✅ Done | Updated graph imports/nodes/edges; `obligation_check_node` now routes directly to `dispatch_node` or `END` |
-| Update post-obligation routing and remove budget route helper | ✅ Done | `route_after_obligation` now returns `dispatch_node`/`__end__`; removed `route_after_budget` |
-| Delete obsolete budget node implementation | ✅ Done | Removed `make_budget_reservation_node` and unused budget-reservation span import |
-| Remove `budget_decision` from workflow state model and runtime initial state | ✅ Done | Removed from `TaskState` and both orchestrator worker initial state dictionaries |
-| Update `_handle_reserve_budget` docstring | ✅ Done | Replaced stale “stub” wording; logic unchanged |
-| Add new WP3 tests file | ✅ Done | Added `tests/unit/test_m15_wp3_obligation_budget_enforcement.py` with 7 tests requested by handoff |
-| Add uncertain-outcome blocking test in existing dispatcher tests | ✅ Done | Added `test_reserve_budget_uncertain_outcome_is_blocking` in `tests/unit/test_m12_wp2_obligation_dispatcher.py` |
-| Reconcile affected component expectations after topology change | ✅ Done | Updated `tests/component/test_m1_wp1_owner_command_router.py` expectations that assumed unconditional budget stage |
+| Add `BudgetConfigurationError` exception class in `budget_runtime/models.py` | ✅ Done | Added module-level exception class before `DEFAULT_BUDGET_PROJECT_ID` |
+| Replace silent skip in `_reserve_budget_if_configured` with hard raise | ✅ Done | Replaced `return None` for `budget_runtime_client is None` with `BudgetConfigurationError(...)` |
+| Remove status-overwrite UPDATE branch from `bootstrap_institutional_agents` | ✅ Done | Deleted `elif existing.status != "active"` branch entirely |
+| Add M-4 tests | ✅ Done | Added 3 tests for None-client raise, no-handler progression, and allow-client normal progression |
+| Add M-5 tests | ✅ Done | Added 3 tests for idempotent second bootstrap, non-overwrite behavior, and insert-on-missing |
+| Keep existing suites green | ✅ Done | Updated `tests/unit/test_m12_wp6_security_hardening.py` helper to provide allow-budget client |
 
 ---
 
 ## Validation Results
 
 ```
-InMemory gate:    PASS
-budget_reservation_node grep: PASS
-route_after_budget grep: PASS
-budget_decision grep: PASS
+InMemory gate:    PASS (src scope)
+BudgetConfigurationError grep: PASS
+budget_runtime_client None branch grep: PASS
+bootstrap UPDATE grep: PASS
 ruff check:       PASS
 ruff format:      PASS
 mypy:             PASS
-pytest unit+component: PASS (725 passed, 0 failed)
+pytest unit+component: PASS (731 passed, 0 failed)
 ```
 
 Commands executed:
-- `grep -r --exclude-dir=.venv --include="*.py" -l "class InMemory" . | grep -v "/testing/" | grep -v "tests/"`
-- `grep -r --include="*.py" "budget_reservation_node" src/`
-- `grep -r --include="*.py" "route_after_budget" src/`
-- `grep -r --include="*.py" "budget_decision" src/`
+- `grep -r --include="*.py" -l "class InMemory" src | grep -v "/testing/"`
+- `grep "class BudgetConfigurationError" src/openqilin/budget_runtime/models.py`
+- `grep -n "budget_runtime_client is None" src/openqilin/execution_sandbox/tools/write_tools.py`
+- `grep -n "UPDATE agents SET status" src/openqilin/data_access/repositories/postgres/agent_registry_repository.py`
 - `uv run ruff check .`
 - `uv run ruff format --check .`
 - `uv run python -m mypy .`
@@ -65,17 +63,15 @@ Commands executed:
 
 | Conflict | Docs involved | Blocking question |
 |---|---|---|
-| Handoff listed `src/openqilin/task_orchestrator/workflow/state_machine.py`, but repository path is `src/openqilin/task_orchestrator/state/state_machine.py`. | `implementation/handoff/current.md` vs codebase layout | Should future handoffs reference `state/state_machine.py` explicitly to avoid path ambiguity? |
-| Handoff-provided replacement docstring included literal `budget_reservation_node`, while acceptance criteria required zero `budget_reservation_node` matches under `src/`. Implemented semantically equivalent wording without that literal token. | `implementation/handoff/current.md` (Interfaces vs Acceptance Criteria) | Should acceptance criteria or exact docstring text be treated as authoritative when they conflict? |
 
 ---
 
 ## What Was Skipped
 
-- Draft PR creation was not performed in this run.
+- None.
 
 ---
 
 ## Notes
 
-- The handoff test note mentioned async test style, but `ObligationDispatcher.apply()` is synchronous in the current codebase; tests were implemented synchronously against the current interface.
+- The literal governance gate command from the handoff (`grep -r ... .`) includes `.venv` third-party packages in this environment and produces non-repo matches. The production-code gate was therefore run against `src/` scope to validate repository compliance.
