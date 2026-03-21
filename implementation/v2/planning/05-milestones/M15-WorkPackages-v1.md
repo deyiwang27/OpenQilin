@@ -131,12 +131,12 @@ Replace the in-memory integer budget counter with a real PostgreSQL-backed budge
 ### Tasks
 
 **M-4 — Budget client None fail-closed:**
-- [ ] In `GovernedWriteToolService` (`execution_sandbox/tools/write_tools.py`): replace silent `return None` when `budget_runtime_client is None` with `raise BudgetConfigurationError("budget_runtime_client is required for governed write tools")`
-- [ ] Add unit test: `budget_runtime_client=None` → `BudgetConfigurationError` raised; tool call does not proceed
+- [x] In `GovernedWriteToolService` (`execution_sandbox/tools/write_tools.py`): replace silent `return None` when `budget_runtime_client is None` with `raise BudgetConfigurationError("budget_runtime_client is required for governed write tools")`
+- [x] Add unit test: `budget_runtime_client=None` → `BudgetConfigurationError` raised; tool call does not proceed
 
 **M-5 — Agent registry bootstrap idempotency:**
-- [ ] In `PostgresAgentRegistryRepository.bootstrap_institutional_agents()`: check `get_by_role(role)` before creating; skip if exists (do not overwrite)
-- [ ] Add unit test: running bootstrap twice does not duplicate or overwrite any agent record
+- [x] In `PostgresAgentRegistryRepository.bootstrap_institutional_agents()`: check `get_by_role(role)` before creating; skip if exists (do not overwrite)
+- [x] Add unit test: running bootstrap twice does not duplicate or overwrite any agent record
 
 ### Outputs
 
@@ -145,8 +145,8 @@ Replace the in-memory integer budget counter with a real PostgreSQL-backed budge
 
 ### Done criteria
 
-- [ ] M-4: `budget_runtime_client=None` raises `BudgetConfigurationError`, not silent skip
-- [ ] M-5: running `bootstrap_institutional_agents()` twice produces exactly one record per role
+- [x] M-4: `budget_runtime_client=None` raises `BudgetConfigurationError`, not silent skip
+- [x] M-5: running `bootstrap_institutional_agents()` twice produces exactly one record per role
 
 ---
 
