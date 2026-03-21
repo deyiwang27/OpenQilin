@@ -6,6 +6,11 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Literal, Protocol, runtime_checkable
 
+
+class BudgetConfigurationError(Exception):
+    """Raised when the budget runtime client is not configured but is required."""
+
+
 DEFAULT_BUDGET_PROJECT_ID: str = "project-default"
 
 BudgetDecision = Literal["allow", "deny", "uncertain", "hard_breach"]

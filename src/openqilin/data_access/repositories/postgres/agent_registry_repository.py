@@ -62,18 +62,6 @@ class PostgresAgentRegistryRepository:
                         },
                     )
                     session.commit()
-            elif existing.status != "active":
-                with self._session_factory() as session:
-                    session.execute(
-                        text(
-                            """
-                            UPDATE agents SET status = 'active', updated_at = :updated_at
-                            WHERE role = :role
-                            """
-                        ),
-                        {"role": role, "updated_at": now},
-                    )
-                    session.commit()
         return tuple(
             sorted(
                 self.list_agents(agent_type="institutional"),

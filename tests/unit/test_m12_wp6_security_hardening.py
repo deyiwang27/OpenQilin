@@ -21,6 +21,7 @@ from openqilin.control_plane.identity.principal_resolver import (
     PrincipalResolutionError,
     resolve_principal,
 )
+from openqilin.budget_runtime.models import BudgetReservationResult
 from openqilin.data_access.repositories.identity_channels import IdentityChannelMappingRecord
 from tests.testing.infra_stubs import InMemoryIdentityChannelRepository
 from openqilin.execution_sandbox.tools.contracts import ToolCallContext
@@ -319,10 +320,21 @@ def _build_write_service() -> GovernedWriteToolService:
     from tests.testing.infra_stubs import InMemoryProjectArtifactRepository
     from tests.testing.infra_stubs import InMemoryGovernanceRepository
 
+    budget_runtime_client = MagicMock()
+    budget_runtime_client.reserve.return_value = BudgetReservationResult(
+        decision="allow",
+        reason_code="budget_ok",
+        reason_message="budget reservation approved",
+        reservation_id="resv-test",
+        remaining_units=10_000,
+        budget_version="budget-v1",
+    )
+
     return GovernedWriteToolService(
         governance_repository=InMemoryGovernanceRepository(),
         project_artifact_repository=InMemoryProjectArtifactRepository(),
         audit_writer=InMemoryAuditWriter(),
+        budget_runtime_client=budget_runtime_client,
     )
 
 
