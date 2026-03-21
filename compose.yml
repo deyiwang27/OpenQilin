@@ -110,6 +110,7 @@ services:
     # M12-WP5: Mount provisioning directory to auto-configure data sources.
     volumes:
       - ./ops/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./ops/grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       - prometheus
       - tempo

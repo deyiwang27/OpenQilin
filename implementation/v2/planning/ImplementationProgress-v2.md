@@ -14,7 +14,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 | M12 | `done` | 8 / 8 | All WPs done; PR #88 raised; exit criteria partially met (compose stack validation pending prod) |
 | M13 | `done` | 9 / 9 | All WPs complete; exit criteria met; WPs #89–#96, #98 |
 | M14 | `done` | 7 / 7 | All WPs complete; exit criteria met |
-| M15 | `active` | 4 / 6 | Entry gate: M14 complete ✅ |
+| M15 | `active` | 4 / 6 | Entry gate: M14 complete ✅; WP5 in_progress |
 | M16 | `planned` | 0 / 5 | Entry gate: M15 complete |
 | M17 | `planned` | 0 / 6 | Entry gate: M16 complete |
 
@@ -102,7 +102,7 @@ WP document: `05-milestones/M15-WorkPackages-v1.md`
 | M15-WP2 | Token-Based Cost Model | `done` | #127 | #128 | TokenCostEvaluator; settle() wired; threshold_evaluator deleted; 717 tests pass |
 | M15-WP3 | Budget Obligation Enforcement | `done` | #130 | #131 | reserve_budget obligation wired; budget_reservation_node removed; Rego allow→allow_with_obligations; 725 tests pass |
 | M15-WP4 | Bug Fixes: M-4 and M-5 | `done` | #133 | #134 | BudgetConfigurationError on None client; bootstrap idempotency; 731 tests pass |
-| M15-WP5 | Grafana Dashboard Build | `pending` | — | — | — |
+| M15-WP5 | Grafana Dashboard Build | `in_progress` | #136 | — | — |
 | M15-WP6 | Grafana Alerting and Discord Webhook | `pending` | — | — | — |
 
 **M15 Exit criteria:** `pending`

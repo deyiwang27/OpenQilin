@@ -1,0 +1,375 @@
+{
+  "uid": "openqilin-main",
+  "title": "OpenQilin Operator Dashboard",
+  "description": "Single operator visibility surface — project state, budget, governance, runtime health",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "templating": {
+    "list": [
+      {
+        "name": "project_id",
+        "label": "Project",
+        "type": "query",
+        "datasource": {
+          "type": "postgres",
+          "uid": "postgresql"
+        },
+        "query": "SELECT project_id FROM project_space_bindings WHERE binding_state = 'active' ORDER BY project_id",
+        "refresh": 2,
+        "includeAll": true,
+        "allValue": "%",
+        "current": {},
+        "hide": 0,
+        "sort": 1
+      }
+    ]
+  },
+  "tags": [
+    "openqilin",
+    "operator"
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "title": "Owner Inbox — Pending Attention",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 10
+      },
+      "pluginVersion": "11.1.4",
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgresql"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgresql"
+          },
+          "rawSql": "SELECT\n    t.task_id,\n    t.principal_role AS \"role\",\n    t.status,\n    t.command,\n    t.project_id,\n    t.created_at AS \"created\"\nFROM tasks t\nWHERE t.status IN ('queued', 'blocked', 'pending_approval')\nORDER BY t.created_at DESC\nLIMIT 50",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto"
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "title": "Projects Overview",
+      "type": "table",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 10
+      },
+      "pluginVersion": "11.1.4",
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgresql"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgresql"
+          },
+          "rawSql": "SELECT\n    ps.project_id,\n    ps.binding_state AS \"state\",\n    COUNT(DISTINCT t.task_id) FILTER (WHERE t.status = 'blocked') AS \"blocked_tasks\",\n    COUNT(DISTINCT t.task_id) FILTER (WHERE t.status IN ('queued','pending_approval')) AS \"pending_tasks\",\n    MAX(t.created_at) AS \"last_activity\",\n    COALESCE(SUM(be.actual_cost_usd), 0)::NUMERIC(12,4) AS \"total_spend_usd\"\nFROM project_space_bindings ps\nLEFT JOIN tasks t ON t.project_id = ps.project_id\nLEFT JOIN budget_events be ON be.project_id = ps.project_id\nGROUP BY ps.project_id, ps.binding_state\nORDER BY last_activity DESC NULLS LAST",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "title": "Project Detail — $project_id",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 24,
+        "h": 10
+      },
+      "pluginVersion": "11.1.4",
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgresql"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgresql"
+          },
+          "rawSql": "SELECT\n    t.task_id,\n    t.principal_role AS \"role\",\n    t.status,\n    t.command,\n    t.target,\n    t.outcome_error_code AS \"error_code\",\n    t.created_at AS \"created\"\nFROM tasks t\nWHERE t.project_id LIKE '$project_id'\nORDER BY t.created_at DESC\nLIMIT 100",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "title": "Budget — Utilization",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 12,
+        "h": 8
+      },
+      "pluginVersion": "11.1.4",
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgresql"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgresql"
+          },
+          "rawSql": "SELECT\n    ba.project_id,\n    ba.currency_limit_usd::NUMERIC(12,4) AS \"limit_usd\",\n    ba.quota_limit_tokens AS \"limit_tokens\",\n    COALESCE(SUM(be.actual_cost_usd), 0)::NUMERIC(12,6) AS \"spent_usd\",\n    COALESCE(SUM(be.actual_tokens), 0) AS \"spent_tokens\",\n    CASE\n        WHEN ba.currency_limit_usd > 0\n        THEN ROUND((COALESCE(SUM(be.actual_cost_usd), 0) / ba.currency_limit_usd * 100)::NUMERIC, 1)\n        ELSE 0\n    END AS \"utilization_pct\"\nFROM budget_allocations ba\nLEFT JOIN budget_events be ON be.project_id = ba.project_id\nGROUP BY ba.project_id, ba.currency_limit_usd, ba.quota_limit_tokens\nORDER BY spent_usd DESC",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "title": "Budget — Spend Over Time (7d)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 12,
+        "h": 8
+      },
+      "pluginVersion": "11.1.4",
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgresql"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgresql"
+          },
+          "rawSql": "SELECT\n    date_trunc('hour', be.created_at) AS \"time\",\n    SUM(be.actual_cost_usd)::FLOAT AS \"cost_usd\",\n    be.project_id\nFROM budget_events be\nWHERE be.created_at >= NOW() - INTERVAL '7 days'\n  AND $__timeFilter(be.created_at)\nGROUP BY 1, be.project_id\nORDER BY 1",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "custom": {}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "title": "System and Runtime Health",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 20,
+        "w": 12,
+        "h": 8
+      },
+      "pluginVersion": "11.1.4",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(http_server_request_duration_seconds_count{http_response_status_code=~\"5..\"}[5m])",
+          "legendFormat": "HTTP 5xx errors/s",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(http_server_request_duration_seconds_count[5m])",
+          "legendFormat": "requests/s",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "up{job=\"openqilin_api\"}",
+          "legendFormat": "api_app up",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "up{job=\"openqilin_worker\"}",
+          "legendFormat": "orchestrator_worker up",
+          "refId": "D"
+        }
+      ],
+      "options": {
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 7,
+      "title": "Audit and Governance Events",
+      "type": "table",
+      "gridPos": {
+        "x": 12,
+        "y": 28,
+        "w": 12,
+        "h": 8
+      },
+      "pluginVersion": "11.1.4",
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgresql"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgresql"
+          },
+          "rawSql": "SELECT\n    ae.created_at AS \"time\",\n    ae.event_type,\n    ae.principal_role AS \"role\",\n    ae.decision,\n    ae.task_id,\n    ae.principal_id\nFROM audit_events ae\nORDER BY ae.created_at DESC\nLIMIT 100",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      }
+    }
+  ]
+}
