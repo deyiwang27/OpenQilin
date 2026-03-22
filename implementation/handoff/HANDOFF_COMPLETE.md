@@ -1,16 +1,16 @@
-# Handoff Complete: M16-WP1 — RuntimeSettings Singleton
+# Handoff Complete: M16-WP2 — Conversation History Persistence
 
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-22
-**Branch:** `feat/142-m16-wp1-settings-singleton`
-**Draft PR:** #144
+**Branch:** `feat/145-m16-wp2-conversation-persistence`
+**Draft PR:** N/A (not opened in this environment)
 **Implements:** `implementation/handoff/current.md`
 
 ---
 
 ## Summary
 
-Implemented the RuntimeSettings singleton factory in `src/openqilin/shared_kernel/settings.py` and replaced direct `RuntimeSettings()` construction at all handoff-listed production call sites with `get_settings()`. Added unit coverage in `tests/unit/test_m16_wp1_settings_singleton.py` for instance type, identity singleton behavior, cache reset behavior, and defaults. Validation matrix completed successfully (singleton gate, static checks, and `tests/unit tests/component -x`).
+Implemented PostgreSQL-backed conversation persistence by adding the `conversation_messages` Alembic migration, introducing `PostgresConversationStore`, and wiring it into runtime dependency construction when `runtime_persistence_enabled=True`. Updated dispatch/service interfaces so `LlmGatewayDispatchAdapter` accepts an injected conversation store while preserving `LocalConversationStore` fallback for non-persistent mode. Added unit coverage for store behaviors, adapter injection/fallback behavior, and restart-survival semantics.
 
 ---
 
@@ -18,18 +18,13 @@ Implemented the RuntimeSettings singleton factory in `src/openqilin/shared_kerne
 
 | Task | Status | Notes |
 |---|---|---|
-| Add `shared_kernel/settings.py` singleton factory | ✅ Done | Added `get_settings()` factory and cache reset support used by tests. |
-| Replace `RuntimeSettings()` in `control_plane/api/app.py` | ✅ Done | Uses `get_settings()` and updated import. |
-| Replace `RuntimeSettings()` in `control_plane/api/dependencies.py` | ✅ Done | Uses `get_settings()` and updated import. |
-| Replace `RuntimeSettings()` in `control_plane/identity/connector_security.py` | ✅ Done | Uses `get_settings().connector_shared_secret`. |
-| Replace inline `RuntimeSettings()` import/use in `control_plane/handlers/governance_handler.py` | ✅ Done | Inline import removed; module-level `get_settings` import added. |
-| Replace `RuntimeSettings()` in `llm_gateway/service.py` | ✅ Done | Uses `get_settings()` in `build_llm_gateway_service()`. |
-| Replace fallback `RuntimeSettings()` in `task_orchestrator/dispatch/llm_dispatch.py` | ✅ Done | Uses `settings if settings is not None else get_settings()`. |
-| Replace `RuntimeSettings()` in `apps/communication_worker.py` | ✅ Done | Startup hardening now uses `get_settings()`. |
-| Replace `RuntimeSettings()` in `apps/orchestrator_worker.py` | ✅ Done | Startup hardening now uses `get_settings()`. |
-| Replace `RuntimeSettings()` in `apps/discord_bot_worker.py` | ✅ Done | `main()` now uses `get_settings()`. |
-| Apply four `RuntimeSettings()` replacements in `apps/admin_cli.py` | ✅ Done | Updated default URL constant and all listed secret/settings call sites. |
-| Add singleton unit tests in `tests/unit/test_m16_wp1_settings_singleton.py` | ✅ Done | Added required fixture and four required tests. |
+| Add Alembic migration for `conversation_messages` | ✅ Done | Added `migrations/versions/20260322_0014_create_conversation_messages_table.py` with table + index create/drop operations. |
+| Implement `PostgresConversationStore` | ✅ Done | Added sync session-based repository in `src/openqilin/data_access/repositories/postgres/conversation_store.py` with `list_turns`, `append_turns`, and `clear`. |
+| Add `ConversationStoreProtocol` and inject store into `LlmGatewayDispatchAdapter` | ✅ Done | Updated constructor signature and internal selection (`injected store` or `LocalConversationStore(max_turns=6)`). |
+| Remove `InMemoryConversationStore` alias from production | ✅ Done | Removed alias line from `src/openqilin/task_orchestrator/dispatch/llm_dispatch.py`. |
+| Thread conversation store through task service builder | ✅ Done | Added optional `conversation_store` parameter to `build_task_dispatch_service()` and forwarded to dispatch adapter construction. |
+| Wire Postgres store in `dependencies.py` by runtime flag | ✅ Done | Build `PostgresConversationStore(session_factory=session_factory, max_turns=6)` only when `runtime_persistence_enabled` is true; otherwise pass `None`. |
+| Add unit tests in `tests/unit/test_m16_wp2_conversation_store.py` | ✅ Done | Added all required coverage areas from handoff test table. |
 
 ---
 
@@ -37,11 +32,11 @@ Implemented the RuntimeSettings singleton factory in `src/openqilin/shared_kerne
 
 ```
 InMemory gate:   PASS
+alias removal:   PASS
 ruff check:      PASS
 ruff format:     PASS
 mypy:            PASS
-pytest unit:     PASS  (741 passed, 0 failed)
-pytest component: PASS
+pytest unit+component: PASS  (749 passed, 0 failed)
 ```
 
 ---
@@ -64,11 +59,11 @@ pytest component: PASS
 
 ## What Was Skipped
 
-None.
+- Draft PR creation was not performed in this environment.
 
 ---
 
 ## Notes
 
-- Validation commands were executed with `uv run python -m mypy .` and `uv run python -m pytest ...` because the `mypy` and `pytest` entrypoint binaries were not directly available under `uv run` in this environment.
-- The repository-level InMemory grep command from AGENTS was scoped with `--exclude-dir=.venv` during validation to avoid third-party site-packages noise.
+- Acceptance validation command used for tests: `uv run python -m pytest tests/unit tests/component -x --tb=short -q`.
+- Test run completed with one external dependency deprecation warning from `discord.player` (`audioop`), with no functional test failures.

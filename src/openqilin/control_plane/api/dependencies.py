@@ -51,6 +51,9 @@ from openqilin.data_access.repositories.postgres.agent_registry_repository impor
 from openqilin.data_access.repositories.postgres.communication_repository import (
     PostgresCommunicationRepository,
 )
+from openqilin.data_access.repositories.postgres.conversation_store import (
+    PostgresConversationStore,
+)
 from openqilin.data_access.repositories.postgres.governance_artifact_repository import (
     PostgresGovernanceArtifactRepository,
 )
@@ -253,6 +256,11 @@ def build_runtime_services() -> RuntimeServices:
     budget_reservation_service = BudgetReservationService(client=budget_runtime_client)
     lifecycle_service = TaskLifecycleService(runtime_state_repo=runtime_state_repo)
     retrieval_query_service = build_retrieval_query_service()
+    conversation_store = (
+        PostgresConversationStore(session_factory=session_factory, max_turns=6)
+        if settings.runtime_persistence_enabled
+        else None
+    )
     tracer = InMemoryTracer()
     # OTelAuditWriter with durable Postgres write (AUD-001).
     audit_writer: InMemoryAuditWriter | OTelAuditWriter = OTelAuditWriter(
@@ -303,6 +311,7 @@ def build_runtime_services() -> RuntimeServices:
     )
     task_dispatch_service = build_task_dispatch_service(
         lifecycle_service=lifecycle_service,
+        conversation_store=conversation_store,
         audit_writer=audit_writer,
         metric_recorder=metric_recorder,
         communication_repository=communication_repo,
