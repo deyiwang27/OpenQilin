@@ -357,6 +357,7 @@ def make_dispatch_node(services: WorkflowServices) -> Any:
                 policy_version=policy_version,
                 policy_hash=policy_hash,
                 rule_ids=rule_ids,
+                loop_state=state["loop_state"],
             )
         llm_execution = None
         if dispatch_outcome.llm_metadata is not None:

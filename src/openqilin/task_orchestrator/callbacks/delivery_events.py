@@ -7,6 +7,7 @@ from typing import Literal, Protocol
 
 from openqilin.data_access.repositories.runtime_state import TaskRecord
 from openqilin.observability.audit.audit_writer import OTelAuditWriter
+from openqilin.observability.metrics.recorder import OTelMetricRecorder
 from openqilin.observability.testing.stubs import InMemoryAuditWriter
 from openqilin.observability.testing.stubs import InMemoryMetricRecorder
 
@@ -69,7 +70,7 @@ class LocalDeliveryEventCallbackProcessor:
         *,
         runtime_state_repo: _RuntimeStateRepo,
         audit_writer: InMemoryAuditWriter | OTelAuditWriter,
-        metric_recorder: InMemoryMetricRecorder,
+        metric_recorder: InMemoryMetricRecorder | OTelMetricRecorder,
     ) -> None:
         self._runtime_state_repo = runtime_state_repo
         self._audit_writer = audit_writer

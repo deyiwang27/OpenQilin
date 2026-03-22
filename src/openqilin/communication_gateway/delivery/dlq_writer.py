@@ -10,6 +10,7 @@ from openqilin.data_access.repositories.communication import (
     CommunicationDeadLetterRecord,
 )
 from openqilin.observability.audit.audit_writer import OTelAuditWriter
+from openqilin.observability.metrics.recorder import OTelMetricRecorder
 from openqilin.observability.testing.stubs import InMemoryAuditWriter
 from openqilin.observability.testing.stubs import InMemoryMetricRecorder
 
@@ -42,7 +43,7 @@ class LocalDeadLetterWriter:
         self,
         *,
         audit_writer: InMemoryAuditWriter | OTelAuditWriter | None = None,
-        metric_recorder: InMemoryMetricRecorder | None = None,
+        metric_recorder: InMemoryMetricRecorder | OTelMetricRecorder | None = None,
     ) -> None:
         self._dead_letters: list[CommunicationDeadLetterRecord] = []
         self._audit_writer = audit_writer or InMemoryAuditWriter()

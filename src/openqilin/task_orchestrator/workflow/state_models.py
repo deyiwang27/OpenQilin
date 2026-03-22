@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from openqilin.budget_runtime.service import BudgetReservationService  # type: ignore[import-untyped]
     from openqilin.data_access.repositories.postgres.task_repository import PostgresTaskRepository
     from openqilin.observability.audit.audit_writer import OTelAuditWriter
+    from openqilin.observability.metrics.recorder import OTelMetricRecorder
     from openqilin.observability.testing.stubs import (
         InMemoryAuditWriter,
         InMemoryMetricRecorder,
@@ -67,5 +68,5 @@ class WorkflowServices:
     task_dispatch_service: TaskDispatchService
     runtime_state_repo: PostgresTaskRepository
     audit_writer: InMemoryAuditWriter | OTelAuditWriter
-    metric_recorder: InMemoryMetricRecorder
+    metric_recorder: InMemoryMetricRecorder | OTelMetricRecorder
     tracer: InMemoryTracer

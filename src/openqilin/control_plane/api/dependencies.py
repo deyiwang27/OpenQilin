@@ -76,6 +76,7 @@ from openqilin.data_access.repositories.task_execution_results import (
     InProcessTaskExecutionResultsRepository,
 )
 from openqilin.observability.audit.audit_writer import OTelAuditWriter
+from openqilin.observability.metrics.recorder import OTelMetricRecorder
 from openqilin.observability.testing.stubs import (
     InMemoryAuditWriter,
     InMemoryMetricRecorder,
@@ -147,7 +148,7 @@ class RuntimeServices:
     retrieval_query_service: RetrievalQueryService
     tracer: InMemoryTracer
     audit_writer: InMemoryAuditWriter | OTelAuditWriter
-    metric_recorder: InMemoryMetricRecorder
+    metric_recorder: InMemoryMetricRecorder | OTelMetricRecorder
     routing_resolver: ProjectSpaceRoutingResolver
     delivery_event_callback_processor: LocalDeliveryEventCallbackProcessor
     communication_outcome_notifier: CommunicationOutcomeNotifier
@@ -178,8 +179,16 @@ def build_runtime_services() -> RuntimeServices:
             "OPENQILIN_OPA_URL is required. Run: docker compose --profile core up -d"
         )
 
+    if settings.otlp_endpoint:
+        metric_recorder: InMemoryMetricRecorder | OTelMetricRecorder = OTelMetricRecorder()
+    else:
+        metric_recorder = InMemoryMetricRecorder()
+
     llm_gateway: LlmGatewayService = build_llm_gateway_service()
-    grammar_classifier = IntentClassifier(llm_gateway=llm_gateway)
+    grammar_classifier = IntentClassifier(
+        llm_gateway=llm_gateway,
+        metric_recorder=metric_recorder,
+    )
     grammar_parser = CommandParser()
     grammar_router = FreeTextRouter()
     domain_leader_agent = DomainLeaderAgent(llm_gateway=llm_gateway)
@@ -308,7 +317,6 @@ def build_runtime_services() -> RuntimeServices:
         governance_repo=project_artifact_repo,
         audit_writer=audit_writer,
     )
-    metric_recorder = InMemoryMetricRecorder()
     delivery_event_callback_processor = LocalDeliveryEventCallbackProcessor(
         runtime_state_repo=runtime_state_repo,
         audit_writer=audit_writer,
@@ -500,7 +508,7 @@ def get_audit_writer(request: Request) -> InMemoryAuditWriter | OTelAuditWriter:
     return get_runtime_services(request).audit_writer
 
 
-def get_metric_recorder(request: Request) -> InMemoryMetricRecorder:
+def get_metric_recorder(request: Request) -> InMemoryMetricRecorder | OTelMetricRecorder:
     """Provide metric recorder for governed-path counters."""
 
     return get_runtime_services(request).metric_recorder
