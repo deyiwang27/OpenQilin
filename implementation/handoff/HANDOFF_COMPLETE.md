@@ -3,7 +3,7 @@
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-22
 **Branch:** `feat/142-m16-wp1-settings-singleton`
-**Draft PR:** #TBD
+**Draft PR:** #144
 **Implements:** `implementation/handoff/current.md`
 
 ---
