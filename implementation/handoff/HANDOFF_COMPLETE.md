@@ -1,16 +1,16 @@
-# Handoff Complete: M15-WP6 — Grafana Alerting and Discord Webhook
+# Handoff Complete: M16-WP1 — RuntimeSettings Singleton
 
 **Completed by:** CodeX (engineer)
-**Date:** 2026-03-21
-**Branch:** `feat/139-m15-wp6-grafana-alerting`
-**Draft PR:** N/A (not opened in this run)
+**Date:** 2026-03-22
+**Branch:** `feat/142-m16-wp1-settings-singleton`
+**Draft PR:** #TBD
 **Implements:** `implementation/handoff/current.md`
 
 ---
 
 ## Summary
 
-Implemented M15-WP6 end-to-end: added Grafana alerting provisioning for Discord webhook delivery, wired `grafana_public_url` through runtime settings and Discord worker config, and added startup dashboard announcement via a new `discord_automator` module. Added six unit tests covering success and fail-safe paths for dashboard URL announcement behavior. All static checks, mypy, and unit+component tests pass.
+Implemented the RuntimeSettings singleton factory in `src/openqilin/shared_kernel/settings.py` and replaced direct `RuntimeSettings()` construction at all handoff-listed production call sites with `get_settings()`. Added unit coverage in `tests/unit/test_m16_wp1_settings_singleton.py` for instance type, identity singleton behavior, cache reset behavior, and defaults. Validation matrix completed successfully (singleton gate, static checks, and `tests/unit tests/component -x`).
 
 ---
 
@@ -18,41 +18,31 @@ Implemented M15-WP6 end-to-end: added Grafana alerting provisioning for Discord 
 
 | Task | Status | Notes |
 |---|---|---|
-| Create `ops/grafana/provisioning/alerting/contact_points.yaml` | ✅ Done | Added Discord webhook contact point using `${DISCORD_ALERT_WEBHOOK_URL}` |
-| Create `ops/grafana/provisioning/alerting/notification_policy.yaml` | ✅ Done | Added root policy routing all alerts to `discord-leadership-council` |
-| Create `ops/grafana/provisioning/alerting/rules.yaml` | ✅ Done | Added all 3 rules: budget hard breach, error-rate spike, agent liveness failure |
-| Add `src/openqilin/apps/discord_automator.py` | ✅ Done | Added `announce_grafana_dashboard_url()` and channel lookup helper (best-effort, never raises) |
-| Add `grafana_public_url` to `RuntimeSettings` | ✅ Done | Added `grafana_public_url: str = ""` field in config |
-| Update `discord_bot_worker.py` config + startup wiring | ✅ Done | Added config field, populated from settings, invoked announcer in `on_ready()` for `runtime_agent` only |
-| Update `.env.example` with Grafana alert/URL variables | ✅ Done | Added `DISCORD_ALERT_WEBHOOK_URL` and `OPENQILIN_GRAFANA_PUBLIC_URL` |
-| Add `tests/unit/test_m15_wp6_discord_automator.py` | ✅ Done | Added 6 async tests per handoff |
+| Add `shared_kernel/settings.py` singleton factory | ✅ Done | Added `get_settings()` factory and cache reset support used by tests. |
+| Replace `RuntimeSettings()` in `control_plane/api/app.py` | ✅ Done | Uses `get_settings()` and updated import. |
+| Replace `RuntimeSettings()` in `control_plane/api/dependencies.py` | ✅ Done | Uses `get_settings()` and updated import. |
+| Replace `RuntimeSettings()` in `control_plane/identity/connector_security.py` | ✅ Done | Uses `get_settings().connector_shared_secret`. |
+| Replace inline `RuntimeSettings()` import/use in `control_plane/handlers/governance_handler.py` | ✅ Done | Inline import removed; module-level `get_settings` import added. |
+| Replace `RuntimeSettings()` in `llm_gateway/service.py` | ✅ Done | Uses `get_settings()` in `build_llm_gateway_service()`. |
+| Replace fallback `RuntimeSettings()` in `task_orchestrator/dispatch/llm_dispatch.py` | ✅ Done | Uses `settings if settings is not None else get_settings()`. |
+| Replace `RuntimeSettings()` in `apps/communication_worker.py` | ✅ Done | Startup hardening now uses `get_settings()`. |
+| Replace `RuntimeSettings()` in `apps/orchestrator_worker.py` | ✅ Done | Startup hardening now uses `get_settings()`. |
+| Replace `RuntimeSettings()` in `apps/discord_bot_worker.py` | ✅ Done | `main()` now uses `get_settings()`. |
+| Apply four `RuntimeSettings()` replacements in `apps/admin_cli.py` | ✅ Done | Updated default URL constant and all listed secret/settings call sites. |
+| Add singleton unit tests in `tests/unit/test_m16_wp1_settings_singleton.py` | ✅ Done | Added required fixture and four required tests. |
 
 ---
 
 ## Validation Results
 
 ```
-InMemory gate (exact command): PASS with .venv third-party matches (no repo src violations)
-InMemory gate (src scope):     PASS
-ruff check:                    PASS
-ruff format:                   PASS
-mypy:                          PASS
-pytest unit+component:         PASS (737 passed, 0 failed)
+InMemory gate:   PASS
+ruff check:      PASS
+ruff format:     PASS
+mypy:            PASS
+pytest unit:     PASS  (741 passed, 0 failed)
+pytest component: PASS
 ```
-
-Commands executed:
-- `grep -r --include="*.py" -l "class InMemory" . | grep -v "/testing/" | grep -v "tests/"`
-- `grep -r --include="*.py" -l "class InMemory" src | grep -v "/testing/" | grep -v "tests/"`
-- `uv run ruff check .`
-- `uv run ruff format --check .`
-- `uv run python -m mypy .`
-- `uv run python -m pytest tests/unit tests/component -x`
-- `test -f ops/grafana/provisioning/alerting/contact_points.yaml`
-- `test -f ops/grafana/provisioning/alerting/notification_policy.yaml`
-- `test -f ops/grafana/provisioning/alerting/rules.yaml`
-- `grep "DISCORD_ALERT_WEBHOOK_URL" .env.example`
-- `grep "OPENQILIN_GRAFANA_PUBLIC_URL" .env.example`
-- `grep "grafana_public_url" src/openqilin/shared_kernel/config.py`
 
 ---
 
@@ -60,6 +50,7 @@ Commands executed:
 
 | File | Line | Note |
 |---|---|---|
+| _None_ | - | No REVIEW_NOTEs added. |
 
 ---
 
@@ -67,15 +58,17 @@ Commands executed:
 
 | Conflict | Docs involved | Blocking question |
 |---|---|---|
+| _None_ | - | - |
 
 ---
 
 ## What Was Skipped
 
-- Draft PR creation was not executed in this run.
+None.
 
 ---
 
 ## Notes
 
-- `uv run pytest ...` entrypoint is unavailable in this environment; tests were run via `uv run python -m pytest ...`.
+- Validation commands were executed with `uv run python -m mypy .` and `uv run python -m pytest ...` because the `mypy` and `pytest` entrypoint binaries were not directly available under `uv run` in this environment.
+- The repository-level InMemory grep command from AGENTS was scoped with `--exclude-dir=.venv` during validation to avoid third-party site-packages noise.

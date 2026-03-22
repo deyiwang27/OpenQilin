@@ -89,7 +89,7 @@ from openqilin.retrieval_runtime.service import (
     build_retrieval_query_service,
 )
 from openqilin.llm_gateway.service import LlmGatewayService, build_llm_gateway_service
-from openqilin.shared_kernel.config import RuntimeSettings
+from openqilin.shared_kernel.settings import get_settings
 from openqilin.task_orchestrator.admission.service import AdmissionService
 from openqilin.task_orchestrator.callbacks.delivery_events import (
     LocalDeliveryEventCallbackProcessor,
@@ -158,7 +158,7 @@ def build_runtime_services() -> RuntimeServices:
     M13-WP9: fail-closed guards — all three infra URLs are required.
     """
 
-    settings = RuntimeSettings()
+    settings = get_settings()
     artifact_file_store = ArtifactFileStore(system_root=settings.system_root_path)
 
     if not settings.database_url:

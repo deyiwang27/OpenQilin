@@ -23,6 +23,7 @@ from openqilin.data_access.repositories.governance import (
     WorkforceBindingRecord,
 )
 from openqilin.data_access.repositories.postgres.project_repository import PostgresProjectRepository
+from openqilin.shared_kernel.settings import get_settings
 
 UTC = timezone.utc
 
@@ -247,9 +248,7 @@ def initialize_project_by_cwo(
             return ()
         return tuple((str(k), str(v)) for k, v in m.items())
 
-    from openqilin.shared_kernel.config import RuntimeSettings
-
-    settings = RuntimeSettings()
+    settings = get_settings()
     initialized_at = datetime.now(tz=UTC)
     metric_plan_pairs = _to_pair_tuple(metric_plan)
     workforce_plan_pairs = _to_pair_tuple(workforce_plan)

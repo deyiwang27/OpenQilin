@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 import structlog
 
-from openqilin.shared_kernel.config import RuntimeSettings
+from openqilin.shared_kernel.settings import get_settings
 from openqilin.shared_kernel.startup_validation import enforce_connector_secret_hardening
 from openqilin.task_orchestrator.loop_control import LoopCapBreachError, LoopState
 from openqilin.task_orchestrator.workflow.graph import build_task_graph
@@ -132,7 +132,7 @@ def drain_queued_tasks(runtime_services: "RuntimeServices") -> int:
 async def main(*, run_once: bool = False) -> None:
     """Run orchestrator worker bootstrap and steady-state polling loop."""
 
-    enforce_connector_secret_hardening(RuntimeSettings())
+    enforce_connector_secret_hardening(get_settings())
     LOGGER.info("worker.bootstrap", worker="orchestrator_worker")
     _mark_ready()
     if run_once:
