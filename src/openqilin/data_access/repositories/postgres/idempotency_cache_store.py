@@ -19,6 +19,7 @@ class RedisIdempotencyCacheStore:
     """Redis-backed idempotency cache with the same interface as InMemoryIdempotencyCacheStore.
 
     Key format: ``idempotency:{namespace}:{key}``
+    Namespace is bound at construction time — each instance owns exactly one namespace.
     Claim: SET NX EX (atomic insert-if-absent with TTL).
     All records are stored as JSON strings; TTL is refreshed on update.
     """
@@ -28,14 +29,20 @@ class RedisIdempotencyCacheStore:
         *,
         client: redis.Redis,  # type: ignore[type-arg]
         ttl_seconds: int = 86400,
+        namespace: str,
     ) -> None:
         self._client = client
         self._ttl_seconds = ttl_seconds
+        self._namespace = namespace
+
+    def _key(self, key: str) -> str:
+        """Build the namespaced Redis key for this store instance."""
+
+        return _redis_key(self._namespace, key)
 
     def claim(
         self,
         *,
-        namespace: str,
         key: str,
         payload_hash: str,
     ) -> tuple[CacheClaimStatus, CacheIdempotencyRecord]:
@@ -45,10 +52,10 @@ class RedisIdempotencyCacheStore:
         fetches the stored record and compares payload_hash / status.
         """
 
-        redis_key = _redis_key(namespace, key)
+        redis_key = self._key(key)
         now = datetime.now(tz=UTC)
         new_record = CacheIdempotencyRecord(
-            namespace=namespace,
+            namespace=self._namespace,
             key=key,
             payload_hash=payload_hash,
             status="in_progress",
@@ -84,10 +91,10 @@ class RedisIdempotencyCacheStore:
             return "replay", existing
         return "in_progress", existing
 
-    def increment_attempt(self, *, namespace: str, key: str) -> CacheIdempotencyRecord | None:
+    def increment_attempt(self, *, key: str) -> CacheIdempotencyRecord | None:
         """Increment attempt counter for existing in-progress record."""
 
-        redis_key = _redis_key(namespace, key)
+        redis_key = self._key(key)
         existing = self._get_record(redis_key)
         if existing is None:
             return None
@@ -107,13 +114,12 @@ class RedisIdempotencyCacheStore:
     def complete(
         self,
         *,
-        namespace: str,
         key: str,
         result: Mapping[str, object],
     ) -> CacheIdempotencyRecord | None:
         """Mark idempotency record completed with immutable result payload."""
 
-        redis_key = _redis_key(namespace, key)
+        redis_key = self._key(key)
         existing = self._get_record(redis_key)
         if existing is None:
             return None
@@ -130,19 +136,19 @@ class RedisIdempotencyCacheStore:
         self._client.set(redis_key, _record_to_json(updated), keepttl=True)
         return updated
 
-    def get(self, *, namespace: str, key: str) -> CacheIdempotencyRecord | None:
+    def get(self, *, key: str) -> CacheIdempotencyRecord | None:
         """Load one idempotency record."""
 
-        return self._get_record(_redis_key(namespace, key))
+        return self._get_record(self._key(key))
 
-    def list_namespace(self, *, namespace: str) -> tuple[CacheIdempotencyRecord, ...]:
+    def list_namespace(self) -> tuple[CacheIdempotencyRecord, ...]:
         """List all idempotency records for namespace.
 
         Uses SCAN to iterate without blocking; collects matching keys then
         fetches values via pipeline for efficiency.
         """
 
-        pattern = f"idempotency:{namespace}:*"
+        pattern = f"idempotency:{self._namespace}:*"
         keys: list[str] = []
         cursor = 0
         while True:

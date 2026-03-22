@@ -24,9 +24,6 @@ from openqilin.data_access.repositories.postgres.communication_repository import
 from openqilin.data_access.repositories.postgres.governance_artifact_repository import (
     PostgresGovernanceArtifactRepository,
 )
-from openqilin.data_access.repositories.postgres.idempotency_cache_store import (
-    RedisIdempotencyCacheStore,
-)
 from openqilin.data_access.repositories.postgres.project_repository import PostgresProjectRepository
 from openqilin.data_access.repositories.postgres.task_repository import PostgresTaskRepository
 from openqilin.data_access.repositories.runtime_state import TaskRecord
@@ -600,7 +597,6 @@ def build_task_dispatch_service(
     audit_writer: InMemoryAuditWriter | OTelAuditWriter | None = None,
     metric_recorder: InMemoryMetricRecorder | None = None,
     communication_repository: PostgresCommunicationRepository | None = None,
-    idempotency_cache_store: RedisIdempotencyCacheStore | None = None,
     retrieval_query_service: RetrievalGroundingService | RetrievalQueryService | None = None,
     governance_project_reader: GovernanceProjectReader | None = None,
     governance_repository: PostgresProjectRepository | None = None,

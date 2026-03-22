@@ -123,8 +123,8 @@ def test_record_from_json_unknown_status_defaults_to_in_progress() -> None:
 
 def test_claim_new_key_returns_new_status() -> None:
     client = _make_redis_mock(set_result=True)
-    store = RedisIdempotencyCacheStore(client=client, ttl_seconds=3600)
-    status, record = store.claim(namespace="ns", key="k", payload_hash="h1")
+    store = RedisIdempotencyCacheStore(client=client, ttl_seconds=3600, namespace="ns")
+    status, record = store.claim(key="k", payload_hash="h1")
     assert status == "new"
     assert record.namespace == "ns"
     assert record.key == "k"
@@ -145,8 +145,8 @@ def test_claim_new_key_returns_new_status() -> None:
 def test_claim_existing_same_hash_in_progress() -> None:
     existing = _make_record(payload_hash="h1", status="in_progress")
     client = _make_redis_mock(set_result=None, get_result=_record_to_json(existing).encode())
-    store = RedisIdempotencyCacheStore(client=client)
-    status, record = store.claim(namespace="ns", key="k", payload_hash="h1")
+    store = RedisIdempotencyCacheStore(client=client, namespace="ns")
+    status, record = store.claim(key="k", payload_hash="h1")
     assert status == "in_progress"
     assert record.payload_hash == "h1"
 
@@ -163,8 +163,8 @@ def test_claim_completed_same_hash_returns_replay() -> None:
         result=(("task_id", "abc"),),
     )
     client = _make_redis_mock(set_result=None, get_result=_record_to_json(completed).encode())
-    store = RedisIdempotencyCacheStore(client=client)
-    status, record = store.claim(namespace="ns", key="k", payload_hash="h1")
+    store = RedisIdempotencyCacheStore(client=client, namespace="ns")
+    status, record = store.claim(key="k", payload_hash="h1")
     assert status == "replay"
     assert record.result == (("task_id", "abc"),)
 
@@ -177,8 +177,8 @@ def test_claim_completed_same_hash_returns_replay() -> None:
 def test_claim_different_hash_returns_conflict() -> None:
     existing = _make_record(payload_hash="h1")
     client = _make_redis_mock(set_result=None, get_result=_record_to_json(existing).encode())
-    store = RedisIdempotencyCacheStore(client=client)
-    status, record = store.claim(namespace="ns", key="k", payload_hash="h_different")
+    store = RedisIdempotencyCacheStore(client=client, namespace="ns")
+    status, record = store.claim(key="k", payload_hash="h_different")
     assert status == "conflict"
     assert record.payload_hash == "h1"
 
@@ -193,8 +193,8 @@ def test_claim_race_key_expired_treats_as_new() -> None:
     client = _make_redis_mock(set_result=None, get_result=None)
     # Second SET call (the fallback write) should succeed
     client.set.return_value = True
-    store = RedisIdempotencyCacheStore(client=client)
-    status, record = store.claim(namespace="ns", key="k", payload_hash="h1")
+    store = RedisIdempotencyCacheStore(client=client, namespace="ns")
+    status, record = store.claim(key="k", payload_hash="h1")
     assert status == "new"
 
 
@@ -206,8 +206,8 @@ def test_claim_race_key_expired_treats_as_new() -> None:
 def test_increment_attempt_increments_counter() -> None:
     existing = _make_record(attempt_count=2)
     client = _make_redis_mock(get_result=_record_to_json(existing).encode())
-    store = RedisIdempotencyCacheStore(client=client)
-    updated = store.increment_attempt(namespace="ns", key="k")
+    store = RedisIdempotencyCacheStore(client=client, namespace="ns")
+    updated = store.increment_attempt(key="k")
     assert updated is not None
     assert updated.attempt_count == 3
     # SET with keepttl=True
@@ -218,8 +218,8 @@ def test_increment_attempt_increments_counter() -> None:
 
 def test_increment_attempt_missing_key_returns_none() -> None:
     client = _make_redis_mock(get_result=None)
-    store = RedisIdempotencyCacheStore(client=client)
-    assert store.increment_attempt(namespace="ns", key="missing") is None
+    store = RedisIdempotencyCacheStore(client=client, namespace="ns")
+    assert store.increment_attempt(key="missing") is None
 
 
 # ---------------------------------------------------------------------------
@@ -230,8 +230,8 @@ def test_increment_attempt_missing_key_returns_none() -> None:
 def test_complete_sets_completed_status_and_result() -> None:
     existing = _make_record()
     client = _make_redis_mock(get_result=_record_to_json(existing).encode())
-    store = RedisIdempotencyCacheStore(client=client)
-    updated = store.complete(namespace="ns", key="k", result={"task_id": "xyz"})
+    store = RedisIdempotencyCacheStore(client=client, namespace="ns")
+    updated = store.complete(key="k", result={"task_id": "xyz"})
     assert updated is not None
     assert updated.status == "completed"
     assert updated.result is not None
@@ -240,8 +240,8 @@ def test_complete_sets_completed_status_and_result() -> None:
 
 def test_complete_missing_key_returns_none() -> None:
     client = _make_redis_mock(get_result=None)
-    store = RedisIdempotencyCacheStore(client=client)
-    assert store.complete(namespace="ns", key="missing", result={}) is None
+    store = RedisIdempotencyCacheStore(client=client, namespace="ns")
+    assert store.complete(key="missing", result={}) is None
 
 
 # ---------------------------------------------------------------------------
@@ -252,16 +252,16 @@ def test_complete_missing_key_returns_none() -> None:
 def test_get_existing_record() -> None:
     existing = _make_record(key="key1")
     client = _make_redis_mock(get_result=_record_to_json(existing).encode())
-    store = RedisIdempotencyCacheStore(client=client)
-    record = store.get(namespace="ns", key="key1")
+    store = RedisIdempotencyCacheStore(client=client, namespace="ns")
+    record = store.get(key="key1")
     assert record is not None
     assert record.key == "key1"
 
 
 def test_get_missing_key_returns_none() -> None:
     client = _make_redis_mock(get_result=None)
-    store = RedisIdempotencyCacheStore(client=client)
-    assert store.get(namespace="ns", key="missing") is None
+    store = RedisIdempotencyCacheStore(client=client, namespace="ns")
+    assert store.get(key="missing") is None
 
 
 # ---------------------------------------------------------------------------
@@ -280,8 +280,8 @@ def test_list_namespace_returns_all_records() -> None:
         _record_to_json(r1).encode(),
         _record_to_json(r2).encode(),
     ]
-    store = RedisIdempotencyCacheStore(client=client)
-    records = store.list_namespace(namespace="ns")
+    store = RedisIdempotencyCacheStore(client=client, namespace="ns")
+    records = store.list_namespace()
     assert len(records) == 2
     keys = {r.key for r in records}
     assert keys == {"k1", "k2"}
@@ -289,8 +289,8 @@ def test_list_namespace_returns_all_records() -> None:
 
 def test_list_namespace_empty_returns_empty_tuple() -> None:
     client = _make_redis_mock(scan_result=(0, []))
-    store = RedisIdempotencyCacheStore(client=client)
-    records = store.list_namespace(namespace="ns")
+    store = RedisIdempotencyCacheStore(client=client, namespace="ns")
+    records = store.list_namespace()
     assert records == ()
 
 
@@ -299,9 +299,9 @@ def test_list_namespace_skips_corrupted_entries() -> None:
     client = _make_redis_mock(scan_result=scan_result)
     pipeline = client.pipeline.return_value
     pipeline.execute.return_value = [b"not-valid-json"]
-    store = RedisIdempotencyCacheStore(client=client)
+    store = RedisIdempotencyCacheStore(client=client, namespace="ns")
     # Corrupted entry is skipped, returns empty
-    records = store.list_namespace(namespace="ns")
+    records = store.list_namespace()
     assert records == ()
 
 
@@ -354,16 +354,17 @@ def test_runtime_settings_ttl_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_dependencies_idempotency_store_type_annotations() -> None:
-    """RuntimeServices.idempotency_cache_store is typed as RedisIdempotencyCacheStore."""
+    """RuntimeServices idempotency stores are typed as RedisIdempotencyCacheStore."""
     from openqilin.control_plane.api.dependencies import RuntimeServices
 
     hints = {}
     for field in RuntimeServices.__dataclass_fields__.values():
         hints[field.name] = field.type
     # After M13-WP9 hardening, only the Redis store type is accepted (no InMemory fallback).
-    field_type = hints.get("idempotency_cache_store", "")
-    type_str = str(field_type)
-    assert "RedisIdempotencyCacheStore" in type_str
+    ingress_field_type = hints.get("ingress_idempotency_store", "")
+    communication_field_type = hints.get("communication_idempotency_store", "")
+    assert "RedisIdempotencyCacheStore" in str(ingress_field_type)
+    assert "RedisIdempotencyCacheStore" in str(communication_field_type)
 
 
 def test_build_runtime_services_raises_runtime_error_when_no_redis_url(
@@ -405,6 +406,7 @@ def test_build_runtime_services_uses_redis_when_redis_url_set(
         store = RedisIdempotencyCacheStore(
             client=client,
             ttl_seconds=settings.idempotency_ttl_seconds,
+            namespace="ns",
         )
         assert isinstance(store, RedisIdempotencyCacheStore)
         mock_from_url.assert_called_once_with("redis://localhost:6379", decode_responses=False)

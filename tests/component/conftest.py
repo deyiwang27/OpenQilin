@@ -117,7 +117,8 @@ def _build_test_runtime_services() -> RuntimeServices:
     project_artifact_repo = InMemoryProjectArtifactRepository()
     governance_repo = InMemoryGovernanceRepository()
 
-    idempotency_cache_store = InMemoryIdempotencyCacheStore()
+    ingress_idempotency_store = InMemoryIdempotencyCacheStore()
+    communication_idempotency_store = InMemoryIdempotencyCacheStore()
     ingress_dedupe = IngressDedupeStore()
     project_space_binding_repo = InMemoryProjectSpaceBindingRepository()
     routing_resolver = ProjectSpaceRoutingResolver(binding_repo=project_space_binding_repo)  # type: ignore[arg-type]
@@ -216,7 +217,6 @@ def _build_test_runtime_services() -> RuntimeServices:
         audit_writer=audit_writer,
         metric_recorder=metric_recorder,
         communication_repository=communication_repo,
-        idempotency_cache_store=idempotency_cache_store,  # type: ignore[arg-type]
         retrieval_query_service=retrieval_query_service,
         governance_project_reader=governance_repo,
         governance_repository=governance_repo,
@@ -262,7 +262,8 @@ def _build_test_runtime_services() -> RuntimeServices:
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
         communication_repo=communication_repo,
-        idempotency_cache_store=idempotency_cache_store,  # type: ignore[arg-type]
+        ingress_idempotency_store=ingress_idempotency_store,  # type: ignore[arg-type]
+        communication_idempotency_store=communication_idempotency_store,  # type: ignore[arg-type]
         agent_registry_repo=agent_registry_repo,  # type: ignore[arg-type]
         identity_channel_repo=identity_channel_repo,  # type: ignore[arg-type]
         project_artifact_repo=project_artifact_repo,  # type: ignore[arg-type]

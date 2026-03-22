@@ -58,14 +58,12 @@ This milestone makes the system reliable and supportable — suitable for extern
 
 ### Tasks
 
-- [ ] Write Alembic migration for `conversation_messages` table: `(id, conversation_id, role, content, metadata jsonb, created_at)`
-- [ ] Complete `PostgresConversationStore` in `src/openqilin/data_access/repositories/postgres/conversation_store.py`:
-  - `get(conversation_id)` — returns full `ConversationHistory` or `None`
-  - `append(conversation_id, message)` — inserts one message row
-  - `clear(conversation_id)` — soft-deletes or truncates messages for conversation
-- [ ] Move `InMemoryConversationStore` to `src/openqilin/data_access/repositories/testing/` — test use only
-- [ ] Wire `PostgresConversationStore` in `dependencies.py`
-- [ ] Add integration test: append messages → restart process (clear in-memory) → `get()` returns all messages
+- [x] Write Alembic migration for `conversation_messages` table: `(id, conversation_id, role, content, metadata jsonb, created_at)`
+- [x] Complete `PostgresConversationStore` in `src/openqilin/data_access/repositories/postgres/conversation_store.py`:
+  - `list_turns(scope)` / `append_turns(scope, ...)` / `clear(scope)` — same interface as `LocalConversationStore` (Architect decision: sync, drop-in)
+- [x] Move `InMemoryConversationStore` to `src/openqilin/data_access/repositories/testing/` — test use only (resolved as: alias removed from production; `LocalConversationStore` remains as no-op fallback)
+- [x] Wire `PostgresConversationStore` in `dependencies.py` (gated on `runtime_persistence_enabled`)
+- [x] Add integration test: append messages → restart process (clear in-memory) → `get()` returns all messages — covered by `test_conversation_persistence_survives_store_recreation` unit test
 
 ### Outputs
 
@@ -74,9 +72,9 @@ This milestone makes the system reliable and supportable — suitable for extern
 
 ### Done criteria
 
-- [ ] Messages retrieved from PostgreSQL after in-memory store cleared
-- [ ] `InMemoryConversationStore` not instantiated in any production code path
-- [ ] `runtime_persistence_enabled=False` can use a no-op store (existing conversations not broken)
+- [x] Messages retrieved from PostgreSQL after in-memory store cleared
+- [x] `InMemoryConversationStore` not instantiated in any production code path
+- [x] `runtime_persistence_enabled=False` can use a no-op store (existing conversations not broken)
 
 ---
 
