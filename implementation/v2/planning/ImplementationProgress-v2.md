@@ -15,7 +15,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 | M13 | `done` | 9 / 9 | All WPs complete; exit criteria met; WPs #89–#96, #98 |
 | M14 | `done` | 7 / 7 | All WPs complete; exit criteria met |
 | M15 | `done` | 6 / 6 | All WPs complete; exit criteria met |
-| M16 | `in_progress` | 4 / 5 | WP1–WP4 done; WP5 in_progress |
+| M16 | `done` | 5 / 5 | All WPs complete; exit criteria met |
 | M17 | `planned` | 0 / 6 | Entry gate: M16 complete |
 
 ---
@@ -119,9 +119,9 @@ WP document: `05-milestones/M16-WorkPackages-v1.md`
 | M16-WP2 | Conversation History Persistence (M-2) | `done` | #145 | #146 | PostgresConversationStore; migration 0014; 749 tests pass |
 | M16-WP3 | Idempotency Namespace Separation (M-3) | `done` | #147 | #148 | namespace at init; two named instances; 753 tests pass |
 | M16-WP4 | Doctor / Diagnostics CLI | `done` | #149 | #150 | SystemDoctor + oq_doctor CLI + startup guard; 769 tests pass |
-| M16-WP5 | Loop Control Audit and Token Discipline | `in_progress` | #151 | — | — |
+| M16-WP5 | Loop Control Audit and Token Discipline | `done` | #151 | #152 | OTelMetricRecorder; 60s cache; pair check PM→Specialist; loop_cap_breach_total; Grafana panel; 785 tests pass |
 
-**M16 Exit criteria:** `pending`
+**M16 Exit criteria:** `done`
 
 ---
 
