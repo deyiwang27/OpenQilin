@@ -141,6 +141,7 @@ class LlmGatewayDispatchAdapter:
         llm_gateway_service: LlmGatewayService,
         settings: RuntimeSettings | None = None,
         *,
+        conversation_store: ConversationStoreProtocol | None = None,
         retrieval_query_service: RetrievalGroundingService | None = None,
         governance_project_reader: GovernanceProjectReader | None = None,
         read_tool_service: GovernedReadToolService | None = None,
@@ -149,7 +150,11 @@ class LlmGatewayDispatchAdapter:
     ) -> None:
         self._llm_gateway_service = llm_gateway_service
         self._settings = settings if settings is not None else get_settings()
-        self._conversation_store = LocalConversationStore(max_turns=6)
+        self._conversation_store: ConversationStoreProtocol = (
+            conversation_store
+            if conversation_store is not None
+            else LocalConversationStore(max_turns=6)
+        )
         self._retrieval_query_service = retrieval_query_service
         self._governance_project_reader = governance_project_reader
         self._tool_registry = ToolServiceRegistry(
@@ -585,6 +590,14 @@ class ConversationTurn:
     content: str
 
 
+class ConversationStoreProtocol(Protocol):
+    """Interface contract for conversation turn stores."""
+
+    def list_turns(self, scope: str) -> tuple[ConversationTurn, ...]: ...
+
+    def append_turns(self, scope: str, *, user_prompt: str, assistant_reply: str) -> None: ...
+
+
 class LocalConversationStore:
     """Bounded in-memory conversation turns per scope."""
 
@@ -938,7 +951,3 @@ def _format_project_portfolio_evidence(project_records: tuple[object, ...]) -> s
         name = str(getattr(project, "name", "name-unknown"))
         entries.append(f"{project_id}:{status}:{name}")
     return "projects=" + ", ".join(entries)
-
-
-# Backward-compatible alias retained for existing imports.
-InMemoryConversationStore = LocalConversationStore

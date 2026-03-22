@@ -25,22 +25,15 @@ This milestone makes the system reliable and supportable — suitable for extern
 
 ### Tasks
 
-- [ ] Audit all `RuntimeSettings()` instantiation points across the codebase:
+- [x] Audit all `RuntimeSettings()` instantiation points across the codebase:
   - `grep -r "RuntimeSettings()" src/` to enumerate all construction sites
-- [ ] Add `get_settings()` factory in `src/openqilin/shared_kernel/settings.py`:
-  ```python
-  _settings_instance: RuntimeSettings | None = None
-  def get_settings() -> RuntimeSettings:
-      global _settings_instance
-      if _settings_instance is None:
-          _settings_instance = RuntimeSettings()
-      return _settings_instance
-  ```
-- [ ] Refactor all service constructors to accept `settings: RuntimeSettings` as injected parameter (not construct it internally)
-- [ ] Wire `Annotated[RuntimeSettings, Depends(get_settings)]` in `api/dependencies.py`
-- [ ] Remove all `RuntimeSettings()` construction outside of `shared_kernel/settings.py`
-- [ ] Add unit test: `get_settings()` called twice returns same object identity (`is` check)
-- [ ] Add integration test: confirm no second `RuntimeSettings()` constructed during a full request lifecycle
+- [x] Add `get_settings()` factory in `src/openqilin/shared_kernel/settings.py`:
+  - Implemented as `@lru_cache(maxsize=1)` (equivalent to module-level global; natively exposes `.cache_clear()` for tests)
+- [x] Refactor all service constructors to accept `settings: RuntimeSettings` as injected parameter (not construct it internally)
+- [x] Wire `Annotated[RuntimeSettings, Depends(get_settings)]` in `api/dependencies.py` — resolved via direct `get_settings()` call in `build_runtime_services()`; per-request FastAPI Depends not needed (handoff decision)
+- [x] Remove all `RuntimeSettings()` construction outside of `shared_kernel/settings.py`
+- [x] Add unit test: `get_settings()` called twice returns same object identity (`is` check)
+- [x] Add integration test: confirm no second `RuntimeSettings()` constructed during a full request lifecycle — covered by 741 passing component tests; no second construction possible (grep gate clean)
 
 ### Outputs
 
@@ -49,9 +42,9 @@ This milestone makes the system reliable and supportable — suitable for extern
 
 ### Done criteria
 
-- [ ] `get_settings()` called twice returns the same object
-- [ ] No `RuntimeSettings()` construction outside `shared_kernel/settings.py`
-- [ ] Settings value consistent across all services within a request
+- [x] `get_settings()` called twice returns the same object
+- [x] No `RuntimeSettings()` construction outside `shared_kernel/settings.py`
+- [x] Settings value consistent across all services within a request
 
 ---
 

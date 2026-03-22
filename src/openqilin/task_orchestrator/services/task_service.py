@@ -43,6 +43,7 @@ from openqilin.task_orchestrator.dispatch.communication_dispatch import (
     LocalCommunicationDispatchAdapter,
 )
 from openqilin.task_orchestrator.dispatch.llm_dispatch import (
+    ConversationStoreProtocol,
     GovernanceProjectReader,
     LlmDispatchAdapter,
     LlmDispatchRequest,
@@ -595,6 +596,7 @@ class TaskDispatchService:
 def build_task_dispatch_service(
     lifecycle_service: TaskLifecycleService,
     *,
+    conversation_store: ConversationStoreProtocol | None = None,
     audit_writer: InMemoryAuditWriter | OTelAuditWriter | None = None,
     metric_recorder: InMemoryMetricRecorder | None = None,
     communication_repository: PostgresCommunicationRepository | None = None,
@@ -662,6 +664,7 @@ def build_task_dispatch_service(
         sandbox_execution_adapter=LocalSandboxExecutionAdapter(),
         llm_dispatch_adapter=LlmGatewayDispatchAdapter(
             llm_gateway_service=build_llm_gateway_service(),
+            conversation_store=conversation_store,
             retrieval_query_service=retrieval_query_service,
             governance_project_reader=governance_repository,
             read_tool_service=read_tool_service,
