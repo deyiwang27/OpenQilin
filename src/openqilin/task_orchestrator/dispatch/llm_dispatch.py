@@ -34,6 +34,7 @@ from openqilin.llm_gateway.schemas.responses import (
 from openqilin.llm_gateway.service import LlmGatewayService
 from openqilin.retrieval_runtime.models import RetrievalQueryRequest, RetrievalQueryResult
 from openqilin.shared_kernel.config import RuntimeSettings
+from openqilin.shared_kernel.settings import get_settings
 
 _RECIPIENT_ROLE_ALIASES: dict[str, str] = {
     "admin": "administrator",
@@ -147,7 +148,7 @@ class LlmGatewayDispatchAdapter:
         budget_client: BudgetRuntimeClientProtocol | None = None,
     ) -> None:
         self._llm_gateway_service = llm_gateway_service
-        self._settings = settings or RuntimeSettings()
+        self._settings = settings if settings is not None else get_settings()
         self._conversation_store = LocalConversationStore(max_turns=6)
         self._retrieval_query_service = retrieval_query_service
         self._governance_project_reader = governance_project_reader

@@ -25,6 +25,7 @@ from openqilin.discord_runtime.role_bot_registry import (
     build_role_bot_registry,
 )
 from openqilin.shared_kernel.config import RuntimeSettings
+from openqilin.shared_kernel.settings import get_settings
 from openqilin.shared_kernel.startup_validation import (
     enforce_connector_secret_hardening,
     enforce_discord_role_bot_registry,
@@ -849,7 +850,7 @@ async def run_worker_launch_plan(plan: DiscordWorkerLaunchPlan) -> None:
 async def main(*, run_once: bool = False) -> None:
     """Run Discord bot worker bootstrap and gateway loop."""
 
-    settings = RuntimeSettings()
+    settings = get_settings()
     enforce_connector_secret_hardening(settings)
     enforce_discord_role_bot_registry(settings)
     LOGGER.info("worker.bootstrap", worker="discord_bot_worker")

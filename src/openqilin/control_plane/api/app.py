@@ -12,7 +12,7 @@ from openqilin.control_plane.routers.owner_discussions import (
 from openqilin.control_plane.routers.queries import router as queries_router
 from openqilin.observability.metrics.recorder import configure_metrics
 from openqilin.observability.tracing.tracer import configure_otel_logs, configure_tracer
-from openqilin.shared_kernel.config import RuntimeSettings
+from openqilin.shared_kernel.settings import get_settings
 from openqilin.shared_kernel.startup_validation import (
     enforce_connector_secret_hardening,
     verify_opa_bundle_loaded,
@@ -22,7 +22,7 @@ from openqilin.shared_kernel.startup_validation import (
 def create_control_plane_app() -> FastAPI:
     """Create the control-plane API app and register M1 ingress routes."""
 
-    settings = RuntimeSettings()
+    settings = get_settings()
     enforce_connector_secret_hardening(settings)
     if settings.opa_url:
         verify_opa_bundle_loaded(settings.opa_url)  # Fail fast if OPA unreachable

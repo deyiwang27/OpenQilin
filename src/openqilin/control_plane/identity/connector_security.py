@@ -6,7 +6,7 @@ import hashlib
 import hmac
 from dataclasses import dataclass
 
-from openqilin.shared_kernel.config import RuntimeSettings
+from openqilin.shared_kernel.settings import get_settings
 
 
 class ConnectorSecurityError(ValueError):
@@ -85,7 +85,7 @@ def validate_connector_auth(
         )
 
     signature_value = _normalize_signature(header_signature)
-    secret = RuntimeSettings().connector_shared_secret
+    secret = get_settings().connector_shared_secret
     expected = sign_payload_hash(payload_raw_payload_hash, secret)
     if not hmac.compare_digest(signature_value, expected):
         raise ConnectorSecurityError(

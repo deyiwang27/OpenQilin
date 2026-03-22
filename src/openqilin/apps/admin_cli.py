@@ -34,12 +34,13 @@ from openqilin.data_access.db.engine import (
     resolve_database_url,
 )
 from openqilin.shared_kernel.config import RuntimeSettings
+from openqilin.shared_kernel.settings import get_settings
 from openqilin.shared_kernel.startup_validation import enforce_connector_secret_hardening
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_ALEMBIC_INI = PROJECT_ROOT / "alembic.ini"
 OWNER_COMMAND_ROUTE = "/v1/owner/commands"
-DEFAULT_API_BASE_URL = RuntimeSettings().smoke_api_base_url
+DEFAULT_API_BASE_URL: str = get_settings().smoke_api_base_url
 DEFAULT_ROLLBACK_DRILL_EVIDENCE = (
     PROJECT_ROOT / "implementation/v1/planning/artifacts/migration_rollback_drill_latest.json"
 )
@@ -345,7 +346,7 @@ def run_in_process_smoke_check() -> CheckResult:
 
     client = TestClient(app_instance)
     payload, raw_payload_hash = _smoke_payload()
-    signature = sign_payload_hash(raw_payload_hash, RuntimeSettings().connector_shared_secret)
+    signature = sign_payload_hash(raw_payload_hash, get_settings().connector_shared_secret)
     response = client.post(
         OWNER_COMMAND_ROUTE,
         headers={
@@ -377,7 +378,7 @@ def run_smoke_check(*, api_base_url: str, timeout_seconds: float = 5.0) -> Check
 
     route_url = f"{api_base_url.rstrip('/')}{OWNER_COMMAND_ROUTE}"
     payload, raw_payload_hash = _smoke_payload()
-    signature = sign_payload_hash(raw_payload_hash, RuntimeSettings().connector_shared_secret)
+    signature = sign_payload_hash(raw_payload_hash, get_settings().connector_shared_secret)
     try:
         with httpx.Client(timeout=timeout_seconds) as client:
             response = client.post(
@@ -456,7 +457,7 @@ def run_diagnostics_checks(
 ) -> list[CheckResult]:
     """Collect runtime diagnostics checks."""
 
-    settings = RuntimeSettings()
+    settings = get_settings()
     api_app = create_app()
     route_present = OWNER_COMMAND_ROUTE in _route_paths(api_app)
     configured_database_url = resolve_database_url(
