@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import os
 from time import perf_counter
 from typing import cast
 
@@ -191,13 +190,6 @@ def build_llm_gateway_service() -> LlmGatewayService:
     """Build gateway service with configured provider backend."""
 
     settings = get_settings()
-    env_backend = os.getenv("OPENQILIN_LLM_PROVIDER_BACKEND")
-    if (
-        env_backend is not None
-        and env_backend.strip().lower() != settings.llm_provider_backend.strip().lower()
-    ):
-        get_settings.cache_clear()
-        settings = get_settings()
     backend = settings.llm_provider_backend.strip().lower()
     if backend == "gemini_flash_free":
         provider: LiteLLMProvider = GeminiFlashFreeAdapter.from_settings(settings)
