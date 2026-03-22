@@ -132,7 +132,8 @@ class RuntimeServices:
     ingress_dedupe: IngressDedupeStore
     runtime_state_repo: PostgresTaskRepository
     communication_repo: PostgresCommunicationRepository
-    idempotency_cache_store: RedisIdempotencyCacheStore
+    ingress_idempotency_store: RedisIdempotencyCacheStore
+    communication_idempotency_store: RedisIdempotencyCacheStore
     agent_registry_repo: PostgresAgentRegistryRepository
     identity_channel_repo: PostgresIdentityMappingRepository
     project_artifact_repo: PostgresGovernanceArtifactRepository
@@ -210,9 +211,16 @@ def build_runtime_services() -> RuntimeServices:
     artifact_writer = PMProjectArtifactWriter(project_artifact_repo=project_artifact_repo)
 
     # --- idempotency (Redis required) ------------------------------------
-    idempotency_cache_store = RedisIdempotencyCacheStore(
-        client=build_redis_client(settings.redis_url),
+    redis_client = build_redis_client(settings.redis_url)
+    ingress_idempotency_store = RedisIdempotencyCacheStore(
+        client=redis_client,
         ttl_seconds=settings.idempotency_ttl_seconds,
+        namespace="ingress",
+    )
+    communication_idempotency_store = RedisIdempotencyCacheStore(
+        client=redis_client,
+        ttl_seconds=settings.idempotency_ttl_seconds,
+        namespace="communication",
     )
 
     ingress_dedupe = IngressDedupeStore()
@@ -315,7 +323,6 @@ def build_runtime_services() -> RuntimeServices:
         audit_writer=audit_writer,
         metric_recorder=metric_recorder,
         communication_repository=communication_repo,
-        idempotency_cache_store=idempotency_cache_store,
         retrieval_query_service=retrieval_query_service,
         governance_project_reader=governance_repo,
         governance_repository=governance_repo,
@@ -388,7 +395,8 @@ def build_runtime_services() -> RuntimeServices:
         ingress_dedupe=ingress_dedupe,
         runtime_state_repo=runtime_state_repo,
         communication_repo=communication_repo,
-        idempotency_cache_store=idempotency_cache_store,
+        ingress_idempotency_store=ingress_idempotency_store,
+        communication_idempotency_store=communication_idempotency_store,
         agent_registry_repo=agent_registry_repo,
         identity_channel_repo=identity_channel_repo,
         project_artifact_repo=project_artifact_repo,
