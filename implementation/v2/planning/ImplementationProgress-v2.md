@@ -162,7 +162,7 @@ All 20 architectural review findings from `00-direction/ArchitecturalReviewFindi
 | C-7 | `chat_class` KeyError → 500 | M11 | M11-WP2 | `done` |
 | C-8 | Write tool access check inverted | M12 | M12-WP6 | `done` |
 | C-9 | LangGraph not used; linear HTTP handler | M13 | M13-WP1 | `resolved` |
-| C-10 | Sandbox enforcement empty placeholder | M13 | M13-WP6 | `pending` |
+| C-10 | Sandbox enforcement empty placeholder | M13 | M13-WP6 | `partial` — scaffolding (SandboxProfileEnforcer, seccomp hook entry point) done; full BPF filter enforcement deferred to post-MVP-v2 |
 | H-1 | Fail-open dispatch fallback | M12 | M12-WP7 | `done` |
 | H-2 | No state transition guard | M12 | M12-WP7 | `done` |
 | H-3 | Snapshot split-brain | M13 | M13-WP4 | `done` |
