@@ -15,7 +15,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 | M13 | `done` | 9 / 9 | All WPs complete; exit criteria met; WPs #89–#96, #98 |
 | M14 | `done` | 7 / 7 | All WPs complete; exit criteria met |
 | M15 | `done` | 6 / 6 | All WPs complete; exit criteria met |
-| M16 | `in_progress` | 2 / 5 | WP1 (#144) + WP2 (#146) done; WP3 in progress |
+| M16 | `in_progress` | 3 / 5 | WP1 (#144) + WP2 (#146) + WP3 (#148) done |
 | M17 | `planned` | 0 / 6 | Entry gate: M16 complete |
 
 ---
@@ -117,8 +117,8 @@ WP document: `05-milestones/M16-WorkPackages-v1.md`
 |---|---|---|---|---|---|
 | M16-WP1 | RuntimeSettings Singleton (M-1) | `done` | #142 | #144 | get_settings() @lru_cache; 741 tests pass |
 | M16-WP2 | Conversation History Persistence (M-2) | `done` | #145 | #146 | PostgresConversationStore; migration 0014; 749 tests pass |
-| M16-WP3 | Idempotency Namespace Separation (M-3) | `in_progress` | #147 | — | — |
-| M16-WP4 | Doctor / Diagnostics CLI | `pending` | — | — | — |
+| M16-WP3 | Idempotency Namespace Separation (M-3) | `done` | #147 | #148 | namespace at init; two named instances; 753 tests pass |
+| M16-WP4 | Doctor / Diagnostics CLI | `in_progress` | #149 | — | — |
 | M16-WP5 | Loop Control Audit and Token Discipline | `pending` | — | — | — |
 
 **M16 Exit criteria:** `pending`
@@ -171,7 +171,7 @@ All 20 architectural review findings from `00-direction/ArchitecturalReviewFindi
 | H-6 | `dispatched` miscounted as terminal | M12 | M12-WP3 | `done` |
 | M-1 | Multiple RuntimeSettings instances | M16 | M16-WP1 | `done` |
 | M-2 | Conversation history lost on restart | M16 | M16-WP2 | `done` |
-| M-3 | Idempotency namespace collision | M16 | M16-WP3 | `pending` |
+| M-3 | Idempotency namespace collision | M16 | M16-WP3 | `done` |
 | M-4 | Budget check silently skipped | M15 | M15-WP4 | `done` |
 | M-5 | Agent registry bootstrap overwrites records | M15 | M15-WP4 | `done` |
 
