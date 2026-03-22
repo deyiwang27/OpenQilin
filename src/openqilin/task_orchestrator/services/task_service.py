@@ -32,6 +32,7 @@ from openqilin.execution_sandbox.tools.write_tools import GovernedWriteToolServi
 from openqilin.llm_gateway.schemas.responses import LlmGatewayResponse
 from openqilin.llm_gateway.service import build_llm_gateway_service
 from openqilin.observability.audit.audit_writer import OTelAuditWriter
+from openqilin.observability.metrics.recorder import OTelMetricRecorder
 from openqilin.observability.testing.stubs import InMemoryAuditWriter, InMemoryMetricRecorder
 from openqilin.retrieval_runtime.service import RetrievalQueryService, build_retrieval_query_service
 from openqilin.task_orchestrator.dispatch.communication_dispatch import (
@@ -56,6 +57,10 @@ from openqilin.task_orchestrator.dispatch.target_selector import (
     DispatchTarget,
     DispatchTargetError,
     select_dispatch_target,
+)
+from openqilin.task_orchestrator.loop_control import (
+    LoopState,
+    check_and_increment_pair,
 )
 from openqilin.task_orchestrator.services.lifecycle_service import TaskLifecycleService
 
@@ -128,6 +133,7 @@ class TaskDispatchService:
         policy_version: str = "policy-version-unknown",
         policy_hash: str = "policy-hash-unknown",
         rule_ids: tuple[str, ...] = (),
+        loop_state: LoopState | None = None,
     ) -> TaskDispatchOutcome:
         """Dispatch admitted task through governed target boundaries."""
 
@@ -420,6 +426,10 @@ class TaskDispatchService:
 
             metadata = dict(task.metadata)
             dispatch_source_role = metadata.get("dispatch_source", "unknown")
+            # Pair-hop check: PM->Specialist is a governed A2A boundary (AgentLoopControls §5).
+            # LoopCapBreachError propagates to orchestrator_worker - do NOT catch here.
+            if loop_state is not None and dispatch_source_role == "project_manager":
+                check_and_increment_pair(loop_state, "project_manager", "specialist")
             approved_tools_raw = metadata.get("approved_tools", "")
             approved_tools: tuple[str, ...] = (
                 tuple(tool.strip() for tool in approved_tools_raw.split(",") if tool.strip())
@@ -595,7 +605,7 @@ def build_task_dispatch_service(
     *,
     conversation_store: ConversationStoreProtocol | None = None,
     audit_writer: InMemoryAuditWriter | OTelAuditWriter | None = None,
-    metric_recorder: InMemoryMetricRecorder | None = None,
+    metric_recorder: InMemoryMetricRecorder | OTelMetricRecorder | None = None,
     communication_repository: PostgresCommunicationRepository | None = None,
     retrieval_query_service: RetrievalGroundingService | RetrievalQueryService | None = None,
     governance_project_reader: GovernanceProjectReader | None = None,

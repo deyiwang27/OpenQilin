@@ -1,8 +1,8 @@
-# Handoff Complete: M16-WP4 — Doctor / Diagnostics CLI
+# Handoff Complete: M16-WP5 — Loop Control Audit and Token Discipline
 
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-22
-**Branch:** `feat/149-m16-wp4-doctor-cli`
+**Branch:** `feat/151-m16-wp5-loop-token-discipline`
 **Draft PR:** N/A (not opened in this environment)
 **Implements:** `implementation/handoff/current.md`
 
@@ -10,7 +10,7 @@
 
 ## Summary
 
-Implemented a new synchronous infrastructure diagnostics layer in `shared_kernel/doctor.py` with pass/warn/fail reporting and fail-closed blocking startup checks for PostgreSQL, Redis, and OPA. Added a standalone operator CLI at `openqilin.apps.oq_doctor`, wired startup validation in `create_control_plane_app()`, and added a Docker Compose `oq_doctor` service profile. Added 16 unit tests for doctor behavior and updated the existing runtime entrypoint unit test to patch the new startup-check hook.
+Implemented M16-WP5 loop-control and token-discipline updates end-to-end: PM→Specialist pair-cap enforcement threading, loop-cap breach metric emission in worker handlers, intent-classification TTL caching, and `llm_calls_total` instrumentation with OTel-backed production metric recording. Added the required unit/component test suites and updated the Grafana operator dashboard with an `LLM Calls per Second` panel. Validation matrix passes fully with no spec conflicts.
 
 ---
 
@@ -18,32 +18,37 @@ Implemented a new synchronous infrastructure diagnostics layer in `shared_kernel
 
 | Task | Status | Notes |
 |---|---|---|
-| Implement `src/openqilin/shared_kernel/doctor.py` (`SystemDoctor`, `DoctorReport`, `DoctorCheck`, `run_blocking_startup_checks`) | ✅ Done | Implemented all required checks and check ordering. `agent_registry` is skipped with `warn` when PostgreSQL check fails. |
-| Implement `src/openqilin/apps/oq_doctor.py` standalone CLI | ✅ Done | Added table-style output and exit code `1` on any `fail`, `0` otherwise. |
-| Add `oq_doctor` service in `compose.yml` under `profiles: ["doctor"]` | ✅ Done | Added service with required environment and compose command `python -m openqilin.apps.oq_doctor`. |
-| Replace `verify_opa_bundle_loaded` startup call with `run_blocking_startup_checks(settings)` in control-plane app | ✅ Done | `create_control_plane_app()` now invokes the doctor startup guard after connector-secret validation. |
-| Add unit tests in `tests/unit/test_m16_wp4_doctor.py` | ✅ Done | Added all 16 required tests from handoff acceptance list. |
-| Keep existing tests green after import/call-site swap | ✅ Done | Updated `tests/unit/test_m7_wp4_runtime_entrypoints.py` patch target to `run_blocking_startup_checks`. |
+| Add `OTelMetricRecorder` in `src/openqilin/observability/metrics/recorder.py` | ✅ Done | Added lazy counter creation and no-op behavior when meter provider is absent. |
+| Wire OTel/in-memory metric recorder selection and classifier injection in `dependencies.py` | ✅ Done | `RuntimeServices.metric_recorder` widened to `InMemoryMetricRecorder | OTelMetricRecorder`; `IntentClassifier` receives recorder. |
+| Add 60s TTL cache + `llm_calls_total` on cache-miss in `IntentClassifier` | ✅ Done | Cache key is `(message[:1000], channel_id)` with fail-safe non-caching behavior for unavailable/mutation outcomes. |
+| Add `loop_state` param and PM→Specialist `check_and_increment_pair` enforcement in `dispatch_admitted_task` | ✅ Done | Pair-cap check runs before specialist dispatch and propagates `LoopCapBreachError`. |
+| Pass `loop_state` from `dispatch_node` into `dispatch_admitted_task` | ✅ Done | Added `loop_state=state["loop_state"]`. |
+| Replace loop-cap TODOs with `loop_cap_breach_total` metric increments in orchestrator worker | ✅ Done | Applied in both `drain_queued_tasks()` and async `main()` exception handlers. |
+| Add `LLM Calls per Second` panel and bump dashboard version | ✅ Done | Added panel `id=8`, `y=36`; incremented dashboard `version` from 1 to 2. |
+| Add `tests/unit/test_m16_wp5_loop_token.py` | ✅ Done | Added all required cache/metric/loop-state/OTel no-op tests. |
+| Add `tests/component/test_m16_wp5_loop_cap.py` | ✅ Done | Added hop-cap blocked/audit/metric tests, per-task loop-state independence test, and PM→Specialist pair-cap breach test. |
+| Compatibility typing adjustments for metric recorder union | ✅ Done | Widened recorder type surfaces in workflow/callback/dead-letter/task-dispatch paths to keep `mypy` green with OTel recorder wiring. |
 
 ---
 
 ## Validation Results
 
 ```
-InMemory gate:   PASS (project files; .venv excluded)
-ruff check:      PASS
-ruff format:     PASS
-mypy:            PASS
-pytest unit:     PASS (769 passed, 0 failed)
-pytest component: PASS (included in combined run above)
+InMemory gate:    PASS
+ruff check:       PASS
+ruff format:      PASS
+mypy:             PASS
+pytest unit:      PASS  (run in combined matrix)
+pytest component: PASS  (run in combined matrix)
 ```
 
 Executed commands:
-- `grep -r --include="*.py" -l "class InMemory" . | grep -v "/testing/" | grep -v "tests/" | grep -v "/.venv/"`
+- `grep -r --include="*.py" -l "class InMemory" . | grep -v "/testing/" | grep -v "tests/" | grep -v "/.venv/"` (no output)
 - `uv run ruff check .`
 - `uv run ruff format --check .`
 - `uv run python -m mypy .`
-- `uv run python -m pytest tests/unit tests/component -x --tb=short -q` → `769 passed, 1 warning`
+- `uv run python -m pytest tests/unit tests/component -x --tb=short -q`
+  - Result: `785 passed, 1 warning in 3.66s`
 
 ---
 
@@ -71,4 +76,4 @@ Executed commands:
 
 ## Notes
 
-- `uv run mypy .` and `uv run pytest ...` binaries were unavailable in this environment (`No such file or directory`), so equivalent module invocations were used (`uv run python -m mypy ...` and `uv run python -m pytest ...`).
+- Added `OTelMetricRecorder.get_counter_value()` as a compatibility method returning `0`, so existing test/type surfaces that read counters on `RuntimeServices.metric_recorder` remain type-safe when the runtime recorder type is widened.

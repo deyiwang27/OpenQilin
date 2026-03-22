@@ -114,9 +114,13 @@ def drain_queued_tasks(runtime_services: "RuntimeServices") -> int:
                     "pair": list(exc.pair) if exc.pair else None,
                 },
             )
-            # M14 entry criterion (AgentLoopControls §5): owner MUST be notified on
-            # loop cap breach with an explainable summary via CommunicationOutcomeNotifier.
-            # Deferred to M14 when Discord send path is fully integrated in drain path.
+            # Owner notification via Prometheus metric (AgentLoopControls §5).
+            # Grafana alerting (M15-WP6) fires on loop_cap_breach_total increments.
+            # Direct Discord notification requires communication_gateway in worker - deferred to M17.
+            services.metric_recorder.increment_counter(
+                "loop_cap_breach_total",
+                labels={"cap_type": exc.cap_type},
+            )
         except Exception:
             LOGGER.exception("worker.drain.task_error", task_id=task.task_id)
             runtime_services.runtime_state_repo.update_task_status(
@@ -211,9 +215,13 @@ async def main(*, run_once: bool = False) -> None:
                         "pair": list(exc.pair) if exc.pair else None,
                     },
                 )
-                # M14 entry criterion (AgentLoopControls §5): owner MUST be notified on
-                # loop cap breach with an explainable summary via CommunicationOutcomeNotifier.
-                # Deferred to M14 when Discord send path is fully integrated in async loop.
+                # Owner notification via Prometheus metric (AgentLoopControls §5).
+                # Grafana alerting (M15-WP6) fires on loop_cap_breach_total increments.
+                # Direct Discord notification requires communication_gateway in worker - deferred to M17.
+                services.metric_recorder.increment_counter(
+                    "loop_cap_breach_total",
+                    labels={"cap_type": exc.cap_type},
+                )
             except Exception:
                 LOGGER.exception("worker.loop.task_error", task_id=task.task_id)
                 runtime_services.runtime_state_repo.update_task_status(

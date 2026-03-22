@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import time
 import uuid
+from typing import Any
 
 from openqilin.control_plane.grammar.models import ChatContext, GrammarParseError, IntentClass
 from openqilin.llm_gateway.schemas.requests import (
@@ -49,11 +51,22 @@ class IntentClassifier:
 
     For explicit /oq commands: derives intent from verb (no LLM call).
     For free text: calls LLM gateway with a lightweight classification prompt.
+    Results are cached for 60 seconds per (message, channel_id) to avoid
+    redundant LLM calls within a conversation window.
     Raises GrammarParseError(GRAM-004) if free-text mutation is detected.
     """
 
-    def __init__(self, llm_gateway: LlmGatewayService) -> None:
+    _CACHE_TTL: float = 60.0
+
+    def __init__(
+        self,
+        llm_gateway: LlmGatewayService,
+        metric_recorder: Any | None = None,
+    ) -> None:
         self._llm = llm_gateway
+        self._metric_recorder = metric_recorder
+        # (message[:1000], channel_id) -> (IntentClass, monotonic_timestamp)
+        self._cache: dict[tuple[str, str], tuple[IntentClass, float]] = {}
 
     def classify(self, message: str, context: ChatContext) -> IntentClass:
         """Classify message intent. Raises GrammarParseError for free-text mutations."""
@@ -63,6 +76,15 @@ class IntentClassifier:
         return self._classify_free_text(stripped, context)
 
     def _classify_free_text(self, message: str, context: ChatContext) -> IntentClass:
+        cache_key = (message[:1000], context.channel_id)
+        now = time.monotonic()
+        cached = self._cache.get(cache_key)
+        if cached is not None:
+            result, ts = cached
+            if now - ts < self._CACHE_TTL:
+                return result  # cache hit - no LLM call, no metric increment
+
+        # cache miss - call LLM
         prompt = _CLASSIFICATION_PROMPT.format(message=message[:1000])
         response = self._llm.complete(
             LlmGatewayRequest(
@@ -83,13 +105,15 @@ class IntentClassifier:
         )
 
         if response.decision not in ("served", "fallback_served"):
-            # LLM unavailable — fail safe: treat unclassifiable as discussion
+            # LLM unavailable - fail safe: treat unclassifiable as discussion.
+            # Do NOT cache: fail-safe result should not mask future LLM recovery.
             return IntentClass.DISCUSSION
 
         raw = (response.generated_text or "").strip().lower()
         intent = _parse_intent_token(raw)
 
         if intent == IntentClass.MUTATION:
+            # Raise before caching - mutation free-text is rejected, not stored.
             raise GrammarParseError(
                 code="GRAM-004",
                 message=(
@@ -97,6 +121,14 @@ class IntentClassifier:
                     "Use explicit command syntax: /oq <verb> [target] [args]"
                 ),
                 details={"detected_intent": "mutation", "input_preview": message[:256]},
+            )
+
+        # Successful non-mutation classification: cache result, record metric.
+        self._cache[cache_key] = (intent, now)
+        if self._metric_recorder is not None:
+            self._metric_recorder.increment_counter(
+                "llm_calls_total",
+                labels={"purpose": "intent_classification"},
             )
 
         return intent
