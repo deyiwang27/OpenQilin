@@ -12,11 +12,9 @@ from openqilin.control_plane.routers.owner_discussions import (
 from openqilin.control_plane.routers.queries import router as queries_router
 from openqilin.observability.metrics.recorder import configure_metrics
 from openqilin.observability.tracing.tracer import configure_otel_logs, configure_tracer
+from openqilin.shared_kernel.doctor import run_blocking_startup_checks
 from openqilin.shared_kernel.settings import get_settings
-from openqilin.shared_kernel.startup_validation import (
-    enforce_connector_secret_hardening,
-    verify_opa_bundle_loaded,
-)
+from openqilin.shared_kernel.startup_validation import enforce_connector_secret_hardening
 
 
 def create_control_plane_app() -> FastAPI:
@@ -24,8 +22,7 @@ def create_control_plane_app() -> FastAPI:
 
     settings = get_settings()
     enforce_connector_secret_hardening(settings)
-    if settings.opa_url:
-        verify_opa_bundle_loaded(settings.opa_url)  # Fail fast if OPA unreachable
+    run_blocking_startup_checks(settings)
 
     # M12-WP5: Configure OTel export when otlp_endpoint is set.
     if settings.otlp_endpoint:

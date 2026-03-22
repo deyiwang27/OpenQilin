@@ -1,8 +1,8 @@
-# Handoff Complete: M16-WP3 — Idempotency Namespace Separation
+# Handoff Complete: M16-WP4 — Doctor / Diagnostics CLI
 
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-22
-**Branch:** `feat/147-m16-wp3-idempotency-namespace`
+**Branch:** `feat/149-m16-wp4-doctor-cli`
 **Draft PR:** N/A (not opened in this environment)
 **Implements:** `implementation/handoff/current.md`
 
@@ -10,7 +10,7 @@
 
 ## Summary
 
-Implemented constructor-bound namespace enforcement for `RedisIdempotencyCacheStore` and removed per-call namespace arguments from its API. Runtime wiring now constructs two Redis-backed store instances (`ingress`, `communication`) from a shared Redis client and exposes both on `RuntimeServices`. Updated affected unit/component tests and added new M16-WP3 tests verifying namespaced key generation, cross-namespace isolation, within-namespace deduplication, and namespace-bound store attributes.
+Implemented a new synchronous infrastructure diagnostics layer in `shared_kernel/doctor.py` with pass/warn/fail reporting and fail-closed blocking startup checks for PostgreSQL, Redis, and OPA. Added a standalone operator CLI at `openqilin.apps.oq_doctor`, wired startup validation in `create_control_plane_app()`, and added a Docker Compose `oq_doctor` service profile. Added 16 unit tests for doctor behavior and updated the existing runtime entrypoint unit test to patch the new startup-check hook.
 
 ---
 
@@ -18,24 +18,24 @@ Implemented constructor-bound namespace enforcement for `RedisIdempotencyCacheSt
 
 | Task | Status | Notes |
 |---|---|---|
-| Add `namespace: str` to `RedisIdempotencyCacheStore.__init__` and bind keying to instance | ✅ Done | Added `namespace` constructor arg, persisted `self._namespace`, added `_key()`, removed per-call `namespace` from `claim`, `increment_attempt`, `complete`, `get`, `list_namespace`. |
-| Keep module `_redis_key(namespace, key)` unchanged | ✅ Done | Function signature/body retained exactly; class now uses it via `self._key(key)`. |
-| Wire two namespaced Redis stores in `build_runtime_services()` | ✅ Done | Added shared `redis_client`, `ingress_idempotency_store(namespace="ingress")`, `communication_idempotency_store(namespace="communication")`; updated `RuntimeServices` fields. |
-| Remove unused `idempotency_cache_store` path from dispatch-service builder | ✅ Done | Removed dead parameter/import from `build_task_dispatch_service()` and removed call-site argument in `dependencies.py`. |
-| Update existing Redis idempotency tests for new API shape | ✅ Done | `tests/unit/test_m12_wp4_redis_idempotency.py` updated to constructor namespace + namespace-free method calls; RuntimeServices type check updated for renamed/new fields. |
-| Add M16-WP3 namespace tests | ✅ Done | Added `tests/unit/test_m16_wp3_idempotency_namespace.py` with all four required tests. |
+| Implement `src/openqilin/shared_kernel/doctor.py` (`SystemDoctor`, `DoctorReport`, `DoctorCheck`, `run_blocking_startup_checks`) | ✅ Done | Implemented all required checks and check ordering. `agent_registry` is skipped with `warn` when PostgreSQL check fails. |
+| Implement `src/openqilin/apps/oq_doctor.py` standalone CLI | ✅ Done | Added table-style output and exit code `1` on any `fail`, `0` otherwise. |
+| Add `oq_doctor` service in `compose.yml` under `profiles: ["doctor"]` | ✅ Done | Added service with required environment and compose command `python -m openqilin.apps.oq_doctor`. |
+| Replace `verify_opa_bundle_loaded` startup call with `run_blocking_startup_checks(settings)` in control-plane app | ✅ Done | `create_control_plane_app()` now invokes the doctor startup guard after connector-secret validation. |
+| Add unit tests in `tests/unit/test_m16_wp4_doctor.py` | ✅ Done | Added all 16 required tests from handoff acceptance list. |
+| Keep existing tests green after import/call-site swap | ✅ Done | Updated `tests/unit/test_m7_wp4_runtime_entrypoints.py` patch target to `run_blocking_startup_checks`. |
 
 ---
 
 ## Validation Results
 
 ```
-InMemory gate:   PASS (project files; command requires excluding .venv site-packages locally)
+InMemory gate:   PASS (project files; .venv excluded)
 ruff check:      PASS
 ruff format:     PASS
 mypy:            PASS
-pytest unit:     PASS
-pytest component: PASS
+pytest unit:     PASS (769 passed, 0 failed)
+pytest component: PASS (included in combined run above)
 ```
 
 Executed commands:
@@ -43,7 +43,7 @@ Executed commands:
 - `uv run ruff check .`
 - `uv run ruff format --check .`
 - `uv run python -m mypy .`
-- `uv run python -m pytest tests/unit tests/component -x --tb=short -q` → `753 passed, 0 failed`
+- `uv run python -m pytest tests/unit tests/component -x --tb=short -q` → `769 passed, 1 warning`
 
 ---
 
@@ -59,7 +59,7 @@ Executed commands:
 
 | Conflict | Docs involved | Blocking question |
 |---|---|---|
-| Communication publisher idempotency store interface is not compatible with `RedisIdempotencyCacheStore` (`LocalCommunicationIdempotencyStore` has different methods/record type). WP3 requires namespaced Redis wiring but publisher migration is deferred. | `implementation/handoff/current.md` (Spec Gaps — Gap 1), `src/openqilin/communication_gateway/delivery/publisher.py`, `src/openqilin/communication_gateway/storage/idempotency_store.py` | Should a protocol adapter or a dedicated Redis-backed communication idempotency store interface be introduced in a follow-up WP before wiring `communication_idempotency_store` into publisher? |
+| _None_ | - | - |
 
 ---
 
@@ -71,5 +71,4 @@ Executed commands:
 
 ## Notes
 
-- `uv run mypy .` and `uv run pytest ...` failed to spawn binaries in this local environment (`No such file or directory`), so equivalent module invocations were used (`uv run python -m mypy ...` and `uv run python -m pytest ...`).
-- No changes were made to `communication_gateway/delivery/publisher.py` or `communication_gateway/storage/idempotency_store.py` (out of scope per handoff).
+- `uv run mypy .` and `uv run pytest ...` binaries were unavailable in this environment (`No such file or directory`), so equivalent module invocations were used (`uv run python -m mypy ...` and `uv run python -m pytest ...`).

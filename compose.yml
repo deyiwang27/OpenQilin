@@ -317,6 +317,29 @@ services:
       opa:
         condition: service_healthy
 
+  oq_doctor:
+    image: python:3.12-slim
+    profiles: ["doctor"]
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    command:
+      [
+        "sh",
+        "-lc",
+        "python -m pip install --disable-pip-version-check --quiet -e /workspace && python -m openqilin.apps.oq_doctor",
+      ]
+    environment:
+      OPENQILIN_DATABASE_URL: postgresql+psycopg://openqilin:openqilin@postgres:5432/openqilin
+      OPENQILIN_REDIS_URL: redis://redis:6379
+      OPENQILIN_OPA_URL: http://opa:8181
+      OPENQILIN_OTLP_ENDPOINT: ${OPENQILIN_OTLP_ENDPOINT:-}
+      OPENQILIN_GRAFANA_PUBLIC_URL: ${OPENQILIN_GRAFANA_PUBLIC_URL:-}
+    depends_on:
+      - postgres
+      - redis
+      - opa
+
 volumes:
   postgres_data:
   openqilin_system:

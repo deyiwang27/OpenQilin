@@ -18,7 +18,7 @@ def test_m7_wp4_api_exposes_container_health_endpoints() -> None:
             return_value=MagicMock(),
         ),
         patch(
-            "openqilin.control_plane.api.app.verify_opa_bundle_loaded",
+            "openqilin.control_plane.api.app.run_blocking_startup_checks",
         ),
     ):
         app = create_control_plane_app()
