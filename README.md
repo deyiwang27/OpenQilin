@@ -26,15 +26,16 @@ MVP-v2 is complete. All core agents are active:
 
 | Layer | Agent | Role |
 |---|---|---|
-| **Interaction** | **Secretary** | First point of contact — classifies intent, routes messages to the right project space, and summarises activity; no command authority |
-| **Governance** | **CSO** (Chief Strategy Officer) | Portfolio-level strategy advisor; writes governance gate records; does not issue directives |
-| **Governance** | **Auditor** | Monitors compliance, detects behavioural violations, and escalates to owner when governance constraints are breached |
-| **Executive** | **CEO** | Highest directive authority; approves strategic decisions with co-approval enforcement |
-| **Executive** | **CWO** (Chief Workflow Officer) | Operational command authority; authorises project charters and cross-project workflow decisions |
-| **Operations** | **Domain Leader** | Virtual coordinator for a project space; routes tasks to specialists and escalates to executives when needed |
-| **Operations** | **Project Manager** | Plans tasks, tracks progress, dispatches to Specialists, and produces status reports for the project |
-| **Execution** | **Administrator** | Enforces document policy and retention rules; manages agent lifecycle (quarantine, reinstatement) |
-| **Execution** | **Specialist** | Executes concrete tasks delegated by the Project Manager and records task execution results |
+| **Interaction** | **Secretary** | First point of contact — classifies intent, routes messages to the right project space, and summarises activity; advisory-only (no command or execution authority) |
+| **Governance** | **Administrator** | Enforces document policy and retention rules; manages agent lifecycle (quarantine, reinstatement); oversight authority |
+| **Governance** | **Auditor** | Monitors compliance, detects behavioural violations, and escalates to the owner when governance constraints are breached; oversight authority |
+| **Executive** | **CSO** (Chief Strategy Officer) | Issues portfolio-level strategic review opinions; decision and advisory authority — non-binding without CEO or owner endorsement |
+| **Executive** | **CEO** | Highest directive authority in the organisation; approves strategic decisions with co-approval enforcement |
+| **Executive** | **CWO** (Chief Workflow Officer) | Operational command authority; authorises project charters and manages agent workforce lifecycle |
+| **Operations** | **Domain Leader** | Reviews work within a project space and escalates to executives when needed; review and advisory authority, no command |
+| **Operations** | **Project Manager** | Plans and tracks tasks within a project; dispatches to Specialists; decision, command, and workforce authority within project scope |
+| **Execution** | **Specialist** | Executes concrete tasks delegated by the Project Manager; the only role with execution authority |
+| **Execution** | *(External AgentSwarm — planned)* | Future: external agent integrations delegated structured execution tasks from the Specialist layer |
 
 Infrastructure: OPA policy runtime · PostgreSQL persistence · Redis idempotency · OpenTelemetry tracing · Grafana dashboards · file-backed artifact storage.
 
