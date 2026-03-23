@@ -87,6 +87,8 @@ from openqilin.policy_runtime_integration.client import (
     PolicyRuntimeClient,
 )
 from openqilin.project_spaces.binding_repository import PostgresProjectSpaceBindingRepository
+from openqilin.project_spaces.binding_service import ProjectSpaceBindingService
+from openqilin.project_spaces.discord_automator import DiscordChannelAutomator
 from openqilin.project_spaces.routing_resolver import ProjectSpaceRoutingResolver
 from openqilin.retrieval_runtime.service import (
     RetrievalQueryService,
@@ -150,6 +152,7 @@ class RuntimeServices:
     audit_writer: InMemoryAuditWriter | OTelAuditWriter
     metric_recorder: InMemoryMetricRecorder | OTelMetricRecorder
     routing_resolver: ProjectSpaceRoutingResolver
+    binding_service: ProjectSpaceBindingService
     delivery_event_callback_processor: LocalDeliveryEventCallbackProcessor
     communication_outcome_notifier: CommunicationOutcomeNotifier
     startup_recovery_report: StartupRecoveryReport
@@ -212,6 +215,13 @@ def build_runtime_services() -> RuntimeServices:
         session_factory=session_factory
     )
     routing_resolver = ProjectSpaceRoutingResolver(binding_repo=project_space_binding_repo)
+    discord_automator = DiscordChannelAutomator(
+        bot_token=settings.discord_bot_token or "",
+    )
+    binding_service = ProjectSpaceBindingService(
+        binding_repo=project_space_binding_repo,
+        automator=discord_automator,
+    )
     secretary_data_access = SecretaryDataAccessService(
         governance_repo=governance_repo,
         runtime_state_repo=runtime_state_repo,
@@ -420,6 +430,7 @@ def build_runtime_services() -> RuntimeServices:
         audit_writer=audit_writer,
         metric_recorder=metric_recorder,
         routing_resolver=routing_resolver,
+        binding_service=binding_service,
         delivery_event_callback_processor=delivery_event_callback_processor,
         communication_outcome_notifier=communication_outcome_notifier,
         startup_recovery_report=startup_recovery_report,
@@ -590,6 +601,12 @@ def get_routing_resolver(request: Request) -> ProjectSpaceRoutingResolver:
     """Provide project space routing resolver for Discord channel → project context."""
 
     return get_runtime_services(request).routing_resolver
+
+
+def get_binding_service(request: Request) -> ProjectSpaceBindingService:
+    """Provide project space binding service for channel creation + binding persistence."""
+
+    return get_runtime_services(request).binding_service
 
 
 def get_domain_leader_agent(request: Request) -> DomainLeaderAgent:

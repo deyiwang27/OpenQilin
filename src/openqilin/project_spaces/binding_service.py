@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 
 from openqilin.project_spaces.binding_repository import (
     PostgresProjectSpaceBindingRepository,
@@ -32,6 +33,18 @@ _TRANSITIONS: dict[str, dict[BindingState, BindingState]] = {
 }
 
 
+def _slugify_channel_name(name: str) -> str:
+    """Convert a project name to a Discord-safe channel name.
+
+    Discord channel names: lowercase, hyphens, max 100 chars.
+    """
+
+    slug = name.lower()
+    slug = re.sub(r"[^a-z0-9]+", "-", slug)
+    slug = slug.strip("-")
+    return f"project-{slug}"[:100]
+
+
 class ProjectSpaceBindingService:
     """Orchestrates project space binding creation and lifecycle transitions."""
 
@@ -48,6 +61,7 @@ class ProjectSpaceBindingService:
         self,
         project_id: str,
         guild_id: str,
+        project_name: str,
         *,
         default_recipient: str = "project_manager",
     ) -> ProjectSpaceBinding:
@@ -56,7 +70,11 @@ class ProjectSpaceBindingService:
         The binding starts in ACTIVE state (channel is immediately usable).
         """
 
-        channel_id = self._automator.create_channel(project_id, guild_id)
+        channel_id = self._automator.create_channel(
+            project_id,
+            guild_id,
+            channel_name=_slugify_channel_name(project_name),
+        )
         binding = build_project_space_binding(
             project_id=project_id,
             guild_id=guild_id,

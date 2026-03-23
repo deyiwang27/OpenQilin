@@ -1,7 +1,7 @@
 # OpenQilin v2 - Implementation Progress
 
 Status: `active`
-Updated: `2026-03-18`
+Updated: `2026-03-23`
 Tracking authority: GitHub Issues/PRs are the operational source of truth. This doc is the in-repo WP/milestone-level mirror.
 
 ---
@@ -16,7 +16,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 | M14 | `done` | 7 / 7 | All WPs complete; exit criteria met |
 | M15 | `done` | 6 / 6 | All WPs complete; exit criteria met |
 | M16 | `done` | 5 / 5 | All WPs complete; exit criteria met |
-| M17 | `in_progress` | 4 / 6 | WP1-WP2-WP4-WP6 done |
+| M17 | `in_progress` | 5 / 7 | WP1-WP2-WP4-WP6-WP7 done |
 
 ---
 
@@ -137,6 +137,7 @@ WP document: `05-milestones/M17-WorkPackages-v1.md`
 | M17-WP4 | Contributor Entry Path | `done` | #160 | #165 | CONTRIBUTING.md + CODE_OF_CONDUCT.md added; CWO naming fix in README/ROADMAP; good first issues #161-#164 created; acceptance checks pass |
 | M17-WP5 | Website and Public Presence | `pending` | — | — | — |
 | M17-WP6 | Sponsorship and Startup-Credit Readiness | `done` | #166 | #167 | FUNDING.yml + sponsorship docs added (project summary, program shortlist, GitHub Sponsors setup guide) |
+| M17-WP7 | Auto-create Discord Project Channel on Initialization | `done` | #168 | — | DiscordChannelAutomator now calls Discord REST API; `guild_id` added to initialization payload; binding service wired into runtime + governance initialize non-fatal auto-bind path; unit tests added |
 
 **M17 Exit criteria:** `pending`
 

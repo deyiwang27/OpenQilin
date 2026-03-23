@@ -68,6 +68,7 @@ from openqilin.task_orchestrator.callbacks.delivery_events import (
 )
 from openqilin.task_orchestrator.services.lifecycle_service import TaskLifecycleService
 from openqilin.task_orchestrator.services.task_service import build_task_dispatch_service
+from openqilin.project_spaces.binding_service import ProjectSpaceBindingService
 from openqilin.project_spaces.routing_resolver import ProjectSpaceRoutingResolver
 from tests.testing.infra_stubs import (
     InMemoryAgentRegistryRepository,
@@ -106,6 +107,18 @@ class _SimulatedRetrievalReadModel:
         return tuple(h for h in _SEED_RETRIEVAL_HITS if h.project_id == request.project_id)
 
 
+class _TestDiscordChannelAutomator:
+    def create_channel(self, project_id: str, guild_id: str, *, channel_name: str) -> str:
+        slug = channel_name.strip() or "project"
+        return f"test-{guild_id}-{project_id}-{slug}"
+
+    def archive_channel(self, channel_id: str) -> None:
+        return None
+
+    def lock_channel(self, channel_id: str) -> None:
+        return None
+
+
 def _build_test_runtime_services() -> RuntimeServices:
     """Build a fully-wired RuntimeServices using in-memory test stubs."""
 
@@ -122,6 +135,10 @@ def _build_test_runtime_services() -> RuntimeServices:
     ingress_dedupe = IngressDedupeStore()
     project_space_binding_repo = InMemoryProjectSpaceBindingRepository()
     routing_resolver = ProjectSpaceRoutingResolver(binding_repo=project_space_binding_repo)  # type: ignore[arg-type]
+    binding_service = ProjectSpaceBindingService(
+        binding_repo=project_space_binding_repo,  # type: ignore[arg-type]
+        automator=_TestDiscordChannelAutomator(),  # type: ignore[arg-type]
+    )
 
     llm_gateway = MagicMock()
     grammar_classifier = IntentClassifier(llm_gateway=llm_gateway)
@@ -280,6 +297,7 @@ def _build_test_runtime_services() -> RuntimeServices:
         audit_writer=audit_writer,
         metric_recorder=metric_recorder,
         delivery_event_callback_processor=delivery_event_callback_processor,
+        binding_service=binding_service,
         communication_outcome_notifier=communication_outcome_notifier,
         startup_recovery_report=startup_recovery_report,
     )

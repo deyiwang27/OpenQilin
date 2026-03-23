@@ -1,16 +1,16 @@
-# Handoff Complete: M17-WP6 — Sponsorship and Startup-Credit Readiness
+# Handoff Complete: M17-WP7 — Auto-create Discord Project Channel on Initialization
 
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-23
-**Branch:** `feat/166-m17-wp6-sponsorship`
-**Draft PR:** #167
+**Branch:** `feat/168-m17-wp7-auto-discord-channel`
+**Draft PR:** — (not opened in this environment)
 **Implements:** `implementation/handoff/current.md`
 
 ---
 
 ## Summary
 
-Implemented M17-WP6 as a documentation/config delivery: added `FUNDING.yml` and three sponsorship docs under `docs/sponsorship/` with the exact handoff-provided content. Updated M17 planning mirrors by checking all WP6 tasks/done-criteria and advancing implementation progress to `4 / 6` with M17-WP6 marked done against issue `#166`. Validation gates passed except for one acceptance-spec inconsistency noted below.
+Implemented M17-WP7 end-to-end: Discord channel auto-creation now uses the Discord REST API, governance initialization accepts optional `guild_id`, and `initialize_project` now calls `ProjectSpaceBindingService.create_and_bind(...)` in a non-fatal block after successful initialization. Runtime wiring was extended with a singleton binding service dependency, and tests were added for automator API behavior, slug generation, and initialize-route binding behavior. Planning mirrors and the Discord testing runbook were updated per handoff.
 
 ---
 
@@ -18,25 +18,25 @@ Implemented M17-WP6 as a documentation/config delivery: added `FUNDING.yml` and 
 
 | Task | Status | Notes |
 |---|---|---|
-| Confirm target files do not exist | ✅ Done | Verified all 4 targets were absent before creation |
-| Create `docs/sponsorship/` and write required docs | ✅ Done | Added `project-summary.md`, `program-shortlist.md`, `github-sponsors-setup.md` with handoff content |
-| Add root `FUNDING.yml` | ✅ Done | Added exact handoff content pointing to `deyiwang27` |
-| Tick WP6 task and done-criteria checkboxes in `M17-WorkPackages-v1.md` | ✅ Done | All WP6 task and done-criteria checkboxes set to `[x]` |
-| Update `ImplementationProgress-v2.md` M17 and WP6 row | ✅ Done | M17 now `4 / 6`, notes `WP1-WP2-WP4-WP6 done`; WP6 marked `done | #166 | #167` |
-| Run acceptance validation matrix | ⚠️ Partial | All gates pass except `grep -c "deyiwang27" FUNDING.yml` expected `1` but returns `2` due required exact content |
-| Create handoff completion artifact | ✅ Done | This file created from template |
+| Replace `DiscordChannelAutomator.create_channel()` stub with real Discord API call | ✅ Done | `src/openqilin/project_spaces/discord_automator.py` now POSTs to `/api/v10/guilds/{guild_id}/channels` with bot auth and raises `DiscordChannelError` on non-200/201 |
+| Update binding service for channel slug and new automator signature | ✅ Done | `ProjectSpaceBindingService.create_and_bind()` now accepts `project_name` and passes `channel_name=_slugify_channel_name(project_name)` |
+| Add optional `guild_id` to `ProjectInitializationRequest` | ✅ Done | Added `guild_id: str | None = Field(default=None, max_length=32)` |
+| Wire automator + binding service into runtime dependencies | ✅ Done | Added `binding_service` to `RuntimeServices`, instantiated in `build_runtime_services()`, and exposed via `get_binding_service()` |
+| Update `initialize_project` router to call binding service non-fatally | ✅ Done | Added dependency injection for `binding_service`; wraps auto-bind in broad `except Exception` with `LOGGER.exception(...)` |
+| Add required unit tests | ✅ Done | Added `tests/unit/project_spaces/test_discord_automator.py` and `tests/unit/control_plane/routers/test_initialize_project_binding.py` |
+| Update milestone/progress docs and Discord runbook | ✅ Done | Added M17-WP7 section + checkboxes, updated M17 progress to `5 / 7`, updated runbook Step 4.3 |
 
 ---
 
 ## Validation Results
 
 ```
-InMemory gate:    PASS
+InMemory gate:    PASS (no output)
 ruff check:       PASS
 ruff format:      PASS
 mypy:             PASS (via `uv run python -m mypy .`)
-pytest unit:      PASS (785 passed, 0 failed)
-pytest component: PASS (same run: `tests/unit tests/component`)
+pytest unit:      PASS (same run as unit+component aggregate)
+pytest component: PASS (795 passed, 0 failed aggregate for `tests/unit tests/component`)
 ```
 
 ---
@@ -53,17 +53,17 @@ pytest component: PASS (same run: `tests/unit tests/component`)
 
 | Conflict | Docs involved | Blocking question |
 |---|---|---|
-| Acceptance command `grep -c "deyiwang27" FUNDING.yml` expects `1`, but the required exact `FUNDING.yml` content includes `deyiwang27` in both comment URL and `github:` entry, producing `2`. | `implementation/handoff/current.md` (`FUNDING.yml — Complete Content` vs `Acceptance Criteria`) | Should acceptance check be changed to match the `github:` line only (e.g., `grep -c '^github: \[deyiwang27\]$' FUNDING.yml`)? |
+| — | — | — |
 
 ---
 
 ## What Was Skipped
 
-- GitHub Sponsors activation on github.com/sponsors was not performed (owner-authenticated action; out of scope).
-- Program application submissions were not performed (owner action; out of scope).
+- Opening/pushing a draft PR was not performed from this environment.
 
 ---
 
 ## Notes
 
 - In this environment, `uv run mypy .` and `uv run pytest ...` fail to spawn console entrypoints; equivalent module invocations succeeded: `uv run python -m mypy .` and `uv run python -m pytest tests/unit tests/component -x --tb=short -q`.
+- `python3 -c ...` schema smoke command from the handoff required `uv run python -c ...` in this environment to resolve the `openqilin` module.
