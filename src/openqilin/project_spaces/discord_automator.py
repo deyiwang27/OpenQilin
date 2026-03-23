@@ -11,6 +11,15 @@ _DISCORD_API_BASE = "https://discord.com/api/v10"
 _CHANNEL_TYPE_TEXT = 0
 
 
+def _slugify(name: str) -> str:
+    """Convert a name to a Discord-safe slug (lowercase, hyphens, no edge hyphens)."""
+    import re
+
+    slug = name.lower()
+    slug = re.sub(r"[^a-z0-9]+", "-", slug)
+    return slug.strip("-")[:90]
+
+
 class DiscordChannelAutomator:
     """Creates, archives and locks Discord channels for project spaces.
 
@@ -62,13 +71,76 @@ class DiscordChannelAutomator:
         )
         return channel_id
 
-    def archive_channel(self, channel_id: str) -> None:
-        """Archive a Discord channel (stub — real implementation deferred)."""
-        LOGGER.info("discord_automator.archive_channel", channel_id=channel_id, stub=True)
+    def archive_channel(self, channel_id: str, project_name: str) -> None:
+        """Rename the Discord channel to 'done-{slug}' when a project completes."""
+        new_name = f"done-{_slugify(project_name)}"
+        url = f"{_DISCORD_API_BASE}/channels/{channel_id}"
+        headers = {
+            "Authorization": f"Bot {self._bot_token}",
+            "Content-Type": "application/json",
+        }
+        with httpx.Client(timeout=10.0) as client:
+            response = client.patch(url, headers=headers, json={"name": new_name})
+        if response.status_code not in (200, 201):
+            LOGGER.error(
+                "discord_automator.archive_channel.failed",
+                channel_id=channel_id,
+                new_name=new_name,
+                status_code=response.status_code,
+            )
+            raise DiscordChannelError(
+                f"Discord API returned {response.status_code} renaming channel {channel_id}"
+            )
+        LOGGER.info(
+            "discord_automator.archive_channel.ok",
+            channel_id=channel_id,
+            new_name=new_name,
+        )
 
-    def lock_channel(self, channel_id: str) -> None:
-        """Lock a Discord channel (stub — real implementation deferred)."""
-        LOGGER.info("discord_automator.lock_channel", channel_id=channel_id, stub=True)
+    def lock_channel(self, channel_id: str, project_name: str, guild_id: str) -> None:
+        """Rename channel to 'closed-{slug}' and set read-only when a project terminates."""
+        new_name = f"closed-{_slugify(project_name)}"
+        headers = {
+            "Authorization": f"Bot {self._bot_token}",
+            "Content-Type": "application/json",
+        }
+        with httpx.Client(timeout=10.0) as client:
+            rename_resp = client.patch(
+                f"{_DISCORD_API_BASE}/channels/{channel_id}",
+                headers=headers,
+                json={"name": new_name},
+            )
+            if rename_resp.status_code not in (200, 201):
+                LOGGER.error(
+                    "discord_automator.lock_channel.rename_failed",
+                    channel_id=channel_id,
+                    status_code=rename_resp.status_code,
+                )
+                raise DiscordChannelError(
+                    f"Discord API returned {rename_resp.status_code} renaming channel {channel_id}"
+                )
+            perm_resp = client.put(
+                f"{_DISCORD_API_BASE}/channels/{channel_id}/permissions/{guild_id}",
+                headers=headers,
+                json={"type": 0, "allow": "0", "deny": "2048"},
+            )
+            if perm_resp.status_code not in (200, 201, 204):
+                LOGGER.error(
+                    "discord_automator.lock_channel.permissions_failed",
+                    channel_id=channel_id,
+                    guild_id=guild_id,
+                    status_code=perm_resp.status_code,
+                )
+                raise DiscordChannelError(
+                    "Discord API returned "
+                    f"{perm_resp.status_code} setting permissions on channel {channel_id}"
+                )
+        LOGGER.info(
+            "discord_automator.lock_channel.ok",
+            channel_id=channel_id,
+            new_name=new_name,
+            guild_id=guild_id,
+        )
 
 
 class DiscordChannelError(Exception):

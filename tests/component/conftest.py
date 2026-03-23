@@ -112,10 +112,10 @@ class _TestDiscordChannelAutomator:
         slug = channel_name.strip() or "project"
         return f"test-{guild_id}-{project_id}-{slug}"
 
-    def archive_channel(self, channel_id: str) -> None:
+    def archive_channel(self, channel_id: str, project_name: str) -> None:
         return None
 
-    def lock_channel(self, channel_id: str) -> None:
+    def lock_channel(self, channel_id: str, project_name: str, guild_id: str) -> None:
         return None
 
 

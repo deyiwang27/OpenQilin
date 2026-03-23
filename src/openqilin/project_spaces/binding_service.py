@@ -94,7 +94,12 @@ class ProjectSpaceBindingService:
         )
         return stored
 
-    def transition(self, project_id: str, event: LifecycleEvent) -> ProjectSpaceBinding:
+    def transition(
+        self,
+        project_id: str,
+        event: LifecycleEvent,
+        project_name: str = "",
+    ) -> ProjectSpaceBinding:
         """Apply a lifecycle event to the binding for the given project.
 
         Raises ValueError if no binding exists or the transition is illegal.
@@ -116,9 +121,9 @@ class ProjectSpaceBindingService:
 
         # Trigger Discord channel operation for relevant transitions.
         if target_state == BindingState.ARCHIVED:
-            self._automator.archive_channel(binding.channel_id)
+            self._automator.archive_channel(binding.channel_id, project_name)
         elif target_state == BindingState.LOCKED:
-            self._automator.lock_channel(binding.channel_id)
+            self._automator.lock_channel(binding.channel_id, project_name, binding.guild_id)
 
         LOGGER.info(
             "project_space.transitioned",
