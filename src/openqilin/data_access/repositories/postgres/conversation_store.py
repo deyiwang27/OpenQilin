@@ -186,11 +186,11 @@ class PostgresConversationStore:
                     text(
                         """
                         SELECT window_index, summary_text,
-                               1 - (summary_embedding <=> :query_vec::vector(768)) AS similarity
+                               1 - (summary_embedding <=> :query_vec::text::vector(768)) AS similarity
                         FROM conversation_windows
                         WHERE scope = :scope
                           AND summary_embedding IS NOT NULL
-                          AND 1 - (summary_embedding <=> :query_vec::vector(768)) >= :threshold
+                          AND 1 - (summary_embedding <=> :query_vec::text::vector(768)) >= :threshold
                         ORDER BY similarity DESC
                         LIMIT :limit
                         """
@@ -324,7 +324,7 @@ class PostgresConversationStore:
                     text(
                         """
                         UPDATE conversation_windows
-                        SET summary_embedding = :embedding::vector(768)
+                        SET summary_embedding = :embedding::text::vector(768)
                         WHERE scope = :scope AND window_index = :window_index
                         """
                     ),
