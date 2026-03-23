@@ -197,11 +197,7 @@ def format_governed_response(*, status_code: int, body: Mapping[str, object]) ->
                     "advisory_response"
                 )
                 if isinstance(generated_text, str) and generated_text.strip():
-                    normalized = generated_text.strip().replace("\n", " ")
-                    recipient_role = str(llm_execution.get("recipient_role", "")).strip().lower()
-                    role_label = recipient_role or "llm"
-                    role_prefix = f"\n[{role_label}] "
-                    return f"{summary}{role_prefix}{normalized}"
+                    return generated_text.strip()
             return summary
         return f"[accepted] trace={trace_id}"
     if status_value in {"denied", "error"}:
