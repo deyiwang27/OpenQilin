@@ -16,7 +16,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 | M14 | `done` | 7 / 7 | All WPs complete; exit criteria met |
 | M15 | `done` | 6 / 6 | All WPs complete; exit criteria met |
 | M16 | `done` | 5 / 5 | All WPs complete; exit criteria met |
-| M17 | `planned` | 0 / 6 | Entry gate: M16 complete |
+| M17 | `in_progress` | 0 / 6 | WP1 in progress (#155) |
 
 ---
 
@@ -131,7 +131,7 @@ WP document: `05-milestones/M17-WorkPackages-v1.md`
 
 | WP | Title | Status | Issue | PR | Notes |
 |---|---|---|---|---|---|
-| M17-WP1 | Public README and Repository Clarity | `pending` | — | — | — |
+| M17-WP1 | Public README and Repository Clarity | `in_progress` | #155 | — | — |
 | M17-WP2 | Roadmap | `pending` | — | — | — |
 | M17-WP3 | Demo Assets | `pending` | — | — | — |
 | M17-WP4 | Contributor Entry Path | `pending` | — | — | — |
