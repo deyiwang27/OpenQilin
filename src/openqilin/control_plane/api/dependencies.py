@@ -294,7 +294,7 @@ def build_runtime_services() -> RuntimeServices:
     lifecycle_service = TaskLifecycleService(runtime_state_repo=runtime_state_repo)
     retrieval_query_service = build_retrieval_query_service()
     conversation_store = (
-        PostgresConversationStore(session_factory=session_factory, max_turns=6)
+        PostgresConversationStore(session_factory=session_factory, max_turns=40)
         if settings.runtime_persistence_enabled
         else None
     )

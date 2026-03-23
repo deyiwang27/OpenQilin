@@ -24,7 +24,7 @@ Priority order for applications. Apply to Tier 1 first; Tier 2 in parallel once 
 - **What:** Community funding directly through GitHub; starts at any amount
 - **Why OpenQilin qualifies:** Open-source, Apache 2.0, active contributor community
 - **Apply:** https://github.com/sponsors/deyiwang27 (see `github-sponsors-setup.md`)
-- **Status:** Profile activation pending — see setup guide
+- **Status:** Active
 
 ---
 
@@ -70,4 +70,4 @@ Before submitting any application, confirm these exist:
 - [x] One-page project summary (`docs/sponsorship/project-summary.md`)
 - [ ] Live demo or demo video (M17-WP3)
 - [ ] Public website with domain email (M17-WP5)
-- [ ] GitHub Sponsors profile active (this WP)
+- [x] GitHub Sponsors profile active

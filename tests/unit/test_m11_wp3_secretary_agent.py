@@ -171,15 +171,18 @@ class TestSecretaryConversationAndMentionContext:
             context=_ctx("governance"),
             trace_id="trace-m17-fix-001",
             channel_id="channel-123",
+            guild_id="guild-123",
             actor_id="owner-123",
         )
 
         resp = agent.handle(req)
 
         assert resp.advisory_text == "History-aware advisory"
-        conversation_store.list_turns.assert_called_once_with("discord:channel-123")
+        conversation_store.list_turns.assert_called_once_with(
+            "guild::guild-123::channel::channel-123"
+        )
         conversation_store.append_turns.assert_called_once_with(
-            "discord:channel-123",
+            "guild::guild-123::channel::channel-123",
             user_prompt="What should we do next?",
             assistant_reply="History-aware advisory",
         )

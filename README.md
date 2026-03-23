@@ -1,5 +1,7 @@
 # OpenQilin
 
+[![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/deyiwang27)
+
 A governed AI operating system for the solopreneur — delegate work to an AI workforce through Discord, with constitutional policy enforcement, real cost visibility, and an immutable audit trail.
 
 ## What is OpenQilin?
@@ -48,7 +50,7 @@ Full milestone tracker: [`implementation/v2/planning/ImplementationProgress-v2.m
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/deyiwang89/OpenQilin.git
+git clone https://github.com/deyiwang27/OpenQilin.git
 cd OpenQilin
 uv sync --all-groups
 ```
@@ -130,6 +132,10 @@ See [ROADMAP.md](ROADMAP.md).
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+
+## Sponsorship
+
+If OpenQilin is useful to you, support development through [GitHub Sponsors](https://github.com/sponsors/deyiwang27). Sponsorship helps cover LLM API usage, demo infrastructure, and observability costs.
 
 ## License
 

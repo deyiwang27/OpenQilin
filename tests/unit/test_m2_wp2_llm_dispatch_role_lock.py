@@ -129,9 +129,9 @@ def test_llm_dispatch_builds_role_locked_prompt_and_preserves_conversation_histo
     assert "Grounding contract (mandatory):" in first_prompt
     assert "Evidence sources:" in first_prompt
     assert "Role directive: Focus on strategic trade-offs" in first_prompt
-    assert "Conversation history:" not in first_prompt
+    assert "Recent conversation:" not in first_prompt
     second_prompt = provider.prompts[1]
-    assert "Conversation history:" in second_prompt
+    assert "Recent conversation:" in second_prompt
     assert "User: Provide retrieval status for project 1 risk." in second_prompt
     assert "Assistant: I am the ceo agent in OpenQilin. reply-1" in second_prompt
     assert "User request:\nBased on retrieval status, who are you?" in second_prompt
@@ -231,10 +231,10 @@ def test_llm_dispatch_memory_isolated_by_channel_scope() -> None:
     assert first.accepted is True
     assert second.accepted is True
     assert len(provider.prompts) == 2
-    assert "Conversation history:" not in provider.prompts[1]
+    assert "Recent conversation:" not in provider.prompts[1]
 
 
-def test_llm_dispatch_memory_isolated_across_role_bots_in_same_channel() -> None:
+def test_llm_dispatch_memory_shared_across_role_bots_in_same_channel() -> None:
     provider = _RecordingProvider()
     adapter = LlmGatewayDispatchAdapter(
         llm_gateway_service=LlmGatewayService(provider=provider),
@@ -262,4 +262,5 @@ def test_llm_dispatch_memory_isolated_across_role_bots_in_same_channel() -> None
     assert first.accepted is True
     assert second.accepted is True
     assert len(provider.prompts) == 2
-    assert "Conversation history:" not in provider.prompts[1]
+    assert "Recent conversation:" in provider.prompts[1]
+    assert "User: CEO status update" in provider.prompts[1]

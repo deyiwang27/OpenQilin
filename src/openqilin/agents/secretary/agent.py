@@ -123,7 +123,9 @@ class SecretaryAgent:
             prompt = f"{prompt}{project_context}"
 
         if self._conversation_store and request.channel_id:
-            scope = f"discord:{request.channel_id}"
+            _guild = request.guild_id.strip() or "guild-unspecified"
+            _channel = request.channel_id.strip() or "channel-unspecified"
+            scope = f"guild::{_guild}::channel::{_channel}"
             history = self._conversation_store.list_turns(scope)
             if history:
                 history_lines = []
@@ -163,7 +165,9 @@ class SecretaryAgent:
             else _FALLBACK_ADVISORY
         )
         if self._conversation_store and request.channel_id:
-            scope = f"discord:{request.channel_id}"
+            _guild = request.guild_id.strip() or "guild-unspecified"
+            _channel = request.channel_id.strip() or "channel-unspecified"
+            scope = f"guild::{_guild}::channel::{_channel}"
             self._conversation_store.append_turns(
                 scope,
                 user_prompt=request.message,

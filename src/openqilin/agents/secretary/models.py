@@ -16,6 +16,7 @@ class SecretaryRequest:
     context: ChatContext
     trace_id: str
     channel_id: str = ""
+    guild_id: str = ""
     actor_id: str = ""
     addressed_agent: str = ""
 
