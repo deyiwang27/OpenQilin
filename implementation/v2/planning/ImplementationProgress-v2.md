@@ -16,7 +16,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 | M14 | `done` | 7 / 7 | All WPs complete; exit criteria met |
 | M15 | `done` | 6 / 6 | All WPs complete; exit criteria met |
 | M16 | `done` | 5 / 5 | All WPs complete; exit criteria met |
-| M17 | `in_progress` | 5 / 7 | WP1-WP2-WP4-WP6-WP7 done |
+| M17 | `in_progress` | 6 / 9 | WP1-WP2-WP4-WP6-WP7-WP8 done; WP3-WP5 pending; WP9 pending |
 
 ---
 
@@ -138,6 +138,8 @@ WP document: `05-milestones/M17-WorkPackages-v1.md`
 | M17-WP5 | Website and Public Presence | `pending` | — | — | — |
 | M17-WP6 | Sponsorship and Startup-Credit Readiness | `done` | #166 | #167 | GitHub Sponsors repo wiring complete: funding config moved to `.github/FUNDING.yml`; sponsorship docs updated; README sponsor badge/link added; profile status marked active |
 | M17-WP7 | Auto-create Discord Project Channel on Initialization | `done` | #168 | #169 | DiscordChannelAutomator now calls Discord REST API; `guild_id` added to initialization payload; binding service wired into runtime + governance initialize non-fatal auto-bind path; unit tests added |
+| M17-WP8 | Conversation Memory Foundation | `done` | #179 | #182 | Unified scope key; hot window 6→40; conversation_windows table; warm loading; 829 tests pass |
+| M17-WP9 | Semantic Fetch and Agent Tool | `pending` | #180 | — | pgvector ANN pre-fetch; get_conversation_window tool; cross-channel fetch |
 
 **M17 Exit criteria:** `pending`
 

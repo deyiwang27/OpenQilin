@@ -243,9 +243,66 @@ Prepare OpenQilin for public introduction, early contributors, and realistic spo
 
 ---
 
+## WP M17-08 — Conversation Memory Foundation
+
+**Goal:** Establish unified per-channel conversation scope, increase the hot window from 6 to 40 rows (20 exchanges), and introduce windowed warm-tier summarization so all agents in a channel share a coherent transcript.
+
+**Design ref:** `design/v2/architecture/ConversationMemoryDesign-v1.md`
+
+### Tasks
+
+- [x] Unify conversation scope key: replace `"{project}::{guild}::{channel}::{thread}::{role}::{agent_id}"` with `"guild::{guild_id}::channel::{channel_id}"` in `LlmGatewayDispatchAdapter._conversation_scope()`
+- [x] Align Secretary scope: update `discord_ingress.py` to pass the unified scope key (not `"discord:{channel_id}"`)
+- [x] Increase `max_turns` from 6 to 40 and add `ConversationMemoryConfig` dataclass
+- [x] Alembic migration: add `agent_id TEXT` and `window_index INTEGER` to `conversation_messages`
+- [x] Alembic migration: create `conversation_windows` table
+- [x] Implement `list_windows(scope)` and `fetch_window(scope, window_index)` in `PostgresConversationStore`
+- [x] Synchronous window summary generation on window close (injected `summarize_fn`, non-fatal)
+- [x] Update `_compose_role_locked_prompt()` to include warm summaries before hot turns
+- [x] Update unit and component tests
+
+### Done criteria
+
+- [x] All agents in the same channel share one `conversation_messages` scope
+- [x] Warm summaries generated and loaded after a window fills (40 rows)
+- [x] `max_turns=40` default; old `max_turns=6` removed
+- [x] Static checks and unit/component tests pass (829 passed)
+
+---
+
+## WP M17-09 — Semantic Fetch and Agent Tool
+
+**Goal:** Give agents autonomous context retrieval — proactive semantic pre-fetch of relevant cold windows before each LLM call, and a reactive tool for mid-reasoning history lookup. Add cross-channel summary fetch for on-demand context from other channels or DMs.
+
+**Design ref:** `design/v2/architecture/ConversationMemoryDesign-v1.md`
+
+### Tasks
+
+- [ ] Add `summary_embedding vector(1536)` column to `conversation_windows` (Alembic migration)
+- [ ] Add `ivfflat` index on `summary_embedding` using `vector_cosine_ops`
+- [ ] Async embedding generation for window summaries (background task after summary write)
+- [ ] Implement `find_relevant_windows(scope, query_embedding, threshold, limit)` via pgvector ANN
+- [ ] Wire proactive semantic pre-fetch into `LlmGatewayDispatchAdapter.load_context()`
+- [ ] Register `get_conversation_window(window_index, scope?)` as LangGraph tool for all async agents
+- [ ] Implement `fetch_channel_summary(target_scope)` in store
+- [ ] Wire `/oq context from:#channel-name` command in `discord_ingress.py`
+- [ ] Add `context_sources: list[str]` field to `TaskPayload`
+- [ ] Wire proactive semantic pre-fetch into Secretary sync path
+- [ ] Integration tests (require postgres + pgvector)
+
+### Done criteria
+
+- [ ] Agent receives relevant cold window content without user prompting (proactive fetch)
+- [ ] Agent can call `get_conversation_window` tool mid-reasoning
+- [ ] `/oq context from:#channel` attaches summary to next invocation
+- [ ] DM scope cross-channel fetch restricted to participating bot only
+- [ ] Integration tests pass with compose stack
+
+---
+
 ## M17 Exit Criteria
 
-- [ ] All seven WPs above are marked done
+- [ ] All nine WPs above are marked done
 - [ ] README, CONTRIBUTING.md, CODE_OF_CONDUCT.md, ROADMAP.md all live in repo root
 - [ ] Demo runs end-to-end on clean checkout
 - [ ] Public domain and contact email live
