@@ -116,6 +116,7 @@ class TaskDispatchService:
         llm_dispatch_adapter: LlmDispatchAdapter,
         communication_dispatch_adapter: CommunicationDispatchAdapter | None = None,
         specialist_agent: Any | None = None,
+        domain_leader_agent: Any | None = None,
     ) -> None:
         self._lifecycle_service = lifecycle_service
         self._sandbox_execution_adapter = sandbox_execution_adapter
@@ -124,6 +125,7 @@ class TaskDispatchService:
             communication_dispatch_adapter or LocalCommunicationDispatchAdapter()
         )
         self._specialist_agent = specialist_agent
+        self._domain_leader_agent = domain_leader_agent
         self._task_outcomes: dict[str, TaskDispatchOutcome] = {}
 
     def dispatch_admitted_task(
@@ -598,6 +600,47 @@ class TaskDispatchService:
             rule_ids=("AUTH-001", "AUTH-002", "ORCH-001", "ORCH-002"),
         )
         return outcome.dispatch_id or created_task.task_id
+
+    def escalate_to_domain_leader(
+        self,
+        question: str,
+        project_id: str,
+        trace_id: str,
+        *,
+        loop_state: LoopState | None = None,
+    ) -> str:
+        """Run a PM→DL escalation with pair-hop guard."""
+
+        if loop_state is not None:
+            check_and_increment_pair(loop_state, "project_manager", "domain_leader")
+        if self._domain_leader_agent is None:
+            raise DispatchTargetError(
+                "domain_leader escalation requires domain_leader_agent to be configured"
+            )
+        from openqilin.agents.domain_leader.models import DomainLeaderRequest
+
+        response = self._domain_leader_agent.handle_escalation(
+            DomainLeaderRequest(
+                project_id=project_id,
+                message=question,
+                requesting_agent="project_manager",
+                trace_id=trace_id,
+            )
+        )
+        if response.domain_outcome == "domain_risk_escalation":
+            return (
+                "Domain Leader review found unresolved domain risk. Escalate through "
+                "project governance to CWO before further execution."
+            )
+        if response.domain_outcome == "needs_rework":
+            return (
+                "Domain Leader review requires rework before execution continues. "
+                "Update the task output and resubmit within the current project scope."
+            )
+        return (
+            "Domain Leader review completed. The issue is resolved within project scope "
+            "and execution may continue."
+        )
 
 
 def build_task_dispatch_service(
