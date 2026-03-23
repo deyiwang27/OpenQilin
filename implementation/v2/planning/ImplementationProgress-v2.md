@@ -136,7 +136,7 @@ WP document: `05-milestones/M17-WorkPackages-v1.md`
 | M17-WP3 | Demo Assets | `pending` | — | — | — |
 | M17-WP4 | Contributor Entry Path | `done` | #160 | #165 | CONTRIBUTING.md + CODE_OF_CONDUCT.md added; CWO naming fix in README/ROADMAP; good first issues #161-#164 created; acceptance checks pass |
 | M17-WP5 | Website and Public Presence | `pending` | — | — | — |
-| M17-WP6 | Sponsorship and Startup-Credit Readiness | `done` | #166 | #<PR> | FUNDING.yml + sponsorship docs added (project summary, program shortlist, GitHub Sponsors setup guide) |
+| M17-WP6 | Sponsorship and Startup-Credit Readiness | `done` | #166 | #167 | FUNDING.yml + sponsorship docs added (project summary, program shortlist, GitHub Sponsors setup guide) |
 
 **M17 Exit criteria:** `pending`
 

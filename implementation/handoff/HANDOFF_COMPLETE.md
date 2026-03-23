@@ -3,7 +3,7 @@
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-23
 **Branch:** `feat/166-m17-wp6-sponsorship`
-**Draft PR:** #<pr-number>
+**Draft PR:** #167
 **Implements:** `implementation/handoff/current.md`
 
 ---
@@ -22,7 +22,7 @@ Implemented M17-WP6 as a documentation/config delivery: added `FUNDING.yml` and 
 | Create `docs/sponsorship/` and write required docs | ✅ Done | Added `project-summary.md`, `program-shortlist.md`, `github-sponsors-setup.md` with handoff content |
 | Add root `FUNDING.yml` | ✅ Done | Added exact handoff content pointing to `deyiwang27` |
 | Tick WP6 task and done-criteria checkboxes in `M17-WorkPackages-v1.md` | ✅ Done | All WP6 task and done-criteria checkboxes set to `[x]` |
-| Update `ImplementationProgress-v2.md` M17 and WP6 row | ✅ Done | M17 now `4 / 6`, notes `WP1-WP2-WP4-WP6 done`; WP6 marked `done | #166 | #<PR>` |
+| Update `ImplementationProgress-v2.md` M17 and WP6 row | ✅ Done | M17 now `4 / 6`, notes `WP1-WP2-WP4-WP6 done`; WP6 marked `done | #166 | #167` |
 | Run acceptance validation matrix | ⚠️ Partial | All gates pass except `grep -c "deyiwang27" FUNDING.yml` expected `1` but returns `2` due required exact content |
 | Create handoff completion artifact | ✅ Done | This file created from template |
 
