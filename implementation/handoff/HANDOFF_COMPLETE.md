@@ -78,3 +78,4 @@ Environment command notes:
 
 - To ensure runtime hot-window behavior aligns with WP intent (40 rows) when persistence is enabled, `src/openqilin/control_plane/api/dependencies.py` conversation-store wiring was updated from `max_turns=6` to `max_turns=40`.
 - The acceptance snippet in `current.md` for `SecretaryRequest` omitted required constructor args (`context`, `trace_id`); an equivalent check with those required args was executed and passed.
+- After WP8 delivery, the branch also picked up follow-up M17-WP6 sponsorship repo updates so Claude review is aware of them: GitHub funding config was corrected to `.github/FUNDING.yml`, README gained a sponsor badge/link, and sponsorship status/docs were refreshed to reflect the now-active GitHub Sponsors profile.
