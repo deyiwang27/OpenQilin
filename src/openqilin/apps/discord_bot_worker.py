@@ -824,6 +824,22 @@ class OpenQilinDiscordClient(discord.Client):
         channel_type = _channel_type_name(message.channel)
         chat_class = _resolve_chat_class(message.channel)
 
+        # DM gate for non-Secretary bots: free-text DMs are not routed through the Secretary
+        # advisory bypass on behalf of another bot — that produces confusing "I am Secretary"
+        # responses delivered via a different bot's channel.
+        # For free-text DMs, post a usage hint and return. Explicit /oq commands in DMs are
+        # still processed normally.
+        if (
+            chat_class == "direct"
+            and not _is_explicit_command
+            and self._config.bot_role != "secretary"
+        ):
+            await message.channel.send(
+                f"To send me a query, use: `/oq ask {self._config.bot_role} <your question>`\n"
+                f"Or DM @OpenQilin Secretary for general routing assistance."
+            )
+            return
+
         # Free-text group-channel gate: non-Secretary bots silently skip free-text messages.
         # Apply BEFORE recipient resolution to prevent spurious [denied] errors when a bot
         # mentioned in the message runs in a different process.
