@@ -1,0 +1,25 @@
+# CODEOWNERS
+#
+# Files listed here require explicit Owner approval on any PR that modifies them.
+# GitHub enforces this — a PR cannot be merged without the listed owner's review.
+#
+# Prompt-injection protection: CLAUDE.md and AGENTS.md are read by AI agents
+# (Claude Architect and CodeX Engineer) at session start. A malicious modification
+# could alter agent behavior. Owner review on every change is the primary defence.
+#
+# Supply-chain protection: .pre-commit-config.yaml defines hooks that execute
+# code on every local commit. Pinned SHAs are preferred; Owner review prevents
+# silent hook substitution.
+
+# AI agent instruction files — prompt injection risk
+CLAUDE.md                           @deyiwang27
+AGENTS.md                           @deyiwang27
+
+# Pre-commit hook configuration — supply chain risk
+.pre-commit-config.yaml             @deyiwang27
+
+# Constitution and policy — governance integrity
+constitution/                       @deyiwang27
+
+# GitHub repository configuration
+.github/                            @deyiwang27
