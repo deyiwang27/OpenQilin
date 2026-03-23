@@ -19,6 +19,7 @@ _READ_ALLOWLIST_BY_ROLE: Mapping[str, frozenset[str]] = MappingProxyType(
                 "get_project_workforce_snapshot",
                 "get_audit_event_stream",
                 "get_dispatch_denial_evidence",
+                "get_conversation_window",
             }
         ),
         "ceo": frozenset(
@@ -32,6 +33,7 @@ _READ_ALLOWLIST_BY_ROLE: Mapping[str, frozenset[str]] = MappingProxyType(
                 "get_completion_gate_status",
                 "get_project_workforce_snapshot",
                 "get_dispatch_denial_evidence",
+                "get_conversation_window",
             }
         ),
         "cwo": frozenset(
@@ -45,6 +47,7 @@ _READ_ALLOWLIST_BY_ROLE: Mapping[str, frozenset[str]] = MappingProxyType(
                 "get_completion_gate_status",
                 "get_project_workforce_snapshot",
                 "get_dispatch_denial_evidence",
+                "get_conversation_window",
             }
         ),
         "auditor": frozenset(
@@ -59,6 +62,7 @@ _READ_ALLOWLIST_BY_ROLE: Mapping[str, frozenset[str]] = MappingProxyType(
                 "get_project_workforce_snapshot",
                 "get_audit_event_stream",
                 "get_dispatch_denial_evidence",
+                "get_conversation_window",
             }
         ),
         "administrator": frozenset(
@@ -70,6 +74,7 @@ _READ_ALLOWLIST_BY_ROLE: Mapping[str, frozenset[str]] = MappingProxyType(
                 "get_project_doc_latest",
                 "get_audit_event_stream",
                 "get_dispatch_denial_evidence",
+                "get_conversation_window",
             }
         ),
         "project_manager": frozenset(
@@ -81,6 +86,7 @@ _READ_ALLOWLIST_BY_ROLE: Mapping[str, frozenset[str]] = MappingProxyType(
                 "get_project_doc_latest",
                 "get_completion_gate_status",
                 "get_project_workforce_snapshot",
+                "get_conversation_window",
             }
         ),
         "runtime_agent": frozenset(),

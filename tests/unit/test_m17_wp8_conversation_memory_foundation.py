@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from types import SimpleNamespace
 from typing import cast
 from unittest.mock import MagicMock
@@ -8,6 +9,7 @@ from openqilin.agents.secretary.agent import SecretaryAgent
 from openqilin.agents.secretary.models import SecretaryRequest
 from openqilin.control_plane.grammar.models import ChatContext, IntentClass
 from openqilin.data_access.repositories.postgres.conversation_store import PostgresConversationStore
+from openqilin.llm_gateway.providers.base import LiteLLMProviderRequest, LiteLLMProviderResult
 from openqilin.llm_gateway.service import LlmGatewayService
 from openqilin.task_orchestrator.dispatch.llm_dispatch import (
     ConversationTurn,
@@ -45,6 +47,22 @@ def _build_session_factory() -> tuple[MagicMock, MagicMock]:
     session_cm.__exit__.return_value = False
     session_factory = MagicMock(return_value=session_cm)
     return session_factory, session
+
+
+class _RecordingPromptProvider:
+    def __init__(self) -> None:
+        self.prompts: list[str] = []
+
+    def complete(self, request: LiteLLMProviderRequest) -> LiteLLMProviderResult:
+        self.prompts.append(request.prompt)
+        return LiteLLMProviderResult(
+            model_identifier=f"gemini/{request.model_alias}",
+            content="runtime summary",
+            input_tokens=8,
+            output_tokens=8,
+            provider_cost_usd=None,
+            quota_limit_source="policy_guardrail",
+        )
 
 
 def _build_dispatch_request(
@@ -303,6 +321,100 @@ def test_local_store_append_turns_accepts_agent_id_kwarg() -> None:
     )
 
     assert len(store.list_turns("scope-1")) == 2
+
+
+def test_fetch_channel_summary_returns_latest_window() -> None:
+    session_factory, session = _build_session_factory()
+    session.execute.return_value = _RowsResult([(2, "latest summary")])
+    store = PostgresConversationStore(session_factory=session_factory)
+
+    summary = store.fetch_channel_summary("scope-1")
+
+    assert summary == ConversationWindowSummary(
+        window_index=2,
+        summary_text="latest summary",
+        scope="scope-1",
+    )
+
+
+def test_fetch_channel_summary_returns_none_when_missing() -> None:
+    session_factory, session = _build_session_factory()
+    session.execute.return_value = _RowsResult([])
+    store = PostgresConversationStore(session_factory=session_factory)
+
+    assert store.fetch_channel_summary("scope-1") is None
+
+
+def test_find_relevant_windows_returns_ranked_matches() -> None:
+    session_factory, session = _build_session_factory()
+    session.execute.return_value = _RowsResult([(3, "relevant summary", 0.91)])
+    store = PostgresConversationStore(session_factory=session_factory)
+
+    windows = store.find_relevant_windows("scope-1", (1.0,) + (0.0,) * 767)
+
+    assert windows == (ConversationWindowSummary(window_index=3, summary_text="relevant summary"),)
+    params = session.execute.call_args.args[1]
+    assert params["scope"] == "scope-1"
+    assert params["threshold"] == 0.75
+    assert params["limit"] == 3
+
+
+def test_compose_prompt_includes_cold_and_cross_channel_context() -> None:
+    prompt = _compose_role_locked_prompt(
+        recipient_role="ceo",
+        history=(ConversationTurn(role="user", content="latest user"),),
+        warm_summaries=(ConversationWindowSummary(window_index=0, summary_text="warm summary"),),
+        cold_summaries=(ConversationWindowSummary(window_index=4, summary_text="cold summary"),),
+        cross_channel_summaries=(
+            ConversationWindowSummary(
+                window_index=2,
+                summary_text="other channel summary",
+                scope="guild::g::channel::c2",
+            ),
+        ),
+        user_prompt="what now?",
+        grounding_evidence=(),
+    )
+
+    assert "Previous conversation context (summaries of earlier discussion):" in prompt
+    assert "[Window 4] cold summary" in prompt
+    assert "[Context from guild::g::channel::c2] other channel summary" in prompt
+    assert prompt.index("Cross-channel context:") < prompt.index("User request:\nwhat now?")
+
+
+def test_dispatch_performs_semantic_prefetch_and_cross_channel_summary_fetch() -> None:
+    provider = _RecordingPromptProvider()
+    conversation_store = MagicMock()
+    conversation_store.list_turns.return_value = ()
+    conversation_store.list_windows.return_value = (
+        ConversationWindowSummary(window_index=0, summary_text="warm summary"),
+    )
+    conversation_store.find_relevant_windows.return_value = (
+        ConversationWindowSummary(window_index=3, summary_text="cold summary"),
+    )
+    conversation_store.fetch_channel_summary.return_value = ConversationWindowSummary(
+        window_index=1,
+        summary_text="other channel summary",
+        scope="guild::guild_1::channel::other_channel",
+    )
+    embedding_service = MagicMock()
+    embedding_service.embed.return_value = (0.1,) * 768
+    adapter = LlmGatewayDispatchAdapter(
+        llm_gateway_service=LlmGatewayService(provider=provider),
+        conversation_store=conversation_store,
+        embedding_service=embedding_service,
+    )
+    payload = _build_dispatch_request()
+    payload = replace(payload, context_sources=("other-scope",))
+
+    receipt = adapter.dispatch(payload)
+
+    assert receipt.accepted is True
+    embedding_service.embed.assert_called_once_with("llm_summarize status?")
+    conversation_store.find_relevant_windows.assert_called_once()
+    conversation_store.fetch_channel_summary.assert_called_once_with("other-scope")
+    assert "cold summary" in provider.prompts[0]
+    assert "other channel summary" in provider.prompts[0]
 
 
 def test_clear_also_deletes_windows() -> None:

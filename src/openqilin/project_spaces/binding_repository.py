@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import UTC, datetime
 from uuid import uuid4
 
@@ -82,6 +83,39 @@ class PostgresProjectSpaceBindingRepository:
         if row is None:
             return None
         return _binding_from_row(dict(row))
+
+    def find_by_channel_name(self, guild_id: str, channel_name: str) -> ProjectSpaceBinding | None:
+        """Look up a binding by inferred Discord channel name within one guild."""
+
+        normalized_channel_name = channel_name.strip().lower()
+        if not normalized_channel_name:
+            return None
+        with self._session_factory() as session:
+            rows = (
+                session.execute(
+                    text(
+                        """
+                        SELECT psb.*, p.name AS project_name
+                        FROM project_space_bindings psb
+                        JOIN projects p ON p.project_id = psb.project_id
+                        WHERE psb.guild_id = :guild_id
+                        ORDER BY psb.updated_at DESC
+                        """
+                    ),
+                    {"guild_id": guild_id},
+                )
+                .mappings()
+                .all()
+            )
+        for row in rows:
+            project_name = str(row.get("project_name") or "").strip().lower()
+            slug = re.sub(r"[^a-z0-9]+", "-", project_name)
+            while "--" in slug:
+                slug = slug.replace("--", "-")
+            slug = slug.strip("-")
+            if f"project-{slug}"[:100] == normalized_channel_name:
+                return _binding_from_row(dict(row))
+        return None
 
     def update_state(self, binding_id: str, state: BindingState) -> ProjectSpaceBinding:
         """Transition binding_state; returns the updated record."""
