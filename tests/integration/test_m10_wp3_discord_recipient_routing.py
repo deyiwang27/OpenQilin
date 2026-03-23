@@ -51,10 +51,24 @@ def test_m10_wp3_group_routing_uses_only_explicit_mentions() -> None:
     assert recipients == (("auditor_core", "auditor"), ("ceo_core", "ceo"))
 
 
-def test_m10_wp3_group_routing_rejects_no_mention() -> None:
+def test_m10_wp3_group_routing_free_text_passes_through_without_mention() -> None:
+    recipients = resolve_discord_recipients(
+        parsed_recipients=(("runtime", "runtime"),),
+        chat_class="leadership_council",
+        target_bot_role="ceo",
+        target_bot_id="ceo_core",
+        mentioned_bot_user_ids=frozenset(),
+        mention_recipients=(),
+        unresolved_mentions=frozenset(),
+    )
+
+    assert recipients == (("runtime", "runtime"),)
+
+
+def test_m10_wp3_group_routing_explicit_recipient_rejects_no_mention() -> None:
     with pytest.raises(DiscordRecipientResolutionError) as error:
         resolve_discord_recipients(
-            parsed_recipients=(("runtime", "runtime"),),
+            parsed_recipients=(("ceo_core", "ceo"),),
             chat_class="leadership_council",
             target_bot_role="ceo",
             target_bot_id="ceo_core",
