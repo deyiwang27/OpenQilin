@@ -355,11 +355,11 @@ def _resolve_chat_class(channel: Any) -> str:
         return "direct"
     channel_name = getattr(channel, "name", "")
     normalized = str(channel_name).strip().lower().replace("-", "_")
-    if normalized == "leadership_council":
+    if normalized == "leadership_council" or normalized.startswith("leadership_council_"):
         return "leadership_council"
-    if normalized == "governance":
+    if normalized == "governance" or normalized.startswith("governance_"):
         return "governance"
-    if normalized == "executive":
+    if normalized == "executive" or normalized.startswith("executive_"):
         return "executive"
     return "project"
 
