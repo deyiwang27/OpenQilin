@@ -20,10 +20,10 @@ Full success bar: `00-direction/MvpV2SuccessCriteria-v1.md`
 |---|---|---|---|---|
 | M11 | Discord Grammar and Secretary Activation | `done` | M10 complete | Free-text + `/oq` command UX live; Secretary active; C-7 fixed |
 | M12 | Infrastructure Wiring, Security Hardening, CSO Activation | `done` | M11 complete | OPA, PostgreSQL, Redis, OTel all wired; all C/H security fixes applied; CSO wired |
-| M13 | Project Space Binding, Routing, Orchestration, and Agent Spec Fixes | `planned` | M12 complete | LangGraph active; project spaces bound; DL virtual agent active; H-3 fixed; CSO rewritten as Chief Strategy Officer; Secretary spec aligned |
-| M14 | Executive and Operational Agent Activation | `planned` | M13 complete | PM, CEO, CWO, Auditor, Administrator, Specialist agents active; DecisionReviewGates flow wired |
-| M15 | Budget Persistence, Real Cost Model, and Grafana Dashboard | `planned` | M14 complete | PostgreSQL budget ledger live; token cost model active; Grafana dashboard provisioned with 6 panels |
-| M16 | Onboarding, Diagnostics, and Runtime Polish | `planned` | M15 complete | RuntimeSettings singleton; conversation persistence; idempotency namespaced; doctor CLI working |
+| M13 | Project Space Binding, Routing, Orchestration, and Agent Spec Fixes | `done` | M12 complete | LangGraph active; project spaces bound; DL virtual agent active; H-3 fixed; CSO rewritten as Chief Strategy Officer; Secretary spec aligned |
+| M14 | Executive and Operational Agent Activation | `done` | M13 complete | PM, CEO, CWO, Auditor, Administrator, Specialist agents active; DecisionReviewGates flow wired |
+| M15 | Budget Persistence, Real Cost Model, and Grafana Dashboard | `done` | M14 complete | PostgreSQL budget ledger live; token cost model active; Grafana dashboard provisioned with 6 panels |
+| M16 | Onboarding, Diagnostics, and Runtime Polish | `done` | M15 complete | RuntimeSettings singleton; conversation persistence; idempotency namespaced; doctor CLI working |
 | M17 | Open-Source and Sponsorship Readiness | `planned` | M16 complete | README, demo, roadmap, website, contributor path, sponsorship assets all published |
 
 ---
