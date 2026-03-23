@@ -212,19 +212,22 @@ class PostgresConversationStore:
         """Return the most recent window summary for ``target_scope``, or None."""
 
         normalized = target_scope.strip() or "default-scope"
-        with self._session_factory() as session:
-            row = session.execute(
-                text(
-                    """
-                    SELECT window_index, summary_text
-                    FROM conversation_windows
-                    WHERE scope = :scope
-                    ORDER BY window_index DESC
-                    LIMIT 1
-                    """
-                ),
-                {"scope": normalized},
-            ).fetchone()
+        try:
+            with self._session_factory() as session:
+                row = session.execute(
+                    text(
+                        """
+                        SELECT window_index, summary_text
+                        FROM conversation_windows
+                        WHERE scope = :scope
+                        ORDER BY window_index DESC
+                        LIMIT 1
+                        """
+                    ),
+                    {"scope": normalized},
+                ).fetchone()
+        except Exception:
+            return None
         if row is None:
             return None
         return ConversationWindowSummary(
