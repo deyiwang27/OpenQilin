@@ -130,8 +130,7 @@ def test_format_governed_response_includes_llm_generated_text_when_available() -
             },
         },
     )
-    assert "[accepted]" in rendered
-    assert "[ceo] As CEO: Approved. Keep risk under control and report daily." in rendered
+    assert rendered == "As CEO: Approved. Keep risk under control and report daily."
 
 
 def test_parse_actor_role_map_ignores_invalid_json() -> None:
