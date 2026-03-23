@@ -3,7 +3,7 @@
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-23
 **Branch:** `feat/186-llm-calls-total-secretary-pm`
-**Draft PR:** `TBD`
+**Draft PR:** #187
 **Implements:** `implementation/handoff/current.md`
 
 ---
