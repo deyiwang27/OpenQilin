@@ -3,7 +3,7 @@
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-22
 **Branch:** `feat/155-m17-wp1-public-readme`
-**Draft PR:** N/A (not opened in this environment)
+**Draft PR:** #156
 **Implements:** `implementation/handoff/current.md`
 
 ---
@@ -69,7 +69,7 @@ Executed commands:
 
 ## What Was Skipped
 
-- Draft PR creation was not completed in this environment.
+- None.
 
 ---
 
