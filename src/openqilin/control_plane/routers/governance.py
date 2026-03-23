@@ -5,11 +5,13 @@ from __future__ import annotations
 from string import hexdigits
 from typing import Annotated, Literal
 
+import structlog
 from fastapi import APIRouter, Depends, Header, status
 from fastapi.responses import JSONResponse
 
 from openqilin.control_plane.api.dependencies import (
     get_audit_writer,
+    get_binding_service,
     get_governance_repository,
 )
 from openqilin.control_plane.handlers.governance_handler import (
@@ -48,8 +50,11 @@ from openqilin.control_plane.schemas.governance import (
 )
 from openqilin.observability.testing.stubs import InMemoryAuditWriter
 from openqilin.data_access.repositories.postgres.project_repository import PostgresProjectRepository
+from openqilin.project_spaces.binding_service import ProjectSpaceBindingService
+from openqilin.project_spaces.models import LifecycleEvent
 
 router = APIRouter(tags=["governance"])
+LOGGER = structlog.get_logger(__name__)
 
 
 def _governance_response(
@@ -477,6 +482,7 @@ def initialize_project(
     project_id: str,
     payload: ProjectInitializationRequest,
     governance_repository: PostgresProjectRepository = Depends(get_governance_repository),
+    binding_service: ProjectSpaceBindingService = Depends(get_binding_service),
     audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
     external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
     external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
@@ -544,6 +550,21 @@ def initialize_project(
             status_value=status_value,
             error=response_error,
         )
+
+    # Auto-create Discord project channel — non-fatal.
+    if payload.guild_id:
+        try:
+            binding_service.create_and_bind(
+                project_id=project_id,
+                guild_id=payload.guild_id,
+                project_name=outcome.project.name,
+            )
+        except Exception:
+            LOGGER.exception(
+                "governance.initialize_project.channel_creation_failed",
+                project_id=project_id,
+                guild_id=payload.guild_id,
+            )
 
     audit_writer.write_event(
         event_type="project.initialized",
@@ -938,6 +959,7 @@ def finalize_completion(
     project_id: str,
     payload: ProjectCompletionFinalizeRequest,
     governance_repository: PostgresProjectRepository = Depends(get_governance_repository),
+    binding_service: ProjectSpaceBindingService = Depends(get_binding_service),
     audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
     external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
     external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
@@ -999,6 +1021,20 @@ def finalize_completion(
             status_value=status_value,
             error=response_error,
         )
+
+    # Archive Discord project channel — non-fatal.
+    try:
+        binding_service.transition(
+            project_id=project_id,
+            event=LifecycleEvent(event_type="archive"),
+            project_name=outcome.project.name,
+        )
+    except Exception:
+        LOGGER.exception(
+            "governance.finalize_completion.channel_archive_failed",
+            project_id=project_id,
+        )
+
     audit_writer.write_event(
         event_type="project.completed",
         outcome="ok",
@@ -1230,6 +1266,7 @@ def terminate_project(
     project_id: str,
     payload: ProjectLifecycleActionRequest,
     governance_repository: PostgresProjectRepository = Depends(get_governance_repository),
+    binding_service: ProjectSpaceBindingService = Depends(get_binding_service),
     audit_writer: InMemoryAuditWriter = Depends(get_audit_writer),
     external_channel_header: Annotated[str | None, Header(alias="X-External-Channel")] = None,
     external_actor_id_header: Annotated[str | None, Header(alias="X-External-Actor-Id")] = None,
@@ -1290,6 +1327,20 @@ def terminate_project(
             status_value=status_value,
             error=response_error,
         )
+
+    # Lock Discord project channel — non-fatal.
+    try:
+        binding_service.transition(
+            project_id=project_id,
+            event=LifecycleEvent(event_type="lock"),
+            project_name=outcome.project.name,
+        )
+    except Exception:
+        LOGGER.exception(
+            "governance.terminate_project.channel_lock_failed",
+            project_id=project_id,
+        )
+
     audit_writer.write_event(
         event_type="project.terminated",
         outcome="ok",

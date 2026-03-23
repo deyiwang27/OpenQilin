@@ -211,9 +211,41 @@ Prepare OpenQilin for public introduction, early contributors, and realistic spo
 
 ---
 
+## WP M17-07 — Auto-create Discord Project Channel on Initialization
+
+**Goal:** When a CWO initializes an approved project, automatically create a Discord project channel and persist an active `project_space_bindings` record so routing is live immediately.
+
+**Design ref:** `implementation/handoff/current.md` (M17-WP7 handoff; issue #168)
+
+### Tasks
+
+- [x] Replace `DiscordChannelAutomator.create_channel()` stub with a real Discord REST API call using `settings.discord_bot_token`
+- [x] Add optional `guild_id` field to `ProjectInitializationRequest`
+- [x] Wire `ProjectSpaceBindingService` into `RuntimeServices` and expose `get_binding_service` dependency
+- [x] Update governance initialization endpoint to call `binding_service.create_and_bind(...)` after successful project init
+- [x] Make channel creation failure non-fatal (project initialization still succeeds; failure logged)
+- [x] Add unit tests for Discord automator success/error paths and initialize-project binding behavior
+- [x] Update Discord testing runbook to document auto-created project channel behavior
+
+### Outputs
+
+- Real Discord channel creation in `project_spaces/discord_automator.py`
+- Auto-binding on project initialization in governance router
+- New unit tests for automator and initialization binding behavior
+- Updated Discord runbook notes for initialization flow
+
+### Done criteria
+
+- [x] `initialize_project` with `guild_id` creates and binds a project channel (success path)
+- [x] `initialize_project` without `guild_id` skips binding cleanly
+- [x] Any channel creation/binding exception is caught and logged without failing initialization
+- [x] Static checks and unit/component tests pass with the new wiring
+
+---
+
 ## M17 Exit Criteria
 
-- [ ] All six WPs above are marked done
+- [ ] All seven WPs above are marked done
 - [ ] README, CONTRIBUTING.md, CODE_OF_CONDUCT.md, ROADMAP.md all live in repo root
 - [ ] Demo runs end-to-end on clean checkout
 - [ ] Public domain and contact email live

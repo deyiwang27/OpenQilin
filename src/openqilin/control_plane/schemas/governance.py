@@ -140,6 +140,7 @@ class ProjectInitializationRequest(BaseModel):
     budget_quota_total: float = Field(ge=0)
     metric_plan: dict[str, str] = Field(default_factory=dict)
     workforce_plan: dict[str, str] = Field(default_factory=dict)
+    guild_id: str | None = Field(default=None, max_length=32)
 
 
 class WorkforceTemplateBindingRequest(BaseModel):
