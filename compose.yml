@@ -1,3 +1,26 @@
+# =============================================================================
+# OpenQilin — Docker Compose Profile Guide
+# =============================================================================
+#
+# Profiles
+# --------
+#   core    — PostgreSQL, Redis, OPA.
+#             Minimum required for running tests and local development.
+#             Usage: docker compose --profile core up -d
+#
+#   obs     — OTel collector, Prometheus, Tempo, Loki, Grafana.
+#             Adds the full observability stack on top of core.
+#             Usage: docker compose --profile core --profile obs up -d
+#
+#   full    — Everything: core + obs + all application services
+#             (api_app, orchestrator_worker, communication_worker,
+#              discord_bot_worker, admin bootstrap).
+#             Usage: docker compose --profile full up -d
+#
+#   doctor  — Runs the oq_doctor diagnostics check against the core stack.
+#             Usage: docker compose --profile core --profile doctor up
+#
+# =============================================================================
 name: openqilin
 
 services:
