@@ -26,8 +26,7 @@ def upgrade() -> None:
         """
         CREATE INDEX IF NOT EXISTS ix_conversation_windows_embedding
         ON conversation_windows
-        USING ivfflat (summary_embedding vector_cosine_ops)
-        WITH (lists = 100)
+        USING hnsw (summary_embedding vector_cosine_ops)
         """
     )
 
