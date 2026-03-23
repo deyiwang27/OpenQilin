@@ -34,7 +34,7 @@ MVP-v2 is complete as of March 2026. The system is running, tested, and document
 
 ## Current traction
 
-- Public GitHub repository: [github.com/deyiwang89/OpenQilin](https://github.com/deyiwang27/OpenQilin)
+- Public GitHub repository: [github.com/deyiwang27/OpenQilin](https://github.com/deyiwang27/OpenQilin)
 - MVP-v2 fully implemented across 6 milestones (M11–M16), 44 work packages, 120+ PRs
 - Open-source, Apache 2.0 licensed
 - Contributor entry path published (CONTRIBUTING.md, good first issues)
