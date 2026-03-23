@@ -7,6 +7,7 @@ Secretary MUST NOT issue commands, mutate state, or act as delegation authority.
 from __future__ import annotations
 
 import uuid
+from typing import Any
 
 from openqilin.agents.secretary.data_access import SecretaryDataAccessService
 from openqilin.agents.secretary.models import (
@@ -64,10 +65,12 @@ class SecretaryAgent:
         llm_gateway: LlmGatewayService,
         data_access: SecretaryDataAccessService | None = None,
         conversation_store: ConversationStoreProtocol | None = None,
+        metric_recorder: Any | None = None,
     ) -> None:
         self._llm = llm_gateway
         self._data_access = data_access
         self._conversation_store = conversation_store
+        self._metric_recorder = metric_recorder
 
     def handle(self, request: SecretaryRequest) -> SecretaryResponse:
         """Handle advisory request. Raises SecretaryPolicyError for mutation/admin intents."""
@@ -158,6 +161,11 @@ class SecretaryAgent:
                 policy_context=_ADVISORY_POLICY_CONTEXT,
             )
         )
+        if self._metric_recorder is not None:
+            self._metric_recorder.increment_counter(
+                "llm_calls_total",
+                labels={"purpose": "secretary_response"},
+            )
 
         result = (
             response.generated_text.strip()

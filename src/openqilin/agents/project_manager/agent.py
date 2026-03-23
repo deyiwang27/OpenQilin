@@ -77,6 +77,7 @@ class ProjectManagerAgent:
         task_dispatch_service: TaskDispatchService,
         project_artifact_repo: Any,
         trace_id_factory: Callable[[], str] | None = None,
+        metric_recorder: Any | None = None,
     ) -> None:
         self._llm = llm_gateway
         self._artifact_writer = artifact_writer
@@ -85,6 +86,7 @@ class ProjectManagerAgent:
         self._task_dispatch_service = task_dispatch_service
         self._project_artifact_repo = project_artifact_repo
         self._trace_id_factory = trace_id_factory or (lambda: str(uuid.uuid4()))
+        self._metric_recorder = metric_recorder
 
     def handle(self, request: ProjectManagerRequest) -> ProjectManagerResponse:
         self._require_project_id(request.project_id)
@@ -450,6 +452,11 @@ class ProjectManagerAgent:
                 policy_context=_PM_POLICY_CONTEXT,
             )
         )
+        if self._metric_recorder is not None:
+            self._metric_recorder.increment_counter(
+                "llm_calls_total",
+                labels={"purpose": "pm_response"},
+            )
         if response.decision in {"served", "fallback_served"} and response.generated_text:
             return response.generated_text.strip()
         return fallback
