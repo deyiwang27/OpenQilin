@@ -207,11 +207,21 @@ def submit_discord_message(
                         },
                     },
                 )
+            _addressed_agent = ""
+            for _r in payload.recipients:
+                _rt = _r.recipient_type.strip().lower() if _r.recipient_type else ""
+                if _rt and _rt not in ("runtime", "secretary", ""):
+                    _addressed_agent = _rt
+                    break
+
             sec_req = SecretaryRequest(
                 message=content,
                 intent=intent,
                 context=grammar_context,
                 trace_id=payload.trace_id,
+                channel_id=payload.channel_id,
+                actor_id=payload.actor_external_id,
+                addressed_agent=_addressed_agent,
             )
             try:
                 sec_resp = secretary_agent.handle(sec_req)

@@ -237,7 +237,6 @@ def build_runtime_services() -> RuntimeServices:
         governance_repo=governance_repo,
         runtime_state_repo=runtime_state_repo,
     )
-    secretary_agent = SecretaryAgent(llm_gateway=llm_gateway, data_access=secretary_data_access)
     artifact_writer = PMProjectArtifactWriter(project_artifact_repo=project_artifact_repo)
 
     # --- idempotency (Redis required) ------------------------------------
@@ -298,6 +297,11 @@ def build_runtime_services() -> RuntimeServices:
         PostgresConversationStore(session_factory=session_factory, max_turns=6)
         if settings.runtime_persistence_enabled
         else None
+    )
+    secretary_agent = SecretaryAgent(
+        llm_gateway=llm_gateway,
+        data_access=secretary_data_access,
+        conversation_store=conversation_store,
     )
     tracer = InMemoryTracer()
     # OTelAuditWriter with durable Postgres write (AUD-001).
