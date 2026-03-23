@@ -32,7 +32,7 @@ services:
   opa:
     image: openpolicyagent/opa:0.69.0-static
     profiles: ["core", "full"]
-    # M12-WP1: serve the constitution Rego bundle from source tree.
+    # Serves the OPA policy bundle from the source tree (constitution/ Rego files mounted at /bundle inside OPA).
     command: ["run", "--server", "--addr=0.0.0.0:8181", "--bundle", "/bundle"]
     volumes:
       - ./src/openqilin/policy_runtime_integration/rego:/bundle:ro
@@ -48,6 +48,8 @@ services:
     image: python:3.12-slim
     profiles: ["core", "full"]
     command: ["python", "-m", "http.server", "4000"]
+    # Dev stub only — exposes a minimal HTTP endpoint that satisfies the LiteLLM gateway health check.
+    # Replace with a real LiteLLM instance (https://github.com/BerriAI/litellm) for production LLM routing.
     ports:
       - "4000:4000"
     healthcheck:
@@ -107,7 +109,7 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: admin
     ports:
       - "3000:3000"
-    # M12-WP5: Mount provisioning directory to auto-configure data sources.
+    # Mounts Grafana provisioning files so data sources and dashboards are auto-configured at startup.
     volumes:
       - ./ops/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./ops/grafana/dashboards:/var/lib/grafana/dashboards:ro
@@ -145,11 +147,11 @@ services:
       OPENQILIN_GEMINI_RETRY_MAX_DELAY_SECONDS: ${OPENQILIN_GEMINI_RETRY_MAX_DELAY_SECONDS:-8.0}
       OPENQILIN_GEMINI_FREE_PRIMARY_MODEL: ${OPENQILIN_GEMINI_FREE_PRIMARY_MODEL:-gemini-2.0-flash}
       OPENQILIN_GEMINI_FREE_FALLBACK_MODEL: ${OPENQILIN_GEMINI_FREE_FALLBACK_MODEL:-gemini-2.0-flash}
-      # M12-WP1: OPA policy runtime wiring. Points api_app to the OPA container.
+      # OPA policy runtime — points api_app to the OPA sidecar.
       OPENQILIN_OPA_URL: http://opa:8181
-      # M12-WP4: Redis idempotency wiring.
+      # Redis for idempotency key deduplication.
       OPENQILIN_REDIS_URL: redis://redis:6379
-      # M12-WP5: OTel export wiring. Points api_app to the OTel collector gRPC endpoint.
+      # OpenTelemetry export — gRPC endpoint for the OTel collector sidecar.
       OPENQILIN_OTLP_ENDPOINT: http://otel_collector:4317
     healthcheck:
       test:
@@ -189,8 +191,8 @@ services:
       OPENQILIN_RUNTIME_PERSISTENCE_ENABLED: "true"
       OPENQILIN_SYSTEM_ROOT: /var/lib/openqilin
       OPENQILIN_CONNECTOR_SHARED_SECRET: ${OPENQILIN_CONNECTOR_SHARED_SECRET:-dev-openqilin-secret}
-      # LangSmith dev-time tracing (M11-WP4). Disabled by default.
-      # Not a governance audit source — dev-time visibility only.
+      # LangSmith dev-time tracing — disabled by default.
+      # This is developer visibility only, not a governance audit source.
       LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2:-false}
       LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY:-}
       LANGCHAIN_PROJECT: ${LANGCHAIN_PROJECT:-openqilin-dev}
