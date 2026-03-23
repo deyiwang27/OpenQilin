@@ -216,11 +216,16 @@ def build_runtime_services() -> RuntimeServices:
         session_factory=session_factory
     )
     routing_resolver = ProjectSpaceRoutingResolver(binding_repo=project_space_binding_repo)
-    _role_bot_registry = build_role_bot_registry(settings)
-    _admin_identity = _role_bot_registry.identities_by_role.get("administrator")
-    _channel_manager_token = (
-        _admin_identity.token if _admin_identity is not None else (settings.discord_bot_token or "")
-    )
+    try:
+        _role_bot_registry = build_role_bot_registry(settings)
+        _admin_identity = _role_bot_registry.identities_by_role.get("administrator")
+        _channel_manager_token = (
+            _admin_identity.token
+            if _admin_identity is not None
+            else (settings.discord_bot_token or "")
+        )
+    except Exception:
+        _channel_manager_token = settings.discord_bot_token or ""
     discord_automator = DiscordChannelAutomator(
         bot_token=_channel_manager_token,
     )
