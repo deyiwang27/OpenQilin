@@ -1,8 +1,8 @@
 # OpenQilin MVP-v2 Success Criteria
 
 Date: `2026-03-14`
-Status: `discussion draft`
-Stage: `pre-kickoff`
+Status: `active`
+Stage: `M17-in-progress`
 
 ## 1. Purpose
 
