@@ -182,25 +182,19 @@ class PostgresConversationStore:
         vector_literal = "[" + ",".join(str(value) for value in query_embedding) + "]"
         try:
             with self._session_factory() as session:
+                sql = text(
+                    f"SELECT window_index, summary_text,"
+                    f" 1 - (summary_embedding <=> '{vector_literal}'::vector(768)) AS similarity"
+                    f" FROM conversation_windows"
+                    f" WHERE scope = :scope"
+                    f"   AND summary_embedding IS NOT NULL"
+                    f"   AND 1 - (summary_embedding <=> '{vector_literal}'::vector(768)) >= :threshold"
+                    f" ORDER BY similarity DESC"
+                    f" LIMIT :limit"
+                )
                 rows = session.execute(
-                    text(
-                        """
-                        SELECT window_index, summary_text,
-                               1 - (summary_embedding <=> :query_vec::text::vector(768)) AS similarity
-                        FROM conversation_windows
-                        WHERE scope = :scope
-                          AND summary_embedding IS NOT NULL
-                          AND 1 - (summary_embedding <=> :query_vec::text::vector(768)) >= :threshold
-                        ORDER BY similarity DESC
-                        LIMIT :limit
-                        """
-                    ),
-                    {
-                        "scope": normalized,
-                        "query_vec": vector_literal,
-                        "threshold": threshold,
-                        "limit": limit,
-                    },
+                    sql,
+                    {"scope": normalized, "threshold": threshold, "limit": limit},
                 ).fetchall()
         except Exception:
             return ()
@@ -319,21 +313,13 @@ class PostgresConversationStore:
             if embedding is None:
                 return
             vector_literal = "[" + ",".join(str(value) for value in embedding) + "]"
+            sql = text(
+                f"UPDATE conversation_windows"
+                f" SET summary_embedding = '{vector_literal}'::vector(768)"
+                f" WHERE scope = :scope AND window_index = :window_index"
+            )
             with self._session_factory() as session:
-                session.execute(
-                    text(
-                        """
-                        UPDATE conversation_windows
-                        SET summary_embedding = :embedding::text::vector(768)
-                        WHERE scope = :scope AND window_index = :window_index
-                        """
-                    ),
-                    {
-                        "scope": scope,
-                        "window_index": window_index,
-                        "embedding": vector_literal,
-                    },
-                )
+                session.execute(sql, {"scope": scope, "window_index": window_index})
                 session.commit()
         except Exception:
             pass
