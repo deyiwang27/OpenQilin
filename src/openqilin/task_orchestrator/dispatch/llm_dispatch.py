@@ -153,7 +153,7 @@ class LlmGatewayDispatchAdapter:
         self._conversation_store: ConversationStoreProtocol = (
             conversation_store
             if conversation_store is not None
-            else LocalConversationStore(max_turns=6)
+            else LocalConversationStore(max_turns=40)
         )
         self._retrieval_query_service = retrieval_query_service
         self._governance_project_reader = governance_project_reader
@@ -244,9 +244,11 @@ class LlmGatewayDispatchAdapter:
             grounding_evidence = grounding.evidence
 
         conversation_scope = self._conversation_scope(payload)
+        warm_summaries = self._conversation_store.list_windows(conversation_scope)
         composed_prompt = _compose_role_locked_prompt(
             recipient_role=recipient_role,
             history=self._conversation_store.list_turns(conversation_scope),
+            warm_summaries=warm_summaries,
             user_prompt=raw_user_prompt,
             grounding_evidence=grounding_evidence,
         )
@@ -325,6 +327,7 @@ class LlmGatewayDispatchAdapter:
                     conversation_scope,
                     user_prompt=raw_user_prompt,
                     assistant_reply=response.generated_text,
+                    agent_id=payload.recipient_id,
                 )
             return LlmDispatchReceipt(
                 accepted=True,
@@ -572,16 +575,14 @@ class LlmGatewayDispatchAdapter:
 
     @staticmethod
     def _conversation_scope(payload: LlmDispatchRequest) -> str:
-        project_scope = (payload.project_id or "project-default").strip() or "project-default"
+        """Build unified per-channel conversation scope.
+
+        All agents in the same channel share one scope. Agent identity is
+        recorded per-turn via agent_id on append, not encoded in the scope.
+        """
         guild_scope = (payload.conversation_guild_id or "").strip() or "guild-unspecified"
         channel_scope = (payload.conversation_channel_id or "").strip() or "channel-unspecified"
-        thread_scope = (payload.conversation_thread_id or "").strip() or "thread-none"
-        recipient_id = _normalize_recipient_id(payload.recipient_id) or "recipient-unspecified"
-        recipient_role = _normalize_recipient_role(payload.recipient_role)
-        return (
-            f"{project_scope}::{guild_scope}::{channel_scope}::{thread_scope}::"
-            f"{recipient_role}::{recipient_id}"
-        )
+        return f"guild::{guild_scope}::channel::{channel_scope}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -590,12 +591,31 @@ class ConversationTurn:
     content: str
 
 
+@dataclass(frozen=True, slots=True)
+class ConversationWindowSummary:
+    """One closed window summary row from the warm conversation tier."""
+
+    window_index: int
+    summary_text: str
+
+
 class ConversationStoreProtocol(Protocol):
     """Interface contract for conversation turn stores."""
 
     def list_turns(self, scope: str) -> tuple[ConversationTurn, ...]: ...
 
-    def append_turns(self, scope: str, *, user_prompt: str, assistant_reply: str) -> None: ...
+    def append_turns(
+        self,
+        scope: str,
+        *,
+        user_prompt: str,
+        assistant_reply: str,
+        agent_id: str | None = None,
+    ) -> None: ...
+
+    def list_windows(self, scope: str) -> tuple[ConversationWindowSummary, ...]: ...
+
+    def fetch_window(self, scope: str, window_index: int) -> tuple[ConversationTurn, ...]: ...
 
 
 class LocalConversationStore:
@@ -611,7 +631,14 @@ class LocalConversationStore:
             turns = self._turns_by_scope.get(scope, [])
             return tuple(turns)
 
-    def append_turns(self, scope: str, *, user_prompt: str, assistant_reply: str) -> None:
+    def append_turns(
+        self,
+        scope: str,
+        *,
+        user_prompt: str,
+        assistant_reply: str,
+        agent_id: str | None = None,
+    ) -> None:
         normalized_scope = scope.strip() or "default-scope"
         with self._lock:
             turns = self._turns_by_scope.setdefault(normalized_scope, [])
@@ -619,6 +646,14 @@ class LocalConversationStore:
             turns.append(ConversationTurn(role="assistant", content=assistant_reply.strip()))
             if len(turns) > self._max_turns:
                 self._turns_by_scope[normalized_scope] = turns[-self._max_turns :]
+
+    def list_windows(self, scope: str) -> tuple[ConversationWindowSummary, ...]:
+        """In-memory store has no warm tier — always returns empty."""
+        return ()
+
+    def fetch_window(self, scope: str, window_index: int) -> tuple[ConversationTurn, ...]:
+        """In-memory store has no window archive — always returns empty."""
+        return ()
 
 
 def _normalize_recipient_role(value: str | None) -> str:
@@ -636,23 +671,36 @@ def _compose_role_locked_prompt(
     *,
     recipient_role: str,
     history: tuple[ConversationTurn, ...],
+    warm_summaries: tuple[ConversationWindowSummary, ...],
     user_prompt: str,
     grounding_evidence: tuple[GroundingEvidence, ...],
 ) -> str:
     system_prompt = _role_system_prompt(recipient_role)
+    warm_lines = [
+        f"[window {summary.window_index}] {summary.summary_text}"
+        for summary in warm_summaries
+        if summary.summary_text.strip()
+    ]
+    warm_block = (
+        "Previous conversation context (summaries of earlier discussion):\n"
+        + "\n".join(warm_lines)
+        + "\n\n"
+        if warm_lines
+        else ""
+    )
     history_lines = [
         f"{'User' if turn.role == 'user' else 'Assistant'}: {turn.content}"
         for turn in history
         if turn.content.strip()
     ]
     history_block = (
-        "Conversation history:\n" + "\n".join(history_lines) + "\n\n" if history_lines else ""
+        "Recent conversation:\n" + "\n".join(history_lines) + "\n\n" if history_lines else ""
     )
     grounding_block = _grounding_contract_block(grounding_evidence)
     return (
         f"{system_prompt}\n\n"
         f"{grounding_block}\n\n"
-        f"{history_block}User request:\n{user_prompt.strip()}"
+        f"{warm_block}{history_block}User request:\n{user_prompt.strip()}"
     )
 
 

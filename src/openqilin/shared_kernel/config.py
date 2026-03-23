@@ -1,8 +1,27 @@
 """Configuration primitives shared by runtime modules."""
 
+from dataclasses import dataclass
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+@dataclass
+class ConversationMemoryConfig:
+    """Configuration for conversation memory tiers.
+
+    hot_window_size: number of message rows kept verbatim (each exchange = 2 rows).
+                     Default 40 = 20 exchanges.
+    window_size:     number of rows per archived window before summarization.
+                     Default 40 = 20 exchanges per window.
+    max_warm_windows: maximum number of closed window summaries loaded per invocation.
+    summary_model:   LLM routing profile used for window summarization.
+    """
+
+    hot_window_size: int = 40
+    window_size: int = 40
+    max_warm_windows: int = 10
+    summary_model: str = "dev_gemini_free"
 
 
 class RuntimeSettings(BaseSettings):

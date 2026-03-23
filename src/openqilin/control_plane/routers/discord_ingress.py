@@ -220,6 +220,7 @@ def submit_discord_message(
                 context=grammar_context,
                 trace_id=payload.trace_id,
                 channel_id=payload.channel_id,
+                guild_id=payload.guild_id,
                 actor_id=payload.actor_external_id,
                 addressed_agent=_addressed_agent,
             )

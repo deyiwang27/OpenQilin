@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from typing import cast
 from unittest.mock import MagicMock
@@ -29,11 +30,14 @@ class _StaticProvider:
 
 
 class _RowsResult:
-    def __init__(self, rows: list[tuple[str, str]]) -> None:
-        self._rows = rows
+    def __init__(self, rows: Sequence[object]) -> None:
+        self._rows = list(rows)
 
-    def fetchall(self) -> list[tuple[str, str]]:
+    def fetchall(self) -> list[object]:
         return list(self._rows)
+
+    def fetchone(self) -> object | None:
+        return self._rows[0] if self._rows else None
 
 
 def _build_mock_session_factory(
@@ -42,6 +46,7 @@ def _build_mock_session_factory(
 ) -> tuple[MagicMock, MagicMock]:
     session = MagicMock()
     session.execute.return_value.fetchall.return_value = [] if rows is None else rows
+    session.execute.return_value.fetchone.return_value = (0,)
     session_cm = MagicMock()
     session_cm.__enter__.return_value = session
     session_cm.__exit__.return_value = False
@@ -121,14 +126,19 @@ def test_postgres_conversation_store_append_turns_inserts_two_rows() -> None:
 
     store.append_turns("scope-1", user_prompt="  hello  ", assistant_reply="  hi  ")
 
-    statement = str(session.execute.call_args.args[0])
-    params = session.execute.call_args.args[1]
+    statement = str(session.execute.call_args_list[0].args[0])
+    params = session.execute.call_args_list[0].args[1]
     assert "INSERT INTO conversation_messages" in statement
-    assert "(:id1, :scope, 'user', :user_content, '{}', :created_at1)" in statement
-    assert "(:id2, :scope, 'assistant', :assistant_content, '{}', :created_at2)" in statement
+    assert "(id, conversation_id, role, content, agent_id, metadata, created_at)" in statement
+    assert "(:id1, :scope, 'user', :user_content, :agent_id, '{}', :created_at1)" in statement
+    assert (
+        "(:id2, :scope, 'assistant', :assistant_content, :agent_id, '{}', :created_at2)"
+        in statement
+    )
     assert params["scope"] == "scope-1"
     assert params["user_content"] == "hello"
     assert params["assistant_content"] == "hi"
+    assert params["agent_id"] is None
     assert isinstance(params["created_at1"], datetime)
     assert params["created_at1"].tzinfo == UTC
     assert params["created_at2"] == params["created_at1"]
@@ -163,7 +173,7 @@ def test_llm_dispatch_adapter_uses_injected_conversation_store() -> None:
     receipt = adapter.dispatch(payload)
 
     assert receipt.accepted is True
-    expected_scope = "project_1::guild_1::channel_1::thread-none::ceo::ceo_core"
+    expected_scope = "guild::guild_1::channel::channel_1"
     conversation_store.list_turns.assert_called_once_with(expected_scope)
     conversation_store.append_turns.assert_called_once()
     assert adapter._conversation_store is conversation_store
@@ -198,6 +208,12 @@ def test_conversation_persistence_survives_store_recreation() -> None:
             scoped.sort(key=lambda row: row[3])
             result_rows = [(row[1], row[2]) for row in scoped][-limit:]
             return _RowsResult(result_rows)
+        if "SELECT COUNT(*) FROM conversation_messages" in query:
+            scope = str(params["scope"])
+            scoped = [row for row in rows if row[0] == scope]
+            return _RowsResult([(len(scoped),)])
+        if "DELETE FROM conversation_windows" in query:
+            return _RowsResult([])
         if "DELETE FROM conversation_messages" in query:
             scope = str(params["scope"])
             rows[:] = [row for row in rows if row[0] != scope]
