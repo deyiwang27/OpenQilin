@@ -132,7 +132,7 @@ WP document: `05-milestones/M17-WorkPackages-v1.md`
 | WP | Title | Status | Issue | PR | Notes |
 |---|---|---|---|---|---|
 | M17-WP1 | Public README and Repository Clarity | `done` | #155 | #156 | README rewritten; compose.yml + .env.example WP refs cleaned; LICENSE confirmed Apache 2.0; 785 tests pass |
-| M17-WP2 | Roadmap | `done` | #158 | #<PR> | ROADMAP.md created; all sections present |
+| M17-WP2 | Roadmap | `done` | #158 | #159 | ROADMAP.md created; all sections present |
 | M17-WP3 | Demo Assets | `pending` | — | — | — |
 | M17-WP4 | Contributor Entry Path | `pending` | — | — | — |
 | M17-WP5 | Website and Public Presence | `pending` | — | — | — |
