@@ -1,16 +1,16 @@
-# Handoff Complete: M17-WP2 — Roadmap
+# Handoff Complete: M17-WP4 — Contributor Entry Path
 
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-22
-**Branch:** `feat/158-m17-wp2-roadmap`
-**Draft PR:** #159
+**Branch:** `feat/160-m17-wp4-contributor-path`
+**Draft PR:** #165
 **Implements:** `implementation/handoff/current.md`
 
 ---
 
 ## Summary
 
-Implemented M17-WP2 by creating root `ROADMAP.md` with the exact architect-provided public roadmap content, then marking WP2 complete in the M17 work package and implementation progress trackers. Changes are documentation-only and aligned with the handoff scope (no source, test, migration, or config changes).
+Implemented all M17-WP4 deliverables: added `CONTRIBUTING.md`, added `CODE_OF_CONDUCT.md` from Contributor Covenant 2.1 canonical source, fixed CWO display name in `README.md` and `ROADMAP.md`, created four `good first issue` tickets, and updated milestone/progress tracking docs. All requested acceptance checks passed.
 
 ---
 
@@ -18,37 +18,29 @@ Implemented M17-WP2 by creating root `ROADMAP.md` with the exact architect-provi
 
 | Task | Status | Notes |
 |---|---|---|
-| Confirm `ROADMAP.md` does not already exist | ✅ Done | Verified missing before creation (`ls ROADMAP.md` returned not found). |
-| Create `ROADMAP.md` with complete specified content | ✅ Done | Added exact roadmap text including MVP-v1, MVP-v2, post-MVP themes, non-goals, and contributing link. |
-| Tick M17-WP2 tasks and done criteria in `M17-WorkPackages-v1.md` | ✅ Done | Both WP2 tasks and all three WP2 done-criteria boxes set to `[x]`. |
-| Update M17 progress summary + M17-WP2 row in `ImplementationProgress-v2.md` | ✅ Done | Summary now `2 / 6` with notes `WP1-WP2 done`; WP2 row set to `done`, issue `#158`, PR `#159`. |
-| Run acceptance matrix from handoff | ✅ Done | All required checks passed; `mypy`/`pytest` executed via `python -m` due missing console entrypoints. |
+| Confirm `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md` do not exist yet | ✅ Done | Both were absent before implementation |
+| Write `CONTRIBUTING.md` with required content | ✅ Done | Added complete document at repo root |
+| Fetch and write canonical Contributor Covenant 2.1 to `CODE_OF_CONDUCT.md` | ✅ Done | Fetched from canonical URL and written verbatim |
+| Apply CWO name fix in `README.md` and `ROADMAP.md` | ✅ Done | Replaced "Chief Workflow Officer" with "Chief Workforce Officer" in both files |
+| Run CWO verification greps | ✅ Done | 0 matches for old term; 2 matches for new term |
+| Create four good-first issues (A-D) with exact scope | ✅ Done | Created issues #161, #162, #163, #164 |
+| Tick WP4 tasks and done-criteria in `M17-WorkPackages-v1.md` | ✅ Done | All WP4 task and done-criteria checkboxes marked `[x]` |
+| Update `ImplementationProgress-v2.md` for M17-WP4 and milestone count | ✅ Done | M17 `3 / 6`; WP4 marked `done | #160 | #165` |
+| Run acceptance criteria matrix | ✅ Done | Governance grep, ruff, mypy-equivalent, pytest, section/content greps all pass |
+| Commit, push, open draft PR, write handoff complete file | ✅ Done | Commit pushed; draft PR #165 opened; this file added |
 
 ---
 
 ## Validation Results
 
 ```
-InMemory gate:    PASS
-ruff check:       PASS
-ruff format:      PASS
-mypy:             PASS
-pytest unit:      PASS (785 passed, 0 failed)
-pytest component: PASS (785 passed, 0 failed)
+InMemory gate:   PASS
+ruff check:      PASS
+ruff format:     PASS
+mypy:            PASS (via `uv run -- python -m mypy .`; `uv run mypy .` fails in this env due stale .venv shebang path)
+pytest unit:     PASS
+pytest component: PASS (combined run: 785 passed, 0 failed)
 ```
-
-Executed commands:
-- `grep -r --include="*.py" -l "class InMemory" . | grep -v "/testing/" | grep -v "tests/" | grep -v "/.venv/"` (no output)
-- `uv run ruff check .`
-- `uv run ruff format --check .`
-- `uv run python -m mypy .`
-- `uv run python -m pytest tests/unit tests/component -x --tb=short -q`
-  - Result: `785 passed, 1 warning in 3.70s`
-- `test -f ROADMAP.md && echo "ROADMAP.md present"` → `ROADMAP.md present`
-- `grep -c "## Completed — MVP-v1" ROADMAP.md` → `1`
-- `grep -c "## Completed — MVP-v2" ROADMAP.md` → `1`
-- `grep -c "## Next — Post-MVP-v2 Themes" ROADMAP.md` → `1`
-- `grep -c "## Non-Goals" ROADMAP.md` → `1`
 
 ---
 
@@ -56,7 +48,7 @@ Executed commands:
 
 | File | Line | Note |
 |---|---|---|
-| _None_ | - | No REVIEW_NOTEs added. |
+| None | — | No implementation ambiguity required REVIEW_NOTE comments |
 
 ---
 
@@ -64,16 +56,22 @@ Executed commands:
 
 | Conflict | Docs involved | Blocking question |
 |---|---|---|
-| _None_ | - | - |
+| None | — | — |
 
 ---
 
 ## What Was Skipped
 
-- None.
+Nothing skipped.
 
 ---
 
 ## Notes
 
-- In this environment, console entrypoints `mypy` and `pytest` are not directly spawnable via `uv run <tool>`. Equivalent module invocations (`uv run python -m mypy .`, `uv run python -m pytest ...`) were used and passed.
+- Created label `type:docs` because it was required by the handoff issue command for Issue B and did not exist.
+- Draft PR link: https://github.com/deyiwang27/OpenQilin/pull/165
+- New good-first issues:
+  - https://github.com/deyiwang27/OpenQilin/issues/161
+  - https://github.com/deyiwang27/OpenQilin/issues/162
+  - https://github.com/deyiwang27/OpenQilin/issues/163
+  - https://github.com/deyiwang27/OpenQilin/issues/164
