@@ -450,6 +450,28 @@ def _is_runtime_placeholder_recipients(recipients: tuple[tuple[str, str], ...]) 
     return recipients == (("runtime", "runtime"),)
 
 
+def _coerce_free_text_to_ask_command(
+    *,
+    parsed: ParsedDiscordCommand | None,
+    message_content: str,
+) -> ParsedDiscordCommand | None:
+    """Normalize free-text messages into runtime ask commands."""
+
+    if parsed is not None:
+        return parsed
+    stripped_content = message_content.strip()
+    if not stripped_content:
+        return None
+    return ParsedDiscordCommand(
+        action="ask",
+        target=None,
+        args=(stripped_content,),
+        recipients=(("runtime", "runtime"),),
+        project_id=None,
+        priority="normal",
+    )
+
+
 def _chunk_discord_message(text: str, *, max_chunk_chars: int) -> tuple[str, ...]:
     normalized = text.strip()
     if not normalized:
@@ -536,6 +558,10 @@ def resolve_discord_recipients(
         return expected_dm_recipients
 
     if len(mentioned_bot_user_ids) == 0:
+        if _is_runtime_placeholder_recipients(parsed_recipients):
+            # No explicit mention but runtime-placeholder recipients — let the
+            # control plane FreeTextRouter determine the actual recipient.
+            return (("runtime", "runtime"),)
         raise DiscordRecipientResolutionError(
             code="recipient_mentions_required",
             message="group chat command requires explicit role-bot mention(s)",
@@ -754,6 +780,10 @@ class OpenQilinDiscordClient(discord.Client):
                 f"[error] code=discord_command_parse_error message={error.message}"
             )
             return
+        parsed = _coerce_free_text_to_ask_command(
+            parsed=parsed,
+            message_content=message.content,
+        )
         if parsed is None:
             return
         actor_id = str(message.author.id)
