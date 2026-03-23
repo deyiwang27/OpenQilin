@@ -26,6 +26,7 @@ from openqilin.llm_gateway.schemas.requests import (
     LlmPolicyContext,
 )
 from openqilin.llm_gateway.service import LlmGatewayService
+from openqilin.task_orchestrator.dispatch.llm_dispatch import ConversationStoreProtocol
 
 # Secretary NEVER handles mutation or admin intents
 _DENIED_INTENTS: frozenset[IntentClass] = frozenset({IntentClass.MUTATION, IntentClass.ADMIN})
@@ -59,11 +60,14 @@ class SecretaryAgent:
 
     def __init__(
         self,
+        *,
         llm_gateway: LlmGatewayService,
         data_access: SecretaryDataAccessService | None = None,
+        conversation_store: ConversationStoreProtocol | None = None,
     ) -> None:
         self._llm = llm_gateway
         self._data_access = data_access
+        self._conversation_store = conversation_store
 
     def handle(self, request: SecretaryRequest) -> SecretaryResponse:
         """Handle advisory request. Raises SecretaryPolicyError for mutation/admin intents."""
@@ -108,10 +112,33 @@ class SecretaryAgent:
                 chat_class=request.context.chat_class,
                 message=request.message[:500],
             )
+        if request.addressed_agent:
+            agent_context = (
+                f"Note: the user directed this message at the {request.addressed_agent} agent. "
+                f"Acknowledge this and frame your response in the context of the {request.addressed_agent}'s role "
+                f"(e.g. what they handle, how to interact with them via /oq commands)."
+            )
+            prompt = f"{agent_context}\n\n{prompt}"
         if project_context:
             prompt = f"{prompt}{project_context}"
 
-        full_prompt = f"{ADVISORY_SYSTEM_PROMPT}\n\n{prompt}"
+        if self._conversation_store and request.channel_id:
+            scope = f"discord:{request.channel_id}"
+            history = self._conversation_store.list_turns(scope)
+            if history:
+                history_lines = []
+                for turn in history:
+                    prefix = "User" if turn.role == "user" else "Secretary"
+                    history_lines.append(f"{prefix}: {turn.content}")
+                history_text = "\n".join(history_lines)
+                full_prompt = (
+                    f"{ADVISORY_SYSTEM_PROMPT}\n\nConversation so far:\n{history_text}\n\n{prompt}"
+                )
+            else:
+                full_prompt = f"{ADVISORY_SYSTEM_PROMPT}\n\n{prompt}"
+        else:
+            full_prompt = f"{ADVISORY_SYSTEM_PROMPT}\n\n{prompt}"
+
         response = self._llm.complete(
             LlmGatewayRequest(
                 request_id=str(uuid.uuid4()),
@@ -130,9 +157,19 @@ class SecretaryAgent:
             )
         )
 
-        if response.decision in ("served", "fallback_served") and response.generated_text:
-            return response.generated_text.strip()
-        return _FALLBACK_ADVISORY
+        result = (
+            response.generated_text.strip()
+            if response.decision in ("served", "fallback_served") and response.generated_text
+            else _FALLBACK_ADVISORY
+        )
+        if self._conversation_store and request.channel_id:
+            scope = f"discord:{request.channel_id}"
+            self._conversation_store.append_turns(
+                scope,
+                user_prompt=request.message,
+                assistant_reply=result,
+            )
+        return result
 
 
 def _build_routing_suggestion(request: SecretaryRequest) -> str | None:
