@@ -118,15 +118,15 @@ Prepare OpenQilin for public introduction, early contributors, and realistic spo
 
 ### Tasks
 
-- [ ] Write `CONTRIBUTING.md`:
+- [x] Write `CONTRIBUTING.md`:
   - **How to set up** — prerequisites, clone, `docker compose up`, run tests
   - **How the codebase is organized** — link to `spec/architecture/ArchitectureBaseline-v1.md` and `design/v2/README.md`
   - **Where to start** — point to `good first issue` label; suggest reading path
   - **How to submit a PR** — branch naming, PR format, review expectations
   - **Code of conduct** — short, standard CoC or link to `CODE_OF_CONDUCT.md`
-- [ ] Write `CODE_OF_CONDUCT.md` (Contributor Covenant or equivalent)
-- [ ] Label 3–5 existing issues as `good first issue` in GitHub with clear descriptions
-- [ ] Confirm test suite runs cleanly from a clean clone: `pytest` passes without manual data seeding
+- [x] Write `CODE_OF_CONDUCT.md` (Contributor Covenant or equivalent)
+- [x] Label 3–5 existing issues as `good first issue` in GitHub with clear descriptions
+- [x] Confirm test suite runs cleanly from a clean clone: `pytest` passes without manual data seeding
 
 ### Outputs
 
@@ -136,9 +136,9 @@ Prepare OpenQilin for public introduction, early contributors, and realistic spo
 
 ### Done criteria
 
-- [ ] External contributor can set up and run tests in under 30 minutes using `CONTRIBUTING.md` alone
-- [ ] At least 3 `good first issue` issues exist with scope, context, and expected outcome described
-- [ ] `CONTRIBUTING.md` linked from `README.md`
+- [x] External contributor can set up and run tests in under 30 minutes using `CONTRIBUTING.md` alone
+- [x] At least 3 `good first issue` issues exist with scope, context, and expected outcome described
+- [x] `CONTRIBUTING.md` linked from `README.md`
 
 ---
 
