@@ -3,7 +3,7 @@
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-23
 **Branch:** `feat/163-pm-dl-pair-hop-check`
-**Draft PR:** TBD
+**Draft PR:** #185
 **Implements:** `implementation/handoff/current.md`
 
 ---
@@ -68,7 +68,7 @@ Environment command notes:
 ## What Was Skipped
 
 - Nothing from the implementation scope was skipped.
-- Draft PR creation remains pending until commit/push completes successfully in this session.
+- Draft PR creation completed: #185.
 
 ---
 
