@@ -5,8 +5,21 @@ import pytest
 from openqilin.apps.discord_bot_worker import (
     DiscordRecipientResolutionError,
     _coerce_free_text_to_ask_command,
+    _strip_leading_mentions,
     resolve_discord_recipients,
 )
+
+
+def test_strip_leading_mentions_strips_multiple_prefix_mentions() -> None:
+    stripped = _strip_leading_mentions('<@123>   <@!456> /oq ask "hello"')
+
+    assert stripped == '/oq ask "hello"'
+
+
+def test_strip_leading_mentions_leaves_non_prefix_mentions() -> None:
+    stripped = _strip_leading_mentions("hello <@123>")
+
+    assert stripped == "hello <@123>"
 
 
 def test_free_text_message_creates_ask_command() -> None:
