@@ -355,11 +355,11 @@ def _resolve_chat_class(channel: Any) -> str:
         return "direct"
     channel_name = getattr(channel, "name", "")
     normalized = str(channel_name).strip().lower().replace("-", "_")
-    if normalized == "leadership_council":
+    if normalized == "leadership_council" or normalized.startswith("leadership_council_"):
         return "leadership_council"
-    if normalized == "governance":
+    if normalized == "governance" or normalized.startswith("governance_"):
         return "governance"
-    if normalized == "executive":
+    if normalized == "executive" or normalized.startswith("executive_"):
         return "executive"
     return "project"
 
@@ -824,11 +824,55 @@ class OpenQilinDiscordClient(discord.Client):
         channel_type = _channel_type_name(message.channel)
         chat_class = _resolve_chat_class(message.channel)
 
-        # Free-text group-channel gate: non-Secretary bots silently skip free-text messages.
-        # Apply BEFORE recipient resolution to prevent spurious [denied] errors when a bot
-        # mentioned in the message runs in a different process.
+        # DM gate for non-Secretary bots: free-text DMs are not routed through the Secretary
+        # advisory bypass on behalf of another bot — that produces confusing "I am Secretary"
+        # responses delivered via a different bot's channel.
+        # For free-text DMs, post a usage hint and return. Explicit /oq commands in DMs are
+        # still processed normally.
+        if (
+            chat_class == "direct"
+            and not _is_explicit_command
+            and self._config.bot_role != "secretary"
+        ):
+            await message.channel.send(
+                f"To send me a query, use: `/oq ask {self._config.bot_role} <your question>`\n"
+                f"Or DM @OpenQilin Secretary for general routing assistance."
+            )
+            return
+
+        # Free-text group-channel gate.
+        # Rules:
+        #   - No bot @mentioned → Secretary handles; all other bots skip.
+        #   - Specific non-Secretary bot @mentioned → that bot posts its own intro and returns;
+        #     Secretary skips (so only the mentioned bot responds).
+        #   - Secretary @mentioned → Secretary handles; all other bots skip.
         if chat_class != "direct" and not _is_explicit_command:
-            if self._config.bot_role != "secretary":
+            my_user_id = str(self.user.id) if self.user is not None else ""
+            mentioned_bot_ids = frozenset(
+                str(user.id) for user in message.mentions if getattr(user, "bot", False)
+            )
+            i_am_mentioned = bool(my_user_id and my_user_id in mentioned_bot_ids)
+
+            if self._config.bot_role == "secretary":
+                # Secretary yields if any other (non-Secretary) bot is explicitly mentioned.
+                other_bot_mentioned = bool(
+                    mentioned_bot_ids - ({my_user_id} if my_user_id else set())
+                )
+                if other_bot_mentioned:
+                    return
+            else:
+                if not i_am_mentioned:
+                    # Not mentioned — Secretary will handle the message.
+                    return
+                # This bot was explicitly @mentioned with free-text.
+                # Respond directly without going through the control plane
+                # (avoids principal identity verification for conversational greetings).
+                role_name = self._config.bot_role.replace("_", " ").title()
+                await message.channel.send(
+                    f"Hello! I'm the **{role_name}** agent. "
+                    f"To send me a query or task, use:\n"
+                    f"`/oq ask {self._config.bot_role} <your topic>`"
+                )
                 return
 
         try:

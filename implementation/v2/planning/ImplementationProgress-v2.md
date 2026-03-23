@@ -17,6 +17,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 | M15 | `done` | 6 / 6 | All WPs complete; exit criteria met |
 | M16 | `done` | 5 / 5 | All WPs complete; exit criteria met |
 | M17 | `in_progress` | 7 / 9 | WP1-WP2-WP4-WP6-WP7-WP8-WP9 done; WP3-WP5 pending |
+| M18 | `planned` | 0 / 1 | WP1 pending |
 
 ---
 
