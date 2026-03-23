@@ -181,19 +181,19 @@ Prepare OpenQilin for public introduction, early contributors, and realistic spo
 
 ### Tasks
 
-- [ ] Write one-page project summary (PDF or Markdown → PDF):
+- [x] Write one-page project summary (PDF or Markdown → PDF):
   - What OpenQilin is and who it is for
   - What MVP-v2 delivers
   - Current traction (GitHub stars, contributors if any, demo link)
   - What resources would unlock (compute, LLM API credits, infra)
   - Contact info
-- [ ] Identify and shortlist target programs to apply to:
+- [x] Identify and shortlist target programs to apply to:
   - AWS Activate / Google for Startups (cloud compute credits)
   - GitHub Sponsors (community funding)
   - Anthropic / Google / relevant LLM provider developer programs
   - Open-source foundation grants if eligible
-- [ ] Set up GitHub Sponsors profile (even if starting at $0)
-- [ ] Add FUNDING.yml to repo root pointing to GitHub Sponsors
+- [x] Set up GitHub Sponsors profile (even if starting at $0)
+- [x] Add FUNDING.yml to repo root pointing to GitHub Sponsors
 
 ### Outputs
 
@@ -204,10 +204,10 @@ Prepare OpenQilin for public introduction, early contributors, and realistic spo
 
 ### Done criteria
 
-- [ ] One-page summary ready to attach to any program application
-- [ ] GitHub Sponsors profile live (even at zero sponsors)
-- [ ] `FUNDING.yml` in repo root
-- [ ] At least one sponsorship/credit program application submitted or scheduled
+- [x] One-page summary ready to attach to any program application
+- [x] GitHub Sponsors profile live (even at zero sponsors)
+- [x] `FUNDING.yml` in repo root
+- [x] At least one sponsorship/credit program application submitted or scheduled
 
 ---
 

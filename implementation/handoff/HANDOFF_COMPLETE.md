@@ -1,16 +1,16 @@
-# Handoff Complete: M17-WP4 — Contributor Entry Path
+# Handoff Complete: M17-WP6 — Sponsorship and Startup-Credit Readiness
 
 **Completed by:** CodeX (engineer)
-**Date:** 2026-03-22
-**Branch:** `feat/160-m17-wp4-contributor-path`
-**Draft PR:** #165
+**Date:** 2026-03-23
+**Branch:** `feat/166-m17-wp6-sponsorship`
+**Draft PR:** #<pr-number>
 **Implements:** `implementation/handoff/current.md`
 
 ---
 
 ## Summary
 
-Implemented all M17-WP4 deliverables: added `CONTRIBUTING.md`, added `CODE_OF_CONDUCT.md` from Contributor Covenant 2.1 canonical source, fixed CWO display name in `README.md` and `ROADMAP.md`, created four `good first issue` tickets, and updated milestone/progress tracking docs. All requested acceptance checks passed.
+Implemented M17-WP6 as a documentation/config delivery: added `FUNDING.yml` and three sponsorship docs under `docs/sponsorship/` with the exact handoff-provided content. Updated M17 planning mirrors by checking all WP6 tasks/done-criteria and advancing implementation progress to `4 / 6` with M17-WP6 marked done against issue `#166`. Validation gates passed except for one acceptance-spec inconsistency noted below.
 
 ---
 
@@ -18,28 +18,25 @@ Implemented all M17-WP4 deliverables: added `CONTRIBUTING.md`, added `CODE_OF_CO
 
 | Task | Status | Notes |
 |---|---|---|
-| Confirm `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md` do not exist yet | ✅ Done | Both were absent before implementation |
-| Write `CONTRIBUTING.md` with required content | ✅ Done | Added complete document at repo root |
-| Fetch and write canonical Contributor Covenant 2.1 to `CODE_OF_CONDUCT.md` | ✅ Done | Fetched from canonical URL and written verbatim |
-| Apply CWO name fix in `README.md` and `ROADMAP.md` | ✅ Done | Replaced "Chief Workflow Officer" with "Chief Workforce Officer" in both files |
-| Run CWO verification greps | ✅ Done | 0 matches for old term; 2 matches for new term |
-| Create four good-first issues (A-D) with exact scope | ✅ Done | Created issues #161, #162, #163, #164 |
-| Tick WP4 tasks and done-criteria in `M17-WorkPackages-v1.md` | ✅ Done | All WP4 task and done-criteria checkboxes marked `[x]` |
-| Update `ImplementationProgress-v2.md` for M17-WP4 and milestone count | ✅ Done | M17 `3 / 6`; WP4 marked `done | #160 | #165` |
-| Run acceptance criteria matrix | ✅ Done | Governance grep, ruff, mypy-equivalent, pytest, section/content greps all pass |
-| Commit, push, open draft PR, write handoff complete file | ✅ Done | Commit pushed; draft PR #165 opened; this file added |
+| Confirm target files do not exist | ✅ Done | Verified all 4 targets were absent before creation |
+| Create `docs/sponsorship/` and write required docs | ✅ Done | Added `project-summary.md`, `program-shortlist.md`, `github-sponsors-setup.md` with handoff content |
+| Add root `FUNDING.yml` | ✅ Done | Added exact handoff content pointing to `deyiwang27` |
+| Tick WP6 task and done-criteria checkboxes in `M17-WorkPackages-v1.md` | ✅ Done | All WP6 task and done-criteria checkboxes set to `[x]` |
+| Update `ImplementationProgress-v2.md` M17 and WP6 row | ✅ Done | M17 now `4 / 6`, notes `WP1-WP2-WP4-WP6 done`; WP6 marked `done | #166 | #<PR>` |
+| Run acceptance validation matrix | ⚠️ Partial | All gates pass except `grep -c "deyiwang27" FUNDING.yml` expected `1` but returns `2` due required exact content |
+| Create handoff completion artifact | ✅ Done | This file created from template |
 
 ---
 
 ## Validation Results
 
 ```
-InMemory gate:   PASS
-ruff check:      PASS
-ruff format:     PASS
-mypy:            PASS (via `uv run -- python -m mypy .`; `uv run mypy .` fails in this env due stale .venv shebang path)
-pytest unit:     PASS
-pytest component: PASS (combined run: 785 passed, 0 failed)
+InMemory gate:    PASS
+ruff check:       PASS
+ruff format:      PASS
+mypy:             PASS (via `uv run python -m mypy .`)
+pytest unit:      PASS (785 passed, 0 failed)
+pytest component: PASS (same run: `tests/unit tests/component`)
 ```
 
 ---
@@ -48,7 +45,7 @@ pytest component: PASS (combined run: 785 passed, 0 failed)
 
 | File | Line | Note |
 |---|---|---|
-| None | — | No implementation ambiguity required REVIEW_NOTE comments |
+| — | — | No REVIEW_NOTE comments added in code for this WP |
 
 ---
 
@@ -56,22 +53,17 @@ pytest component: PASS (combined run: 785 passed, 0 failed)
 
 | Conflict | Docs involved | Blocking question |
 |---|---|---|
-| None | — | — |
+| Acceptance command `grep -c "deyiwang27" FUNDING.yml` expects `1`, but the required exact `FUNDING.yml` content includes `deyiwang27` in both comment URL and `github:` entry, producing `2`. | `implementation/handoff/current.md` (`FUNDING.yml — Complete Content` vs `Acceptance Criteria`) | Should acceptance check be changed to match the `github:` line only (e.g., `grep -c '^github: \[deyiwang27\]$' FUNDING.yml`)? |
 
 ---
 
 ## What Was Skipped
 
-Nothing skipped.
+- GitHub Sponsors activation on github.com/sponsors was not performed (owner-authenticated action; out of scope).
+- Program application submissions were not performed (owner action; out of scope).
 
 ---
 
 ## Notes
 
-- Created label `type:docs` because it was required by the handoff issue command for Issue B and did not exist.
-- Draft PR link: https://github.com/deyiwang27/OpenQilin/pull/165
-- New good-first issues:
-  - https://github.com/deyiwang27/OpenQilin/issues/161
-  - https://github.com/deyiwang27/OpenQilin/issues/162
-  - https://github.com/deyiwang27/OpenQilin/issues/163
-  - https://github.com/deyiwang27/OpenQilin/issues/164
+- In this environment, `uv run mypy .` and `uv run pytest ...` fail to spawn console entrypoints; equivalent module invocations succeeded: `uv run python -m mypy .` and `uv run python -m pytest tests/unit tests/component -x --tb=short -q`.
