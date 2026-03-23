@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -450,6 +451,12 @@ def _is_runtime_placeholder_recipients(recipients: tuple[tuple[str, str], ...]) 
     return recipients == (("runtime", "runtime"),)
 
 
+def _strip_leading_mentions(content: str) -> str:
+    """Strip leading Discord @mention tokens (e.g. <@123> or <@!123>) from content."""
+
+    return re.sub(r"^(<@!?\d+>\s*)+", "", content).strip()
+
+
 def _coerce_free_text_to_ask_command(
     *,
     parsed: ParsedDiscordCommand | None,
@@ -770,9 +777,11 @@ class OpenQilinDiscordClient(discord.Client):
                 message_id=str(message.id),
             )
             return
+        _content_for_parse = _strip_leading_mentions(message.content)
+        _is_explicit_command = _content_for_parse.startswith(self._config.command_prefix)
         try:
             parsed = parse_discord_command(
-                message.content,
+                _content_for_parse,
                 command_prefix=self._config.command_prefix,
             )
         except DiscordCommandParseError as error:
@@ -799,16 +808,16 @@ class OpenQilinDiscordClient(discord.Client):
         except DiscordRecipientResolutionError as error:
             await message.channel.send(f"[denied] code={error.code} message={error.message}")
             return
-        # Group-channel single-bot gate: prevent all bots from forwarding the same message.
-        # In DMs only the addressed bot ever receives the message, so no gate needed.
+        # Group-channel single-bot gate.
+        # DMs are always 1:1 so no gate needed there.
         if chat_class != "direct":
-            _is_runtime = _is_runtime_placeholder_recipients(resolved_recipients)
-            if _is_runtime:
-                # Free-text with no explicit mention: Secretary is the designated group handler.
+            if not _is_explicit_command:
+                # Free-text (no /oq prefix): Secretary is the sole group-channel handler.
+                # This prevents @Auditor free-text being displayed via Auditor with Secretary text.
                 if self._config.bot_role != "secretary":
                     return
             else:
-                # Explicit @mention: only process if this bot is among the resolved recipients.
+                # Explicit /oq command: only the @mentioned bot (resolved recipient) handles it.
                 _this_bot_is_target = any(
                     r[0] == self._config.bot_id or r[1] == self._config.bot_role
                     for r in resolved_recipients
