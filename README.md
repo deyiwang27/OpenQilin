@@ -1,97 +1,99 @@
 # OpenQilin
 
-OpenQilin is a governance-first multi-agent runtime for operating a long-running AI workforce.
-It treats authority, policy, audit, budget, and project-state transitions as runtime constraints, not after-the-fact documentation.
+A governed AI operating system for the solopreneur — delegate work to an AI workforce through Discord, with constitutional policy enforcement, real cost visibility, and an immutable audit trail.
 
-## What OpenQilin Is
+## What is OpenQilin?
 
-- A control plane for governed AI work, built around explicit roles such as `owner`, `administrator`, `auditor`, `ceo`, `cwo`, `project_manager`, `domain_leader`, and `specialist`
-- A fail-closed orchestration runtime with constitutional policy enforcement, immutable audit evidence, and durable project artifacts
-- A local-first implementation stack using FastAPI, LangGraph, PostgreSQL, Redis, OPA, OpenTelemetry, and file-backed storage
-- A repo where `constitution/`, `spec/`, and implementation code stay tightly linked so behavior is traceable to written rules
+OpenQilin turns one capable person into a coordinated AI-augmented team by giving each agent role a bounded authority, a policy-gated action space, and a cost-tracked budget. It treats authority, policy, audit, and project-state transitions as runtime constraints, not after-the-fact documentation — every agent action is authorised by a live OPA policy engine, recorded immutably in PostgreSQL, and cost-tracked before it executes.
 
-## Current Status
+## Why?
 
-OpenQilin is in active implementation, not just planning.
+- **Coordination noise** — solopreneurs managing AI agents through chat lose track of who decided what, who approved it, and why. OpenQilin gives every decision a governance record.
+- **Cost opacity** — LLM spend is invisible until the bill arrives. OpenQilin tracks and enforces a per-project budget before each action, using a real cost model backed by PostgreSQL.
+- **Role sprawl** — without explicit authority boundaries, agents either do too little (asking for approval on every step) or too much (acting outside their mandate). OpenQilin enforces constitutional roles end-to-end.
 
-- Milestones `M11` through `M14` are complete, including Secretary, CSO, Project Manager, CEO, CWO, Auditor, Administrator, Specialist, and file-backed artifact storage.
-- Milestones `M15` through `M17` are planned next, covering budget persistence, runtime polish, and public open-source readiness.
-- The canonical in-repo status tracker is [`implementation/v2/planning/ImplementationProgress-v2.md`](implementation/v2/planning/ImplementationProgress-v2.md).
+## How it works
 
-This means the repo already contains a working control plane, workers, governance agents, persistence layer, migrations, and tests. The public-facing packaging is still being improved.
+- You interact through Discord using natural language or `/oq` commands; a grammar layer classifies intent and routes it to the correct agent role
+- Every action is evaluated by an OPA policy engine against a versioned constitutional bundle before it executes — the system is fail-closed by default
+- A LangGraph orchestration pipeline handles admission, obligation checking, budget approval, and agent dispatch in sequence
+- Project state, conversation history, budget ledger, task execution records, and audit events are all persisted in PostgreSQL
+- Grafana dashboards give real-time visibility into project health, budget consumption, agent activity, and governance events
 
-## Runtime Overview
+## Status
 
-At a high level, the runtime is organized like this:
+MVP-v2 is complete. All core agents are active:
 
-- `src/openqilin/control_plane/`: FastAPI routers, request schemas, identity/governance checks, dependency wiring
-- `src/openqilin/task_orchestrator/`: admission, dispatch, LangGraph workflow, lifecycle handling
-- `src/openqilin/agents/`: institutional and project-role agents
-- `src/openqilin/data_access/repositories/postgres/`: PostgreSQL-backed repositories and persistence adapters
-- `src/openqilin/policy_runtime_integration/rego/`: OPA policy bundle used by the policy runtime
-- `src/openqilin/apps/`: runnable entrypoints for the API, workers, and admin CLI
+| Agent | Role |
+|---|---|
+| **Secretary** | Routes and summarises Discord interactions; advisory-only |
+| **CSO** (Chief Strategy Officer) | Portfolio governance advisor |
+| **Domain Leader** | Project-space coordinator and escalation point |
+| **Project Manager** | Task planning and specialist dispatch |
+| **CEO** | Directive authority with co-approval enforcement |
+| **CWO** (Chief Workflow Officer) | Command authority; project charter writes |
+| **Auditor** | Compliance monitoring and behavioural violation detection |
+| **Administrator** | Agent lifecycle, document policy, and retention enforcement |
+| **Specialist** | Task execution against project goals |
+
+Infrastructure: OPA policy runtime · PostgreSQL persistence · Redis idempotency · OpenTelemetry tracing · Grafana dashboards · file-backed artifact storage.
+
+Full milestone tracker: [`implementation/v2/planning/ImplementationProgress-v2.md`](implementation/v2/planning/ImplementationProgress-v2.md)
 
 ## Quick Start
 
-Prerequisites:
+**Prerequisites:** Python 3.12, [`uv`](https://github.com/astral-sh/uv), Docker Compose
 
-- Python `3.12`
-- [`uv`](https://github.com/astral-sh/uv)
-- Docker Compose
-
-### 1. Install dependencies
+### 1. Clone and install
 
 ```bash
+git clone https://github.com/deyiwang89/OpenQilin.git
+cd OpenQilin
 uv sync --all-groups
 ```
 
-### 2. Create local environment config
+### 2. Configure environment
 
 ```bash
 cp .env.example .env
+# Required: set OPENQILIN_GEMINI_API_KEY (or configure a different LLM backend).
+# Optional: set Discord bot credentials if you want a real Discord integration.
+# See .env.example for all settings with descriptions.
 ```
 
-Notes:
-
-- Set `OPENQILIN_GEMINI_API_KEY` if you want to use the Gemini-backed LLM path.
-- Set Discord bot credentials only if you plan to run the Discord worker.
-- Keep `OPENQILIN_SYSTEM_ROOT` outside the source tree.
-
-### 3. Start core infrastructure
+### 3. Start infrastructure and run migrations
 
 ```bash
 docker compose --profile core up -d
 uv run alembic upgrade head
-uv run python -m openqilin.apps.admin_cli bootstrap --smoke-in-process
 ```
 
-### 4. Run the app locally
-
-Use the local developer loop when you want fast iteration without running every service in containers:
+### 4. Validate setup
 
 ```bash
+uv run python -m openqilin.apps.oq_doctor
+# All checks should pass before starting the runtime.
+```
+
+### 5. Bootstrap and start
+
+```bash
+uv run python -m openqilin.apps.admin_cli bootstrap --smoke-in-process
+
+# In separate terminals:
 uv run python -m openqilin.apps.api_app
 uv run python -m openqilin.apps.orchestrator_worker
 uv run python -m openqilin.apps.communication_worker
+uv run python -m openqilin.apps.discord_bot_worker   # optional: real Discord bot
 ```
 
-Optional:
-
-```bash
-uv run python -m openqilin.apps.discord_bot_worker
-```
-
-### 5. Run the full container stack
-
-If your `.env` is fully configured and you want the complete local runtime:
+### Full container stack
 
 ```bash
 docker compose --profile full up -d
 ```
 
-## Development Checks
-
-Run these before opening or updating a PR:
+## Development
 
 ```bash
 uv run ruff check .
@@ -100,43 +102,34 @@ uv run mypy .
 uv run pytest tests/unit tests/component
 ```
 
-Useful admin commands:
+## Architecture
 
-```bash
-uv run python -m openqilin.apps.admin_cli diagnostics --check-db
-uv run python -m openqilin.apps.admin_cli smoke --in-process
-```
+OpenQilin runs as two long-running processes:
 
-## Repository Map
+- **Control plane** (`api_app`) — FastAPI app that receives Discord webhooks, authenticates callers, classifies intent, and enqueues tasks.
+- **Orchestrator worker** — Async worker that drains the task queue through a LangGraph pipeline: policy evaluation → obligation check → budget approval → agent dispatch.
 
-- `constitution/`: runtime constitutional rules and versioned policy bundles
-- `spec/`: implementation contracts and authoritative architecture/specification docs
-- `design/`: design artifacts and implementation-facing technical decisions
-- `implementation/`: milestone planning, handoffs, workflow guides, and progress tracking
-- `src/`: Python runtime implementation
-- `tests/`: unit, component, contract, integration, and conformance coverage
-- `migrations/`: Alembic migrations
-- `ops/`: local stack, observability, and operational scripts
+Read more: [`spec/architecture/ArchitectureBaseline-v1.md`](spec/architecture/ArchitectureBaseline-v1.md)
 
-Document precedence:
+Source layout:
 
-1. `constitution/`
-2. `spec/`
-3. `design/`
-4. `docs/`
+| Path | Contents |
+|---|---|
+| `constitution/` | OPA Rego policy bundle and YAML governance rules |
+| `spec/` | Implementation contracts and authoritative architecture docs |
+| `src/openqilin/` | Python runtime: control_plane, task_orchestrator, agents, data_access, observability |
+| `tests/` | Unit, component, contract, integration, and conformance coverage |
+| `migrations/` | Alembic schema migrations |
+| `ops/` | Docker stack config, Grafana dashboards, OTel collector |
 
-## Start Reading Here
+## Roadmap
 
-If you are new to the project, use this order:
+See [ROADMAP.md](ROADMAP.md).
 
-1. [`docs/SystemOverview.md`](docs/SystemOverview.md)
-2. [`docs/QuickStart.md`](docs/QuickStart.md)
-3. [`spec/architecture/ArchitectureBaseline-v1.md`](spec/architecture/ArchitectureBaseline-v1.md)
-4. [`spec/governance/architecture/GovernanceArchitecture.md`](spec/governance/architecture/GovernanceArchitecture.md)
-5. [`spec/infrastructure/architecture/RuntimeArchitecture.md`](spec/infrastructure/architecture/RuntimeArchitecture.md)
-6. [`constitution/core/PolicyManifest.yaml`](constitution/core/PolicyManifest.yaml)
-7. [`implementation/v2/planning/ImplementationProgress-v2.md`](implementation/v2/planning/ImplementationProgress-v2.md)
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## License
 
-OpenQilin is licensed under the terms of the [LICENSE](LICENSE) file.
+Apache 2.0 — see [LICENSE](LICENSE).
