@@ -41,7 +41,7 @@ MVP-v2 made the governance model real at every layer. All major infrastructure, 
 - **Domain Leader** — virtual agent; project-space coordinator and escalation point
 - **Project Manager** — task planning, status reports, Specialist dispatch
 - **CEO** — directive authority, GATE-003/004/005, co-approval enforcement
-- **CWO** (Chief Workflow Officer) — command authority, project charter writes
+- **CWO** (Chief Workforce Officer) — command authority, project charter writes
 - **Auditor** — compliance monitoring, ESC-005/006 escalation, behavioural violation path
 - **Administrator** — agent lifecycle, document policy enforcement, retention enforcement
 - **Specialist** — task execution and task execution result writes

@@ -30,7 +30,7 @@ MVP-v2 is complete. All core agents are active:
 | **Governance** | **Administrator** | Enforces document policy and retention rules; manages agent lifecycle (quarantine, reinstatement); oversight authority |
 | **Governance** | **Auditor** | Monitors compliance, detects behavioural violations, and escalates to the owner when governance constraints are breached; oversight authority |
 | **Executive** | **CEO** | Highest directive authority in the organisation; approves strategic decisions with co-approval enforcement |
-| **Executive** | **CWO** (Chief Workflow Officer) | Operational command authority; authorises project charters and manages agent workforce lifecycle |
+| **Executive** | **CWO** (Chief Workforce Officer) | Operational command authority; authorises project charters and manages agent workforce lifecycle |
 | **Executive** | **CSO** (Chief Strategy Officer) | Issues portfolio-level strategic review opinions; decision and advisory authority — non-binding without CEO or owner endorsement |
 | **Operations** | **Project Manager** | Plans and tracks tasks within a project; dispatches to Specialists; decision, command, and workforce authority within project scope |
 | **Operations** | **Domain Leader** | Reviews work within a project space and escalates to executives when needed; review and advisory authority, no command |
