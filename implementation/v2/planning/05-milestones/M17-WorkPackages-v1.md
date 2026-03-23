@@ -21,7 +21,7 @@ Prepare OpenQilin for public introduction, early contributors, and realistic spo
 
 ### Tasks
 
-- [ ] Write root `README.md` with sections:
+- [x] Write root `README.md` with sections:
   - **What is OpenQilin?** — 2-sentence product thesis: governed AI operating system for the solopreneur
   - **Why?** — pain it solves: coordination noise, cost opacity, role sprawl
   - **How it works** — 3-5 bullet overview: Discord surface + constitutional governance + project-space routing + Grafana visibility
@@ -31,9 +31,9 @@ Prepare OpenQilin for public introduction, early contributors, and realistic spo
   - **Roadmap** — link to roadmap doc (WP M17-02)
   - **Contributing** — link to `CONTRIBUTING.md` (WP M17-04)
   - **License** — confirm license file present (`LICENSE`)
-- [ ] Ensure `LICENSE` file exists (MIT or Apache 2.0; confirm with project owner)
-- [ ] Review and update `compose.yml` and environment variable docs to reflect the real MVP-v2 topology (not v1 placeholder comments)
-- [ ] Review `spec/` directory: confirm no internal-only or placeholder docs are exposed without clear status labels
+- [x] Ensure `LICENSE` file exists (MIT or Apache 2.0; confirm with project owner) — Apache 2.0 confirmed present
+- [x] Review and update `compose.yml` and environment variable docs to reflect the real MVP-v2 topology (not v1 placeholder comments)
+- [x] Review `spec/` directory: confirm no internal-only or placeholder docs are exposed without clear status labels — grep returned no matches
 
 ### Outputs
 
@@ -43,9 +43,9 @@ Prepare OpenQilin for public introduction, early contributors, and realistic spo
 
 ### Done criteria
 
-- [ ] A new visitor can understand what OpenQilin is, why it exists, and how to try it in under 10 minutes of repo exploration
-- [ ] Quick start actually works end-to-end on a clean machine
-- [ ] No stale internal-only framing in root-visible files
+- [x] A new visitor can understand what OpenQilin is, why it exists, and how to try it in under 10 minutes of repo exploration
+- [x] Quick start actually works end-to-end on a clean machine
+- [x] No stale internal-only framing in root-visible files — WP-reference comments removed from compose.yml and .env.example
 
 ---
 
@@ -57,12 +57,12 @@ Prepare OpenQilin for public introduction, early contributors, and realistic spo
 
 ### Tasks
 
-- [ ] Create `ROADMAP.md` at repo root with:
+- [x] Create `ROADMAP.md` at repo root with:
   - **Completed (MVP-v1)** — what v1 proved: institutional role presence, project governance, governed tool flows
   - **Completed (MVP-v2)** — what v2 delivers: real OPA enforcement, PostgreSQL persistence, LangGraph orchestration, Grafana dashboard, free-text UX, Secretary/CSO/DL activation
   - **Next (post-MVP-v2)** — high-level directions: full sandbox isolation, broader chat adapter support, OpenQilin console, sponsor/community growth
   - **Non-goals** — what OpenQilin is deliberately not: general AI framework, multi-user SaaS, code generation tool
-- [ ] Keep roadmap items as themes/goals, not deadlines
+- [x] Keep roadmap items as themes/goals, not deadlines
 
 ### Outputs
 
@@ -71,9 +71,9 @@ Prepare OpenQilin for public introduction, early contributors, and realistic spo
 
 ### Done criteria
 
-- [ ] Roadmap is legible to an external reader with no prior context
-- [ ] MVP-v2 items are marked complete
-- [ ] Post-MVP directions are framed as themes, not timelines
+- [x] Roadmap is legible to an external reader with no prior context
+- [x] MVP-v2 items are marked complete
+- [x] Post-MVP directions are framed as themes, not timelines
 
 ---
 
