@@ -90,6 +90,7 @@ from openqilin.project_spaces.binding_repository import PostgresProjectSpaceBind
 from openqilin.project_spaces.binding_service import ProjectSpaceBindingService
 from openqilin.project_spaces.discord_automator import DiscordChannelAutomator
 from openqilin.project_spaces.routing_resolver import ProjectSpaceRoutingResolver
+from openqilin.discord_runtime.role_bot_registry import build_role_bot_registry
 from openqilin.retrieval_runtime.service import (
     RetrievalQueryService,
     build_retrieval_query_service,
@@ -215,8 +216,13 @@ def build_runtime_services() -> RuntimeServices:
         session_factory=session_factory
     )
     routing_resolver = ProjectSpaceRoutingResolver(binding_repo=project_space_binding_repo)
+    _role_bot_registry = build_role_bot_registry(settings)
+    _admin_identity = _role_bot_registry.identities_by_role.get("administrator")
+    _channel_manager_token = (
+        _admin_identity.token if _admin_identity is not None else (settings.discord_bot_token or "")
+    )
     discord_automator = DiscordChannelAutomator(
-        bot_token=settings.discord_bot_token or "",
+        bot_token=_channel_manager_token,
     )
     binding_service = ProjectSpaceBindingService(
         binding_repo=project_space_binding_repo,
