@@ -681,6 +681,30 @@ def build_worker_launch_plan(settings: RuntimeSettings) -> DiscordWorkerLaunchPl
     )
 
 
+def _infer_recipients_from_mentions(
+    message: discord.Message,
+) -> tuple[tuple[str, str], ...]:
+    """Infer recipient tuples from bot display names when role resolution fails.
+
+    Used when a bot is mentioned but its Discord user ID is not in this process's
+    readiness registry (multi-process deployment scenario). Extracts the role name
+    from the bot's display name using the "OpenQilin <Role>" naming convention.
+    Returns ``(("runtime", "runtime"),)`` if no role can be inferred.
+    """
+    roles: list[tuple[str, str]] = []
+    for user in message.mentions:
+        if not getattr(user, "bot", False):
+            continue
+        display = (user.display_name or user.name or "").strip().lower()
+        for prefix in ("openqilin ", "openqilin_"):
+            if display.startswith(prefix):
+                role = display[len(prefix) :].replace(" ", "_").replace("-", "_")
+                if role and role not in ("runtime",):
+                    roles.append((str(user.id), role))
+                break
+    return tuple(roles) if roles else (("runtime", "runtime"),)
+
+
 class OpenQilinDiscordClient(discord.Client):
     """Discord gateway client that bridges inbound messages to governed ingress."""
 
@@ -799,6 +823,14 @@ class OpenQilinDiscordClient(discord.Client):
         actor_role = self._config.actor_role_map.get(actor_id, self._config.actor_role_default)
         channel_type = _channel_type_name(message.channel)
         chat_class = _resolve_chat_class(message.channel)
+
+        # Free-text group-channel gate: non-Secretary bots silently skip free-text messages.
+        # Apply BEFORE recipient resolution to prevent spurious [denied] errors when a bot
+        # mentioned in the message runs in a different process.
+        if chat_class != "direct" and not _is_explicit_command:
+            if self._config.bot_role != "secretary":
+                return
+
         try:
             resolved_recipients = await self._resolve_recipients(
                 parsed=parsed,
@@ -806,8 +838,19 @@ class OpenQilinDiscordClient(discord.Client):
                 message=message,
             )
         except DiscordRecipientResolutionError as error:
-            await message.channel.send(f"[denied] code={error.code} message={error.message}")
-            return
+            if (
+                not _is_explicit_command
+                and self._config.bot_role == "secretary"
+                and error.code == "recipient_mention_unresolved"
+            ):
+                # A bot was mentioned but its user ID is not in this process's registry
+                # (multi-process deployment: each bot only knows its own user ID at runtime).
+                # Infer the recipient role from the bot's display name so Secretary can
+                # still provide routing guidance for the addressed agent.
+                resolved_recipients = _infer_recipients_from_mentions(message)
+            else:
+                await message.channel.send(f"[denied] code={error.code} message={error.message}")
+                return
         # Group-channel single-bot gate.
         # DMs are always 1:1 so no gate needed there.
         if chat_class != "direct":

@@ -206,8 +206,8 @@ class TestSecretaryConversationAndMentionContext:
         agent.handle(req)
 
         sent_prompt = llm.complete.call_args.args[0].messages_or_prompt
-        assert "directed this message at the administrator agent" in sent_prompt
-        assert "context of the administrator's role" in sent_prompt
+        assert "directed at the administrator agent" in sent_prompt
+        assert "do NOT roleplay as or speak as the administrator" in sent_prompt
 
 
 # ---------------------------------------------------------------------------

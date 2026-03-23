@@ -117,9 +117,10 @@ class SecretaryAgent:
             )
         if request.addressed_agent:
             agent_context = (
-                f"Note: the user directed this message at the {request.addressed_agent} agent. "
-                f"Acknowledge this and frame your response in the context of the {request.addressed_agent}'s role "
-                f"(e.g. what they handle, how to interact with them via /oq commands)."
+                f"The user's message was directed at the {request.addressed_agent} agent, but you are Secretary — "
+                f"do NOT roleplay as or speak as the {request.addressed_agent}. "
+                f"As Secretary, briefly explain what the {request.addressed_agent} handles and "
+                f"how the user can reach them (e.g. `/oq ask {request.addressed_agent} <topic>`)."
             )
             prompt = f"{agent_context}\n\n{prompt}"
         if project_context:
