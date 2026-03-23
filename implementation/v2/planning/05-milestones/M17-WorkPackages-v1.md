@@ -278,25 +278,25 @@ Prepare OpenQilin for public introduction, early contributors, and realistic spo
 
 ### Tasks
 
-- [ ] Add `summary_embedding vector(1536)` column to `conversation_windows` (Alembic migration)
-- [ ] Add `ivfflat` index on `summary_embedding` using `vector_cosine_ops`
-- [ ] Async embedding generation for window summaries (background task after summary write)
-- [ ] Implement `find_relevant_windows(scope, query_embedding, threshold, limit)` via pgvector ANN
-- [ ] Wire proactive semantic pre-fetch into `LlmGatewayDispatchAdapter.load_context()`
-- [ ] Register `get_conversation_window(window_index, scope?)` as LangGraph tool for all async agents
-- [ ] Implement `fetch_channel_summary(target_scope)` in store
-- [ ] Wire `/oq context from:#channel-name` command in `discord_ingress.py`
-- [ ] Add `context_sources: list[str]` field to `TaskPayload`
-- [ ] Wire proactive semantic pre-fetch into Secretary sync path
-- [ ] Integration tests (require postgres + pgvector)
+- [x] Add `summary_embedding vector(768)` column to `conversation_windows` (Alembic migration) — spec said 1536; architect resolved to 768 (Gemini text-embedding-004 output dim)
+- [x] Add ANN index on `summary_embedding` using `vector_cosine_ops` — hnsw used instead of ivfflat (ivfflat fails on empty table at migration time)
+- [x] Async embedding generation for window summaries (background thread after summary write)
+- [x] Implement `find_relevant_windows(scope, query_embedding, threshold, limit)` via pgvector ANN
+- [x] Wire proactive semantic pre-fetch into `LlmGatewayDispatchAdapter.dispatch()`
+- [x] Register `get_conversation_window(window_index, scope?)` as governed read tool (GovernedReadToolService); added to all role allowlists
+- [x] Implement `fetch_channel_summary(target_scope)` in store
+- [x] Wire `/oq context from:#channel-name` command in `discord_ingress.py` — parse + confirmation response implemented; context injection into next invocation deferred (requires new persistence column)
+- [x] Add `context_sources: tuple[str, ...]` field to `LlmDispatchRequest` (TaskPayload doesn't exist; carrier is LlmDispatchRequest per architect decision)
+- [ ] Wire proactive semantic pre-fetch into Secretary sync path — **deferred** (Secretary does not use LlmGatewayDispatchAdapter; separate WP needed)
+- [x] Integration tests (require postgres + pgvector) — 8 tests pass on CI compose stack
 
 ### Done criteria
 
-- [ ] Agent receives relevant cold window content without user prompting (proactive fetch)
-- [ ] Agent can call `get_conversation_window` tool mid-reasoning
-- [ ] `/oq context from:#channel` attaches summary to next invocation
-- [ ] DM scope cross-channel fetch restricted to participating bot only
-- [ ] Integration tests pass with compose stack
+- [x] Agent receives relevant cold window content without user prompting (proactive pre-fetch wired in dispatch path)
+- [x] Agent can call `get_conversation_window` tool mid-reasoning
+- [x] `/oq context from:#channel` parses command and sends confirmation/denial response — full injection into next invocation deferred
+- [ ] DM scope cross-channel fetch restricted to participating bot only — **deferred** (no DM-specific fetch scope implemented; cross-channel fetch is unrestricted at store level)
+- [x] Integration tests pass with compose stack (PR #188, CI green)
 
 ---
 
