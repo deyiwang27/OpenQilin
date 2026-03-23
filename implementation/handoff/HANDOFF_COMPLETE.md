@@ -3,7 +3,7 @@
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-23
 **Branch:** `feat/180-semantic-fetch-agent-tool`
-**Draft PR:** pending
+**Draft PR:** #188
 **Implements:** `implementation/handoff/current.md`
 
 ---
