@@ -24,17 +24,17 @@ OpenQilin turns one capable person into a coordinated AI-augmented team by givin
 
 MVP-v2 is complete. All core agents are active:
 
-| Agent | Role |
-|---|---|
-| **Secretary** | Routes and summarises Discord interactions; advisory-only |
-| **CSO** (Chief Strategy Officer) | Portfolio governance advisor |
-| **Domain Leader** | Project-space coordinator and escalation point |
-| **Project Manager** | Task planning and specialist dispatch |
-| **CEO** | Directive authority with co-approval enforcement |
-| **CWO** (Chief Workflow Officer) | Command authority; project charter writes |
-| **Auditor** | Compliance monitoring and behavioural violation detection |
-| **Administrator** | Agent lifecycle, document policy, and retention enforcement |
-| **Specialist** | Task execution against project goals |
+| Layer | Agent | Role |
+|---|---|---|
+| **Interaction** | **Secretary** | First point of contact — classifies intent, routes messages to the right project space, and summarises activity; no command authority |
+| **Governance** | **CSO** (Chief Strategy Officer) | Portfolio-level strategy advisor; writes governance gate records; does not issue directives |
+| **Governance** | **Auditor** | Monitors compliance, detects behavioural violations, and escalates to owner when governance constraints are breached |
+| **Executive** | **CEO** | Highest directive authority; approves strategic decisions with co-approval enforcement |
+| **Executive** | **CWO** (Chief Workflow Officer) | Operational command authority; authorises project charters and cross-project workflow decisions |
+| **Operations** | **Domain Leader** | Virtual coordinator for a project space; routes tasks to specialists and escalates to executives when needed |
+| **Operations** | **Project Manager** | Plans tasks, tracks progress, dispatches to Specialists, and produces status reports for the project |
+| **Execution** | **Administrator** | Enforces document policy and retention rules; manages agent lifecycle (quarantine, reinstatement) |
+| **Execution** | **Specialist** | Executes concrete tasks delegated by the Project Manager and records task execution results |
 
 Infrastructure: OPA policy runtime · PostgreSQL persistence · Redis idempotency · OpenTelemetry tracing · Grafana dashboards · file-backed artifact storage.
 
