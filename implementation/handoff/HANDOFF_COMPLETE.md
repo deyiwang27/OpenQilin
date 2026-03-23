@@ -21,7 +21,7 @@ Implemented M17-WP2 by creating root `ROADMAP.md` with the exact architect-provi
 | Confirm `ROADMAP.md` does not already exist | ✅ Done | Verified missing before creation (`ls ROADMAP.md` returned not found). |
 | Create `ROADMAP.md` with complete specified content | ✅ Done | Added exact roadmap text including MVP-v1, MVP-v2, post-MVP themes, non-goals, and contributing link. |
 | Tick M17-WP2 tasks and done criteria in `M17-WorkPackages-v1.md` | ✅ Done | Both WP2 tasks and all three WP2 done-criteria boxes set to `[x]`. |
-| Update M17 progress summary + M17-WP2 row in `ImplementationProgress-v2.md` | ✅ Done | Summary now `2 / 6` with notes `WP1-WP2 done`; WP2 row set to `done`, issue `#158`, PR placeholder pending PR creation. |
+| Update M17 progress summary + M17-WP2 row in `ImplementationProgress-v2.md` | ✅ Done | Summary now `2 / 6` with notes `WP1-WP2 done`; WP2 row set to `done`, issue `#158`, PR `#159`. |
 | Run acceptance matrix from handoff | ✅ Done | All required checks passed; `mypy`/`pytest` executed via `python -m` due missing console entrypoints. |
 
 ---
