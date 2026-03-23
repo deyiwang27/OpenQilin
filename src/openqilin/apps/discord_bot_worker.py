@@ -799,6 +799,22 @@ class OpenQilinDiscordClient(discord.Client):
         except DiscordRecipientResolutionError as error:
             await message.channel.send(f"[denied] code={error.code} message={error.message}")
             return
+        # Group-channel single-bot gate: prevent all bots from forwarding the same message.
+        # In DMs only the addressed bot ever receives the message, so no gate needed.
+        if chat_class != "direct":
+            _is_runtime = _is_runtime_placeholder_recipients(resolved_recipients)
+            if _is_runtime:
+                # Free-text with no explicit mention: Secretary is the designated group handler.
+                if self._config.bot_role != "secretary":
+                    return
+            else:
+                # Explicit @mention: only process if this bot is among the resolved recipients.
+                _this_bot_is_target = any(
+                    r[0] == self._config.bot_id or r[1] == self._config.bot_role
+                    for r in resolved_recipients
+                )
+                if not _this_bot_is_target:
+                    return
         project_id = parsed.project_id
         if project_id is None and chat_class == "project":
             project_id = _derive_project_id(message.channel)

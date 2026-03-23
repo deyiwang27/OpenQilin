@@ -193,7 +193,9 @@ def format_governed_response(*, status_code: int, body: Mapping[str, object]) ->
             )
             llm_execution = data.get("llm_execution")
             if isinstance(llm_execution, dict):
-                generated_text = llm_execution.get("generated_text")
+                generated_text = llm_execution.get("generated_text") or llm_execution.get(
+                    "advisory_response"
+                )
                 if isinstance(generated_text, str) and generated_text.strip():
                     normalized = generated_text.strip().replace("\n", " ")
                     recipient_role = str(llm_execution.get("recipient_role", "")).strip().lower()
