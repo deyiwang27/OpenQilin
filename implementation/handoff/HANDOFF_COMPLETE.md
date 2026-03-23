@@ -1,16 +1,16 @@
-# Handoff Complete: M17-WP1 — Public README and Repository Clarity
+# Handoff Complete: M17-WP2 — Roadmap
 
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-22
-**Branch:** `feat/155-m17-wp1-public-readme`
-**Draft PR:** #156
+**Branch:** `feat/158-m17-wp2-roadmap`
+**Draft PR:** #<pr-number>
 **Implements:** `implementation/handoff/current.md`
 
 ---
 
 ## Summary
 
-Implemented M17-WP1 by fully rewriting `README.md` with the required public-facing structure and content, cleaning internal milestone/WP references from root-visible comments, and confirming no placeholder/TODO status markers required updates in `spec/`. Changes were constrained to documentation/comment text only (no Python/runtime/migration edits) and validated with the required check matrix.
+Implemented M17-WP2 by creating root `ROADMAP.md` with the exact architect-provided public roadmap content, then marking WP2 complete in the M17 work package and implementation progress trackers. Changes are documentation-only and aligned with the handoff scope (no source, test, migration, or config changes).
 
 ---
 
@@ -18,12 +18,11 @@ Implemented M17-WP1 by fully rewriting `README.md` with the required public-faci
 
 | Task | Status | Notes |
 |---|---|---|
-| Rewrite root `README.md` with required public structure and content | ✅ Done | Replaced entire file per handoff template, including required sections and links to future roadmap/contributing docs. |
-| Apply 6 specified comment replacements in `compose.yml` | ✅ Done | All six exact replacements/insertion applied; YAML keys/values unchanged. |
-| Remove remaining internal WP references in root-visible comments | ✅ Done | Replaced one additional `M12-WP5` Grafana comment so acceptance grep is clean. |
-| Clean `M##-WP#` comments in `.env.example` | ✅ Done | Reworded section headers containing milestone/WP references; environment variables unchanged. |
-| Run `spec/` placeholder/TODO scan and add draft-status labels where needed | ✅ Done | `grep -rn "Status: placeholder\|^# TODO" spec/` returned no matches; no spec edits required. |
-| Run acceptance criteria checks | ✅ Done | Governance grep, lint/format/mypy, tests, WP-reference greps, and README section-count checks completed. |
+| Confirm `ROADMAP.md` does not already exist | ✅ Done | Verified missing before creation (`ls ROADMAP.md` returned not found). |
+| Create `ROADMAP.md` with complete specified content | ✅ Done | Added exact roadmap text including MVP-v1, MVP-v2, post-MVP themes, non-goals, and contributing link. |
+| Tick M17-WP2 tasks and done criteria in `M17-WorkPackages-v1.md` | ✅ Done | Both WP2 tasks and all three WP2 done-criteria boxes set to `[x]`. |
+| Update M17 progress summary + M17-WP2 row in `ImplementationProgress-v2.md` | ✅ Done | Summary now `2 / 6` with notes `WP1-WP2 done`; WP2 row set to `done`, issue `#158`, PR placeholder pending PR creation. |
+| Run acceptance matrix from handoff | ✅ Done | All required checks passed; `mypy`/`pytest` executed via `python -m` due missing console entrypoints. |
 
 ---
 
@@ -44,10 +43,12 @@ Executed commands:
 - `uv run ruff format --check .`
 - `uv run python -m mypy .`
 - `uv run python -m pytest tests/unit tests/component -x --tb=short -q`
-  - Result: `785 passed, 1 warning in 3.66s`
-- `grep -n "M12-WP\|M11-WP\|M13-WP\|M14-WP\|M15-WP\|M16-WP" compose.yml` (no output)
-- `grep -n "M12-WP\|M11-WP\|M13-WP\|M14-WP\|M15-WP\|M16-WP" .env.example` (no output)
-- README section checks (`grep -c ...`) all returned `1`
+  - Result: `785 passed, 1 warning in 3.70s`
+- `test -f ROADMAP.md && echo "ROADMAP.md present"` → `ROADMAP.md present`
+- `grep -c "## Completed — MVP-v1" ROADMAP.md` → `1`
+- `grep -c "## Completed — MVP-v2" ROADMAP.md` → `1`
+- `grep -c "## Next — Post-MVP-v2 Themes" ROADMAP.md` → `1`
+- `grep -c "## Non-Goals" ROADMAP.md` → `1`
 
 ---
 
@@ -75,5 +76,4 @@ Executed commands:
 
 ## Notes
 
-- `uv run mypy .` and `uv run pytest ...` failed to spawn tool entrypoints in this environment (`No such file or directory`). Equivalent module invocations were used successfully: `uv run python -m mypy .` and `uv run python -m pytest ...`.
-- Pre-existing working-tree edits in `implementation/handoff/current.md` and `implementation/v2/planning/ImplementationProgress-v2.md` were left untouched.
+- In this environment, console entrypoints `mypy` and `pytest` are not directly spawnable via `uv run <tool>`. Equivalent module invocations (`uv run python -m mypy .`, `uv run python -m pytest ...`) were used and passed.
