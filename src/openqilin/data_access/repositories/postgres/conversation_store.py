@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 from datetime import UTC, datetime
 from typing import Callable
 from uuid import uuid4
@@ -9,6 +10,7 @@ from uuid import uuid4
 from sqlalchemy import text
 from sqlalchemy.orm import Session, sessionmaker
 
+from openqilin.llm_gateway.embedding_service import EmbeddingServiceProtocol
 from openqilin.task_orchestrator.dispatch.llm_dispatch import (
     ConversationTurn,
     ConversationWindowSummary,
@@ -35,11 +37,13 @@ class PostgresConversationStore:
         max_turns: int = 40,
         window_size: int = 40,
         summarize_fn: Callable[[str, int, tuple[ConversationTurn, ...]], str] | None = None,
+        embedding_service: EmbeddingServiceProtocol | None = None,
     ) -> None:
         self._session_factory = session_factory
         self._max_turns = max(2, max_turns)
         self._window_size = max(4, window_size)
         self._summarize_fn = summarize_fn
+        self._embedding_service = embedding_service
 
     def list_turns(self, scope: str) -> tuple[ConversationTurn, ...]:
         """Return the most recent ``max_turns`` turns for ``scope``, oldest first."""
@@ -164,6 +168,68 @@ class PostgresConversationStore:
             )
             session.commit()
 
+    def find_relevant_windows(
+        self,
+        scope: str,
+        query_embedding: tuple[float, ...],
+        *,
+        threshold: float = 0.75,
+        limit: int = 3,
+    ) -> tuple[ConversationWindowSummary, ...]:
+        """Return up to ``limit`` semantically relevant window summaries."""
+
+        normalized = scope.strip() or "default-scope"
+        vector_literal = "[" + ",".join(str(value) for value in query_embedding) + "]"
+        try:
+            with self._session_factory() as session:
+                sql = text(
+                    f"SELECT window_index, summary_text,"
+                    f" 1 - (summary_embedding <=> '{vector_literal}'::vector(768)) AS similarity"
+                    f" FROM conversation_windows"
+                    f" WHERE scope = :scope"
+                    f"   AND summary_embedding IS NOT NULL"
+                    f"   AND 1 - (summary_embedding <=> '{vector_literal}'::vector(768)) >= :threshold"
+                    f" ORDER BY similarity DESC"
+                    f" LIMIT :limit"
+                )
+                rows = session.execute(
+                    sql,
+                    {"scope": normalized, "threshold": threshold, "limit": limit},
+                ).fetchall()
+        except Exception:
+            return ()
+        return tuple(
+            ConversationWindowSummary(window_index=row[0], summary_text=row[1]) for row in rows
+        )
+
+    def fetch_channel_summary(self, target_scope: str) -> ConversationWindowSummary | None:
+        """Return the most recent window summary for ``target_scope``, or None."""
+
+        normalized = target_scope.strip() or "default-scope"
+        try:
+            with self._session_factory() as session:
+                row = session.execute(
+                    text(
+                        """
+                        SELECT window_index, summary_text
+                        FROM conversation_windows
+                        WHERE scope = :scope
+                        ORDER BY window_index DESC
+                        LIMIT 1
+                        """
+                    ),
+                    {"scope": normalized},
+                ).fetchone()
+        except Exception:
+            return None
+        if row is None:
+            return None
+        return ConversationWindowSummary(
+            window_index=row[0],
+            summary_text=row[1],
+            scope=normalized,
+        )
+
     def _close_window(self, scope: str, window_index: int, total_rows: int) -> None:
         """Tag completed window rows and generate summary. Non-fatal on failure."""
         turn_start = window_index * self._window_size
@@ -228,5 +294,32 @@ class PostgresConversationStore:
                     },
                 )
                 session.commit()
+            if self._embedding_service is not None and summary_text.strip():
+                threading.Thread(
+                    target=self._embed_and_store_window,
+                    args=(scope, window_index, summary_text),
+                    daemon=True,
+                ).start()
         except Exception:
             pass  # Non-fatal: summary failure does not block responses.
+
+    def _embed_and_store_window(self, scope: str, window_index: int, summary_text: str) -> None:
+        """Generate embedding for one closed window and store it."""
+
+        if self._embedding_service is None:
+            return
+        try:
+            embedding = self._embedding_service.embed(summary_text)
+            if embedding is None:
+                return
+            vector_literal = "[" + ",".join(str(value) for value in embedding) + "]"
+            sql = text(
+                f"UPDATE conversation_windows"
+                f" SET summary_embedding = '{vector_literal}'::vector(768)"
+                f" WHERE scope = :scope AND window_index = :window_index"
+            )
+            with self._session_factory() as session:
+                session.execute(sql, {"scope": scope, "window_index": window_index})
+                session.commit()
+        except Exception:
+            pass

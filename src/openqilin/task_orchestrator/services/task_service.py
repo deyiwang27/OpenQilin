@@ -691,6 +691,7 @@ def build_task_dispatch_service(
         retrieval_query_service=retrieval_service_for_tools,
         audit_writer=audit_writer or InMemoryAuditWriter(),
         communication_repository=communication_repository,
+        conversation_store=conversation_store,
     )
     write_tool_service = GovernedWriteToolService(
         governance_repository=governance_repository,

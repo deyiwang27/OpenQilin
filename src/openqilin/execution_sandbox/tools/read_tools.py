@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import json
-from typing import Mapping
+from typing import TYPE_CHECKING, Mapping
 from uuid import uuid4
 
 from openqilin.control_plane.governance.project_lifecycle import allowed_project_status_transitions
@@ -30,6 +30,9 @@ from openqilin.observability.testing.stubs import InMemoryAuditWriter
 from openqilin.retrieval_runtime.models import RetrievalQueryRequest
 from openqilin.retrieval_runtime.service import RetrievalQueryService
 
+if TYPE_CHECKING:
+    from openqilin.task_orchestrator.dispatch.llm_dispatch import ConversationStoreProtocol
+
 
 class GovernedReadToolService:
     """Intent-level read tool runtime with role/scope fail-closed checks."""
@@ -43,6 +46,7 @@ class GovernedReadToolService:
         retrieval_query_service: RetrievalQueryService,
         audit_writer: InMemoryAuditWriter | OTelAuditWriter,
         communication_repository: PostgresCommunicationRepository | None = None,
+        conversation_store: ConversationStoreProtocol | None = None,
     ) -> None:
         self._governance_repository = governance_repository
         self._project_artifact_repository = project_artifact_repository
@@ -50,6 +54,7 @@ class GovernedReadToolService:
         self._retrieval_query_service = retrieval_query_service
         self._audit_writer = audit_writer
         self._communication_repository = communication_repository
+        self._conversation_store = conversation_store
 
     def call_tool(
         self,
@@ -648,6 +653,71 @@ class GovernedReadToolService:
             context=context,
             data=data,
             sources=tuple(sources),
+        )
+
+    def _tool_get_conversation_window(
+        self,
+        *,
+        arguments: Mapping[str, object],
+        context: ToolCallContext,
+    ) -> ToolResult:
+        if self._conversation_store is None:
+            return self._deny(
+                tool_name="get_conversation_window",
+                context=context,
+                code="tool_conversation_store_missing",
+                message="conversation store is not available",
+            )
+        raw_window_index = arguments.get("window_index")
+        try:
+            window_index = int(str(raw_window_index))
+        except (TypeError, ValueError):
+            return self._deny(
+                tool_name="get_conversation_window",
+                context=context,
+                code="tool_window_index_invalid",
+                message="window_index must be an integer",
+            )
+        if window_index < 0:
+            return self._deny(
+                tool_name="get_conversation_window",
+                context=context,
+                code="tool_window_index_invalid",
+                message="window_index must be >= 0",
+            )
+        raw_scope = str(arguments.get("scope") or "").strip()
+        if not raw_scope:
+            return self._deny(
+                tool_name="get_conversation_window",
+                context=context,
+                code="tool_scope_missing",
+                message="scope is required (e.g. 'guild::G::channel::C')",
+            )
+        turns = self._conversation_store.fetch_window(raw_scope, window_index)
+        if not turns:
+            return self._deny(
+                tool_name="get_conversation_window",
+                context=context,
+                code="tool_window_not_found",
+                message=f"no turns found for window_index={window_index} in scope",
+            )
+        return self._ok(
+            tool_name="get_conversation_window",
+            context=context,
+            data={
+                "scope": raw_scope,
+                "window_index": window_index,
+                "turn_count": len(turns),
+                "turns": [{"role": turn.role, "content": turn.content} for turn in turns],
+            },
+            sources=(
+                ToolSourceDescriptor(
+                    source_id=f"conversation:{raw_scope}:window:{window_index}",
+                    source_kind="conversation_window",
+                    version=f"window:{window_index}",
+                    updated_at=None,
+                ),
+            ),
         )
 
     def _resolve_project_scope(

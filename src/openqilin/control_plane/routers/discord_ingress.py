@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, Request
@@ -21,6 +22,7 @@ from openqilin.control_plane.api.dependencies import (
     get_audit_writer,
     get_budget_reservation_service,
     get_governance_repository,
+    get_binding_service,
     get_grammar_classifier,
     get_grammar_parser,
     get_grammar_router,
@@ -60,12 +62,14 @@ from openqilin.observability.testing.stubs import (
     InMemoryTracer,
 )
 from openqilin.policy_runtime_integration.client import PolicyRuntimeClient
+from openqilin.project_spaces.binding_service import ProjectSpaceBindingService
 from openqilin.task_orchestrator.admission.service import AdmissionService
 from openqilin.task_orchestrator.services.task_service import TaskDispatchService
 
 router = APIRouter(prefix="/v1/connectors/discord", tags=["discord_ingress"])
 
 _COMMAND_PREFIX = "/oq"
+_CONTEXT_FROM_PATTERN = re.compile(r"^/oq\s+context\s+from:#([a-z0-9_-]+)\s*$", re.IGNORECASE)
 
 
 def _resolve_target(*, action: str, explicit_target: str | None) -> str:
@@ -101,6 +105,31 @@ def _grammar_error_response(
     )
 
 
+def _discord_advisory_response(
+    *,
+    payload: DiscordIngressRequest,
+    command: str,
+    message: str,
+) -> OwnerCommandResponse:
+    request_id = str(uuid.uuid4())
+    return OwnerCommandResponse(
+        status="accepted",
+        trace_id=payload.trace_id,
+        data=OwnerCommandAcceptedData(
+            task_id=f"discord-context-{payload.external_message_id}",
+            admission_state="dispatched",
+            replayed=False,
+            request_id=request_id,
+            principal_id=payload.actor_external_id,
+            connector="discord",
+            command=command,
+            accepted_args=[],
+            dispatch_target="context_injection",
+            llm_execution={"advisory_response": message},
+        ),
+    )
+
+
 @router.post(
     "/messages",
     response_model=OwnerCommandResponse,
@@ -121,6 +150,7 @@ def submit_discord_message(
     identity_channel_repository: PostgresIdentityMappingRepository = Depends(
         get_identity_channel_repository
     ),
+    binding_service: ProjectSpaceBindingService = Depends(get_binding_service),
     grammar_classifier: IntentClassifier = Depends(get_grammar_classifier),
     grammar_parser: CommandParser = Depends(get_grammar_parser),
     grammar_router: FreeTextRouter = Depends(get_grammar_router),
@@ -156,6 +186,50 @@ def submit_discord_message(
     is_command = content.startswith(_COMMAND_PREFIX)
 
     if is_command:
+        context_match = _CONTEXT_FROM_PATTERN.match(content)
+        if context_match is not None:
+            try:
+                validate_connector_auth(
+                    header_channel="discord",
+                    header_actor_external_id=payload.actor_external_id,
+                    header_idempotency_key=payload.idempotency_key,
+                    header_signature=x_openqilin_signature,
+                    payload_channel="discord",
+                    payload_actor_external_id=payload.actor_external_id,
+                    payload_idempotency_key=payload.idempotency_key,
+                    payload_raw_payload_hash=payload.raw_payload_hash,
+                )
+            except ConnectorSecurityError as exc:
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "status": "error",
+                        "trace_id": payload.trace_id,
+                        "error": {
+                            "code": exc.code,
+                            "class": "authorization_error",
+                            "message": exc.message,
+                            "retryable": False,
+                            "source_component": "connector_security",
+                            "trace_id": payload.trace_id,
+                        },
+                    },
+                )
+            channel_name = context_match.group(1).lower()
+            binding = binding_service.get_binding_by_name(channel_name, payload.guild_id)
+            if binding is None:
+                return _discord_advisory_response(
+                    payload=payload,
+                    command="context",
+                    message=f"No project channel named #{channel_name} found.",
+                )
+            return _discord_advisory_response(
+                payload=payload,
+                command="context",
+                message=(
+                    f"Context from #{channel_name} noted. It will be included in your next message."
+                ),
+            )
         # Explicit /oq command: parse and derive action/target from grammar
         try:
             envelope = grammar_parser.parse(content)

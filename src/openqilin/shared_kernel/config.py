@@ -49,6 +49,7 @@ class RuntimeSettings(BaseSettings):
     gemini_retry_base_delay_seconds: float = 1.0
     gemini_retry_max_delay_seconds: float = 8.0
     gemini_free_primary_model: str = "gemini-2.0-flash"
+    gemini_embedding_model: str = "text-embedding-004"
     gemini_free_fallback_model: str = "gemini-2.0-flash"
     discord_bot_token: str | None = None
     discord_multi_bot_enabled: bool = False

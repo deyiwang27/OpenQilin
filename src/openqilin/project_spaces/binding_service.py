@@ -135,3 +135,15 @@ class ProjectSpaceBindingService:
             },
         )
         return updated
+
+    def get_binding_by_name(self, channel_name: str, guild_id: str) -> ProjectSpaceBinding | None:
+        """Resolve one active binding by inferred Discord channel name."""
+
+        # REVIEW_NOTE: project_space_bindings does not persist Discord channel names.
+        # Current lookup infers the expected name from the bound project's name and
+        # only returns active bindings. If Discord names diverge from that slug, the
+        # Architect should specify a durable name/source-of-truth strategy.
+        binding = self._repo.find_by_channel_name(guild_id, channel_name)
+        if binding is None or binding.binding_state is not BindingState.ACTIVE:
+            return None
+        return binding

@@ -17,6 +17,7 @@ from openqilin.execution_sandbox.tools.read_tools import GovernedReadToolService
 from openqilin.execution_sandbox.tools.registry_resolver import ToolServiceRegistry
 from openqilin.execution_sandbox.tools.skill_binding_resolver import resolve_tool_skill_binding
 from openqilin.execution_sandbox.tools.write_tools import GovernedWriteToolService
+from openqilin.llm_gateway.embedding_service import EmbeddingServiceProtocol
 from openqilin.llm_gateway.schemas.requests import (
     AllocationMode,
     LlmBudgetContext,
@@ -93,6 +94,7 @@ class LlmDispatchRequest:
     conversation_guild_id: str | None = None
     conversation_channel_id: str | None = None
     conversation_thread_id: str | None = None
+    context_sources: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -147,6 +149,7 @@ class LlmGatewayDispatchAdapter:
         read_tool_service: GovernedReadToolService | None = None,
         write_tool_service: GovernedWriteToolService | None = None,
         budget_client: BudgetRuntimeClientProtocol | None = None,
+        embedding_service: EmbeddingServiceProtocol | None = None,
     ) -> None:
         self._llm_gateway_service = llm_gateway_service
         self._settings = settings if settings is not None else get_settings()
@@ -162,6 +165,7 @@ class LlmGatewayDispatchAdapter:
             write_tools=write_tool_service,
         )
         self._budget_client = budget_client
+        self._embedding_service = embedding_service
 
     def dispatch(self, payload: LlmDispatchRequest) -> LlmDispatchReceipt:
         """Dispatch llm task and map gateway decision to dispatch receipt."""
@@ -245,10 +249,27 @@ class LlmGatewayDispatchAdapter:
 
         conversation_scope = self._conversation_scope(payload)
         warm_summaries = self._conversation_store.list_windows(conversation_scope)
+        cold_summaries: tuple[ConversationWindowSummary, ...] = ()
+        if self._embedding_service is not None:
+            query_embedding = self._embedding_service.embed(raw_user_prompt)
+            if query_embedding is not None:
+                cold_summaries = self._conversation_store.find_relevant_windows(
+                    conversation_scope,
+                    query_embedding,
+                    threshold=0.75,
+                    limit=3,
+                )
+        cross_channel_summaries: list[ConversationWindowSummary] = []
+        for source_scope in payload.context_sources:
+            summary = self._conversation_store.fetch_channel_summary(source_scope)
+            if summary is not None:
+                cross_channel_summaries.append(summary)
         composed_prompt = _compose_role_locked_prompt(
             recipient_role=recipient_role,
             history=self._conversation_store.list_turns(conversation_scope),
             warm_summaries=warm_summaries,
+            cold_summaries=cold_summaries,
+            cross_channel_summaries=tuple(cross_channel_summaries),
             user_prompt=raw_user_prompt,
             grounding_evidence=grounding_evidence,
         )
@@ -597,6 +618,7 @@ class ConversationWindowSummary:
 
     window_index: int
     summary_text: str
+    scope: str | None = None
 
 
 class ConversationStoreProtocol(Protocol):
@@ -616,6 +638,17 @@ class ConversationStoreProtocol(Protocol):
     def list_windows(self, scope: str) -> tuple[ConversationWindowSummary, ...]: ...
 
     def fetch_window(self, scope: str, window_index: int) -> tuple[ConversationTurn, ...]: ...
+
+    def find_relevant_windows(
+        self,
+        scope: str,
+        query_embedding: tuple[float, ...],
+        *,
+        threshold: float = 0.75,
+        limit: int = 3,
+    ) -> tuple[ConversationWindowSummary, ...]: ...
+
+    def fetch_channel_summary(self, target_scope: str) -> ConversationWindowSummary | None: ...
 
 
 class LocalConversationStore:
@@ -655,6 +688,21 @@ class LocalConversationStore:
         """In-memory store has no window archive — always returns empty."""
         return ()
 
+    def find_relevant_windows(
+        self,
+        scope: str,
+        query_embedding: tuple[float, ...],
+        *,
+        threshold: float = 0.75,
+        limit: int = 3,
+    ) -> tuple[ConversationWindowSummary, ...]:
+        """In-memory store has no pgvector — always returns empty."""
+        return ()
+
+    def fetch_channel_summary(self, target_scope: str) -> ConversationWindowSummary | None:
+        """In-memory store has no cross-channel summary — always returns None."""
+        return None
+
 
 def _normalize_recipient_role(value: str | None) -> str:
     normalized = (value or "").strip().lower()
@@ -671,14 +719,26 @@ def _compose_role_locked_prompt(
     *,
     recipient_role: str,
     history: tuple[ConversationTurn, ...],
-    warm_summaries: tuple[ConversationWindowSummary, ...],
+    warm_summaries: tuple[ConversationWindowSummary, ...] = (),
+    cold_summaries: tuple[ConversationWindowSummary, ...] = (),
+    cross_channel_summaries: tuple[ConversationWindowSummary, ...] = (),
     user_prompt: str,
-    grounding_evidence: tuple[GroundingEvidence, ...],
+    grounding_evidence: tuple[GroundingEvidence, ...] = (),
 ) -> str:
     system_prompt = _role_system_prompt(recipient_role)
     warm_lines = [
-        f"[window {summary.window_index}] {summary.summary_text}"
+        f"[Window {summary.window_index}] {summary.summary_text}"
         for summary in warm_summaries
+        if summary.summary_text.strip()
+    ]
+    cold_lines = [
+        f"[Window {summary.window_index}] {summary.summary_text}"
+        for summary in cold_summaries
+        if summary.summary_text.strip()
+    ]
+    cross_channel_lines = [
+        f"[Context from {summary.scope or 'unknown-scope'}] {summary.summary_text}"
+        for summary in cross_channel_summaries
         if summary.summary_text.strip()
     ]
     warm_block = (
@@ -686,6 +746,16 @@ def _compose_role_locked_prompt(
         + "\n".join(warm_lines)
         + "\n\n"
         if warm_lines
+        else ""
+    )
+    cold_block = (
+        "Semantically relevant archived context:\n" + "\n".join(cold_lines) + "\n\n"
+        if cold_lines
+        else ""
+    )
+    cross_channel_block = (
+        "Cross-channel context:\n" + "\n".join(cross_channel_lines) + "\n\n"
+        if cross_channel_lines
         else ""
     )
     history_lines = [
@@ -700,7 +770,8 @@ def _compose_role_locked_prompt(
     return (
         f"{system_prompt}\n\n"
         f"{grounding_block}\n\n"
-        f"{warm_block}{history_block}User request:\n{user_prompt.strip()}"
+        f"{warm_block}{cold_block}{history_block}{cross_channel_block}"
+        f"User request:\n{user_prompt.strip()}"
     )
 
 
