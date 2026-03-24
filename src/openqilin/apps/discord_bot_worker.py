@@ -824,26 +824,10 @@ class OpenQilinDiscordClient(discord.Client):
         channel_type = _channel_type_name(message.channel)
         chat_class = _resolve_chat_class(message.channel)
 
-        # DM gate for non-Secretary bots: free-text DMs are not routed through the Secretary
-        # advisory bypass on behalf of another bot — that produces confusing "I am Secretary"
-        # responses delivered via a different bot's channel.
-        # For free-text DMs, post a usage hint and return. Explicit /oq commands in DMs are
-        # still processed normally.
-        if (
-            chat_class == "direct"
-            and not _is_explicit_command
-            and self._config.bot_role != "secretary"
-        ):
-            await message.channel.send(
-                f"To send me a query, use: `/oq ask {self._config.bot_role} <your question>`\n"
-                f"Or DM @OpenQilin Secretary for general routing assistance."
-            )
-            return
-
         # Free-text group-channel gate.
         # Rules:
         #   - No bot @mentioned → Secretary handles; all other bots skip.
-        #   - Specific non-Secretary bot @mentioned → that bot posts its own intro and returns;
+        #   - Specific non-Secretary bot @mentioned → that bot forwards to the control plane;
         #     Secretary skips (so only the mentioned bot responds).
         #   - Secretary @mentioned → Secretary handles; all other bots skip.
         if chat_class != "direct" and not _is_explicit_command:
@@ -865,15 +849,7 @@ class OpenQilinDiscordClient(discord.Client):
                     # Not mentioned — Secretary will handle the message.
                     return
                 # This bot was explicitly @mentioned with free-text.
-                # Respond directly without going through the control plane
-                # (avoids principal identity verification for conversational greetings).
-                role_name = self._config.bot_role.replace("_", " ").title()
-                await message.channel.send(
-                    f"Hello! I'm the **{role_name}** agent. "
-                    f"To send me a query or task, use:\n"
-                    f"`/oq ask {self._config.bot_role} <your topic>`"
-                )
-                return
+                # Forward to the control plane and let the agent handle conversational advisory.
 
         try:
             resolved_recipients = await self._resolve_recipients(
@@ -898,17 +874,17 @@ class OpenQilinDiscordClient(discord.Client):
         # Group-channel single-bot gate.
         # DMs are always 1:1 so no gate needed there.
         if chat_class != "direct":
+            _this_bot_is_target = any(
+                r[0] == self._config.bot_id or r[1] == self._config.bot_role
+                for r in resolved_recipients
+            )
             if not _is_explicit_command:
-                # Free-text (no /oq prefix): Secretary is the sole group-channel handler.
-                # This prevents @Auditor free-text being displayed via Auditor with Secretary text.
-                if self._config.bot_role != "secretary":
+                # Free-text (no /oq prefix): Secretary handles unaddressed messages, while an
+                # explicitly @mentioned institutional bot may forward its own advisory request.
+                if self._config.bot_role != "secretary" and not _this_bot_is_target:
                     return
             else:
                 # Explicit /oq command: only the @mentioned bot (resolved recipient) handles it.
-                _this_bot_is_target = any(
-                    r[0] == self._config.bot_id or r[1] == self._config.bot_role
-                    for r in resolved_recipients
-                )
                 if not _this_bot_is_target:
                     return
         project_id = parsed.project_id

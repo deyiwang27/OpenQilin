@@ -8,10 +8,18 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Header, Request
 from fastapi.responses import JSONResponse
 
+import structlog
 import uuid
 
+from openqilin.agents.administrator.agent import AdministratorAgent
+from openqilin.agents.auditor.agent import AuditorAgent
+from openqilin.agents.ceo.agent import CeoAgent
+from openqilin.agents.cso.agent import CSOAgent
+from openqilin.agents.cwo.agent import CwoAgent
+from openqilin.agents.project_manager.agent import ProjectManagerAgent
 from openqilin.agents.secretary.agent import SecretaryAgent
 from openqilin.agents.secretary.models import SecretaryPolicyError, SecretaryRequest
+from openqilin.agents.shared.free_text_advisory import FreeTextAdvisoryRequest
 from openqilin.control_plane.identity.connector_security import (
     ConnectorSecurityError,
     validate_connector_auth,
@@ -27,8 +35,14 @@ from openqilin.control_plane.api.dependencies import (
     get_grammar_parser,
     get_grammar_router,
     get_identity_channel_repository,
+    get_administrator_agent,
+    get_auditor_agent,
+    get_ceo_agent,
+    get_cso_agent,
+    get_cwo_agent,
     get_metric_recorder,
     get_policy_runtime_client,
+    get_project_manager_agent,
     get_routing_resolver,
     get_runtime_state_repository,
     get_secretary_agent,
@@ -67,9 +81,13 @@ from openqilin.task_orchestrator.admission.service import AdmissionService
 from openqilin.task_orchestrator.services.task_service import TaskDispatchService
 
 router = APIRouter(prefix="/v1/connectors/discord", tags=["discord_ingress"])
+LOGGER = structlog.get_logger(__name__)
 
 _COMMAND_PREFIX = "/oq"
 _CONTEXT_FROM_PATTERN = re.compile(r"^/oq\s+context\s+from:#([a-z0-9_-]+)\s*$", re.IGNORECASE)
+_ADVISORY_AGENT_ROLES = frozenset(
+    {"ceo", "cwo", "auditor", "administrator", "cso", "project_manager"}
+)
 
 
 def _resolve_target(*, action: str, explicit_target: str | None) -> str:
@@ -155,6 +173,12 @@ def submit_discord_message(
     grammar_parser: CommandParser = Depends(get_grammar_parser),
     grammar_router: FreeTextRouter = Depends(get_grammar_router),
     secretary_agent: SecretaryAgent = Depends(get_secretary_agent),
+    project_manager_agent: ProjectManagerAgent = Depends(get_project_manager_agent),
+    cso_agent: CSOAgent = Depends(get_cso_agent),
+    ceo_agent: CeoAgent = Depends(get_ceo_agent),
+    cwo_agent: CwoAgent = Depends(get_cwo_agent),
+    auditor_agent: AuditorAgent = Depends(get_auditor_agent),
+    administrator_agent: AdministratorAgent = Depends(get_administrator_agent),
     routing_resolver: ProjectSpaceRoutingResolver = Depends(get_routing_resolver),
     x_openqilin_signature: Annotated[str | None, Header(alias="X-OpenQilin-Signature")] = None,
 ) -> OwnerCommandResponse | JSONResponse:
@@ -333,6 +357,87 @@ def submit_discord_message(
                     llm_execution={
                         "advisory_response": sec_resp.advisory_text,
                         "routing_suggestion": sec_resp.routing_suggestion,
+                    },
+                ),
+            )
+        if payload.bot_role in _ADVISORY_AGENT_ROLES:
+            try:
+                validate_connector_auth(
+                    header_channel="discord",
+                    header_actor_external_id=payload.actor_external_id,
+                    header_idempotency_key=payload.idempotency_key,
+                    header_signature=x_openqilin_signature,
+                    payload_channel="discord",
+                    payload_actor_external_id=payload.actor_external_id,
+                    payload_idempotency_key=payload.idempotency_key,
+                    payload_raw_payload_hash=payload.raw_payload_hash,
+                )
+            except ConnectorSecurityError as exc:
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "status": "error",
+                        "trace_id": payload.trace_id,
+                        "error": {
+                            "code": exc.code,
+                            "class": "authorization_error",
+                            "message": exc.message,
+                            "retryable": False,
+                            "source_component": "connector_security",
+                            "trace_id": payload.trace_id,
+                        },
+                    },
+                )
+
+            scope = f"guild::{payload.guild_id}::channel::{payload.channel_id}"
+            advisory_request = FreeTextAdvisoryRequest(
+                text=content,
+                scope=scope,
+                guild_id=payload.guild_id,
+                channel_id=payload.channel_id,
+                addressed_agent=payload.bot_role,
+            )
+
+            try:
+                if payload.bot_role == "ceo":
+                    advisory_response = ceo_agent.handle_free_text(advisory_request)
+                elif payload.bot_role == "cwo":
+                    advisory_response = cwo_agent.handle_free_text(advisory_request)
+                elif payload.bot_role == "auditor":
+                    advisory_response = auditor_agent.handle_free_text(advisory_request)
+                elif payload.bot_role == "administrator":
+                    advisory_response = administrator_agent.handle_free_text(advisory_request)
+                elif payload.bot_role == "cso":
+                    advisory_response = cso_agent.handle_free_text(advisory_request)
+                else:
+                    advisory_response = project_manager_agent.handle_free_text(advisory_request)
+                advisory_text = advisory_response.advisory_text
+            except Exception:
+                LOGGER.exception(
+                    "discord_ingress.advisory_bypass.failed", bot_role=payload.bot_role
+                )
+                advisory_text = (
+                    f"I'm the {payload.bot_role.replace('_', ' ').title()} agent. "
+                    "I'm unable to respond right now — please try again."
+                )
+
+            request_id = str(uuid.uuid4())
+            return OwnerCommandResponse(
+                status="accepted",
+                trace_id=payload.trace_id,
+                data=OwnerCommandAcceptedData(
+                    task_id=f"{payload.bot_role}-{payload.external_message_id}",
+                    admission_state="dispatched",
+                    replayed=False,
+                    request_id=request_id,
+                    principal_id=payload.actor_external_id,
+                    connector="discord",
+                    command=resolved_action,
+                    accepted_args=[],
+                    dispatch_target=payload.bot_role,
+                    llm_execution={
+                        "advisory_response": advisory_text,
+                        "routing_suggestion": None,
                     },
                 ),
             )
