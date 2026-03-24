@@ -90,6 +90,7 @@ class DiscordInboundEvent:
     project_id: str | None
     timestamp: datetime
     response_channel: Any
+    is_everyone_mention: bool = False
 
 
 @dataclass(slots=True)
@@ -208,6 +209,7 @@ class DiscordIngressFanIn:
             bot_role=event.bot_role,
             bot_id=event.bot_id,
             bot_user_id=event.bot_user_id,
+            is_everyone_mention=event.is_everyone_mention,
         )
         try:
             response = await self._http_client.post(
@@ -823,6 +825,7 @@ class OpenQilinDiscordClient(discord.Client):
         actor_role = self._config.actor_role_map.get(actor_id, self._config.actor_role_default)
         channel_type = _channel_type_name(message.channel)
         chat_class = _resolve_chat_class(message.channel)
+        is_everyone = bool(getattr(message, "mention_everyone", False))
 
         # Free-text group-channel gate.
         # Rules:
@@ -835,21 +838,17 @@ class OpenQilinDiscordClient(discord.Client):
             mentioned_bot_ids = frozenset(
                 str(user.id) for user in message.mentions if getattr(user, "bot", False)
             )
-            i_am_mentioned = bool(my_user_id and my_user_id in mentioned_bot_ids)
+            i_am_mentioned = bool(my_user_id and my_user_id in mentioned_bot_ids) or is_everyone
 
             if self._config.bot_role == "secretary":
-                # Secretary yields if any other (non-Secretary) bot is explicitly mentioned.
                 other_bot_mentioned = bool(
                     mentioned_bot_ids - ({my_user_id} if my_user_id else set())
                 )
-                if other_bot_mentioned:
+                if other_bot_mentioned and not is_everyone:
                     return
             else:
                 if not i_am_mentioned:
-                    # Not mentioned — Secretary will handle the message.
                     return
-                # This bot was explicitly @mentioned with free-text.
-                # Forward to the control plane and let the agent handle conversational advisory.
 
         try:
             resolved_recipients = await self._resolve_recipients(
@@ -915,6 +914,7 @@ class OpenQilinDiscordClient(discord.Client):
             project_id=project_id,
             timestamp=message.created_at,
             response_channel=message.channel,
+            is_everyone_mention=is_everyone,
         )
         await self._fan_in.process_event(event)
 

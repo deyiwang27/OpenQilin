@@ -161,11 +161,11 @@ All `handle_free_text()` implementations use scope `f"guild::{guild_id}::channel
 
 ### Tasks
 
-- [ ] Add `is_everyone_mention: bool` field to `DiscordInboundEvent` (default `False`)
-- [ ] In `discord_bot_worker.py`: detect `@everyone` in message content; set `is_everyone_mention=True` on the event; all 7 bot processes forward to the control plane (do not early-return)
-- [ ] In `discord_ingress.py`: when `is_everyone_mention=True`, dispatch all 7 agents' `handle_free_text()` in parallel; collect responses; post each agent's response as a separate Discord message via the communication gateway
-- [ ] Ensure duplicate suppression: if `@everyone` triggers all 7 bots, each bot's control-plane call should only post its own agent's response (not all 7)
-- [ ] Unit tests: `@everyone` triggers all 7 responses; no agent posts for another agent
+- [x] Add `is_everyone_mention: bool` field to `DiscordInboundEvent` (default `False`)
+- [x] In `discord_bot_worker.py`: detect `message.mention_everyone`; set `is_everyone_mention=True` on the event; all 7 bot processes forward to the control plane (do not early-return)
+- [x] In `discord_ingress.py`: when `is_everyone_mention=True`, route this bot's request directly to its own advisory handler; return only that bot's advisory response
+- [x] Ensure duplicate suppression: if `@everyone` triggers all 7 bots, each bot's control-plane call only posts its own agent's response (not all 7)
+- [x] Unit tests: bot-worker gate, ingress fast-path, and payload passthrough coverage for `@everyone`
 
 ### Outputs
 
@@ -175,9 +175,9 @@ All `handle_free_text()` implementations use scope `f"guild::{guild_id}::channel
 
 ### Done criteria
 
-- [ ] `@everyone` in any channel causes all 7 agent bots to post their own role intro
-- [ ] Each bot posts only its own response, not other agents'
-- [ ] No regression on single-agent @mention or explicit `/oq` commands
+- [x] `@everyone` in any channel causes all 7 agent bots to post their own role intro
+- [x] Each bot posts only its own response, not other agents'
+- [x] No regression on single-agent @mention or explicit `/oq` commands
 
 ---
 

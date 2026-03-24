@@ -140,6 +140,7 @@ def build_discord_ingress_payload(
     bot_role: str | None = None,
     bot_id: str | None = None,
     bot_user_id: str | None = None,
+    is_everyone_mention: bool = False,
 ) -> tuple[dict[str, object], str]:
     """Build signed payload for POST /v1/connectors/discord/messages."""
 
@@ -169,6 +170,7 @@ def build_discord_ingress_payload(
         "bot_role": bot_role,
         "bot_id": bot_id,
         "bot_user_id": bot_user_id,
+        "is_everyone_mention": is_everyone_mention,
     }
     raw_payload_hash = hashlib.sha256(_serialize_for_hash(payload_without_hash)).hexdigest()
     payload = dict(payload_without_hash)
