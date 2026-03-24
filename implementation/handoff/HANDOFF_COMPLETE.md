@@ -3,7 +3,7 @@
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-24
 **Branch:** `fix/oq-ask-intercept-target`
-**Draft PR:** pending
+**Draft PR:** #206
 **Implements:** targeted fix request for `/oq ask <agent_role> ...` advisory intercept in `src/openqilin/control_plane/routers/discord_ingress.py`
 
 ---
