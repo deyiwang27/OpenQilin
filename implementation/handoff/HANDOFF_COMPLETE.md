@@ -1,16 +1,16 @@
-# Handoff Complete: M18-WP2 — @everyone Broadcast
+# Handoff Complete: Hotfix — `/oq ask <agent>` advisory intercept
 
 **Completed by:** CodeX (engineer)
-**Date:** 2026-03-23
-**Branch:** `feat/196-m18-wp2-everyone-broadcast`
-**Draft PR:** #197
-**Implements:** `implementation/handoff/current.md`
+**Date:** 2026-03-24
+**Branch:** `fix/oq-ask-advisory-intercept`
+**Draft PR:** #TBD
+**Implements:** targeted hotfix request for `src/openqilin/control_plane/routers/discord_ingress.py`
 
 ---
 
 ## Summary
 
-Implemented the M18-WP2 `@everyone` broadcast path end-to-end. The Discord bot worker now detects `message.mention_everyone`, forwards one request per bot process, the ingress schema carries `is_everyone_mention`, and the control plane routes each request directly to that bot's own advisory handler without cross-bot coordination.
+Implemented a targeted fix in `discord_ingress.py` so explicit `/oq ask <agent_role> <text>` commands hit the advisory bypass before falling through to the governance task pipeline. The change preserves existing authentication, Secretary policy handling, and non-Secretary fallback responses.
 
 ---
 
@@ -18,13 +18,11 @@ Implemented the M18-WP2 `@everyone` broadcast path end-to-end. The Discord bot w
 
 | Task | Status | Notes |
 |---|---|---|
-| Add `is_everyone_mention` to `DiscordInboundEvent` | ✅ Done | Added field with default `False` and populated it from `message.mention_everyone` |
-| Update bot-worker free-text gate for `@everyone` | ✅ Done | Secretary no longer yields on `@everyone`; non-Secretary bots forward even when not individually listed in `message.mentions` |
-| Add `is_everyone_mention` to `DiscordIngressRequest` | ✅ Done | Schema default is `False`; acceptance one-liner confirmed field construction works |
-| Pass `is_everyone_mention` through `build_discord_ingress_payload()` | ✅ Done | Fan-in payload now includes the flag for control-plane routing |
-| Add ingress `@everyone` fast-path advisory routing | ✅ Done | Non-Secretary bots route directly to their own advisory handler; Secretary falls through to its existing advisory block |
-| Add unit tests for worker gate, ingress fast-path, and payload passthrough | ✅ Done | Added `tests/unit/test_m18_wp2_everyone_broadcast.py` with 8 focused cases |
-| Update planning/progress docs | ✅ Done | M18-WP2 tasks/criteria checked and `ImplementationProgress-v2.md` marked `done` |
+| Add explicit-command advisory intercept for `/oq ask <agent_role> <text>` | ✅ Done | Inserted immediately after explicit command grammar parsing and before owner-command dispatch |
+| Keep Secretary advisory handling aligned with existing bypass behaviour | ✅ Done | Reused `SecretaryRequest`, intent classification, and `SecretaryPolicyError` handling |
+| Keep non-Secretary advisory handling aligned with existing bypass behaviour | ✅ Done | Reused `FreeTextAdvisoryRequest` dispatch and canned fallback responses |
+| Run required static checks | ✅ Done | `ruff check`, `ruff format --check`, and `python -m mypy` all passed |
+| Run required unit/component tests | ✅ Done | `uv run pytest ...` launcher was unavailable; equivalent `uv run python -m pytest tests/unit tests/component -x --tb=short -q` passed |
 
 ---
 
@@ -35,8 +33,8 @@ InMemory gate:    PASS
 ruff check:       PASS
 ruff format:      PASS
 mypy:             PASS
-pytest unit:      PASS  (880 passed, 1 warning in combined unit+component run)
-pytest component: PASS  (880 passed, 1 warning in combined unit+component run)
+pytest unit:      PASS  (880 passed, 0 failed)
+pytest component: PASS  (same combined run: 880 passed, 0 failed)
 ```
 
 ---
@@ -55,11 +53,11 @@ None.
 
 ## What Was Skipped
 
-None.
+No new tests were added because this was a live-session hotfix and the request explicitly scoped validation to manual Discord verification plus the existing repo-wide checks.
 
 ---
 
 ## Notes
 
-- Draft PR opened: `#197`
-- `implementation/handoff/current.md` had a pre-existing local modification and was intentionally left untouched.
+- `implementation/handoff/current.md` currently describes M18-WP2, which is unrelated to this hotfix request; this completion note reflects the user-requested targeted fix instead.
+- `uv run pytest tests/unit tests/component -x --tb=short -q` failed in this environment because the `pytest` launcher executable was unavailable. The suite was run successfully with `uv run python -m pytest tests/unit tests/component -x --tb=short -q` instead.
