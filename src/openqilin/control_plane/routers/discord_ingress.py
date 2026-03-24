@@ -299,6 +299,97 @@ def submit_discord_message(
             action=payload.action, explicit_target=payload.target
         )
         resolved_args = [str(a) for a in envelope.args] if envelope.args else payload.args
+        # /oq ask <agent_role> <text> — advisory shortcut bypassing governance pipeline
+        _ALL_ADVISORY_ROLES = _ADVISORY_AGENT_ROLES | {"secretary"}
+        if (
+            resolved_action == "ask"
+            and resolved_args
+            and resolved_args[0].lower() in _ALL_ADVISORY_ROLES
+        ):
+            auth_error = _validate_discord_connector_request(
+                payload=payload,
+                signature_header=x_openqilin_signature,
+            )
+            if auth_error is not None:
+                return auth_error
+            _ask_role = resolved_args[0].lower()
+            _ask_text = " ".join(resolved_args[1:]).strip() if len(resolved_args) > 1 else content
+            if not _ask_text:
+                _ask_text = content
+            scope = f"guild::{payload.guild_id}::channel::{payload.channel_id}"
+            if _ask_role == "secretary":
+                try:
+                    intent = grammar_classifier.classify(_ask_text, grammar_context)
+                except GrammarParseError:
+                    intent = grammar_classifier.classify("tell me about your role", grammar_context)
+                sec_req = SecretaryRequest(
+                    message=_ask_text,
+                    intent=intent,
+                    context=grammar_context,
+                    trace_id=payload.trace_id,
+                    channel_id=payload.channel_id,
+                    guild_id=payload.guild_id,
+                    actor_id=payload.actor_external_id,
+                    addressed_agent="",
+                )
+                try:
+                    sec_resp = secretary_agent.handle(sec_req)
+                    _advisory_text = sec_resp.advisory_text
+                except SecretaryPolicyError as exc:
+                    return JSONResponse(
+                        status_code=403,
+                        content={
+                            "status": "denied",
+                            "trace_id": payload.trace_id,
+                            "error": {
+                                "code": exc.code,
+                                "class": "authorization_error",
+                                "message": exc.message,
+                                "retryable": False,
+                                "source_component": "secretary_agent",
+                                "trace_id": payload.trace_id,
+                            },
+                        },
+                    )
+                except Exception:
+                    LOGGER.exception("discord_ingress.ask_advisory.secretary_failed")
+                    _advisory_text = (
+                        "I'm the Secretary agent. I'm unable to respond right now"
+                        " — please try again."
+                    )
+                return _discord_advisory_response(
+                    payload=payload, command="ask", message=_advisory_text
+                )
+            advisory_req = FreeTextAdvisoryRequest(
+                text=_ask_text,
+                scope=scope,
+                guild_id=payload.guild_id,
+                channel_id=payload.channel_id,
+                addressed_agent=_ask_role,
+            )
+            try:
+                if _ask_role == "ceo":
+                    _resp = ceo_agent.handle_free_text(advisory_req)
+                elif _ask_role == "cwo":
+                    _resp = cwo_agent.handle_free_text(advisory_req)
+                elif _ask_role == "auditor":
+                    _resp = auditor_agent.handle_free_text(advisory_req)
+                elif _ask_role == "administrator":
+                    _resp = administrator_agent.handle_free_text(advisory_req)
+                elif _ask_role == "cso":
+                    _resp = cso_agent.handle_free_text(advisory_req)
+                else:
+                    _resp = project_manager_agent.handle_free_text(advisory_req)
+                _advisory_text = _resp.advisory_text
+            except Exception:
+                LOGGER.exception("discord_ingress.ask_advisory.agent_failed", target_role=_ask_role)
+                _advisory_text = (
+                    f"I'm the {_ask_role.replace('_', ' ').title()} agent. "
+                    "I'm unable to respond right now — please try again."
+                )
+            return _discord_advisory_response(
+                payload=payload, command="ask", message=_advisory_text
+            )
     else:
         # Free-text: classify intent, reject mutations, resolve routing target
         try:
