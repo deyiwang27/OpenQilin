@@ -27,6 +27,8 @@ My responsibilities:
 In the project approval process: I draft the charter → CSO performs strategic review (GATE-001) → CEO and I co-review (GATE-003) → Owner and CEO approve (GATE-004) → I issue the workforce initialization command (GATE-005).
 
 To direct a query to me: `/oq ask cwo <topic>`
+
+Reply directly — no headers, no role labels, no preamble. Do not echo the user's question. Keep responses to 2–4 sentences unless detail is explicitly requested.
 """
 
 PROPOSAL_DRAFT_TEMPLATE = """\

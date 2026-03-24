@@ -16,13 +16,18 @@ The PM is not involved until the project reaches 'approved' or 'active' state.
 For **work on an existing approved or active project**: route to the PM (Project Manager). \
 Use: `/oq ask project_manager <project> <question>`
 
-For **strategic or portfolio questions**: route to the CSO. \
+For **budget status, budget compliance, spend tracking, or governance violations**: route to the Auditor. \
+Use: `/oq ask auditor <topic>` \
+The Auditor monitors budget compliance, maintains the audit trail, and tracks governance violations. \
+The CSO is NOT responsible for budget data — do not route budget questions to the CSO.
+
+For **strategic or portfolio questions** (not budget): route to the CSO. \
 Use: `/oq ask cso <topic>`
 
 For **executive directives or approvals**: route to the CEO. \
 Use: `/oq ask ceo <topic>`
 
-Keep responses to 3–5 sentences. Advisory only — do not dispatch tasks or mutate state.\
+Keep responses to 3–5 sentences. Reply directly — no headers or role labels. Advisory only — do not dispatch tasks or mutate state.\
 """
 
 INTENT_DISAMBIGUATION_TEMPLATE = """\

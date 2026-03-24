@@ -25,9 +25,16 @@ from openqilin.control_plane.identity.connector_security import (
     validate_connector_auth,
 )
 from openqilin.budget_runtime.reservation_service import BudgetReservationService
+from openqilin.control_plane.advisory.bot_registry_reader import BotRegistryReader
+from openqilin.control_plane.advisory.channel_availability import (
+    is_role_available_in_channel,
+)
+from openqilin.control_plane.advisory.topic_router import AdvisoryTopicRouter
 from openqilin.control_plane.api.dependencies import (
     get_admission_service,
+    get_advisory_topic_router,
     get_audit_writer,
+    get_bot_registry_reader,
     get_budget_reservation_service,
     get_governance_repository,
     get_binding_service,
@@ -215,6 +222,8 @@ def submit_discord_message(
     auditor_agent: AuditorAgent = Depends(get_auditor_agent),
     administrator_agent: AdministratorAgent = Depends(get_administrator_agent),
     routing_resolver: ProjectSpaceRoutingResolver = Depends(get_routing_resolver),
+    advisory_topic_router: AdvisoryTopicRouter = Depends(get_advisory_topic_router),
+    bot_registry_reader: BotRegistryReader = Depends(get_bot_registry_reader),
     x_openqilin_signature: Annotated[str | None, Header(alias="X-OpenQilin-Signature")] = None,
 ) -> OwnerCommandResponse | JSONResponse:
     """Translate Discord connector payload into canonical owner-command ingress contract.
@@ -243,6 +252,12 @@ def submit_discord_message(
 
     content = payload.content.strip()
     is_command = content.startswith(_COMMAND_PREFIX)
+    _advisory_topic_router = (
+        advisory_topic_router if hasattr(advisory_topic_router, "classify") else None
+    )
+    _bot_registry_reader = (
+        bot_registry_reader if hasattr(bot_registry_reader, "get_mention") else None
+    )
 
     if is_command:
         context_match = _CONTEXT_FROM_PATTERN.match(content)
@@ -459,6 +474,67 @@ def submit_discord_message(
             )
             if auth_error is not None:
                 return auth_error
+            # Tier 1: deterministic advisory topic routing (M18-WP5)
+            _tier1 = (
+                _advisory_topic_router.classify(content)
+                if _advisory_topic_router is not None
+                else None
+            )
+            if _tier1 is not None:
+                _is_project_channel = routing_context is not None
+                if is_role_available_in_channel(_tier1.agent_role, _is_project_channel):
+                    _scope = f"guild::{payload.guild_id}::channel::{payload.channel_id}"
+                    _advisory_req = FreeTextAdvisoryRequest(
+                        text=content,
+                        scope=_scope,
+                        guild_id=payload.guild_id,
+                        channel_id=payload.channel_id,
+                        addressed_agent=_tier1.agent_role,
+                    )
+                    try:
+                        if _tier1.agent_role == "ceo":
+                            _t1_resp = ceo_agent.handle_free_text(_advisory_req)
+                        elif _tier1.agent_role == "cwo":
+                            _t1_resp = cwo_agent.handle_free_text(_advisory_req)
+                        elif _tier1.agent_role == "auditor":
+                            _t1_resp = auditor_agent.handle_free_text(_advisory_req)
+                        elif _tier1.agent_role == "cso":
+                            _t1_resp = cso_agent.handle_free_text(_advisory_req)
+                        elif _tier1.agent_role == "project_manager":
+                            _t1_resp = project_manager_agent.handle_free_text(_advisory_req)
+                        else:
+                            _t1_resp = None
+                        if _t1_resp is not None:
+                            return _discord_advisory_response(
+                                payload=payload,
+                                command="ask",
+                                message=_t1_resp.advisory_text,
+                            )
+                    except Exception:
+                        LOGGER.exception(
+                            "discord_ingress.tier1_routing.agent_failed",
+                            target_role=_tier1.agent_role,
+                        )
+                        # Fall through to Secretary LLM on exception
+                else:
+                    # Role not available in this channel type — return referral message
+                    _role_label = _tier1.agent_role.replace("_", " ").title()
+                    _mention = (
+                        _bot_registry_reader.get_mention(_tier1.agent_role)
+                        if _bot_registry_reader is not None
+                        else None
+                    )
+                    _mention_str = f" {_mention}" if _mention else ""
+                    _referral_msg = (
+                        f"The {_role_label} agent{_mention_str} is not available in project channels. "
+                        f"Use `/oq ask {_tier1.agent_role} <your question>` in a general channel."
+                    )
+                    return _discord_advisory_response(
+                        payload=payload,
+                        command="ask",
+                        message=_referral_msg,
+                    )
+            # Fall through: Tier 1 did not match or agent failed — Secretary LLM handles (Tier 2)
             _addressed_agent = ""
             for _r in payload.recipients:
                 _rt = _r.recipient_type.strip().lower() if _r.recipient_type else ""

@@ -13,6 +13,9 @@ import discord
 import httpx
 import structlog
 
+from openqilin.data_access.repositories.postgres.idempotency_cache_store import (
+    build_redis_client,
+)
 from openqilin.discord_runtime.bridge import (
     DiscordCommandParseError,
     ParsedDiscordCommand,
@@ -746,6 +749,7 @@ class OpenQilinDiscordClient(discord.Client):
         config: DiscordBotWorkerConfig,
         fan_in: DiscordIngressFanIn,
         readiness: DiscordRoleBotReadiness,
+        redis_client: Any | None = None,
     ) -> None:
         intents = discord.Intents.default()
         intents.message_content = True
@@ -753,6 +757,7 @@ class OpenQilinDiscordClient(discord.Client):
         self._config = config
         self._fan_in = fan_in
         self._readiness = readiness
+        self._redis_client = redis_client
 
     async def close(self) -> None:
         await super().close()
@@ -760,6 +765,23 @@ class OpenQilinDiscordClient(discord.Client):
     async def on_ready(self) -> None:
         bot_user_id = str(self.user.id) if self.user is not None else "unknown"
         await self._readiness.mark_ready(role=self._config.bot_role, user_id=bot_user_id)
+        if self._redis_client is not None and bot_user_id != "unknown":
+            try:
+                self._redis_client.hset(
+                    "openqilin:bot_discord_ids",
+                    self._config.bot_role,
+                    bot_user_id,
+                )
+                LOGGER.info(
+                    "discord.worker.bot_registry_written",
+                    role=self._config.bot_role,
+                    user_id=bot_user_id,
+                )
+            except Exception:
+                LOGGER.warning(
+                    "discord.worker.bot_registry_write_failed",
+                    role=self._config.bot_role,
+                )
         LOGGER.info(
             "discord.worker.ready",
             bot_user=str(self.user),
@@ -978,7 +1000,9 @@ def build_worker_config(settings: RuntimeSettings) -> DiscordBotWorkerConfig:
     )
 
 
-async def run_worker_launch_plan(plan: DiscordWorkerLaunchPlan) -> None:
+async def run_worker_launch_plan(
+    plan: DiscordWorkerLaunchPlan, *, redis_client: Any | None = None
+) -> None:
     """Run one or many Discord bot clients according to launch plan."""
 
     primary_config = plan.configs[0]
@@ -999,6 +1023,7 @@ async def run_worker_launch_plan(plan: DiscordWorkerLaunchPlan) -> None:
             config=config,
             fan_in=fan_in,
             readiness=readiness,
+            redis_client=redis_client,
         )
         for config in plan.configs
     ]
@@ -1030,6 +1055,12 @@ async def main(*, run_once: bool = False) -> None:
         _mark_ready()
         return
     launch_plan = build_worker_launch_plan(settings)
+    bot_redis: Any | None = None
+    try:
+        if settings.redis_url:
+            bot_redis = build_redis_client(settings.redis_url)
+    except Exception:
+        LOGGER.warning("discord.worker.redis_client_build_failed")
     LOGGER.info(
         "discord.worker.launch_plan",
         multi_bot=settings.discord_multi_bot_enabled,
@@ -1037,7 +1068,7 @@ async def main(*, run_once: bool = False) -> None:
         required_roles=sorted(launch_plan.required_roles),
         bot_roles=[config.bot_role for config in launch_plan.configs],
     )
-    await run_worker_launch_plan(launch_plan)
+    await run_worker_launch_plan(launch_plan, redis_client=bot_redis)
 
 
 if __name__ == "__main__":

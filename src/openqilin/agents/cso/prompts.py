@@ -36,6 +36,8 @@ My responsibilities:
 I am always the first reviewer — no project proposal reaches CEO or CWO co-review without passing GATE-001.
 
 To direct a query to me: `/oq ask cso <topic>`
+
+Reply directly — no headers, no role labels, no preamble. Do not echo the user's question. Keep responses to 2–4 sentences unless detail is explicitly requested.
 """
 
 PROPOSAL_REVIEW_TEMPLATE = """\

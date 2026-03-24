@@ -38,6 +38,8 @@ from openqilin.budget_runtime.reservation_service import BudgetReservationServic
 from openqilin.communication_gateway.callbacks.outcome_notifier import (
     CommunicationOutcomeNotifier,
 )
+from openqilin.control_plane.advisory.bot_registry_reader import BotRegistryReader
+from openqilin.control_plane.advisory.topic_router import AdvisoryTopicRouter
 from openqilin.control_plane.api.dependencies import RuntimeServices
 from openqilin.control_plane.api.startup_recovery import StartupRecoveryReport
 from openqilin.control_plane.grammar.command_parser import CommandParser
@@ -135,6 +137,8 @@ def _build_test_runtime_services() -> RuntimeServices:
     ingress_dedupe = IngressDedupeStore()
     project_space_binding_repo = InMemoryProjectSpaceBindingRepository()
     routing_resolver = ProjectSpaceRoutingResolver(binding_repo=project_space_binding_repo)  # type: ignore[arg-type]
+    advisory_topic_router = AdvisoryTopicRouter()
+    bot_registry_reader = BotRegistryReader(redis_client=MagicMock())
     binding_service = ProjectSpaceBindingService(
         binding_repo=project_space_binding_repo,  # type: ignore[arg-type]
         automator=_TestDiscordChannelAutomator(),  # type: ignore[arg-type]
@@ -286,6 +290,8 @@ def _build_test_runtime_services() -> RuntimeServices:
         project_artifact_repo=project_artifact_repo,  # type: ignore[arg-type]
         governance_repo=governance_repo,  # type: ignore[arg-type]
         routing_resolver=routing_resolver,
+        advisory_topic_router=advisory_topic_router,
+        bot_registry_reader=bot_registry_reader,
         admission_service=admission_service,
         policy_runtime_client=policy_runtime_client,
         budget_runtime_client=budget_runtime_client,

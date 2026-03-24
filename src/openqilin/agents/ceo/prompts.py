@@ -27,6 +27,8 @@ My responsibilities:
 In the project approval process: CSO reviews first (GATE-001), then CEO and CWO co-review (GATE-003), then CEO and owner approve (GATE-004).
 
 To direct a query to me: `/oq ask ceo <topic>`
+
+Reply directly — no headers, no role labels, no preamble. Do not echo the user's question. Keep responses to 2–4 sentences unless detail is explicitly requested.
 """
 
 PROPOSAL_REVIEW_TEMPLATE = """\

@@ -255,11 +255,291 @@ All `handle_free_text()` implementations use scope `f"guild::{guild_id}::channel
 
 ---
 
+## WP M18-WP5 — Deterministic Advisory Topic Router
+
+**Goal:** Replace Secretary's prompt-only advisory routing with a two-tier deterministic system. Tier 1 is an `AdvisoryTopicRouter` — a keyword→agent authority table that resolves unambiguous routing without an LLM call. When Tier 1 matches, `discord_ingress.py` delegates directly to the target agent's `handle_free_text()` and returns its response. When Tier 1 has no match, Secretary's LLM (Tier 2) handles the message as today. Channel availability is enforced: Auditor and Administrator are not reachable in project channels; Secretary returns a natural-language referral with `/oq ask <role>` guidance. Secretary discovers live bot @mention handles from the Redis bot registry (`openqilin:bot_discord_ids`) to include `<@id>` mentions in referral messages.
+
+**GitHub issue:** #207
+
+**Entry gate:** M18-WP1 done ✓ (all agents have `handle_free_text()`), M18-WP2 done ✓
+
+---
+
+### Background
+
+After M18-WP1, all agents have `handle_free_text()`. Secretary currently routes advisory queries by LLM-prompt alone — fragile because the LLM may route budget questions to CSO, strategic questions to PM, etc. A prompt fix was applied as a temporary measure (session 2026-03-23) but the owner confirmed this is not a durable solution. This WP installs a deterministic pre-filter that handles unambiguous cases without an LLM call, and enforces the authoritative routing table below regardless of LLM output.
+
+**Authority table (owner-confirmed, 2026-03-23):**
+
+| Agent | Topic domain | Keywords (case-insensitive substring match) |
+|---|---|---|
+| `auditor` | Budget, spend, compliance, violations, audit trail | budget, spend, spending, compliance, violation, audit, trail, financial, expenditure, cost, overrun, breach, governance breach |
+| `cso` | Strategic alignment, portfolio, cross-project risks | strategic, strategy, portfolio, alignment, cross-project, opportunity, conflict, risk, roadmap |
+| `project_manager` | Project status, tasks, assignments, milestones | task, assignment, blocked, milestone, progress, execution plan, sprint, backlog |
+| `cwo` | Workforce, charter, specialist activation | charter, workforce, initialization, specialist, workforce plan, role binding, agent activation |
+| `ceo` | Executive directives, approvals, escalation | approve, directive, executive, authorize, escalation, final decision |
+
+Secretary is NOT a routing target in Tier 1 — Secretary's LLM handles its own fallback (Tier 2).
+
+**Channel availability:**
+- Project channels (channel bound to a project via `routing_resolver`): `{secretary, ceo, cwo, cso, project_manager}` are available
+- Restricted roles (not available in project channels): `{auditor, administrator}`
+- Determination: `is_project_channel = (routing_context is not None)` — `routing_context` comes from `routing_resolver.resolve(guild_id, channel_id)` already called in `discord_ingress.py`
+
+**Bot registry Redis hash:**
+- Key: `openqilin:bot_discord_ids`
+- Field: role string (e.g., `"auditor"`, `"secretary"`)
+- Value: Discord user ID string (e.g., `"1234567890"`)
+- Write: each bot writes its own entry to this hash when `on_ready()` fires in `discord_bot_worker.py`
+- Read: `BotRegistryReader` in `discord_ingress.py` formats `<@user_id>` for referral messages
+
+---
+
+### Tasks
+
+#### New package: `src/openqilin/control_plane/advisory/`
+
+- [ ] Create `src/openqilin/control_plane/advisory/__init__.py` (empty)
+- [ ] Create `src/openqilin/control_plane/advisory/topic_router.py`:
+  - `TOPIC_ROUTING_TABLE: dict[str, frozenset[str]]` — maps agent role to frozenset of lowercase keyword strings (use the authority table above; do not include `secretary` or `administrator` as routing targets)
+  - `@dataclass(frozen=True, slots=True) class RoutingDecision` with fields `agent_role: str`, `confidence: Literal["high", "low"]`, `matched_keywords: list[str]`
+  - `class AdvisoryTopicRouter` with `classify(self, text: str) -> RoutingDecision | None`:
+    - Lowercase `text` before matching
+    - For each role in `TOPIC_ROUTING_TABLE`, count how many keywords appear as substrings in the lowercased text
+    - If exactly one role has ≥1 match: return `RoutingDecision(agent_role=role, confidence="high", matched_keywords=[...])`
+    - If multiple roles match with equal counts: return `None` (let Secretary LLM decide tie-breaks)
+    - If multiple roles match but one has strictly more matches: return that role with `confidence="high"`
+    - If no role matches: return `None`
+- [ ] Create `src/openqilin/control_plane/advisory/channel_availability.py`:
+  - `CHANNEL_RESTRICTED_ROLES: frozenset[str] = frozenset({"auditor", "administrator"})`
+  - `def is_role_available_in_channel(role: str, is_project_channel: bool) -> bool` — returns `False` if `is_project_channel` and `role in CHANNEL_RESTRICTED_ROLES`, else `True`
+- [ ] Create `src/openqilin/control_plane/advisory/bot_registry_reader.py`:
+  - `BOT_REGISTRY_REDIS_KEY = "openqilin:bot_discord_ids"`
+  - `class BotRegistryReader` with constructor `__init__(self, redis_client: Any)` (accepts a Redis client — same type as used in `RedisIdempotencyCacheStore`, i.e., `redis.Redis`)
+  - `def get_mention(self, role: str) -> str | None` — calls `self._redis.hget(BOT_REGISTRY_REDIS_KEY, role)`, decodes bytes if needed, returns `f"<@{user_id}>"` or `None` if missing; must not raise on Redis error — log warning and return `None`
+  - `def get_all(self) -> dict[str, str]` — calls `self._redis.hgetall(BOT_REGISTRY_REDIS_KEY)`, decodes all keys/values, returns `{role: user_id}` dict; returns `{}` on error
+
+#### Bot registry write: `src/openqilin/apps/discord_bot_worker.py`
+
+- [ ] Import `build_redis_client` from `openqilin.data_access.repositories.postgres.idempotency_cache_store` (already imported in `dependencies.py`; add to bot worker)
+- [ ] Add optional `redis_client: Any | None = None` parameter to `OpenQilinDiscordClient.__init__()` — store as `self._redis_client`
+- [ ] In `OpenQilinDiscordClient.on_ready()`, after `mark_ready()`, add bot registry write:
+  ```python
+  if self._redis_client is not None and bot_user_id != "unknown":
+      try:
+          self._redis_client.hset("openqilin:bot_discord_ids", self._config.bot_role, bot_user_id)
+          LOGGER.info("discord.worker.bot_registry_written", role=self._config.bot_role, user_id=bot_user_id)
+      except Exception:
+          LOGGER.warning("discord.worker.bot_registry_write_failed", role=self._config.bot_role)
+  ```
+- [ ] In `main()` (or wherever `OpenQilinDiscordClient` is instantiated), build a Redis client and pass it:
+  ```python
+  _redis = build_redis_client(settings.redis_url) if settings.redis_url else None
+  ```
+  Pass `redis_client=_redis` to each `OpenQilinDiscordClient(...)` constructor call.
+
+#### Routing intercept: `src/openqilin/control_plane/routers/discord_ingress.py`
+
+- [ ] Import `AdvisoryTopicRouter` from `openqilin.control_plane.advisory.topic_router`
+- [ ] Import `is_role_available_in_channel` from `openqilin.control_plane.advisory.channel_availability`
+- [ ] Import `BotRegistryReader` from `openqilin.control_plane.advisory.bot_registry_reader`
+- [ ] Add `get_advisory_topic_router` and `get_bot_registry_reader` to `dependencies.py` and import them here
+- [ ] Add `advisory_topic_router: AdvisoryTopicRouter = Depends(get_advisory_topic_router)` and `bot_registry_reader: BotRegistryReader = Depends(get_bot_registry_reader)` as parameters to `submit_discord_message()`
+- [ ] In the free-text branch, **before** the block that calls `secretary_agent.handle()` when `resolved_target == "secretary"` (currently around line 455), add Tier 1 intercept:
+
+  ```python
+  # Tier 1: deterministic advisory topic routing (M18-WP5)
+  _tier1 = advisory_topic_router.classify(content) if advisory_topic_router is not None else None
+  if _tier1 is not None:
+      _is_project_channel = routing_context is not None
+      if is_role_available_in_channel(_tier1.agent_role, _is_project_channel):
+          # Delegate to target agent directly
+          _scope = f"guild::{payload.guild_id}::channel::{payload.channel_id}"
+          _advisory_req = FreeTextAdvisoryRequest(
+              text=content,
+              scope=_scope,
+              guild_id=payload.guild_id,
+              channel_id=payload.channel_id,
+              addressed_agent=_tier1.agent_role,
+          )
+          try:
+              if _tier1.agent_role == "ceo":
+                  _resp = ceo_agent.handle_free_text(_advisory_req)
+              elif _tier1.agent_role == "cwo":
+                  _resp = cwo_agent.handle_free_text(_advisory_req)
+              elif _tier1.agent_role == "auditor":
+                  _resp = auditor_agent.handle_free_text(_advisory_req)
+              elif _tier1.agent_role == "cso":
+                  _resp = cso_agent.handle_free_text(_advisory_req)
+              elif _tier1.agent_role == "project_manager":
+                  _resp = project_manager_agent.handle_free_text(_advisory_req)
+              else:
+                  _resp = None
+              if _resp is not None:
+                  return _discord_advisory_response(payload=payload, command="ask", message=_resp.advisory_text)
+          except Exception:
+              LOGGER.exception("discord_ingress.tier1_routing.agent_failed", target_role=_tier1.agent_role)
+              # Fall through to Secretary LLM on exception
+      else:
+          # Role not available in this channel type — return referral
+          _role_label = _tier1.agent_role.replace("_", " ").title()
+          _mention = bot_registry_reader.get_mention(_tier1.agent_role) if bot_registry_reader is not None else None
+          _mention_str = f" {_mention}" if _mention else ""
+          _referral_msg = (
+              f"The {_role_label} agent{_mention_str} is not available in project channels. "
+              f"Use `/oq ask {_tier1.agent_role} <your question>` in a general channel."
+          )
+          return _discord_advisory_response(payload=payload, command="ask", message=_referral_msg)
+  # Fall through to Secretary LLM (Tier 2) — unchanged path below
+  ```
+
+#### RuntimeServices and dependency wiring: `src/openqilin/control_plane/api/dependencies.py`
+
+- [ ] Import `AdvisoryTopicRouter` from `openqilin.control_plane.advisory.topic_router`
+- [ ] Import `BotRegistryReader` from `openqilin.control_plane.advisory.bot_registry_reader`
+- [ ] Add `advisory_topic_router: AdvisoryTopicRouter` and `bot_registry_reader: BotRegistryReader` fields to `RuntimeServices` dataclass
+- [ ] In `build_runtime_services()`:
+  - `advisory_topic_router = AdvisoryTopicRouter()` (no constructor arguments)
+  - `bot_registry_reader = BotRegistryReader(redis_client=redis_client)` (Redis client already built at this point as `redis_client`)
+- [ ] Add to the `return RuntimeServices(...)` call: `advisory_topic_router=advisory_topic_router, bot_registry_reader=bot_registry_reader`
+- [ ] Add dependency getter functions:
+  ```python
+  def get_advisory_topic_router(request: Request) -> AdvisoryTopicRouter:
+      return get_runtime_services(request).advisory_topic_router
+
+  def get_bot_registry_reader(request: Request) -> BotRegistryReader:
+      return get_runtime_services(request).bot_registry_reader
+  ```
+
+#### Tests
+
+- [ ] Create `tests/unit/advisory/__init__.py` (empty)
+- [ ] Create `tests/unit/advisory/test_topic_router.py`:
+  - `test_classify_budget_keyword` — text "what is my budget?" → `RoutingDecision(agent_role="auditor", confidence="high", ...)`
+  - `test_classify_spend_keyword` — text "show spend report" → auditor
+  - `test_classify_strategic_keyword` — text "portfolio alignment?" → cso
+  - `test_classify_task_keyword` — text "what tasks are blocked?" → project_manager
+  - `test_classify_charter_keyword` — text "project charter status" — note "project" is in project_manager keywords and "charter" is in cwo keywords; verify most-matches wins or tie → None
+  - `test_classify_no_match` — text "hello how are you" → `None`
+  - `test_classify_case_insensitive` — text "BUDGET COMPLIANCE" → auditor
+  - `test_classify_most_matches_wins` — text with 2 auditor keywords, 1 cso keyword → auditor
+  - `test_classify_tie_returns_none` — text with exactly 1 match for 2 different roles → `None`
+- [ ] Create `tests/unit/advisory/test_channel_availability.py`:
+  - `test_auditor_not_in_project_channel` — `is_role_available_in_channel("auditor", True)` → `False`
+  - `test_administrator_not_in_project_channel` — `is_role_available_in_channel("administrator", True)` → `False`
+  - `test_auditor_in_general_channel` — `is_role_available_in_channel("auditor", False)` → `True`
+  - `test_cso_in_project_channel` — `is_role_available_in_channel("cso", True)` → `True`
+  - `test_secretary_in_project_channel` — `is_role_available_in_channel("secretary", True)` → `True`
+- [ ] Create `tests/unit/advisory/test_bot_registry_reader.py`:
+  - `test_get_mention_present` — mock Redis `hget` returns `b"1234567890"` → `"<@1234567890>"`
+  - `test_get_mention_bytes` — mock returns `b"9876543210"` (bytes) → decoded correctly
+  - `test_get_mention_absent` — mock returns `None` → `None`
+  - `test_get_mention_redis_error` — mock raises exception → returns `None` (no propagation)
+  - `test_get_all_returns_dict` — mock returns `{b"auditor": b"123", b"cso": b"456"}` → `{"auditor": "123", "cso": "456"}`
+  - `test_get_all_redis_error` — mock raises exception → returns `{}`
+- [ ] Create `tests/unit/test_m18_wp5_tier1_router.py` (secretary + ingress integration):
+  - `test_tier1_high_confidence_routes_to_auditor` — mock `AdvisoryTopicRouter.classify()` returns auditor high-confidence, `routing_context=None` (non-project channel); verify `auditor_agent.handle_free_text()` called with original text; verify advisory response returned
+  - `test_tier1_restricted_role_in_project_channel` — mock returns auditor, `routing_context` non-None (project channel); verify referral message returned, auditor NOT called
+  - `test_tier1_no_match_falls_through_to_secretary` — mock returns `None`; verify `secretary_agent.handle()` called as before
+  - `test_tier1_agent_exception_falls_through` — mock returns cso but `cso_agent.handle_free_text()` raises; verify fall-through to Secretary (no uncaught exception)
+  - `test_tier1_router_unavailable` — `advisory_topic_router=None` in dependencies; verify Secretary path used normally
+- [ ] Static checks: `ruff`, `mypy`, InMemory grep gate, `pytest tests/unit tests/component` pass
+
+---
+
+### Key interfaces (spec)
+
+```python
+# topic_router.py
+from __future__ import annotations
+from dataclasses import dataclass, field
+from typing import Literal
+
+TOPIC_ROUTING_TABLE: dict[str, frozenset[str]] = {
+    "auditor": frozenset({
+        "budget", "spend", "spending", "compliance", "violation", "audit",
+        "trail", "financial", "expenditure", "cost", "overrun", "breach",
+        "governance breach",
+    }),
+    "cso": frozenset({
+        "strategic", "strategy", "portfolio", "alignment", "cross-project",
+        "opportunity", "conflict", "risk", "roadmap",
+    }),
+    "project_manager": frozenset({
+        "task", "assignment", "blocked", "milestone", "progress",
+        "execution plan", "sprint", "backlog",
+    }),
+    "cwo": frozenset({
+        "charter", "workforce", "initialization", "specialist",
+        "workforce plan", "role binding", "agent activation",
+    }),
+    "ceo": frozenset({
+        "approve", "directive", "executive", "authorize", "escalation",
+        "final decision",
+    }),
+}
+
+@dataclass(frozen=True, slots=True)
+class RoutingDecision:
+    agent_role: str
+    confidence: Literal["high", "low"]
+    matched_keywords: list[str] = field(default_factory=list)
+
+class AdvisoryTopicRouter:
+    def classify(self, text: str) -> RoutingDecision | None: ...
+```
+
+```python
+# channel_availability.py
+CHANNEL_RESTRICTED_ROLES: frozenset[str] = frozenset({"auditor", "administrator"})
+
+def is_role_available_in_channel(role: str, is_project_channel: bool) -> bool:
+    if is_project_channel and role in CHANNEL_RESTRICTED_ROLES:
+        return False
+    return True
+```
+
+```python
+# bot_registry_reader.py
+BOT_REGISTRY_REDIS_KEY = "openqilin:bot_discord_ids"
+
+class BotRegistryReader:
+    def __init__(self, redis_client: Any) -> None: ...
+    def get_mention(self, role: str) -> str | None: ...
+    def get_all(self) -> dict[str, str]: ...
+```
+
+---
+
+### Outputs
+
+- `src/openqilin/control_plane/advisory/` — new package (3 modules + `__init__.py`)
+- Updated `src/openqilin/apps/discord_bot_worker.py` — Redis bot registry write in `on_ready()`
+- Updated `src/openqilin/control_plane/routers/discord_ingress.py` — Tier 1 intercept in Secretary free-text path
+- Updated `src/openqilin/control_plane/api/dependencies.py` — `advisory_topic_router`, `bot_registry_reader` wired into `RuntimeServices`
+- `tests/unit/advisory/` — new test suite (3 modules)
+- `tests/unit/test_m18_wp5_tier1_router.py` — integration-style unit tests
+
+### Done criteria
+
+- [x] Sending "what's my budget?" as free text in a non-project channel → Auditor responds directly (Tier 1 match, no Secretary LLM call)
+- [x] Sending "portfolio strategy alignment?" → CSO responds directly (Tier 1)
+- [x] Ambiguous or unmatched text → Secretary LLM advisory (Tier 2, unchanged)
+- [x] Budget-related free text in a project channel → Secretary returns referral message, Auditor NOT called
+- [x] Referral message includes `<@id>` if bot registry has the entry, falls back to role name if not
+- [x] Bot registry Redis hash updated when each bot comes online (`on_ready()`)
+- [x] `AdvisoryTopicRouter` or `BotRegistryReader` None → graceful fallback, no crash
+- [x] `ruff`, `mypy`, InMemory grep gate, `pytest tests/unit tests/component` all pass
+- [x] No regression on `/oq ask <agent> <text>` explicit commands or `@everyone` broadcast
+
+---
+
 ## M18 Exit Criteria
 
-- [ ] All four WPs above are marked done
+- [ ] All five WPs above are marked done
 - [ ] Every institutional agent responds to @mentions with an LLM-generated conversational reply from its own identity
 - [ ] `@everyone` triggers simultaneous introductions from all 7 agents
+- [ ] Advisory routing is deterministic for unambiguous topic domains (Tier 1 keyword table)
 - [ ] Demo recorded against the complete product and linked from README
 - [ ] Website and contact email live at public domain
 - [ ] Conversation memory persisted per channel across all agents

@@ -17,7 +17,7 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 | M15 | `done` | 6 / 6 | All WPs complete; exit criteria met |
 | M16 | `done` | 5 / 5 | All WPs complete; exit criteria met |
 | M17 | `done` | 7 / 9 | WP1-WP2-WP4-WP6-WP7-WP8-WP9 done; WP3+WP5 moved to M18 (launch after feature-complete) |
-| M18 | `active` | 2 / 4 | WP1-WP2 done; WP3-WP4 pending |
+| M18 | `active` | 3 / 5 | WP1-WP2-WP5 done; WP3-WP4 pending |
 
 ---
 
@@ -156,6 +156,7 @@ WP document: `05-milestones/M18-WorkPackages-v1.md`
 | M18-WP2 | @everyone Broadcast | `done` | #196 | #197 | `is_everyone_mention` wired end-to-end; each bot returns only its own advisory; 880 unit+component tests pass |
 | M18-WP3 | Demo Assets | `pending` | — | — | Moved from M17-WP3; entry gate: WP1 done (record against full product) |
 | M18-WP4 | Website and Public Presence | `pending` | — | — | Moved from M17-WP5; entry gate: WP3 done (demo link required) |
+| M18-WP5 | Deterministic Advisory Topic Router | `done` | #207 | #208 | Two-tier routing: keyword authority table (Tier 1) + Secretary LLM fallback (Tier 2); bot registry Redis write; channel availability enforcement; 914 tests pass |
 
 **M18 Exit criteria:** `pending`
 
