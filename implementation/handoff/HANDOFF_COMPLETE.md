@@ -3,7 +3,7 @@
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-24
 **Branch:** `fix/oq-ask-advisory-intercept`
-**Draft PR:** #TBD
+**Draft PR:** #204
 **Implements:** targeted hotfix request for `src/openqilin/control_plane/routers/discord_ingress.py`
 
 ---
