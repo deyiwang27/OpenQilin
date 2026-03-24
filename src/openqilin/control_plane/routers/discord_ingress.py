@@ -19,7 +19,10 @@ from openqilin.agents.cwo.agent import CwoAgent
 from openqilin.agents.project_manager.agent import ProjectManagerAgent
 from openqilin.agents.secretary.agent import SecretaryAgent
 from openqilin.agents.secretary.models import SecretaryPolicyError, SecretaryRequest
-from openqilin.agents.shared.free_text_advisory import FreeTextAdvisoryRequest
+from openqilin.agents.shared.free_text_advisory import (
+    FreeTextAdvisoryRequest,
+    FreeTextAdvisoryResponse,
+)
 from openqilin.control_plane.identity.connector_security import (
     ConnectorSecurityError,
     validate_connector_auth,
@@ -464,6 +467,56 @@ def submit_discord_message(
                     command="everyone_broadcast",
                     message=advisory_text,
                 )
+
+        # Tier-1-forwarded advisory: a non-Secretary advisory bot forwarded this free-text
+        # message because the bot worker Tier 1 router matched it. Dispatch directly to
+        # that agent's handle_free_text() so the correct bot posts the response.
+        if (
+            not payload.is_everyone_mention
+            and payload.bot_role in _ADVISORY_AGENT_ROLES
+            and resolved_target == "secretary"
+        ):
+            auth_error = _validate_discord_connector_request(
+                payload=payload,
+                signature_header=x_openqilin_signature,
+            )
+            if auth_error is not None:
+                return auth_error
+            _scope = f"guild::{payload.guild_id}::channel::{payload.channel_id}"
+            _fwd_req = FreeTextAdvisoryRequest(
+                text=content,
+                scope=_scope,
+                guild_id=payload.guild_id,
+                channel_id=payload.channel_id,
+                addressed_agent=payload.bot_role,
+            )
+            try:
+                if payload.bot_role == "ceo":
+                    _fwd_resp: FreeTextAdvisoryResponse | None = ceo_agent.handle_free_text(
+                        _fwd_req
+                    )
+                elif payload.bot_role == "cwo":
+                    _fwd_resp = cwo_agent.handle_free_text(_fwd_req)
+                elif payload.bot_role == "auditor":
+                    _fwd_resp = auditor_agent.handle_free_text(_fwd_req)
+                elif payload.bot_role == "cso":
+                    _fwd_resp = cso_agent.handle_free_text(_fwd_req)
+                elif payload.bot_role == "project_manager":
+                    _fwd_resp = project_manager_agent.handle_free_text(_fwd_req)
+                else:
+                    _fwd_resp = None
+                if _fwd_resp is not None:
+                    return _discord_advisory_response(
+                        payload=payload,
+                        command="ask",
+                        message=_fwd_resp.advisory_text,
+                    )
+            except Exception:
+                LOGGER.exception(
+                    "discord_ingress.tier1_forwarded.agent_failed",
+                    bot_role=payload.bot_role,
+                )
+                # Fall through to normal path on exception
 
         # Advisory bypass: secretary handles discussion/query without task dispatch.
         # Validate connector signature first — bypass must not skip authenticity checks.

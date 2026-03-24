@@ -16,6 +16,7 @@ import structlog
 from openqilin.data_access.repositories.postgres.idempotency_cache_store import (
     build_redis_client,
 )
+from openqilin.control_plane.advisory.topic_router import AdvisoryTopicRouter
 from openqilin.discord_runtime.bridge import (
     DiscordCommandParseError,
     ParsedDiscordCommand,
@@ -758,6 +759,7 @@ class OpenQilinDiscordClient(discord.Client):
         self._fan_in = fan_in
         self._readiness = readiness
         self._redis_client = redis_client
+        self._topic_router = AdvisoryTopicRouter()
 
     async def close(self) -> None:
         await super().close()
@@ -878,6 +880,7 @@ class OpenQilinDiscordClient(discord.Client):
         channel_type = _channel_type_name(message.channel)
         chat_class = _resolve_chat_class(message.channel)
         is_everyone = bool(getattr(message, "mention_everyone", False))
+        _tier1_target_role: str | None = None
 
         # Free-text group-channel gate.
         # Rules:
@@ -892,15 +895,41 @@ class OpenQilinDiscordClient(discord.Client):
             )
             i_am_mentioned = bool(my_user_id and my_user_id in mentioned_bot_ids) or is_everyone
 
-            if self._config.bot_role == "secretary":
-                other_bot_mentioned = bool(
-                    mentioned_bot_ids - ({my_user_id} if my_user_id else set())
-                )
-                if other_bot_mentioned and not is_everyone:
+            # Tier 1 topic pre-routing: classify free-text and route to the matched agent's bot.
+            # This ensures the correct bot posts the response (e.g. Auditor bot for budget
+            # questions).
+            if not is_everyone:
+                _t1 = self._topic_router.classify(message.content)
+                if _t1 is not None:
+                    _tier1_target_role = _t1.agent_role
+
+            _is_project_ch = chat_class == "project"
+            _tier1_restricted = _is_project_ch and _tier1_target_role in {
+                "auditor",
+                "administrator",
+            }
+
+            if (
+                _tier1_target_role is not None
+                and _tier1_target_role != "secretary"
+                and not _tier1_restricted
+            ):
+                # Tier 1 matched: only the target agent's bot forwards; all others skip.
+                if self._config.bot_role != _tier1_target_role:
                     return
+                # This is the target bot, so bypass the mention gate and fall through.
             else:
-                if not i_am_mentioned:
-                    return
+                # No Tier 1 match, Secretary target, or channel-restricted role: use the
+                # existing Secretary/mention gate.
+                if self._config.bot_role == "secretary":
+                    other_bot_mentioned = bool(
+                        mentioned_bot_ids - ({my_user_id} if my_user_id else set())
+                    )
+                    if other_bot_mentioned and not is_everyone:
+                        return
+                else:
+                    if not i_am_mentioned:
+                        return
 
         try:
             resolved_recipients = await self._resolve_recipients(
@@ -932,7 +961,11 @@ class OpenQilinDiscordClient(discord.Client):
             if not _is_explicit_command:
                 # Free-text (no /oq prefix): Secretary handles unaddressed messages, while an
                 # explicitly @mentioned institutional bot may forward its own advisory request.
-                if self._config.bot_role != "secretary" and not _this_bot_is_target:
+                if (
+                    self._config.bot_role != "secretary"
+                    and not _this_bot_is_target
+                    and self._config.bot_role != _tier1_target_role
+                ):
                     return
             else:
                 # Explicit /oq command: the @mentioned bot handles it when a bot is mentioned.
