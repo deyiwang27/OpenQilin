@@ -211,19 +211,38 @@ class DiscordIngressFanIn:
             bot_user_id=event.bot_user_id,
             is_everyone_mention=event.is_everyone_mention,
         )
-        try:
-            response = await self._http_client.post(
-                self._ingress_url,
-                headers={"X-OpenQilin-Signature": signature},
-                json=payload,
-            )
-        except httpx.HTTPError as error:
-            LOGGER.warning(
-                "discord.worker.connector_error",
-                message_id=event.message_id,
-                bot_role=event.bot_role,
-                error=str(error),
-            )
+        response = None
+        _max_attempts = 3
+        for _attempt in range(1, _max_attempts + 1):
+            try:
+                response = await self._http_client.post(
+                    self._ingress_url,
+                    headers={"X-OpenQilin-Signature": signature},
+                    json=payload,
+                )
+                break
+            except (httpx.ConnectError, httpx.RemoteProtocolError) as error:
+                LOGGER.warning(
+                    "discord.worker.connector_error",
+                    message_id=event.message_id,
+                    bot_role=event.bot_role,
+                    attempt=_attempt,
+                    error=str(error),
+                )
+                if _attempt < _max_attempts:
+                    await asyncio.sleep(1.0)
+            except httpx.HTTPError as error:
+                LOGGER.warning(
+                    "discord.worker.connector_error",
+                    message_id=event.message_id,
+                    bot_role=event.bot_role,
+                    error=str(error),
+                )
+                await event.response_channel.send(
+                    "[error] code=connector_http_error message=failed to reach OpenQilin control plane"
+                )
+                return
+        if response is None:
             await event.response_channel.send(
                 "[error] code=connector_http_error message=failed to reach OpenQilin control plane"
             )
