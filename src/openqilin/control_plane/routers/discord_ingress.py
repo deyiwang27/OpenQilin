@@ -303,8 +303,8 @@ def submit_discord_message(
         _ALL_ADVISORY_ROLES = _ADVISORY_AGENT_ROLES | {"secretary"}
         if (
             resolved_action == "ask"
-            and resolved_args
-            and resolved_args[0].lower() in _ALL_ADVISORY_ROLES
+            and resolved_target is not None
+            and resolved_target.lower() in _ALL_ADVISORY_ROLES
         ):
             auth_error = _validate_discord_connector_request(
                 payload=payload,
@@ -312,8 +312,8 @@ def submit_discord_message(
             )
             if auth_error is not None:
                 return auth_error
-            _ask_role = resolved_args[0].lower()
-            _ask_text = " ".join(resolved_args[1:]).strip() if len(resolved_args) > 1 else content
+            _ask_role = resolved_target.lower()
+            _ask_text = " ".join(resolved_args).strip() if resolved_args else content
             if not _ask_text:
                 _ask_text = content
             scope = f"guild::{payload.guild_id}::channel::{payload.channel_id}"
