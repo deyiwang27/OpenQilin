@@ -902,8 +902,14 @@ class OpenQilinDiscordClient(discord.Client):
                 if self._config.bot_role != "secretary" and not _this_bot_is_target:
                     return
             else:
-                # Explicit /oq command: only the @mentioned bot (resolved recipient) handles it.
-                if not _this_bot_is_target:
+                # Explicit /oq command: the @mentioned bot handles it when a bot is mentioned.
+                # When no bot is explicitly mentioned (runtime placeholder recipients),
+                # Secretary forwards as the routing fallback so the control plane can
+                # route based on command grammar (e.g. `/oq ask administrator ...`).
+                _unaddressed = _is_runtime_placeholder_recipients(resolved_recipients)
+                if not _this_bot_is_target and not (
+                    _unaddressed and self._config.bot_role == "secretary"
+                ):
                     return
         project_id = parsed.project_id
         if project_id is None and chat_class == "project":
