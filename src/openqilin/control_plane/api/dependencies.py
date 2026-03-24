@@ -34,6 +34,8 @@ from openqilin.agents.project_manager.artifact_writer import PMProjectArtifactWr
 from openqilin.agents.secretary.data_access import SecretaryDataAccessService
 from openqilin.agents.domain_leader.agent import DomainLeaderAgent
 from openqilin.agents.secretary.agent import SecretaryAgent
+from openqilin.control_plane.advisory.bot_registry_reader import BotRegistryReader
+from openqilin.control_plane.advisory.topic_router import AdvisoryTopicRouter
 from openqilin.control_plane.grammar.command_parser import CommandParser
 from openqilin.control_plane.grammar.free_text_router import FreeTextRouter
 from openqilin.control_plane.grammar.intent_classifier import IntentClassifier
@@ -153,6 +155,8 @@ class RuntimeServices:
     audit_writer: InMemoryAuditWriter | OTelAuditWriter
     metric_recorder: InMemoryMetricRecorder | OTelMetricRecorder
     routing_resolver: ProjectSpaceRoutingResolver
+    advisory_topic_router: AdvisoryTopicRouter
+    bot_registry_reader: BotRegistryReader
     binding_service: ProjectSpaceBindingService
     delivery_event_callback_processor: LocalDeliveryEventCallbackProcessor
     communication_outcome_notifier: CommunicationOutcomeNotifier
@@ -246,6 +250,8 @@ def build_runtime_services() -> RuntimeServices:
 
     # --- idempotency (Redis required) ------------------------------------
     redis_client = build_redis_client(settings.redis_url)
+    advisory_topic_router = AdvisoryTopicRouter()
+    bot_registry_reader = BotRegistryReader(redis_client=redis_client)
     ingress_idempotency_store = RedisIdempotencyCacheStore(
         client=redis_client,
         ttl_seconds=settings.idempotency_ttl_seconds,
@@ -460,6 +466,8 @@ def build_runtime_services() -> RuntimeServices:
         audit_writer=audit_writer,
         metric_recorder=metric_recorder,
         routing_resolver=routing_resolver,
+        advisory_topic_router=advisory_topic_router,
+        bot_registry_reader=bot_registry_reader,
         binding_service=binding_service,
         delivery_event_callback_processor=delivery_event_callback_processor,
         communication_outcome_notifier=communication_outcome_notifier,
@@ -631,6 +639,18 @@ def get_routing_resolver(request: Request) -> ProjectSpaceRoutingResolver:
     """Provide project space routing resolver for Discord channel → project context."""
 
     return get_runtime_services(request).routing_resolver
+
+
+def get_advisory_topic_router(request: Request) -> AdvisoryTopicRouter:
+    """Provide advisory topic router for Tier 1 routing in discord ingress."""
+
+    return get_runtime_services(request).advisory_topic_router
+
+
+def get_bot_registry_reader(request: Request) -> BotRegistryReader:
+    """Provide bot registry reader for @mention formatting in referral messages."""
+
+    return get_runtime_services(request).bot_registry_reader
 
 
 def get_binding_service(request: Request) -> ProjectSpaceBindingService:
