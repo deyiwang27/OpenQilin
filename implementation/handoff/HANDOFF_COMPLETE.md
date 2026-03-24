@@ -3,7 +3,7 @@
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-24
 **Branch:** `feat/207-m18-wp5-advisory-topic-router`
-**Draft PR:** pending creation
+**Draft PR:** #208
 **Implements:** `implementation/handoff/current.md`
 
 ---
