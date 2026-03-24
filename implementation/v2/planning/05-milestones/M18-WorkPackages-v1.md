@@ -522,15 +522,15 @@ class BotRegistryReader:
 
 ### Done criteria
 
-- [ ] Sending "what's my budget?" as free text in a non-project channel → Auditor responds directly (Tier 1 match, no Secretary LLM call)
-- [ ] Sending "portfolio strategy alignment?" → CSO responds directly (Tier 1)
-- [ ] Ambiguous or unmatched text → Secretary LLM advisory (Tier 2, unchanged)
-- [ ] Budget-related free text in a project channel → Secretary returns referral message, Auditor NOT called
-- [ ] Referral message includes `<@id>` if bot registry has the entry, falls back to role name if not
-- [ ] Bot registry Redis hash updated when each bot comes online (`on_ready()`)
-- [ ] `AdvisoryTopicRouter` or `BotRegistryReader` None → graceful fallback, no crash
-- [ ] `ruff`, `mypy`, InMemory grep gate, `pytest tests/unit tests/component` all pass
-- [ ] No regression on `/oq ask <agent> <text>` explicit commands or `@everyone` broadcast
+- [x] Sending "what's my budget?" as free text in a non-project channel → Auditor responds directly (Tier 1 match, no Secretary LLM call)
+- [x] Sending "portfolio strategy alignment?" → CSO responds directly (Tier 1)
+- [x] Ambiguous or unmatched text → Secretary LLM advisory (Tier 2, unchanged)
+- [x] Budget-related free text in a project channel → Secretary returns referral message, Auditor NOT called
+- [x] Referral message includes `<@id>` if bot registry has the entry, falls back to role name if not
+- [x] Bot registry Redis hash updated when each bot comes online (`on_ready()`)
+- [x] `AdvisoryTopicRouter` or `BotRegistryReader` None → graceful fallback, no crash
+- [x] `ruff`, `mypy`, InMemory grep gate, `pytest tests/unit tests/component` all pass
+- [x] No regression on `/oq ask <agent> <text>` explicit commands or `@everyone` broadcast
 
 ---
 
