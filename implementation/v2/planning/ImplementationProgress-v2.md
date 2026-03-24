@@ -153,7 +153,7 @@ WP document: `05-milestones/M18-WorkPackages-v1.md`
 | WP | Title | Status | Issue | PR | Notes |
 |---|---|---|---|---|---|
 | M18-WP1 | Conversational Advisory Mode for Institutional Agents | `done` | #193 | #194 | All 6 agents handle_free_text(); bot-worker gaps A/B fixed; Secretary prompt gap 1 fixed; 872 tests pass |
-| M18-WP2 | @everyone Broadcast | `done` | #196 | — | `is_everyone_mention` wired end-to-end; each bot returns only its own advisory; 880 unit+component tests pass |
+| M18-WP2 | @everyone Broadcast | `done` | #196 | #197 | `is_everyone_mention` wired end-to-end; each bot returns only its own advisory; 880 unit+component tests pass |
 | M18-WP3 | Demo Assets | `pending` | — | — | Moved from M17-WP3; entry gate: WP1 done (record against full product) |
 | M18-WP4 | Website and Public Presence | `pending` | — | — | Moved from M17-WP5; entry gate: WP3 done (demo link required) |
 
