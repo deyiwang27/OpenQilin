@@ -1,16 +1,16 @@
-# Handoff Complete: M18-WP1 — Conversational Advisory Mode for Institutional Agents
+# Handoff Complete: M18-WP2 — @everyone Broadcast
 
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-23
-**Branch:** `feat/193-m18-wp1-conversational-advisory`
-**Draft PR:** #194
+**Branch:** `feat/196-m18-wp2-everyone-broadcast`
+**Draft PR:** #197
 **Implements:** `implementation/handoff/current.md`
 
 ---
 
 ## Summary
 
-Implemented conversational free-text advisory for CEO, CWO, CSO, Auditor, Administrator, and Project Manager; replaced the bot-worker canned intro/DM blocking path with control-plane forwarding; and generalized the Discord ingress advisory bypass to dispatch to all six agents. Added conversation-history persistence guards, advisory metric emission, role-specific prompts, and 24 unit tests covering the new handler paths.
+Implemented the M18-WP2 `@everyone` broadcast path end-to-end. The Discord bot worker now detects `message.mention_everyone`, forwards one request per bot process, the ingress schema carries `is_everyone_mention`, and the control plane routes each request directly to that bot's own advisory handler without cross-bot coordination.
 
 ---
 
@@ -18,14 +18,13 @@ Implemented conversational free-text advisory for CEO, CWO, CSO, Auditor, Admini
 
 | Task | Status | Notes |
 |---|---|---|
-| Secretary prompt update for new-project routing | ✅ Done | `ADVISORY_SYSTEM_PROMPT` now routes new-project initiation to CWO and preserves PM routing for approved/active work |
-| Bot-worker free-text forwarding fixes | ✅ Done | Removed the canned intro path and relaxed the non-Secretary DM block so free-text reaches the control plane |
-| Shared advisory request/response models | ✅ Done | Added `FreeTextAdvisoryRequest` and `FreeTextAdvisoryResponse` under `src/openqilin/agents/shared/` |
-| Six agent `handle_free_text()` implementations | ✅ Done | Added role-specific conversational prompts, fallbacks, history load/store, and advisory responses for CEO/CWO/CSO/Auditor/Administrator/PM |
-| Advisory metrics and DI wiring | ✅ Done | Wired `conversation_store` into all six agents and `llm_gateway`/`metric_recorder` into Auditor and Administrator; also fixed missing metric wiring for Secretary and PM |
-| Discord ingress six-agent advisory bypass | ✅ Done | Added per-bot-role advisory dispatch with auth validation and broad fallback handling |
-| Unit coverage for conversational advisory | ✅ Done | Added 24 unit tests across six new files under `tests/unit/agents/` |
-| Planning/progress updates | ✅ Done | Ticked the M18-WP1 checklist items and marked M18-WP1 `done` in `ImplementationProgress-v2.md` |
+| Add `is_everyone_mention` to `DiscordInboundEvent` | ✅ Done | Added field with default `False` and populated it from `message.mention_everyone` |
+| Update bot-worker free-text gate for `@everyone` | ✅ Done | Secretary no longer yields on `@everyone`; non-Secretary bots forward even when not individually listed in `message.mentions` |
+| Add `is_everyone_mention` to `DiscordIngressRequest` | ✅ Done | Schema default is `False`; acceptance one-liner confirmed field construction works |
+| Pass `is_everyone_mention` through `build_discord_ingress_payload()` | ✅ Done | Fan-in payload now includes the flag for control-plane routing |
+| Add ingress `@everyone` fast-path advisory routing | ✅ Done | Non-Secretary bots route directly to their own advisory handler; Secretary falls through to its existing advisory block |
+| Add unit tests for worker gate, ingress fast-path, and payload passthrough | ✅ Done | Added `tests/unit/test_m18_wp2_everyone_broadcast.py` with 8 focused cases |
+| Update planning/progress docs | ✅ Done | M18-WP2 tasks/criteria checked and `ImplementationProgress-v2.md` marked `done` |
 
 ---
 
@@ -36,8 +35,8 @@ InMemory gate:    PASS
 ruff check:       PASS
 ruff format:      PASS
 mypy:             PASS
-pytest unit:      PASS  (872 passed, 1 warning in combined unit+component run)
-pytest component: PASS  (872 passed, 1 warning in combined unit+component run)
+pytest unit:      PASS  (880 passed, 1 warning in combined unit+component run)
+pytest component: PASS  (880 passed, 1 warning in combined unit+component run)
 ```
 
 ---
@@ -62,5 +61,5 @@ None.
 
 ## Notes
 
-- `uv run pytest` and `uv run mypy` were not available as direct entrypoints in this shell, so validation used `uv run python -m pytest ...` and `uv run python -m mypy .`.
-- `implementation/handoff/current.md` and `implementation/v2/planning/05-milestones/M17-WorkPackages-v1.md` had pre-existing local modifications and were intentionally left untouched.
+- Draft PR opened: `#197`
+- `implementation/handoff/current.md` had a pre-existing local modification and was intentionally left untouched.
