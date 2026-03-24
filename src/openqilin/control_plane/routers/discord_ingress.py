@@ -361,7 +361,7 @@ def submit_discord_message(
 
         # Advisory bypass: secretary handles discussion/query without task dispatch.
         # Validate connector signature first — bypass must not skip authenticity checks.
-        if resolved_target == "secretary":
+        if resolved_target == "secretary" and payload.bot_role not in _ADVISORY_AGENT_ROLES:
             auth_error = _validate_discord_connector_request(
                 payload=payload,
                 signature_header=x_openqilin_signature,
