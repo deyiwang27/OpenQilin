@@ -221,7 +221,7 @@ class DiscordIngressFanIn:
                     json=payload,
                 )
                 break
-            except (httpx.ConnectError, httpx.RemoteProtocolError) as error:
+            except httpx.TransportError as error:
                 LOGGER.warning(
                     "discord.worker.connector_error",
                     message_id=event.message_id,
@@ -976,9 +976,17 @@ async def run_worker_launch_plan(plan: DiscordWorkerLaunchPlan) -> None:
         for config in plan.configs
     ]
     try:
-        await asyncio.gather(
+        results = await asyncio.gather(
             *(client.start(config.token) for client, config in zip(clients, plan.configs)),
+            return_exceptions=True,
         )
+        for config, result in zip(plan.configs, results):
+            if isinstance(result, BaseException):
+                LOGGER.error(
+                    "discord.worker.client_fatal_error",
+                    bot_role=config.bot_role,
+                    error=str(result),
+                )
     finally:
         await asyncio.gather(*(client.close() for client in clients), return_exceptions=True)
         await fan_in.close()
