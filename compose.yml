@@ -211,9 +211,22 @@ services:
         "python -m pip install --disable-pip-version-check --quiet -e /workspace && python -m openqilin.apps.orchestrator_worker",
       ]
     environment:
+      OPENQILIN_DATABASE_URL: postgresql+psycopg://openqilin:openqilin@postgres:5432/openqilin
       OPENQILIN_RUNTIME_PERSISTENCE_ENABLED: "true"
       OPENQILIN_SYSTEM_ROOT: /var/lib/openqilin
       OPENQILIN_CONNECTOR_SHARED_SECRET: ${OPENQILIN_CONNECTOR_SHARED_SECRET:-dev-openqilin-secret}
+      OPENQILIN_LLM_DEFAULT_ROUTING_PROFILE: ${OPENQILIN_LLM_DEFAULT_ROUTING_PROFILE:-dev_gemini_free}
+      OPENQILIN_LLM_DEFAULT_MAX_TOKENS: ${OPENQILIN_LLM_DEFAULT_MAX_TOKENS:-1024}
+      OPENQILIN_LLM_PROVIDER_BACKEND: ${OPENQILIN_LLM_PROVIDER_BACKEND:-gemini_flash_free}
+      OPENQILIN_GEMINI_API_KEY: ${OPENQILIN_GEMINI_API_KEY:-}
+      OPENQILIN_GEMINI_MAX_RETRIES: ${OPENQILIN_GEMINI_MAX_RETRIES:-2}
+      OPENQILIN_GEMINI_RETRY_BASE_DELAY_SECONDS: ${OPENQILIN_GEMINI_RETRY_BASE_DELAY_SECONDS:-1.0}
+      OPENQILIN_GEMINI_RETRY_MAX_DELAY_SECONDS: ${OPENQILIN_GEMINI_RETRY_MAX_DELAY_SECONDS:-8.0}
+      OPENQILIN_GEMINI_FREE_PRIMARY_MODEL: ${OPENQILIN_GEMINI_FREE_PRIMARY_MODEL:-gemini-2.0-flash}
+      OPENQILIN_GEMINI_FREE_FALLBACK_MODEL: ${OPENQILIN_GEMINI_FREE_FALLBACK_MODEL:-gemini-2.0-flash}
+      OPENQILIN_OPA_URL: http://opa:8181
+      OPENQILIN_REDIS_URL: redis://redis:6379
+      OPENQILIN_OTLP_ENDPOINT: http://otel_collector:4317
       # LangSmith dev-time tracing — disabled by default.
       # This is developer visibility only, not a governance audit source.
       LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2:-false}
