@@ -10,16 +10,44 @@ import structlog
 
 from openqilin.agents.auditor.enforcement import AuditWriter, AuditorEnforcementService
 from openqilin.agents.auditor.models import AuditorRequest, AuditorResponse
+from openqilin.agents.auditor.prompts import _CONVERSATIONAL_SYSTEM_PROMPT
+from openqilin.agents.shared.free_text_advisory import (
+    FreeTextAdvisoryRequest,
+    FreeTextAdvisoryResponse,
+)
 from openqilin.data_access.repositories.artifacts import ProjectArtifactWriteContext
+from openqilin.data_access.repositories.postgres.conversation_store import (
+    PostgresConversationStore,
+)
 from openqilin.data_access.repositories.postgres.governance_artifact_repository import (
     PostgresGovernanceArtifactRepository,
 )
+from openqilin.llm_gateway.schemas.requests import (
+    LlmBudgetContext,
+    LlmGatewayRequest,
+    LlmPolicyContext,
+)
+from openqilin.llm_gateway.service import LlmGatewayService
 
 LOGGER = structlog.get_logger(__name__)
 
 _AUDITOR_WRITE_CONTEXT = ProjectArtifactWriteContext(
     actor_role="auditor",
     project_status="active",
+)
+_AUDITOR_POLICY_CONTEXT = LlmPolicyContext(
+    policy_version="v2",
+    policy_hash="auditor-advisory-v1",
+    rule_ids=("GOV-001", "AUD-001"),
+)
+_AUDITOR_BUDGET_CONTEXT = LlmBudgetContext(
+    quota_token_cap=256,
+    allocation_mode="absolute",
+)
+_FALLBACK_ADVISORY = (
+    "I'm the Auditor agent. I handle governance oversight, compliance monitoring, "
+    "and escalation records. "
+    "Use `/oq ask auditor <topic>` to direct a query to me."
 )
 
 
@@ -32,11 +60,17 @@ class AuditorAgent:
         governance_repo: PostgresGovernanceArtifactRepository,
         audit_writer: AuditWriter,
         trace_id_factory: Callable[[], str] | None = None,
+        llm_gateway: LlmGatewayService | None = None,
+        conversation_store: PostgresConversationStore | None = None,
+        metric_recorder: Any | None = None,
     ) -> None:
         self._enforcement = enforcement
         self._governance_repo = governance_repo
         self._audit_writer = audit_writer
         self._trace_id_factory = trace_id_factory or (lambda: str(uuid.uuid4()))
+        self._llm_gateway = llm_gateway
+        self._conversation_store = conversation_store
+        self._metric_recorder = metric_recorder
 
     def handle(self, request: AuditorRequest) -> AuditorResponse:
         normalized_request = _normalize_request(request, trace_id_factory=self._trace_id_factory)
@@ -74,6 +108,71 @@ class AuditorAgent:
             ),
             trace_id=normalized_request.trace_id,
         )
+
+    def handle_free_text(self, request: FreeTextAdvisoryRequest) -> FreeTextAdvisoryResponse:
+        """Generate a role-appropriate advisory response for a free-text @mention."""
+        conversation_turns: tuple[Any, ...] = ()
+        if self._conversation_store is not None:
+            try:
+                conversation_turns = self._conversation_store.list_turns(request.scope)
+            except Exception:
+                LOGGER.warning(
+                    "auditor_agent.handle_free_text.store_read_failed", scope=request.scope
+                )
+
+        history_lines = [f"{turn.role}: {turn.content}" for turn in conversation_turns]
+        history_block = ""
+        if history_lines:
+            history_block = "Conversation so far:\n" + "\n".join(history_lines) + "\n\n"
+        prompt = f"{_CONVERSATIONAL_SYSTEM_PROMPT}\n\n{history_block}Owner message:\n{request.text}"
+
+        advisory_text = _FALLBACK_ADVISORY
+        llm_attempted = False
+        if self._llm_gateway is not None:
+            llm_attempted = True
+            try:
+                response = self._llm_gateway.complete(
+                    LlmGatewayRequest(
+                        request_id=self._trace_id_factory(),
+                        trace_id=self._trace_id_factory(),
+                        project_id="system",
+                        agent_id="auditor",
+                        task_id=None,
+                        skill_id="free_text_advisory",
+                        model_class="interactive_fast",
+                        routing_profile="dev_gemini_free",
+                        messages_or_prompt=prompt,
+                        max_tokens=256,
+                        temperature=0.3,
+                        budget_context=_AUDITOR_BUDGET_CONTEXT,
+                        policy_context=_AUDITOR_POLICY_CONTEXT,
+                    )
+                )
+                if response.decision in {"served", "fallback_served"} and response.generated_text:
+                    advisory_text = response.generated_text.strip()
+            except Exception:
+                LOGGER.warning("auditor_agent.handle_free_text.llm_failed")
+
+        if llm_attempted and self._metric_recorder is not None:
+            self._metric_recorder.increment_counter(
+                "llm_calls_total",
+                labels={"purpose": "auditor_response"},
+            )
+
+        if self._conversation_store is not None:
+            try:
+                self._conversation_store.append_turns(
+                    request.scope,
+                    user_prompt=request.text,
+                    assistant_reply=advisory_text,
+                    agent_id="auditor",
+                )
+            except Exception:
+                LOGGER.warning(
+                    "auditor_agent.handle_free_text.store_write_failed", scope=request.scope
+                )
+
+        return FreeTextAdvisoryResponse(advisory_text=advisory_text)
 
     def _handle_budget_breach(self, request: AuditorRequest) -> AuditorResponse:
         if request.task_id:

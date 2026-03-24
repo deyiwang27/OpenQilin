@@ -216,6 +216,11 @@ def build_runtime_services() -> RuntimeServices:
         session_factory=session_factory
     )
     routing_resolver = ProjectSpaceRoutingResolver(binding_repo=project_space_binding_repo)
+    conversation_store = (
+        PostgresConversationStore(session_factory=session_factory, max_turns=40)
+        if settings.runtime_persistence_enabled
+        else None
+    )
     try:
         _role_bot_registry = build_role_bot_registry(settings)
         _admin_identity = _role_bot_registry.identities_by_role.get("administrator")
@@ -264,6 +269,8 @@ def build_runtime_services() -> RuntimeServices:
         llm_gateway=llm_gateway,
         project_artifact_repo=project_artifact_repo,
         governance_repo=governance_repo,
+        conversation_store=conversation_store,
+        metric_recorder=metric_recorder,
     )
     ceo_decision_writer = CeoDecisionWriter(governance_repo=project_artifact_repo)
     ceo_agent = CeoAgent(
@@ -271,6 +278,8 @@ def build_runtime_services() -> RuntimeServices:
         decision_writer=ceo_decision_writer,
         governance_repo=project_artifact_repo,
         cso_agent=cso_agent,
+        conversation_store=conversation_store,
+        metric_recorder=metric_recorder,
     )
     workforce_initializer = WorkforceInitializer(
         governance_repo=project_artifact_repo,
@@ -283,6 +292,8 @@ def build_runtime_services() -> RuntimeServices:
         workforce_initializer=workforce_initializer,
         governance_repo=project_artifact_repo,
         data_access=secretary_data_access,
+        conversation_store=conversation_store,
+        metric_recorder=metric_recorder,
     )
 
     budget_ledger_repo.seed_default_allocation()
@@ -293,15 +304,11 @@ def build_runtime_services() -> RuntimeServices:
     budget_reservation_service = BudgetReservationService(client=budget_runtime_client)
     lifecycle_service = TaskLifecycleService(runtime_state_repo=runtime_state_repo)
     retrieval_query_service = build_retrieval_query_service()
-    conversation_store = (
-        PostgresConversationStore(session_factory=session_factory, max_turns=40)
-        if settings.runtime_persistence_enabled
-        else None
-    )
     secretary_agent = SecretaryAgent(
         llm_gateway=llm_gateway,
         data_access=secretary_data_access,
         conversation_store=conversation_store,
+        metric_recorder=metric_recorder,
     )
     tracer = InMemoryTracer()
     # OTelAuditWriter with durable Postgres write (AUD-001).
@@ -318,6 +325,9 @@ def build_runtime_services() -> RuntimeServices:
         enforcement=auditor_enforcement,
         governance_repo=project_artifact_repo,
         audit_writer=audit_writer,
+        llm_gateway=llm_gateway,
+        conversation_store=conversation_store,
+        metric_recorder=metric_recorder,
     )
     document_policy_enforcer = DocumentPolicyEnforcer(
         governance_repo=project_artifact_repo,
@@ -334,6 +344,9 @@ def build_runtime_services() -> RuntimeServices:
         governance_repo=project_artifact_repo,
         agent_registry_repo=agent_registry_repo,
         audit_writer=audit_writer,
+        llm_gateway=llm_gateway,
+        conversation_store=conversation_store,
+        metric_recorder=metric_recorder,
     )
     task_execution_results_repo = InProcessTaskExecutionResultsRepository()
     specialist_agent = SpecialistAgent(
@@ -371,6 +384,8 @@ def build_runtime_services() -> RuntimeServices:
         domain_leader_agent=domain_leader_agent,
         task_dispatch_service=task_dispatch_service,
         project_artifact_repo=project_artifact_repo,
+        metric_recorder=metric_recorder,
+        conversation_store=conversation_store,
     )
 
     # --- startup recovery --------------------------------------------------------

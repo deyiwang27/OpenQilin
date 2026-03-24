@@ -25,11 +25,19 @@ from openqilin.agents.project_manager.prompts import (
     DISCUSSION_QUERY_TEMPLATE,
     MUTATION_DISPATCH_TEMPLATE,
     PM_SYSTEM_PROMPT,
+    _CONVERSATIONAL_SYSTEM_PROMPT,
+)
+from openqilin.agents.shared.free_text_advisory import (
+    FreeTextAdvisoryRequest,
+    FreeTextAdvisoryResponse,
 )
 from openqilin.agents.secretary.data_access import SecretaryDataAccessService
 from openqilin.data_access.repositories.artifacts import (
     ProjectArtifactDocument,
     ProjectArtifactWriteContext,
+)
+from openqilin.data_access.repositories.postgres.conversation_store import (
+    PostgresConversationStore,
 )
 from openqilin.llm_gateway.schemas.requests import (
     LlmBudgetContext,
@@ -38,6 +46,7 @@ from openqilin.llm_gateway.schemas.requests import (
 )
 from openqilin.llm_gateway.service import LlmGatewayService
 from openqilin.task_orchestrator.admission.envelope_validator import AdmissionEnvelope
+from openqilin.task_orchestrator.dispatch.llm_dispatch import ConversationTurn
 from openqilin.task_orchestrator.services.task_service import TaskDispatchService
 
 LOGGER = structlog.get_logger(__name__)
@@ -63,6 +72,11 @@ _FALLBACK_ADMIN_TEXT = (
     "Decision: controlled document update denied until both CEO and CWO approval "
     "evidence are present."
 )
+_FALLBACK_ADVISORY = (
+    "I'm the Project Manager agent. I handle active-project execution, status reporting, "
+    "and specialist dispatch. "
+    "Use `/oq ask project_manager <project> <question>` to direct a query to me."
+)
 
 
 class ProjectManagerAgent:
@@ -78,6 +92,7 @@ class ProjectManagerAgent:
         project_artifact_repo: Any,
         trace_id_factory: Callable[[], str] | None = None,
         metric_recorder: Any | None = None,
+        conversation_store: PostgresConversationStore | None = None,
     ) -> None:
         self._llm = llm_gateway
         self._artifact_writer = artifact_writer
@@ -87,6 +102,7 @@ class ProjectManagerAgent:
         self._project_artifact_repo = project_artifact_repo
         self._trace_id_factory = trace_id_factory or (lambda: str(uuid.uuid4()))
         self._metric_recorder = metric_recorder
+        self._conversation_store = conversation_store
 
     def handle(self, request: ProjectManagerRequest) -> ProjectManagerResponse:
         self._require_project_id(request.project_id)
@@ -99,6 +115,64 @@ class ProjectManagerAgent:
         if intent == "ADMIN":
             return self._handle_document_admin(request)
         raise PMProjectContextError(f"Unsupported Project Manager intent: {request.intent!r}")
+
+    def handle_free_text(self, request: FreeTextAdvisoryRequest) -> FreeTextAdvisoryResponse:
+        """Generate a role-appropriate advisory response for a free-text @mention."""
+        conversation_turns: tuple[ConversationTurn, ...] = ()
+        if self._conversation_store is not None:
+            try:
+                conversation_turns = self._conversation_store.list_turns(request.scope)
+            except Exception:
+                LOGGER.warning("pm_agent.handle_free_text.store_read_failed", scope=request.scope)
+
+        history_lines = [f"{turn.role}: {turn.content}" for turn in conversation_turns]
+        history_block = ""
+        if history_lines:
+            history_block = "Conversation so far:\n" + "\n".join(history_lines) + "\n\n"
+        prompt = f"{_CONVERSATIONAL_SYSTEM_PROMPT}\n\n{history_block}Owner message:\n{request.text}"
+
+        advisory_text = _FALLBACK_ADVISORY
+        try:
+            response = self._llm.complete(
+                LlmGatewayRequest(
+                    request_id=self._trace_id_factory(),
+                    trace_id=self._trace_id_factory(),
+                    project_id="system",
+                    agent_id="project_manager",
+                    task_id=None,
+                    skill_id="free_text_advisory",
+                    model_class="interactive_fast",
+                    routing_profile="dev_gemini_free",
+                    messages_or_prompt=prompt,
+                    max_tokens=256,
+                    temperature=0.3,
+                    budget_context=_PM_BUDGET_CONTEXT,
+                    policy_context=_PM_POLICY_CONTEXT,
+                )
+            )
+            if response.decision in {"served", "fallback_served"} and response.generated_text:
+                advisory_text = response.generated_text.strip()
+        except Exception:
+            LOGGER.warning("pm_agent.handle_free_text.llm_failed")
+
+        if self._metric_recorder is not None:
+            self._metric_recorder.increment_counter(
+                "llm_calls_total",
+                labels={"purpose": "pm_response"},
+            )
+
+        if self._conversation_store is not None:
+            try:
+                self._conversation_store.append_turns(
+                    request.scope,
+                    user_prompt=request.text,
+                    assistant_reply=advisory_text,
+                    agent_id="project_manager",
+                )
+            except Exception:
+                LOGGER.warning("pm_agent.handle_free_text.store_write_failed", scope=request.scope)
+
+        return FreeTextAdvisoryResponse(advisory_text=advisory_text)
 
     def _handle_status_or_decision(self, request: ProjectManagerRequest) -> ProjectManagerResponse:
         snapshot = self._data_access.get_project_snapshot(request.project_id)

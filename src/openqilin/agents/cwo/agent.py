@@ -24,13 +24,21 @@ from openqilin.agents.cwo.prompts import (
     INITIALIZATION_COMPLETE_TEMPLATE,
     PROPOSAL_DRAFT_TEMPLATE,
     WORKFORCE_STATUS_TEMPLATE,
+    _CONVERSATIONAL_SYSTEM_PROMPT,
 )
 from openqilin.agents.cwo.workforce_initializer import WorkforceInitializer
+from openqilin.agents.shared.free_text_advisory import (
+    FreeTextAdvisoryRequest,
+    FreeTextAdvisoryResponse,
+)
 from openqilin.agents.secretary.data_access import SecretaryDataAccessService
 from openqilin.control_plane.grammar.models import ChatContext, IntentClass
 from openqilin.data_access.repositories.artifacts import (
     ProjectArtifactDocument,
     ProjectArtifactWriteContext,
+)
+from openqilin.data_access.repositories.postgres.conversation_store import (
+    PostgresConversationStore,
 )
 from openqilin.data_access.repositories.postgres.governance_artifact_repository import (
     PostgresGovernanceArtifactRepository,
@@ -41,6 +49,7 @@ from openqilin.llm_gateway.schemas.requests import (
     LlmPolicyContext,
 )
 from openqilin.llm_gateway.service import LlmGatewayService
+from openqilin.task_orchestrator.dispatch.llm_dispatch import ConversationTurn
 
 LOGGER = structlog.get_logger(__name__)
 
@@ -68,6 +77,11 @@ _FALLBACK_PROPOSAL = (
 _FALLBACK_INITIALIZATION = (
     "Command: workforce initialization recorded. Bind the approved template package and hold "
     "execution to the governed project scope."
+)
+_FALLBACK_ADVISORY = (
+    "I'm the CWO agent. I handle project charter drafting, workforce initialization, "
+    "and governed role activation. "
+    "Use `/oq ask cwo <topic>` to direct a query to me."
 )
 _ADVISORY_MARKERS = (
     "i suggest",
@@ -112,6 +126,8 @@ class CwoAgent:
         governance_repo: PostgresGovernanceArtifactRepository,
         data_access: SecretaryDataAccessService,
         trace_id_factory: Callable[[], str] | None = None,
+        conversation_store: PostgresConversationStore | None = None,
+        metric_recorder: Any | None = None,
     ) -> None:
         self._llm_gateway = llm_gateway
         self._cso_agent = cso_agent
@@ -120,6 +136,8 @@ class CwoAgent:
         self._governance_repo = governance_repo
         self._data_access = data_access
         self._trace_id_factory = trace_id_factory or (lambda: str(uuid.uuid4()))
+        self._conversation_store = conversation_store
+        self._metric_recorder = metric_recorder
 
     def handle(self, request: CwoRequest) -> CwoResponse:
         intent = request.intent.strip().upper()
@@ -133,6 +151,64 @@ class CwoAgent:
         if intent == "ADMIN":
             return self._handle_coapproval(request)
         raise CwoCommandError(f"Unsupported CWO command action: {request.intent!r} / {action!r}")
+
+    def handle_free_text(self, request: FreeTextAdvisoryRequest) -> FreeTextAdvisoryResponse:
+        """Generate a role-appropriate advisory response for a free-text @mention."""
+        conversation_turns: tuple[ConversationTurn, ...] = ()
+        if self._conversation_store is not None:
+            try:
+                conversation_turns = self._conversation_store.list_turns(request.scope)
+            except Exception:
+                LOGGER.warning("cwo_agent.handle_free_text.store_read_failed", scope=request.scope)
+
+        history_lines = [f"{turn.role}: {turn.content}" for turn in conversation_turns]
+        history_block = ""
+        if history_lines:
+            history_block = "Conversation so far:\n" + "\n".join(history_lines) + "\n\n"
+        prompt = f"{_CONVERSATIONAL_SYSTEM_PROMPT}\n\n{history_block}Owner message:\n{request.text}"
+
+        advisory_text = _FALLBACK_ADVISORY
+        try:
+            response = self._llm_gateway.complete(
+                LlmGatewayRequest(
+                    request_id=self._trace_id_factory(),
+                    trace_id=self._trace_id_factory(),
+                    project_id="system",
+                    agent_id="cwo",
+                    task_id=None,
+                    skill_id="free_text_advisory",
+                    model_class="interactive_fast",
+                    routing_profile="dev_gemini_free",
+                    messages_or_prompt=prompt,
+                    max_tokens=256,
+                    temperature=0.3,
+                    budget_context=_CWO_BUDGET_CONTEXT,
+                    policy_context=_CWO_POLICY_CONTEXT,
+                )
+            )
+            if response.decision in {"served", "fallback_served"} and response.generated_text:
+                advisory_text = response.generated_text.strip()
+        except Exception:
+            LOGGER.warning("cwo_agent.handle_free_text.llm_failed")
+
+        if self._metric_recorder is not None:
+            self._metric_recorder.increment_counter(
+                "llm_calls_total",
+                labels={"purpose": "cwo_response"},
+            )
+
+        if self._conversation_store is not None:
+            try:
+                self._conversation_store.append_turns(
+                    request.scope,
+                    user_prompt=request.text,
+                    assistant_reply=advisory_text,
+                    agent_id="cwo",
+                )
+            except Exception:
+                LOGGER.warning("cwo_agent.handle_free_text.store_write_failed", scope=request.scope)
+
+        return FreeTextAdvisoryResponse(advisory_text=advisory_text)
 
     def _handle_status(self, request: CwoRequest) -> CwoResponse:
         route = _classify_routing_target(request)

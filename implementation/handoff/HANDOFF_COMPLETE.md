@@ -1,16 +1,16 @@
-# Handoff Complete: M17-WP9 — Semantic Fetch and Agent Tool
+# Handoff Complete: M18-WP1 — Conversational Advisory Mode for Institutional Agents
 
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-23
-**Branch:** `feat/180-semantic-fetch-agent-tool`
-**Draft PR:** #188
+**Branch:** `feat/193-m18-wp1-conversational-advisory`
+**Draft PR:** #<pending>
 **Implements:** `implementation/handoff/current.md`
 
 ---
 
 ## Summary
 
-Implemented the WP9 semantic-fetch foundation: pgvector-backed `summary_embedding` storage, Gemini embedding client, semantic cold-window lookup in the LLM dispatch path, and the new `get_conversation_window` governed read tool. Added the deferred `/oq context from:#channel-name` command parse and confirmation path, plus unit and integration coverage for the new repository, dispatch, tool, and embedding behaviors.
+Implemented conversational free-text advisory for CEO, CWO, CSO, Auditor, Administrator, and Project Manager; replaced the bot-worker canned intro/DM blocking path with control-plane forwarding; and generalized the Discord ingress advisory bypass to dispatch to all six agents. Added conversation-history persistence guards, advisory metric emission, role-specific prompts, and 24 unit tests covering the new handler paths.
 
 ---
 
@@ -18,13 +18,14 @@ Implemented the WP9 semantic-fetch foundation: pgvector-backed `summary_embeddin
 
 | Task | Status | Notes |
 |---|---|---|
-| Add `GeminiEmbeddingService` and `EmbeddingServiceProtocol` | ✅ Done | Added `src/openqilin/llm_gateway/embedding_service.py` with 768-dim Gemini embed handling and fail-open error behavior |
-| Add Alembic migration for `summary_embedding` | ✅ Done | Added `migrations/versions/20260323_0017_add_summary_embedding_to_conversation_windows.py` with `vector(768)` column and `ivfflat` index |
-| Extend conversation-store interfaces and dispatch pre-fetch path | ✅ Done | Added `find_relevant_windows`, `fetch_channel_summary`, `context_sources`, and prompt composition support for warm/cold/cross-channel summaries |
-| Extend `PostgresConversationStore` for semantic lookup and embedding persistence | ✅ Done | Added background embedding write, pgvector similarity query, and latest-summary fetch |
-| Add `get_conversation_window` governed read tool and allowlist entries | ✅ Done | Wired through `GovernedReadToolService`, role access policy, and task-dispatch read-tool construction |
-| Add `/oq context from:#channel-name` parse + confirmation path | ⚠️ Partial | Binding lookup and confirmation/denial response implemented; actual context injection remains deferred per handoff |
-| Add unit and integration coverage | ✅ Done | Added focused unit tests plus `tests/integration/test_m17_wp9_semantic_fetch.py` |
+| Secretary prompt update for new-project routing | ✅ Done | `ADVISORY_SYSTEM_PROMPT` now routes new-project initiation to CWO and preserves PM routing for approved/active work |
+| Bot-worker free-text forwarding fixes | ✅ Done | Removed the canned intro path and relaxed the non-Secretary DM block so free-text reaches the control plane |
+| Shared advisory request/response models | ✅ Done | Added `FreeTextAdvisoryRequest` and `FreeTextAdvisoryResponse` under `src/openqilin/agents/shared/` |
+| Six agent `handle_free_text()` implementations | ✅ Done | Added role-specific conversational prompts, fallbacks, history load/store, and advisory responses for CEO/CWO/CSO/Auditor/Administrator/PM |
+| Advisory metrics and DI wiring | ✅ Done | Wired `conversation_store` into all six agents and `llm_gateway`/`metric_recorder` into Auditor and Administrator; also fixed missing metric wiring for Secretary and PM |
+| Discord ingress six-agent advisory bypass | ✅ Done | Added per-bot-role advisory dispatch with auth validation and broad fallback handling |
+| Unit coverage for conversational advisory | ✅ Done | Added 24 unit tests across six new files under `tests/unit/agents/` |
+| Planning/progress updates | ✅ Done | Ticked the M18-WP1 checklist items and marked M18-WP1 `done` in `ImplementationProgress-v2.md` |
 
 ---
 
@@ -35,38 +36,31 @@ InMemory gate:    PASS
 ruff check:       PASS
 ruff format:      PASS
 mypy:             PASS
-pytest unit:      PASS  (848 passed, 1 warning in combined unit+component run)
-pytest component: PASS  (848 passed, 1 warning in combined unit+component run)
-pytest integration: SKIPPED  (8 skipped; OPENQILIN_DATABASE_URL / compose stack unavailable)
+pytest unit:      PASS  (872 passed, 1 warning in combined unit+component run)
+pytest component: PASS  (872 passed, 1 warning in combined unit+component run)
 ```
 
 ---
 
 ## REVIEW_NOTEs for Architect
 
-| File | Line | Note |
-|---|---|---|
-| `src/openqilin/project_spaces/binding_service.py` | 142 | Channel-name lookup is inferred from project-name slug because `project_space_bindings` does not persist actual Discord channel names; if Discord names can drift, the schema/source-of-truth needs clarification. |
+None.
 
 ---
 
 ## Spec Change Requests
 
-| Conflict | Docs involved | Blocking question |
-|---|---|---|
-| The handoff requires reading `design/v2/architecture/ConversationMemoryDesign-v1.md`, but that file is not present in the repo. | `implementation/handoff/current.md` vs missing `design/v2/architecture/ConversationMemoryDesign-v1.md` | Should the missing design doc be restored or the handoff updated to point at the canonical source? |
+None.
 
 ---
 
 ## What Was Skipped
 
-- Production DI wiring for `GeminiEmbeddingService` was intentionally not added, per the handoff out-of-scope section.
-- `/oq context from:#channel-name` does not persist context into a later `LlmDispatchRequest`; only parse + confirmation/denial response was implemented, per the deferred architect decision.
-- The new integration test file was executed, but all cases were skipped because the compose-backed database environment was not available in this shell.
+None.
 
 ---
 
 ## Notes
 
-- The environment did not expose `pytest` or `mypy` as direct `uv run <tool>` entrypoints, so validation used `uv run python -m pytest ...` and `uv run python -m mypy .`.
-- `implementation/handoff/current.md` already had user-owned local modifications before implementation started and was intentionally left unchanged.
+- `uv run pytest` and `uv run mypy` were not available as direct entrypoints in this shell, so validation used `uv run python -m pytest ...` and `uv run python -m mypy .`.
+- `implementation/handoff/current.md` and `implementation/v2/planning/05-milestones/M17-WorkPackages-v1.md` had pre-existing local modifications and were intentionally left untouched.

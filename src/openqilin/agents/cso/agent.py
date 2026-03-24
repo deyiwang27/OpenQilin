@@ -18,9 +18,11 @@ CSO DOES:
 from __future__ import annotations
 
 import json
-import logging
 import uuid
 from datetime import UTC, datetime
+from typing import Any
+
+import structlog
 
 from openqilin.agents.cso.models import (
     CSOConflictFlag,
@@ -31,9 +33,17 @@ from openqilin.agents.cso.prompts import (
     CROSS_PROJECT_ADVISORY_TEMPLATE,
     PROPOSAL_REVIEW_TEMPLATE,
     STRATEGIC_SYSTEM_PROMPT,
+    _CONVERSATIONAL_SYSTEM_PROMPT,
+)
+from openqilin.agents.shared.free_text_advisory import (
+    FreeTextAdvisoryRequest,
+    FreeTextAdvisoryResponse,
 )
 from openqilin.control_plane.grammar.models import IntentClass
 from openqilin.data_access.repositories.artifacts import ProjectArtifactWriteContext
+from openqilin.data_access.repositories.postgres.conversation_store import (
+    PostgresConversationStore,
+)
 from openqilin.data_access.repositories.postgres.governance_artifact_repository import (
     PostgresGovernanceArtifactRepository,
 )
@@ -46,8 +56,9 @@ from openqilin.llm_gateway.schemas.requests import (
     LlmPolicyContext,
 )
 from openqilin.llm_gateway.service import LlmGatewayService
+from openqilin.task_orchestrator.dispatch.llm_dispatch import ConversationTurn
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = structlog.get_logger(__name__)
 
 # CSO strategic advisory policy context.
 _CSO_POLICY_CONTEXT = LlmPolicyContext(
@@ -64,6 +75,11 @@ _CSO_BUDGET_CONTEXT = LlmBudgetContext(
 _FALLBACK_ADVISORY = (
     "Strategic review unavailable. For portfolio or proposal questions, "
     "provide proposal context or use `/oq ask cso <topic>`."
+)
+_FREE_TEXT_FALLBACK_ADVISORY = (
+    "I'm the CSO agent. I handle strategic review, portfolio alignment, "
+    "and cross-project risk analysis. "
+    "Use `/oq ask cso <topic>` to direct a query to me."
 )
 
 _CSO_AGENT_ID = "cso"
@@ -97,10 +113,14 @@ class CSOAgent:
         llm_gateway: LlmGatewayService,
         project_artifact_repo: PostgresGovernanceArtifactRepository,
         governance_repo: PostgresProjectRepository,
+        conversation_store: PostgresConversationStore | None = None,
+        metric_recorder: Any | None = None,
     ) -> None:
         self._llm = llm_gateway
         self._project_artifact_repo = project_artifact_repo
         self._governance_repo = governance_repo
+        self._conversation_store = conversation_store
+        self._metric_recorder = metric_recorder
 
     def handle(self, request: CSORequest) -> CSOResponse:
         """Handle portfolio strategy advisory request.
@@ -152,6 +172,64 @@ class CSOAgent:
             strategic_note=strategic_note,
             conflict_flag=conflict_flag,
         )
+
+    def handle_free_text(self, request: FreeTextAdvisoryRequest) -> FreeTextAdvisoryResponse:
+        """Generate a role-appropriate advisory response for a free-text @mention."""
+        conversation_turns: tuple[ConversationTurn, ...] = ()
+        if self._conversation_store is not None:
+            try:
+                conversation_turns = self._conversation_store.list_turns(request.scope)
+            except Exception:
+                LOGGER.warning("cso_agent.handle_free_text.store_read_failed", scope=request.scope)
+
+        history_lines = [f"{turn.role}: {turn.content}" for turn in conversation_turns]
+        history_block = ""
+        if history_lines:
+            history_block = "Conversation so far:\n" + "\n".join(history_lines) + "\n\n"
+        prompt = f"{_CONVERSATIONAL_SYSTEM_PROMPT}\n\n{history_block}Owner message:\n{request.text}"
+
+        advisory_text = _FREE_TEXT_FALLBACK_ADVISORY
+        try:
+            response = self._llm.complete(
+                LlmGatewayRequest(
+                    request_id=str(uuid.uuid4()),
+                    trace_id=str(uuid.uuid4()),
+                    project_id="system",
+                    agent_id=_CSO_AGENT_ID,
+                    task_id=None,
+                    skill_id="free_text_advisory",
+                    model_class="interactive_fast",
+                    routing_profile="dev_gemini_free",
+                    messages_or_prompt=prompt,
+                    max_tokens=256,
+                    temperature=0.3,
+                    budget_context=_CSO_BUDGET_CONTEXT,
+                    policy_context=_CSO_POLICY_CONTEXT,
+                )
+            )
+            if response.decision in ("served", "fallback_served") and response.generated_text:
+                advisory_text = response.generated_text.strip()
+        except Exception:
+            LOGGER.warning("cso_agent.handle_free_text.llm_failed")
+
+        if self._metric_recorder is not None:
+            self._metric_recorder.increment_counter(
+                "llm_calls_total",
+                labels={"purpose": "cso_response"},
+            )
+
+        if self._conversation_store is not None:
+            try:
+                self._conversation_store.append_turns(
+                    request.scope,
+                    user_prompt=request.text,
+                    assistant_reply=advisory_text,
+                    agent_id="cso",
+                )
+            except Exception:
+                LOGGER.warning("cso_agent.handle_free_text.store_write_failed", scope=request.scope)
+
+        return FreeTextAdvisoryResponse(advisory_text=advisory_text)
 
     def _read_portfolio_context(
         self,
