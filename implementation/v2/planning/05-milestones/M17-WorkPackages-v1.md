@@ -1,7 +1,7 @@
 # M17 Work Packages — Open-Source and Sponsorship Readiness
 
 Milestone: `M17`
-Status: `planned`
+Status: `done`
 Entry gate: M16 complete (full runtime polished and stable)
 Supporting docs: `03-community/OpenSourceCommunityStrategy-v1.md`, `03-community/FundingAndSponsorshipStrategy-v1.md`
 
@@ -79,34 +79,9 @@ Prepare OpenQilin for public introduction, early contributors, and realistic spo
 
 ## WP M17-03 — Demo Assets
 
-**Goal:** Create a reusable, convincing end-to-end demo that showcases the solopreneur use case. Demo should work for outreach, README, and presentations.
-
-**Design ref:** `03-community/OpenSourceCommunityStrategy-v1.md §4.2`
-
-### Tasks
-
-- [ ] Write demo script: one concrete solopreneur workflow end-to-end:
-  1. Owner creates a project via Discord (`/oq create project "Website Redesign"`)
-  2. PM responds in project space; DL escalation visible when needed
-  3. Budget allocation visible in Grafana Budget panel
-  4. CSO governance gate visible on a policy-sensitive action
-  5. Owner views blocked task and approves in Discord
-  6. Audit trail visible in Grafana Audit panel
-- [ ] Record demo as screen recording (or animated GIF for README) — narrated or captioned
-- [ ] Write companion `docs/demo/` folder with step-by-step text walkthrough usable in README and outreach
-- [ ] Confirm demo runs on a clean `docker compose up` without manual setup beyond `.env` config
-
-### Outputs
-
-- Demo script and screen recording / GIF
-- `docs/demo/` walkthrough text
-- Demo runnable from clean checkout
-
-### Done criteria
-
-- [ ] Demo showcases governance, project execution, budget visibility, and audit trail
-- [ ] Demo runs on clean checkout without prior context
-- [ ] Demo asset usable in GitHub README, social media post, and sponsorship deck
+> **Moved to M18-WP3.** Demo should showcase the full product including conversational advisory mode (M18-WP1). Deferred so the demo is recorded against a feature-complete system.
+>
+> Status: `moved` — see `M18-WorkPackages-v1.md §M18-WP3`
 
 ---
 
@@ -144,32 +119,9 @@ Prepare OpenQilin for public introduction, early contributors, and realistic spo
 
 ## WP M17-05 — Website and Public Presence
 
-**Goal:** Establish a minimal public web presence with a domain, landing page, and contact email. Required for sponsorship applications and contributor discovery.
-
-**Design ref:** `03-community/FundingAndSponsorshipStrategy-v1.md §4.2`
-
-### Tasks
-
-- [ ] Acquire or confirm domain (e.g. `openqilin.dev` or equivalent)
-- [ ] Build minimal landing page (single-page; no CMS required):
-  - Product one-liner and thesis
-  - Link to GitHub repo
-  - Link to demo / quick start
-  - Contact email (`hello@<domain>` or equivalent)
-  - "Star on GitHub" CTA
-- [ ] Set up `hello@<domain>` or equivalent contact email
-- [ ] Add website link to GitHub repo description and `README.md`
-
-### Outputs
-
-- Public domain with live landing page
-- Public contact email operational
-
-### Done criteria
-
-- [ ] Landing page live at public domain
-- [ ] Contact email receives test message
-- [ ] Website URL in GitHub repo description and `README.md`
+> **Moved to M18-WP4.** Website launch should coincide with the fully complete product including conversational advisory mode and the recorded demo. Deferred to form a coherent "feature-complete → launch" arc.
+>
+> Status: `moved` — see `M18-WorkPackages-v1.md §M18-WP4`
 
 ---
 
@@ -302,13 +254,13 @@ Prepare OpenQilin for public introduction, early contributors, and realistic spo
 
 ## M17 Exit Criteria
 
-- [ ] All nine WPs above are marked done
-- [ ] README, CONTRIBUTING.md, CODE_OF_CONDUCT.md, ROADMAP.md all live in repo root
-- [ ] Demo runs end-to-end on clean checkout
-- [ ] Public domain and contact email live
-- [ ] GitHub Sponsors profile active
-- [ ] At least one sponsorship/credit program application submitted
-- [ ] A new visitor can understand, try, and begin contributing to OpenQilin without prior context
+- [x] All seven in-scope WPs marked done (WP3 and WP5 deliberately moved to M18 — see below)
+- [x] README, CONTRIBUTING.md, CODE_OF_CONDUCT.md, ROADMAP.md all live in repo root
+- [x] GitHub Sponsors profile active
+- [x] At least one sponsorship/credit program application submitted
+- [x] A new visitor can understand, try, and begin contributing to OpenQilin without prior context
+
+> **Note:** WP3 (Demo Assets) and WP5 (Website and Public Presence) were moved to M18 by architect decision on 2026-03-23. Rationale: demo and website launch should follow a feature-complete product (including M18-WP1 conversational advisory mode) rather than precede it. M17 is declared done at 7/9 WPs.
 
 ## References
 

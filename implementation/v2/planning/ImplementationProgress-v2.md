@@ -16,8 +16,8 @@ Tracking authority: GitHub Issues/PRs are the operational source of truth. This 
 | M14 | `done` | 7 / 7 | All WPs complete; exit criteria met |
 | M15 | `done` | 6 / 6 | All WPs complete; exit criteria met |
 | M16 | `done` | 5 / 5 | All WPs complete; exit criteria met |
-| M17 | `in_progress` | 7 / 9 | WP1-WP2-WP4-WP6-WP7-WP8-WP9 done; WP3-WP5 pending |
-| M18 | `planned` | 0 / 1 | WP1 pending |
+| M17 | `done` | 7 / 9 | WP1-WP2-WP4-WP6-WP7-WP8-WP9 done; WP3+WP5 moved to M18 (launch after feature-complete) |
+| M18 | `planned` | 0 / 4 | WP1-WP4 pending |
 
 ---
 
@@ -134,15 +134,30 @@ WP document: `05-milestones/M17-WorkPackages-v1.md`
 |---|---|---|---|---|---|
 | M17-WP1 | Public README and Repository Clarity | `done` | #155 | #156 | README rewritten; compose.yml + .env.example WP refs cleaned; LICENSE confirmed Apache 2.0; 785 tests pass |
 | M17-WP2 | Roadmap | `done` | #158 | #159 | ROADMAP.md created; all sections present |
-| M17-WP3 | Demo Assets | `pending` | — | — | — |
+| M17-WP3 | Demo Assets | `moved` | — | — | Moved to M18-WP3; demo should showcase feature-complete product including conversational advisory mode |
 | M17-WP4 | Contributor Entry Path | `done` | #160 | #165 | CONTRIBUTING.md + CODE_OF_CONDUCT.md added; CWO naming fix in README/ROADMAP; good first issues #161-#164 created; acceptance checks pass |
-| M17-WP5 | Website and Public Presence | `pending` | — | — | — |
+| M17-WP5 | Website and Public Presence | `moved` | — | — | Moved to M18-WP4; website launch coincides with recorded demo and full product |
 | M17-WP6 | Sponsorship and Startup-Credit Readiness | `done` | #166 | #167 | GitHub Sponsors repo wiring complete: funding config moved to `.github/FUNDING.yml`; sponsorship docs updated; README sponsor badge/link added; profile status marked active |
 | M17-WP7 | Auto-create Discord Project Channel on Initialization | `done` | #168 | #169 | DiscordChannelAutomator now calls Discord REST API; `guild_id` added to initialization payload; binding service wired into runtime + governance initialize non-fatal auto-bind path; unit tests added |
 | M17-WP8 | Conversation Memory Foundation | `done` | #179 | #182 | Unified scope key; hot window 6→40; conversation_windows table; warm loading; 829 tests pass |
 | M17-WP9 | Semantic Fetch and Agent Tool | `done` | #180 | #188 | pgvector ANN pre-fetch; get_conversation_window tool; /oq context parse; integration tests pass; Secretary sync path + DM restriction deferred |
 
-**M17 Exit criteria:** `pending`
+**M17 Exit criteria:** `done` — 7/9 WPs complete; WP3+WP5 deliberately moved to M18
+
+---
+
+## M18 — Conversational UX Completion and Public Launch
+
+WP document: `05-milestones/M18-WorkPackages-v1.md`
+
+| WP | Title | Status | Issue | PR | Notes |
+|---|---|---|---|---|---|
+| M18-WP1 | Conversational Advisory Mode for Institutional Agents | `done` | #193 | #194 | All 6 agents handle_free_text(); bot-worker gaps A/B fixed; Secretary prompt gap 1 fixed; 872 tests pass |
+| M18-WP2 | @everyone Broadcast | `pending` | — | — | All 7 agents respond simultaneously; entry gate: WP1 done |
+| M18-WP3 | Demo Assets | `pending` | — | — | Moved from M17-WP3; entry gate: WP1 done (record against full product) |
+| M18-WP4 | Website and Public Presence | `pending` | — | — | Moved from M17-WP5; entry gate: WP3 done (demo link required) |
+
+**M18 Exit criteria:** `pending`
 
 ---
 
