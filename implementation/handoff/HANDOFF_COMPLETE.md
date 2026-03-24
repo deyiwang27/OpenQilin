@@ -3,7 +3,7 @@
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-23
 **Branch:** `feat/193-m18-wp1-conversational-advisory`
-**Draft PR:** #<pending>
+**Draft PR:** #194
 **Implements:** `implementation/handoff/current.md`
 
 ---
