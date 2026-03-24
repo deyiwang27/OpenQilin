@@ -3,7 +3,7 @@
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-24
 **Branch:** `fix/oq-ask-agent-routing`
-**Draft PR:** pending
+**Draft PR:** #205
 **Implements:** targeted fix request for `/oq ask <agent>` routing in `src/openqilin/apps/discord_bot_worker.py`
 
 ---
