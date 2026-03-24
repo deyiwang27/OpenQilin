@@ -34,6 +34,17 @@ from openqilin.shared_kernel.startup_validation import (
 
 LOGGER = structlog.get_logger(__name__)
 READY_MARKER_PATH = Path("/tmp/openqilin.discord_bot_worker.ready")
+_ASK_ADDRESSABLE_ROLES: frozenset[str] = frozenset(
+    {
+        "ceo",
+        "cwo",
+        "cso",
+        "auditor",
+        "administrator",
+        "project_manager",
+        "secretary",
+    }
+)
 
 
 def _mark_ready() -> None:
@@ -907,7 +918,17 @@ class OpenQilinDiscordClient(discord.Client):
                 # Secretary forwards as the routing fallback so the control plane can
                 # route based on command grammar (e.g. `/oq ask administrator ...`).
                 _unaddressed = _is_runtime_placeholder_recipients(resolved_recipients)
-                if not _this_bot_is_target and not (
+                _ask_target = (
+                    parsed.args[0].lower()
+                    if parsed.action == "ask"
+                    and len(parsed.args) > 0
+                    and parsed.args[0].lower() in _ASK_ADDRESSABLE_ROLES
+                    else None
+                )
+                if _ask_target is not None:
+                    if _ask_target != self._config.bot_role:
+                        return
+                elif not _this_bot_is_target and not (
                     _unaddressed and self._config.bot_role == "secretary"
                 ):
                     return

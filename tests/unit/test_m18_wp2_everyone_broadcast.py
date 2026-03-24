@@ -38,7 +38,11 @@ def _worker_config(*, bot_role: str, bot_id: str) -> DiscordBotWorkerConfig:
 
 
 def _make_client(
-    *, bot_role: str, bot_id: str, user_id: str
+    *,
+    bot_role: str,
+    bot_id: str,
+    user_id: str,
+    resolved_recipients: tuple[tuple[str, str], ...] | None = None,
 ) -> tuple[OpenQilinDiscordClient, AsyncMock, AsyncMock]:
     process_event = AsyncMock()
     client = OpenQilinDiscordClient(
@@ -47,7 +51,7 @@ def _make_client(
         readiness=cast(Any, MagicMock()),
     )
     cast(Any, client._connection).user = SimpleNamespace(id=user_id)
-    resolve_recipients = AsyncMock(return_value=((bot_id, bot_role),))
+    resolve_recipients = AsyncMock(return_value=resolved_recipients or ((bot_id, bot_role),))
     setattr(client, "_resolve_recipients", resolve_recipients)
     return client, resolve_recipients, process_event
 
@@ -223,6 +227,128 @@ class TestBotWorkerEveryoneGate:
         assert await_args is not None
         event = await_args.args[0]
         assert event.is_everyone_mention is True
+
+
+class TestBotWorkerExplicitAskRouting:
+    @pytest.mark.asyncio
+    async def test_targeted_ask_only_named_agent_forwards(self) -> None:
+        administrator_client, _resolve_recipients, administrator_process_event = _make_client(
+            bot_role="administrator",
+            bot_id="administrator_core",
+            user_id="3001",
+            resolved_recipients=(("runtime", "runtime"),),
+        )
+        secretary_client, _resolve_recipients, secretary_process_event = _make_client(
+            bot_role="secretary",
+            bot_id="secretary_core",
+            user_id="1001",
+            resolved_recipients=(("runtime", "runtime"),),
+        )
+        message = _message(
+            content="/oq ask administrator what is my name?",
+            mentions=[],
+            mention_everyone=False,
+        )
+
+        try:
+            await administrator_client.on_message(message)
+            await secretary_client.on_message(message)
+        finally:
+            await administrator_client.close()
+            await secretary_client.close()
+
+        administrator_process_event.assert_awaited_once()
+        secretary_process_event.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_targeted_secretary_ask_keeps_secretary_as_sender(self) -> None:
+        secretary_client, _resolve_recipients, secretary_process_event = _make_client(
+            bot_role="secretary",
+            bot_id="secretary_core",
+            user_id="1001",
+            resolved_recipients=(("runtime", "runtime"),),
+        )
+        ceo_client, _resolve_recipients, ceo_process_event = _make_client(
+            bot_role="ceo",
+            bot_id="ceo_core",
+            user_id="2001",
+            resolved_recipients=(("runtime", "runtime"),),
+        )
+        message = _message(
+            content="/oq ask secretary help",
+            mentions=[],
+            mention_everyone=False,
+        )
+
+        try:
+            await secretary_client.on_message(message)
+            await ceo_client.on_message(message)
+        finally:
+            await secretary_client.close()
+            await ceo_client.close()
+
+        secretary_process_event.assert_awaited_once()
+        ceo_process_event.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_unrecognized_ask_arg_uses_existing_secretary_fallback(self) -> None:
+        secretary_client, _resolve_recipients, secretary_process_event = _make_client(
+            bot_role="secretary",
+            bot_id="secretary_core",
+            user_id="1001",
+            resolved_recipients=(("runtime", "runtime"),),
+        )
+        administrator_client, _resolve_recipients, administrator_process_event = _make_client(
+            bot_role="administrator",
+            bot_id="administrator_core",
+            user_id="3001",
+            resolved_recipients=(("runtime", "runtime"),),
+        )
+        message = _message(
+            content="/oq ask about projects",
+            mentions=[],
+            mention_everyone=False,
+        )
+
+        try:
+            await secretary_client.on_message(message)
+            await administrator_client.on_message(message)
+        finally:
+            await secretary_client.close()
+            await administrator_client.close()
+
+        secretary_process_event.assert_awaited_once()
+        administrator_process_event.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_non_ask_explicit_command_uses_existing_secretary_fallback(self) -> None:
+        secretary_client, _resolve_recipients, secretary_process_event = _make_client(
+            bot_role="secretary",
+            bot_id="secretary_core",
+            user_id="1001",
+            resolved_recipients=(("runtime", "runtime"),),
+        )
+        administrator_client, _resolve_recipients, administrator_process_event = _make_client(
+            bot_role="administrator",
+            bot_id="administrator_core",
+            user_id="3001",
+            resolved_recipients=(("runtime", "runtime"),),
+        )
+        message = _message(
+            content="/oq run_task something",
+            mentions=[],
+            mention_everyone=False,
+        )
+
+        try:
+            await secretary_client.on_message(message)
+            await administrator_client.on_message(message)
+        finally:
+            await secretary_client.close()
+            await administrator_client.close()
+
+        secretary_process_event.assert_awaited_once()
+        administrator_process_event.assert_not_awaited()
 
 
 class TestIngressEveryoneBroadcast:
