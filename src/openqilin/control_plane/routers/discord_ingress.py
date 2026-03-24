@@ -148,6 +148,41 @@ def _discord_advisory_response(
     )
 
 
+def _validate_discord_connector_request(
+    *,
+    payload: DiscordIngressRequest,
+    signature_header: str | None,
+) -> JSONResponse | None:
+    try:
+        validate_connector_auth(
+            header_channel="discord",
+            header_actor_external_id=payload.actor_external_id,
+            header_idempotency_key=payload.idempotency_key,
+            header_signature=signature_header,
+            payload_channel="discord",
+            payload_actor_external_id=payload.actor_external_id,
+            payload_idempotency_key=payload.idempotency_key,
+            payload_raw_payload_hash=payload.raw_payload_hash,
+        )
+    except ConnectorSecurityError as exc:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": "error",
+                "trace_id": payload.trace_id,
+                "error": {
+                    "code": exc.code,
+                    "class": "authorization_error",
+                    "message": exc.message,
+                    "retryable": False,
+                    "source_component": "connector_security",
+                    "trace_id": payload.trace_id,
+                },
+            },
+        )
+    return None
+
+
 @router.post(
     "/messages",
     response_model=OwnerCommandResponse,
@@ -275,36 +310,64 @@ def submit_discord_message(
         resolved_target = hint.target_role
         resolved_args = payload.args
 
+        if payload.is_everyone_mention:
+            auth_error = _validate_discord_connector_request(
+                payload=payload,
+                signature_header=x_openqilin_signature,
+            )
+            if auth_error is not None:
+                return auth_error
+            LOGGER.info("discord_ingress.everyone_broadcast", bot_role=payload.bot_role)
+            if payload.bot_role == "secretary" or payload.bot_role is None:
+                pass
+            elif payload.bot_role in _ADVISORY_AGENT_ROLES:
+                scope = f"guild::{payload.guild_id}::channel::{payload.channel_id}"
+                advisory_request = FreeTextAdvisoryRequest(
+                    text=content,
+                    scope=scope,
+                    guild_id=payload.guild_id,
+                    channel_id=payload.channel_id,
+                    addressed_agent=payload.bot_role,
+                )
+                try:
+                    if payload.bot_role == "ceo":
+                        advisory_response = ceo_agent.handle_free_text(advisory_request)
+                    elif payload.bot_role == "cwo":
+                        advisory_response = cwo_agent.handle_free_text(advisory_request)
+                    elif payload.bot_role == "auditor":
+                        advisory_response = auditor_agent.handle_free_text(advisory_request)
+                    elif payload.bot_role == "administrator":
+                        advisory_response = administrator_agent.handle_free_text(advisory_request)
+                    elif payload.bot_role == "cso":
+                        advisory_response = cso_agent.handle_free_text(advisory_request)
+                    else:
+                        advisory_response = project_manager_agent.handle_free_text(advisory_request)
+                    advisory_text = advisory_response.advisory_text
+                except Exception:
+                    LOGGER.exception(
+                        "discord_ingress.everyone_broadcast.agent_failed",
+                        bot_role=payload.bot_role,
+                    )
+                    role_label = payload.bot_role.replace("_", " ").title()
+                    advisory_text = (
+                        f"I'm the {role_label} agent. "
+                        "I'm unable to respond right now — please try again."
+                    )
+                return _discord_advisory_response(
+                    payload=payload,
+                    command="everyone_broadcast",
+                    message=advisory_text,
+                )
+
         # Advisory bypass: secretary handles discussion/query without task dispatch.
         # Validate connector signature first — bypass must not skip authenticity checks.
         if resolved_target == "secretary":
-            try:
-                validate_connector_auth(
-                    header_channel="discord",
-                    header_actor_external_id=payload.actor_external_id,
-                    header_idempotency_key=payload.idempotency_key,
-                    header_signature=x_openqilin_signature,
-                    payload_channel="discord",
-                    payload_actor_external_id=payload.actor_external_id,
-                    payload_idempotency_key=payload.idempotency_key,
-                    payload_raw_payload_hash=payload.raw_payload_hash,
-                )
-            except ConnectorSecurityError as exc:
-                return JSONResponse(
-                    status_code=400,
-                    content={
-                        "status": "error",
-                        "trace_id": payload.trace_id,
-                        "error": {
-                            "code": exc.code,
-                            "class": "authorization_error",
-                            "message": exc.message,
-                            "retryable": False,
-                            "source_component": "connector_security",
-                            "trace_id": payload.trace_id,
-                        },
-                    },
-                )
+            auth_error = _validate_discord_connector_request(
+                payload=payload,
+                signature_header=x_openqilin_signature,
+            )
+            if auth_error is not None:
+                return auth_error
             _addressed_agent = ""
             for _r in payload.recipients:
                 _rt = _r.recipient_type.strip().lower() if _r.recipient_type else ""
@@ -361,33 +424,12 @@ def submit_discord_message(
                 ),
             )
         if payload.bot_role in _ADVISORY_AGENT_ROLES:
-            try:
-                validate_connector_auth(
-                    header_channel="discord",
-                    header_actor_external_id=payload.actor_external_id,
-                    header_idempotency_key=payload.idempotency_key,
-                    header_signature=x_openqilin_signature,
-                    payload_channel="discord",
-                    payload_actor_external_id=payload.actor_external_id,
-                    payload_idempotency_key=payload.idempotency_key,
-                    payload_raw_payload_hash=payload.raw_payload_hash,
-                )
-            except ConnectorSecurityError as exc:
-                return JSONResponse(
-                    status_code=400,
-                    content={
-                        "status": "error",
-                        "trace_id": payload.trace_id,
-                        "error": {
-                            "code": exc.code,
-                            "class": "authorization_error",
-                            "message": exc.message,
-                            "retryable": False,
-                            "source_component": "connector_security",
-                            "trace_id": payload.trace_id,
-                        },
-                    },
-                )
+            auth_error = _validate_discord_connector_request(
+                payload=payload,
+                signature_header=x_openqilin_signature,
+            )
+            if auth_error is not None:
+                return auth_error
 
             scope = f"guild::{payload.guild_id}::channel::{payload.channel_id}"
             advisory_request = FreeTextAdvisoryRequest(

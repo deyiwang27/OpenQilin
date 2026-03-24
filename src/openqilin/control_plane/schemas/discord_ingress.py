@@ -36,3 +36,4 @@ class DiscordIngressRequest(BaseModel):
     bot_role: str | None = Field(default=None, min_length=1, max_length=64)
     bot_id: str | None = Field(default=None, min_length=1, max_length=128)
     bot_user_id: str | None = Field(default=None, min_length=1, max_length=128)
+    is_everyone_mention: bool = False
