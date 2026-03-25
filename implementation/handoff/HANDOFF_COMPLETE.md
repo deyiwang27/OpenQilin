@@ -53,7 +53,7 @@ None.
 
 ## What Was Skipped
 
-Nothing from the handoff scope was skipped.
+Nothing from the requested issue scope was skipped.
 
 ---
 
