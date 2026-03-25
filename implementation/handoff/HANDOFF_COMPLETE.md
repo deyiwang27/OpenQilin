@@ -1,16 +1,16 @@
-# Handoff Complete: Issue #214 — DeepSeek URL and Compose Follow-Up Fixes
+# Handoff Complete: Compose Fix — discord_bot_worker Redis URL
 
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-24
-**Branch:** `fix/deepseek-url-and-compose`
-**Draft PR:** #219
+**Branch:** `fix/discord-bot-worker-redis-url`
+**Draft PR:** #220
 **Implements:** `implementation/handoff/current.md`
 
 ---
 
 ## Summary
 
-Applied the two requested follow-up fixes on top of the DeepSeek provider work. The adapter now targets `{base_url}/chat/completions` so a configured DeepSeek base URL that already includes `/v1` does not produce a duplicated path, and `compose.yml` now forwards the full DeepSeek env block into both `api_app` and `orchestrator_worker` with the `/v1` default base URL.
+Added `OPENQILIN_REDIS_URL: redis://redis:6379` to the `discord_bot_worker` service environment in `compose.yml`. No source code changes were made; validation passed across the requested static checks and the combined unit/component test suite.
 
 ---
 
@@ -18,46 +18,43 @@ Applied the two requested follow-up fixes on top of the DeepSeek provider work. 
 
 | Task | Status | Notes |
 |---|---|---|
-| Fix DeepSeek adapter endpoint URL construction | ✅ Done | `deepseek_adapter.py` now appends only `/chat/completions` |
-| Update DeepSeek unit-test helper base URL | ✅ Done | `_config()` now uses `https://api.deepseek.com/v1` so the existing URL assertion still matches |
-| Forward DeepSeek env vars into `api_app` container | ✅ Done | Added the full DeepSeek env block after the Gemini vars |
-| Forward DeepSeek env vars into `orchestrator_worker` container | ✅ Done | Added the same block with `OPENQILIN_DEEPSEEK_BASE_URL` defaulting to `https://api.deepseek.com/v1` |
+| Add `OPENQILIN_REDIS_URL` to `discord_bot_worker` in `compose.yml` | ✅ Done | Added directly before the service `healthcheck:` block |
+| Run requested validation matrix | ✅ Done | `ruff`, `mypy`, and `pytest tests/unit tests/component -x` all passed |
+| Prepare engineer handoff artifact | ✅ Done | Recorded scope, validation, and handoff mismatch note below |
 
 ---
 
 ## Validation Results
 
 ```text
-InMemory gate:    PASS
-ruff check:       PASS
-ruff format:      PASS
-mypy:             PASS
-pytest unit:      PASS  (84 passed, 0 failed)
-pytest component: PASS
+InMemory gate:   PASS
+ruff check:      PASS
+ruff format:     PASS
+mypy:            PASS
+pytest unit:     PASS  (run in combined command; total result 939 passed, 0 failed)
+pytest component: PASS  (run in combined command; total result 939 passed, 0 failed)
 ```
 
 ---
 
 ## REVIEW_NOTEs for Architect
 
-| File | Line | Note |
-|---|---|---|
+None.
 
 ---
 
 ## Spec Change Requests
 
-| Conflict | Docs involved | Blocking question |
-|---|---|---|
+None.
 
 ---
 
 ## What Was Skipped
 
-No additional DeepSeek provider scope was changed beyond the two requested bug fixes.
+Nothing was skipped from the explicit user-requested scope.
 
 ---
 
 ## Notes
 
-The working tree still has an uncommitted user-authored change in `implementation/handoff/current.md`; it was preserved and not included in the branch commit history.
+`implementation/handoff/current.md` currently describes unrelated DeepSeek provider work. This fix was implemented from the explicit user instruction in the terminal, and `current.md` was left unchanged because it already had pre-existing local modifications.
