@@ -45,10 +45,12 @@ def _make_client(
     resolved_recipients: tuple[tuple[str, str], ...] | None = None,
 ) -> tuple[OpenQilinDiscordClient, AsyncMock, AsyncMock]:
     process_event = AsyncMock()
+    readiness = MagicMock()
+    readiness.get_user_id = MagicMock(return_value="2001")
     client = OpenQilinDiscordClient(
         config=_worker_config(bot_role=bot_role, bot_id=bot_id),
         fan_in=cast(Any, SimpleNamespace(process_event=process_event)),
-        readiness=cast(Any, MagicMock()),
+        readiness=cast(Any, readiness),
     )
     cast(Any, client._connection).user = SimpleNamespace(id=user_id)
     client._topic_router = MagicMock(classify=MagicMock(return_value=topic_decision))
@@ -68,13 +70,19 @@ def _message(
     channel.id = "channel-1"
     channel.name = channel_name
     channel.send = AsyncMock()
+    channel.permissions_for = MagicMock(
+        return_value=SimpleNamespace(read_messages=True, send_messages=True)
+    )
     message = MagicMock()
     message.id = "message-1"
     message.content = content
     message.mentions = mentions or []
     message.mention_everyone = mention_everyone
     message.author = SimpleNamespace(id="owner-1", bot=False)
-    message.guild = SimpleNamespace(id="guild-1")
+    message.guild = MagicMock(
+        id="guild-1",
+        get_member=MagicMock(return_value=SimpleNamespace(id=2001)),
+    )
     message.channel = channel
     message.created_at = datetime(2026, 3, 24, 10, 0, 0, tzinfo=UTC)
     return message
