@@ -3,7 +3,7 @@
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-24
 **Branch:** `fix/secretary-redis-bot-lookup`
-**Draft PR:** TBD
+**Draft PR:** #217
 **Implements:** Direct task instructions from 2026-03-24 chat request
 
 ---
@@ -21,7 +21,7 @@ Updated the Secretary Tier 1 absent-bot gate to fall back from the process-local
 | Add Redis fallback for Tier 1 matched bot lookup in `discord_bot_worker.py` | ✅ Done | Falls back to `openqilin:bot_discord_ids` when `DiscordRoleBotReadiness.get_user_id()` returns `None`. |
 | Add regression test for Secretary Redis fallback | ✅ Done | Added `test_secretary_defers_when_bot_found_via_redis`. |
 | Run required validation matrix | ✅ Done | All requested checks passed. |
-| Open draft PR | ⚠️ Partial | Pending at time of file write; updated after PR creation if available. |
+| Open draft PR | ✅ Done | Draft PR #217 created against `main`. |
 
 ---
 
