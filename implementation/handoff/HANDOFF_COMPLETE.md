@@ -3,7 +3,7 @@
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-24
 **Branch:** `fix/discord-bot-worker-redis-url`
-**Draft PR:** pending
+**Draft PR:** #220
 **Implements:** `implementation/handoff/current.md`
 
 ---
