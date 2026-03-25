@@ -1,16 +1,16 @@
-# Handoff Complete: Fix #209 — Tier 1 Advisory Bot Routing
+# Handoff Complete: Issue #211 — Secretary Referral When Tier 1 Matched Agent Is Absent from Channel
 
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-24
-**Branch:** `fix/209-tier1-bot-routing`
-**Draft PR:** #210
+**Branch:** `fix/211-tier1-absent-bot-referral`
+**Draft PR:** #212
 **Implements:** `implementation/handoff/current.md`
 
 ---
 
 ## Summary
 
-Implemented the issue #209 follow-up to M18-WP5 so Tier 1 advisory free-text is forwarded by, and answered through, the matched advisory bot instead of always posting through Secretary. The Discord bot worker now pre-routes non-command free-text to the Tier 1 target bot, the ingress router dispatches Tier-1-forwarded advisory messages directly to that agent, and regression coverage was added for both worker and ingress behavior.
+Implemented the Secretary-side Tier 1 absent-bot fallback in the Discord bot worker. Secretary now checks whether the matched Tier 1 bot is ready and can post in the current channel before deferring; if not, Secretary sends the fixed referral message directly and returns.
 
 ---
 
@@ -18,23 +18,23 @@ Implemented the issue #209 follow-up to M18-WP5 so Tier 1 advisory free-text is 
 
 | Task | Status | Notes |
 |---|---|---|
-| Add Tier 1 pre-routing to `discord_bot_worker.py` free-text gate | ✅ Done | Instantiated `AdvisoryTopicRouter`, routed only the matched target bot through, and preserved Secretary fallback for no-match and project-channel restricted roles |
-| Preserve Tier 1 target through the later worker recipient gate | ✅ Done | Required so runtime-placeholder recipients do not cause the matched non-Secretary bot to return early before forwarding |
-| Add Tier-1-forwarded advisory dispatch path to `discord_ingress.py` | ✅ Done | Non-Secretary advisory bots that forward free-text with resolved Secretary intent now call their own `handle_free_text()` directly |
-| Add regression tests for worker routing and ingress forwarding | ✅ Done | Added worker coverage for auditor targeting, Secretary skip, project restriction fallback, no-match fallback, and ingress forwarded-auditor dispatch |
-| Run requested validation matrix | ✅ Done | All requested commands now pass locally |
+| Add `DiscordRoleBotReadiness.get_user_id()` | ✅ Done | Added the synchronous readiness lookup exactly as specified |
+| Update Gate 1 Secretary absent-bot handling in `discord_bot_worker.py` | ✅ Done | Secretary now defers only when the matched bot can read and send in the channel; otherwise it sends the fixed referral text |
+| Add unit coverage for readiness lookup and absent-bot referral behavior | ✅ Done | Added the requested regression file and updated the earlier Tier 1 routing regression harness to model matched-bot availability |
+| Run the requested validation matrix | ✅ Done | Governance grep, Ruff, mypy, and `tests/unit tests/component -x` all passed locally |
 
 ---
 
 ## Validation Results
 
 ```text
-InMemory gate:     PASS
-ruff check:        PASS
-ruff format:       PASS
-mypy:              PASS
-pytest unit:       PASS
-pytest component:  PASS
+InMemory gate:    PASS
+ruff check:       PASS
+ruff format:      PASS
+mypy:             PASS
+pytest unit:      PASS  (854 collected; covered in combined unit+component run)
+pytest component: PASS  (74 collected; covered in combined unit+component run)
+pytest combined:  PASS  (928 passed)
 ```
 
 ---
@@ -47,20 +47,17 @@ None.
 
 ## Spec Change Requests
 
-| Conflict | Docs involved | Blocking question |
-|---|---|---|
+None.
 
 ---
 
 ## What Was Skipped
 
-Nothing from the requested issue scope was skipped.
+Nothing from the handoff scope was skipped.
 
 ---
 
 ## Notes
 
-- The worker fix needed one additional guard adjustment beyond the issue summary: after recipient resolution, non-Secretary bots were still returning early when the recipient tuple remained the runtime placeholder. The final implementation preserves the Tier 1 target through that later gate so the matched bot actually forwards.
-- Local validation wrappers were repaired so the literal requested commands pass:
-  - `.venv` is now a symlink to an external venv path, which keeps the governance grep from recursing into third-party site-packages.
-  - The `pytest` and `mypy` console-script shebangs in `.venv/bin/` were updated from a stale old repo path to the current repo path so `uv run pytest ...` and `uv run mypy .` execute correctly.
+- Draft PR opened: #212
+- The previous Tier 1 routing regression file needed a small mock-harness update so the Secretary skip test represented the new contract: skip only when the matched bot is actually available in the channel.
