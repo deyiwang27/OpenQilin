@@ -159,6 +159,7 @@ WP document: `05-milestones/M18-WorkPackages-v1.md`
 | M18-WP5 | Deterministic Advisory Topic Router | `done` | #207 | #208 | Two-tier routing: keyword authority table (Tier 1) + Secretary LLM fallback (Tier 2); bot registry Redis write; channel availability enforcement; 914 tests pass |
 | fix #209 | Tier 1 advisory bot routing | `done` | #209 | #210 | Tier 1 pre-routing in bot worker Gate 1; Tier-1-forwarded advisory block in ingress; matched bot posts its own response |
 | fix #211 | Secretary referral for absent Tier 1 bot | `done` | #211 | #212 | Secretary checks matched bot's channel send permission; posts referral message when bot is absent; 928 tests pass |
+| feat #214 | DeepSeek LLM provider support | `done` | #214 | #215 | DeepSeek OpenAI-compatible adapter; dev_deepseek routing profile; 7 config settings; build_llm_gateway_service() deepseek branch; all 6 agents routing-profile-agnostic; 938 tests pass |
 
 **M18 Exit criteria:** `pending`
 
