@@ -45,7 +45,7 @@ def _config(
 ) -> DeepSeekProviderConfig:
     return DeepSeekProviderConfig(
         api_key=api_key,
-        base_url="https://api.deepseek.com",
+        base_url="https://api.deepseek.com/v1",
         model="deepseek-chat",
         timeout_seconds=10.0,
         max_retries=max_retries,
@@ -76,7 +76,9 @@ def _adapter(
 def test_deepseek_adapter_happy_path() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.method == "POST"
-        assert request.url == httpx.URL("https://api.deepseek.com/v1/chat/completions")
+        assert request.url == httpx.URL(
+            "https://api.deepseek.com/v1/chat/completions"
+        )  # base_url includes /v1
         assert request.headers["Authorization"] == "Bearer test-key"
         assert json.loads(request.read()) == {
             "model": "deepseek-chat",

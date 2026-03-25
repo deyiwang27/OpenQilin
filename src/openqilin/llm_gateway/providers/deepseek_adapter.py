@@ -81,7 +81,7 @@ class DeepSeekAdapter(LiteLLMProvider):
             "max_tokens": request.max_tokens,
             "temperature": request.temperature,
         }
-        endpoint = f"{self._config.base_url}/v1/chat/completions"
+        endpoint = f"{self._config.base_url}/chat/completions"
         headers = {"Authorization": f"Bearer {api_key}"}
         response: httpx.Response | None = None
         for attempt in range(self._config.max_retries + 1):
