@@ -934,15 +934,10 @@ class OpenQilinDiscordClient(discord.Client):
                                     )
                             except Exception:
                                 pass
-                        _bot_can_post = False
-                        if _matched_user_id is not None and message.guild is not None:
-                            _matched_member = message.guild.get_member(int(_matched_user_id))
-                            if _matched_member is not None:
-                                _ch_perms = message.channel.permissions_for(_matched_member)
-                                _bot_can_post = bool(
-                                    _ch_perms.read_messages and _ch_perms.send_messages
-                                )
-                        if _bot_can_post:
+                        if _matched_user_id is not None:
+                            # Matched bot has registered via on_ready() and is active.
+                            # guild.get_member() is unreliable without the privileged members
+                            # intent, so the readiness or Redis registry entry is sufficient.
                             return
                         _role_label = _tier1_target_role.replace("_", " ").title()
                         _referral = (

@@ -63,25 +63,14 @@ def _make_client(
     return client, readiness_mock, resolve_recipients, process_event
 
 
-def _message(
-    *,
-    guild_member: Any | None = None,
-    can_read: bool = True,
-    can_send: bool = True,
-) -> MagicMock:
+def _message() -> MagicMock:
     channel = MagicMock()
     channel.id = "channel-1"
     channel.name = "governance"
     channel.send = AsyncMock()
-    channel.permissions_for = MagicMock(
-        return_value=SimpleNamespace(
-            read_messages=can_read,
-            send_messages=can_send,
-        )
-    )
     guild = MagicMock()
     guild.id = "guild-1"
-    guild.get_member = MagicMock(return_value=guild_member)
+    guild.get_member = MagicMock()
     message = MagicMock()
     message.id = "message-1"
     message.content = "what is my budget status?"
@@ -175,8 +164,7 @@ async def test_secretary_defers_when_bot_found_via_redis() -> None:
         readiness=readiness,
         redis_client=redis_client,
     )
-    matched_member = SimpleNamespace(id=2001)
-    message = _message(guild_member=matched_member, can_read=True, can_send=True)
+    message = _message()
 
     try:
         await client.on_message(message)
@@ -185,15 +173,14 @@ async def test_secretary_defers_when_bot_found_via_redis() -> None:
 
     readiness.get_user_id.assert_called_once_with("auditor")
     redis_client.hget.assert_called_once_with("openqilin:bot_discord_ids", "auditor")
-    message.guild.get_member.assert_called_once_with(2001)
-    message.channel.permissions_for.assert_called_once_with(matched_member)
+    message.guild.get_member.assert_not_called()
     resolve_recipients.assert_not_awaited()
     process_event.assert_not_awaited()
     message.channel.send.assert_not_awaited()
 
 
 @pytest.mark.asyncio
-async def test_secretary_posts_referral_when_matched_bot_not_in_guild() -> None:
+async def test_secretary_defers_when_bot_present() -> None:
     readiness = MagicMock()
     readiness.get_user_id = MagicMock(return_value="2002")
     client, _readiness, resolve_recipients, process_event = _make_client(
@@ -203,7 +190,7 @@ async def test_secretary_posts_referral_when_matched_bot_not_in_guild() -> None:
         topic_role="auditor",
         readiness=readiness,
     )
-    message = _message(guild_member=None)
+    message = _message()
 
     try:
         await client.on_message(message)
@@ -211,15 +198,14 @@ async def test_secretary_posts_referral_when_matched_bot_not_in_guild() -> None:
         await client.close()
 
     readiness.get_user_id.assert_called_once_with("auditor")
-    message.guild.get_member.assert_called_once_with(2002)
-    message.channel.permissions_for.assert_not_called()
+    message.guild.get_member.assert_not_called()
     resolve_recipients.assert_not_awaited()
     process_event.assert_not_awaited()
-    message.channel.send.assert_awaited_once()
+    message.channel.send.assert_not_awaited()
 
 
 @pytest.mark.asyncio
-async def test_secretary_posts_referral_when_matched_bot_lacks_send_permission() -> None:
+async def test_secretary_defers_when_matched_bot_user_id_is_string() -> None:
     readiness = MagicMock()
     readiness.get_user_id = MagicMock(return_value="2002")
     client, _readiness, resolve_recipients, process_event = _make_client(
@@ -229,8 +215,7 @@ async def test_secretary_posts_referral_when_matched_bot_lacks_send_permission()
         topic_role="auditor",
         readiness=readiness,
     )
-    matched_member = SimpleNamespace(id=2002)
-    message = _message(guild_member=matched_member, can_read=True, can_send=False)
+    message = _message()
 
     try:
         await client.on_message(message)
@@ -238,35 +223,7 @@ async def test_secretary_posts_referral_when_matched_bot_lacks_send_permission()
         await client.close()
 
     readiness.get_user_id.assert_called_once_with("auditor")
-    message.guild.get_member.assert_called_once_with(2002)
-    message.channel.permissions_for.assert_called_once_with(matched_member)
-    resolve_recipients.assert_not_awaited()
-    process_event.assert_not_awaited()
-    message.channel.send.assert_awaited_once()
-
-
-@pytest.mark.asyncio
-async def test_secretary_defers_when_matched_bot_has_send_permission() -> None:
-    readiness = MagicMock()
-    readiness.get_user_id = MagicMock(return_value="2002")
-    client, _readiness, resolve_recipients, process_event = _make_client(
-        bot_role="secretary",
-        bot_id="secretary_core",
-        user_id="1001",
-        topic_role="auditor",
-        readiness=readiness,
-    )
-    matched_member = SimpleNamespace(id=2002)
-    message = _message(guild_member=matched_member, can_read=True, can_send=True)
-
-    try:
-        await client.on_message(message)
-    finally:
-        await client.close()
-
-    readiness.get_user_id.assert_called_once_with("auditor")
-    message.guild.get_member.assert_called_once_with(2002)
-    message.channel.permissions_for.assert_called_once_with(matched_member)
+    message.guild.get_member.assert_not_called()
     resolve_recipients.assert_not_awaited()
     process_event.assert_not_awaited()
     message.channel.send.assert_not_awaited()
@@ -283,7 +240,7 @@ async def test_non_secretary_bot_always_returns_regardless_of_matched_bot_presen
         topic_role="administrator",
         readiness=readiness,
     )
-    message = _message(guild_member=SimpleNamespace(id=3003), can_read=True, can_send=True)
+    message = _message()
 
     try:
         await client.on_message(message)
@@ -292,7 +249,6 @@ async def test_non_secretary_bot_always_returns_regardless_of_matched_bot_presen
 
     readiness.get_user_id.assert_not_called()
     message.guild.get_member.assert_not_called()
-    message.channel.permissions_for.assert_not_called()
     resolve_recipients.assert_not_awaited()
     process_event.assert_not_awaited()
     message.channel.send.assert_not_awaited()
