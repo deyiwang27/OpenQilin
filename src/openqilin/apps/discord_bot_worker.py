@@ -142,6 +142,10 @@ class DiscordRoleBotReadiness:
     def is_healthy(self) -> bool:
         return self._required_roles.issubset(self.ready_roles)
 
+    def get_user_id(self, role: str) -> str | None:
+        """Return the Discord user ID for a ready role, or None if not ready."""
+        return self._ready_user_ids_by_role.get(role)
+
     async def mark_ready(self, *, role: str, user_id: str) -> None:
         async with self._lock:
             self._ready_user_ids_by_role[role] = user_id
@@ -916,6 +920,27 @@ class OpenQilinDiscordClient(discord.Client):
             ):
                 # Tier 1 matched: only the target agent's bot forwards; all others skip.
                 if self._config.bot_role != _tier1_target_role:
+                    if self._config.bot_role == "secretary":
+                        _matched_user_id = self._readiness.get_user_id(_tier1_target_role)
+                        _bot_can_post = False
+                        if _matched_user_id is not None and message.guild is not None:
+                            _matched_member = message.guild.get_member(int(_matched_user_id))
+                            if _matched_member is not None:
+                                _ch_perms = message.channel.permissions_for(_matched_member)
+                                _bot_can_post = bool(
+                                    _ch_perms.read_messages and _ch_perms.send_messages
+                                )
+                        if _bot_can_post:
+                            return
+                        _role_label = _tier1_target_role.replace("_", " ").title()
+                        _referral = (
+                            f"The **{_role_label}** agent handles that topic but isn't "
+                            f"available in this channel. "
+                            f"Try `/oq ask {_tier1_target_role} <question>` in a channel "
+                            f"where they're active."
+                        )
+                        await message.channel.send(_referral)
+                        return
                     return
                 # This is the target bot, so bypass the mention gate and fall through.
             else:
