@@ -3,7 +3,7 @@
 **Completed by:** CodeX (engineer)
 **Date:** 2026-03-24
 **Branch:** `fix/topic-router-and-mention-detection`
-**Draft PR:** pending
+**Draft PR:** #222
 **Implements:** explicit user-requested bugfixes
 
 ---
