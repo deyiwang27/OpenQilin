@@ -49,6 +49,7 @@ from openqilin.llm_gateway.schemas.requests import (
     LlmPolicyContext,
 )
 from openqilin.llm_gateway.service import LlmGatewayService
+from openqilin.shared_kernel.settings import get_settings
 from openqilin.task_orchestrator.dispatch.llm_dispatch import ConversationTurn
 
 LOGGER = structlog.get_logger(__name__)
@@ -178,7 +179,7 @@ class CwoAgent:
                     task_id=None,
                     skill_id="free_text_advisory",
                     model_class="interactive_fast",
-                    routing_profile="dev_gemini_free",
+                    routing_profile=get_settings().llm_default_routing_profile,
                     messages_or_prompt=prompt,
                     max_tokens=256,
                     temperature=0.3,

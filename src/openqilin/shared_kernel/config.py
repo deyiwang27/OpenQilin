@@ -51,6 +51,13 @@ class RuntimeSettings(BaseSettings):
     gemini_free_primary_model: str = "gemini-2.0-flash"
     gemini_embedding_model: str = "text-embedding-004"
     gemini_free_fallback_model: str = "gemini-2.0-flash"
+    deepseek_api_key: str = ""
+    deepseek_base_url: str = "https://api.deepseek.com"
+    deepseek_model: str = "deepseek-chat"
+    deepseek_request_timeout_seconds: float = 30.0
+    deepseek_max_retries: int = 2
+    deepseek_retry_base_delay_seconds: float = 1.0
+    deepseek_retry_max_delay_seconds: float = 8.0
     discord_bot_token: str | None = None
     discord_multi_bot_enabled: bool = False
     discord_worker_role: str = "runtime_agent"

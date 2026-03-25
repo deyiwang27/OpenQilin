@@ -193,6 +193,10 @@ def build_llm_gateway_service() -> LlmGatewayService:
     backend = settings.llm_provider_backend.strip().lower()
     if backend == "gemini_flash_free":
         provider: LiteLLMProvider = GeminiFlashFreeAdapter.from_settings(settings)
+    elif backend == "deepseek":
+        from openqilin.llm_gateway.providers.deepseek_adapter import DeepSeekAdapter
+
+        provider = DeepSeekAdapter.from_settings(settings)
     else:
         provider = InMemoryLiteLLMAdapter()
     return LlmGatewayService(provider=provider)

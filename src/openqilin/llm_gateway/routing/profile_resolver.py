@@ -44,6 +44,22 @@ _ROUTING_PROFILES: dict[str, RoutingProfile] = {
         },
         max_fallback_hops=1,
     ),
+    "dev_deepseek": RoutingProfile(
+        profile_id="dev_deepseek",
+        status="active",
+        model_class_map={
+            "interactive_fast": (
+                "deepseek_chat_primary",
+                "deepseek_chat_fallback",
+            ),
+            "reasoning_general": (
+                "deepseek_chat_primary",
+                "deepseek_chat_fallback",
+            ),
+            "embedding_text": ("deepseek_chat_primary",),
+        },
+        max_fallback_hops=1,
+    ),
     "prod_controlled": RoutingProfile(
         profile_id="prod_controlled",
         status="active",
