@@ -44,6 +44,7 @@ def _make_client(
     user_id: str,
     topic_role: str,
     readiness: Any | None = None,
+    redis_client: Any | None = None,
 ) -> tuple[OpenQilinDiscordClient, Any, AsyncMock, AsyncMock]:
     process_event = AsyncMock()
     readiness_mock = readiness or MagicMock()
@@ -51,6 +52,7 @@ def _make_client(
         config=_worker_config(bot_role=bot_role, bot_id=bot_id),
         fan_in=cast(Any, SimpleNamespace(process_event=process_event)),
         readiness=cast(Any, readiness_mock),
+        redis_client=redis_client,
     )
     cast(Any, client._connection).user = SimpleNamespace(id=user_id)
     client._topic_router = MagicMock(
@@ -155,6 +157,39 @@ async def test_secretary_posts_referral_when_matched_bot_user_id_unknown() -> No
         "The **Auditor** agent handles that topic but isn't available in this channel. "
         "Try `/oq ask auditor <question>` in a channel where they're active."
     )
+
+
+@pytest.mark.asyncio
+async def test_secretary_defers_when_bot_found_via_redis() -> None:
+    readiness = MagicMock()
+    readiness.get_user_id = MagicMock(return_value=None)
+    redis_client = MagicMock()
+    redis_client.hget = MagicMock(
+        return_value=b"2001",
+    )
+    client, _readiness, resolve_recipients, process_event = _make_client(
+        bot_role="secretary",
+        bot_id="secretary_core",
+        user_id="1001",
+        topic_role="auditor",
+        readiness=readiness,
+        redis_client=redis_client,
+    )
+    matched_member = SimpleNamespace(id=2001)
+    message = _message(guild_member=matched_member, can_read=True, can_send=True)
+
+    try:
+        await client.on_message(message)
+    finally:
+        await client.close()
+
+    readiness.get_user_id.assert_called_once_with("auditor")
+    redis_client.hget.assert_called_once_with("openqilin:bot_discord_ids", "auditor")
+    message.guild.get_member.assert_called_once_with(2001)
+    message.channel.permissions_for.assert_called_once_with(matched_member)
+    resolve_recipients.assert_not_awaited()
+    process_event.assert_not_awaited()
+    message.channel.send.assert_not_awaited()
 
 
 @pytest.mark.asyncio

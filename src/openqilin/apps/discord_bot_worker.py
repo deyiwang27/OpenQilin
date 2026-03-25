@@ -922,6 +922,18 @@ class OpenQilinDiscordClient(discord.Client):
                 if self._config.bot_role != _tier1_target_role:
                     if self._config.bot_role == "secretary":
                         _matched_user_id = self._readiness.get_user_id(_tier1_target_role)
+                        if _matched_user_id is None and self._redis_client is not None:
+                            try:
+                                _raw = self._redis_client.hget(
+                                    "openqilin:bot_discord_ids",
+                                    _tier1_target_role,
+                                )
+                                if _raw is not None:
+                                    _matched_user_id = (
+                                        _raw.decode() if isinstance(_raw, bytes) else str(_raw)
+                                    )
+                            except Exception:
+                                pass
                         _bot_can_post = False
                         if _matched_user_id is not None and message.guild is not None:
                             _matched_member = message.guild.get_member(int(_matched_user_id))
