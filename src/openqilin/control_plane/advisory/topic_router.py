@@ -69,6 +69,21 @@ TOPIC_ROUTING_TABLE: dict[str, frozenset[str]] = {
             "final decision",
         }
     ),
+    "administrator": frozenset(
+        {
+            "infrastructure",
+            "infra",
+            "document policy",
+            "retention",
+            "quarantine",
+            "integrity",
+            "hash",
+            "system health",
+            "health check",
+            "policy enforcement",
+            "agent health",
+        }
+    ),
 }
 
 

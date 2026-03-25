@@ -894,9 +894,22 @@ class OpenQilinDiscordClient(discord.Client):
         #   - Secretary @mentioned → Secretary handles; all other bots skip.
         if chat_class != "direct" and not _is_explicit_command:
             my_user_id = str(self.user.id) if self.user is not None else ""
-            mentioned_bot_ids = frozenset(
+            _all_mentioned_ids = frozenset(str(user.id) for user in message.mentions)
+            _bot_ids_by_attr = frozenset(
                 str(user.id) for user in message.mentions if getattr(user, "bot", False)
             )
+            # Augment with the Redis bot registry to handle partial user objects
+            # (getattr bot attribute is unreliable without the Discord members privileged intent).
+            _registry_ids: frozenset[str] = frozenset()
+            if self._redis_client is not None and _all_mentioned_ids:
+                try:
+                    _reg = self._redis_client.hgetall("openqilin:bot_discord_ids")
+                    _registry_ids = frozenset(
+                        v.decode() if isinstance(v, bytes) else str(v) for v in _reg.values()
+                    )
+                except Exception:
+                    pass
+            mentioned_bot_ids = _bot_ids_by_attr | (_all_mentioned_ids & _registry_ids)
             i_am_mentioned = bool(my_user_id and my_user_id in mentioned_bot_ids) or is_everyone
 
             # Tier 1 topic pre-routing: classify free-text and route to the matched agent's bot.

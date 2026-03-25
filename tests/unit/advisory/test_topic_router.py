@@ -41,6 +41,20 @@ def test_classify_ceo_keyword() -> None:
     assert decision.agent_role == "ceo"
 
 
+def test_administrator_keywords_route_correctly() -> None:
+    decision = AdvisoryTopicRouter().classify("what is the infrastructure health status")
+
+    assert decision is not None
+    assert decision.agent_role == "administrator"
+
+
+def test_administrator_infra_keyword() -> None:
+    decision = AdvisoryTopicRouter().classify("check infra logs")
+
+    assert decision is not None
+    assert decision.agent_role == "administrator"
+
+
 def test_classify_cwo_keyword() -> None:
     decision = AdvisoryTopicRouter().classify("workforce plan update")
 
