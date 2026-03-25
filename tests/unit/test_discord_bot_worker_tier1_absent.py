@@ -42,7 +42,7 @@ def _make_client(
     bot_role: str,
     bot_id: str,
     user_id: str,
-    topic_role: str,
+    topic_role: str | None,
     readiness: Any | None = None,
     redis_client: Any | None = None,
 ) -> tuple[OpenQilinDiscordClient, Any, AsyncMock, AsyncMock]:
@@ -55,9 +55,8 @@ def _make_client(
         redis_client=redis_client,
     )
     cast(Any, client._connection).user = SimpleNamespace(id=user_id)
-    client._topic_router = MagicMock(
-        classify=MagicMock(return_value=RoutingDecision(topic_role, "high"))
-    )
+    topic_decision = RoutingDecision(topic_role, "high") if topic_role is not None else None
+    client._topic_router = MagicMock(classify=MagicMock(return_value=topic_decision))
     resolve_recipients = AsyncMock(return_value=((bot_id, bot_role),))
     setattr(client, "_resolve_recipients", resolve_recipients)
     return client, readiness_mock, resolve_recipients, process_event
@@ -174,6 +173,32 @@ async def test_secretary_defers_when_bot_found_via_redis() -> None:
     readiness.get_user_id.assert_called_once_with("auditor")
     redis_client.hget.assert_called_once_with("openqilin:bot_discord_ids", "auditor")
     message.guild.get_member.assert_not_called()
+    resolve_recipients.assert_not_awaited()
+    process_event.assert_not_awaited()
+    message.channel.send.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_secretary_skips_when_agent_bot_mentioned_via_registry() -> None:
+    redis_client = MagicMock()
+    redis_client.hgetall = MagicMock(return_value={b"ceo": b"999"})
+    client, _readiness, resolve_recipients, process_event = _make_client(
+        bot_role="secretary",
+        bot_id="secretary_core",
+        user_id="1001",
+        topic_role=None,
+        redis_client=redis_client,
+    )
+    message = _message()
+    message.mentions = [SimpleNamespace(id="999", bot=False)]
+    message.content = "<@999> can you weigh in on this?"
+
+    try:
+        await client.on_message(message)
+    finally:
+        await client.close()
+
+    redis_client.hgetall.assert_called_once_with("openqilin:bot_discord_ids")
     resolve_recipients.assert_not_awaited()
     process_event.assert_not_awaited()
     message.channel.send.assert_not_awaited()

@@ -6,7 +6,7 @@ from openqilin.control_plane.advisory.topic_router import AdvisoryTopicRouter
 
 
 def test_classify_budget_keyword() -> None:
-    decision = AdvisoryTopicRouter().classify("what is my budget status?")
+    decision = AdvisoryTopicRouter().classify("what is my budget outlook?")
 
     assert decision is not None
     assert decision.agent_role == "auditor"
@@ -20,8 +20,22 @@ def test_classify_spend_keyword() -> None:
     assert decision.agent_role == "auditor"
 
 
+def test_auditor_payment_keyword() -> None:
+    decision = AdvisoryTopicRouter().classify("show payment history for this vendor")
+
+    assert decision is not None
+    assert decision.agent_role == "auditor"
+
+
 def test_classify_strategic_keyword() -> None:
     decision = AdvisoryTopicRouter().classify("portfolio alignment review")
+
+    assert decision is not None
+    assert decision.agent_role == "cso"
+
+
+def test_cso_review_keyword() -> None:
+    decision = AdvisoryTopicRouter().classify("conduct a strategic review of cross-project risk")
 
     assert decision is not None
     assert decision.agent_role == "cso"
@@ -34,6 +48,13 @@ def test_classify_task_keyword() -> None:
     assert decision.agent_role == "project_manager"
 
 
+def test_pm_status_keyword() -> None:
+    decision = AdvisoryTopicRouter().classify("give me the project status and timeline")
+
+    assert decision is not None
+    assert decision.agent_role == "project_manager"
+
+
 def test_classify_ceo_keyword() -> None:
     decision = AdvisoryTopicRouter().classify("I need executive approval")
 
@@ -41,8 +62,36 @@ def test_classify_ceo_keyword() -> None:
     assert decision.agent_role == "ceo"
 
 
+def test_ceo_approval_keyword() -> None:
+    decision = AdvisoryTopicRouter().classify("request approval before we decide")
+
+    assert decision is not None
+    assert decision.agent_role == "ceo"
+
+
+def test_administrator_keywords_route_correctly() -> None:
+    decision = AdvisoryTopicRouter().classify("what is the infrastructure health status")
+
+    assert decision is not None
+    assert decision.agent_role == "administrator"
+
+
+def test_administrator_infra_keyword() -> None:
+    decision = AdvisoryTopicRouter().classify("check infra logs")
+
+    assert decision is not None
+    assert decision.agent_role == "administrator"
+
+
 def test_classify_cwo_keyword() -> None:
     decision = AdvisoryTopicRouter().classify("workforce plan update")
+
+    assert decision is not None
+    assert decision.agent_role == "cwo"
+
+
+def test_cwo_activate_keyword() -> None:
+    decision = AdvisoryTopicRouter().classify("activate onboarding for the new team headcount")
 
     assert decision is not None
     assert decision.agent_role == "cwo"

@@ -21,6 +21,11 @@ TOPIC_ROUTING_TABLE: dict[str, frozenset[str]] = {
             "overrun",
             "breach",
             "governance breach",
+            "expense",
+            "invoice",
+            "payment",
+            "transaction",
+            "penalty",
         }
     ),
     "cso": frozenset(
@@ -34,6 +39,12 @@ TOPIC_ROUTING_TABLE: dict[str, frozenset[str]] = {
             "conflict",
             "risk",
             "roadmap",
+            "review",
+            "evaluate",
+            "priority",
+            "prioritize",
+            "strategic review",
+            "cross-project risk",
         }
     ),
     "project_manager": frozenset(
@@ -46,6 +57,14 @@ TOPIC_ROUTING_TABLE: dict[str, frozenset[str]] = {
             "execution plan",
             "sprint",
             "backlog",
+            "status",
+            "deadline",
+            "schedule",
+            "report",
+            "timeline",
+            "deliverable",
+            "velocity",
+            "issue",
         }
     ),
     "cwo": frozenset(
@@ -57,6 +76,12 @@ TOPIC_ROUTING_TABLE: dict[str, frozenset[str]] = {
             "workforce plan",
             "role binding",
             "agent activation",
+            "activate",
+            "deactivate",
+            "onboard",
+            "onboarding",
+            "team",
+            "headcount",
         }
     ),
     "ceo": frozenset(
@@ -67,6 +92,27 @@ TOPIC_ROUTING_TABLE: dict[str, frozenset[str]] = {
             "authorize",
             "escalation",
             "final decision",
+            "approval",
+            "decision",
+            "decide",
+            "veto",
+            "agreement",
+            "endorse",
+        }
+    ),
+    "administrator": frozenset(
+        {
+            "infrastructure",
+            "infra",
+            "document policy",
+            "retention",
+            "quarantine",
+            "integrity",
+            "hash",
+            "system health",
+            "health check",
+            "policy enforcement",
+            "agent health",
         }
     ),
 }
