@@ -45,7 +45,7 @@ def _config(
 ) -> DeepSeekProviderConfig:
     return DeepSeekProviderConfig(
         api_key=api_key,
-        base_url="https://api.deepseek.com",
+        base_url="https://api.deepseek.com/v1",
         model="deepseek-chat",
         timeout_seconds=10.0,
         max_retries=max_retries,
