@@ -157,6 +157,8 @@ WP document: `05-milestones/M18-WorkPackages-v1.md`
 | M18-WP3 | Demo Assets | `pending` | — | — | Moved from M17-WP3; entry gate: WP1 done (record against full product) |
 | M18-WP4 | Website and Public Presence | `pending` | — | — | Moved from M17-WP5; entry gate: WP3 done (demo link required) |
 | M18-WP5 | Deterministic Advisory Topic Router | `done` | #207 | #208 | Two-tier routing: keyword authority table (Tier 1) + Secretary LLM fallback (Tier 2); bot registry Redis write; channel availability enforcement; 914 tests pass |
+| fix #209 | Tier 1 advisory bot routing | `done` | #209 | #210 | Tier 1 pre-routing in bot worker Gate 1; Tier-1-forwarded advisory block in ingress; matched bot posts its own response |
+| fix #211 | Secretary referral for absent Tier 1 bot | `done` | #211 | #212 | Secretary checks matched bot's channel send permission; posts referral message when bot is absent; 928 tests pass |
 
 **M18 Exit criteria:** `pending`
 
