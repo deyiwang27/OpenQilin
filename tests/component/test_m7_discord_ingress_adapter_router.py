@@ -16,7 +16,7 @@ def _discord_payload() -> dict[str, object]:
         "idempotency_key": "idem-m7-discord-adapter-001",
         "raw_payload_hash": "a" * 64,
         "timestamp": datetime.now(tz=UTC).isoformat(),
-        "content": "Send status update to ceo.",
+        "content": "Send update to ceo.",
         "action": "msg_notify",
         "args": ["ceo", "status_update"],
         "recipients": [{"recipient_id": "ceo_1", "recipient_type": "ceo"}],
@@ -30,7 +30,8 @@ def _discord_payload() -> dict[str, object]:
 
 def test_discord_ingress_adapter_maps_payload_and_reuses_governed_owner_path() -> None:
     # M11: grammar layer classifies free-text content; action is intent-derived, not payload.action.
-    # "Send status update to ceo." → DISCUSSION (default) → secretary bypass (direct channel).
+    # "Send update to ceo." stays neutral for Tier 1 routing → DISCUSSION (default) →
+    # secretary bypass (direct channel).
     client = TestClient(create_control_plane_app())
     payload = _discord_payload()
     signature = sign_payload_hash(
